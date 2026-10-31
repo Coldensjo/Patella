@@ -1,0 +1,13 @@
+# CipSoft client files: proprietary and large; CLAUDE.md records the Tibia.exe hash
+Tibia.exe
+Tibia.dat
+Tibia.spr
+Tibia.pic
+Tibia.cfg
+Patch.exe
+Tibia.url
+unins000.*
+
+# REA output: empty stderr logs and the regenerable Ghidra snapshot
+rea-out/*.err
+rea-out/*.snapshot

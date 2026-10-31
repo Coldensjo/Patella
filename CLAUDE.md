@@ -1,0 +1,30 @@
+# Tibia client reverse engineering
+
+Target: `C:\Tibia\Tibia.exe`, the Tibia 7.x client (PE32, x86, MSVC 7.1 linker, built 2006-06-08,
+sha256 `1a82fe97a39e536c29327d6d5dde316775f537dcc01506831429b1a0433b76f8`).
+Data files next to it: `Tibia.dat`, `Tibia.spr`, `Tibia.pic`, `Tibia.cfg`.
+
+## REA
+
+The `rea` MCP server (https://github.com/morluto/rea) is registered at Claude Code local scope for this
+folder only, with the skill in `.claude/skills/reverse-engineer-anything`. Pass `C:\Tibia\Tibia.exe` as
+the target to its native analysis tools.
+
+- Package: `C:\Servers\Software\rea` (rea-agents 6.8.0), CLI: `rea` (`C:\Servers\Software\rea\rea.cmd`)
+- Runtime: portable Node 24.22.2 in `C:\Servers\Software\node` (the system Node is too old for REA)
+- Provider: Ghidra 12.1.4 in `C:\Servers\Software\ghidra_12.1.4_PUBLIC`, JDK 24 (`C:\Program Files\Java\jdk-24`),
+  `REA_ANALYSIS_PROVIDER=ghidra`. The older Ghidra 11.4.2 in `C:\Servers\Software\Ghidra` is not supported by REA.
+- Windows Ghidra support is read-only: function renames and comments are not available.
+- A full import takes about 80 s; Ghidra finds about 21,700 functions and 3,200 strings.
+
+CLI examples (`rea.cmd` sets `GHIDRA_INSTALL_DIR` and `JAVA_HOME` itself if they are unset):
+
+```
+rea analyze C:\Tibia\Tibia.exe --provider ghidra --json
+rea search C:\Tibia\Tibia.exe "Tibia.spr" --provider ghidra --json
+rea decompile C:\Tibia\Tibia.exe 0x401000 --provider ghidra --json
+```
+
+To update: `rea update` does not refresh the local-scope registration. Run
+`npm install --prefix C:\Servers\Software\rea rea-agents@latest` with the portable Node, then copy the
+skill again from `node_modules\rea-agents\skills`.
