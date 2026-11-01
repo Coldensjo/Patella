@@ -44,3 +44,4 @@ void TestTalk();
 void TestObjects(const char *ExePath); // objectstest.cpp, loads Tibia.dat next to Tibia.exe
 void TestCreatures(const char *ExePath); // creaturestest.cpp, loads Tibia.dat next to Tibia.exe
 void TestMap(const char *ExePath);     // maptest.cpp, also loads Tibia.dat
+void TestGraphics(const char *ExePath); // graphicstest.cpp, loads Tibia.spr, Tibia.pic and Tibia.dat

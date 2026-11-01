@@ -313,7 +313,7 @@ BOOL CPlayerApp::InitInstance()
 			try {
 				SurfaceInitInstance(&MainFrame->m_hWnd);
 				GetSurface()->InitSurfaces();
-				FUN_0048da50();
+				InitVideoCache();
 			} catch (...) {
 				throw (PROGRAM_ERROR)12; // "Video surface allocation failed."
 			}

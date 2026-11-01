@@ -109,8 +109,8 @@ void SendLogin(uint32 AccountID, const char *Password)
 	SendWord(2);
 	SendWord(772);
 	SendQuad(DatSignature);
-	SendQuad(DAT_005ccb64);
-	SendQuad(DAT_005cc758);
+	SendQuad(SpriteSignature);
+	SendQuad(PictureSignature);
 	SendBytes(Data, 128);
 	SendCommand(false);
 	TEND1(AccountID)
@@ -928,8 +928,8 @@ void ReceivePatchBlock()
 	switch (PatchFileNumber) {
 	case 0: Name = "Tibia.exe"; ReloadEvent = 0x48; Signature = 0; break;
 	case 1: Name = "Tibia.dat"; ReloadEvent = 0x41; CompleteEvent = 0x45; Signature = DatSignature; break;
-	case 2: Name = "Tibia.spr"; ReloadEvent = 0x42; CompleteEvent = 0x46; Signature = DAT_005ccb64; break;
-	case 3: Name = "Tibia.pic"; ReloadEvent = 0x43; CompleteEvent = 0x47; Signature = DAT_005cc758; break;
+	case 2: Name = "Tibia.spr"; ReloadEvent = 0x42; CompleteEvent = 0x46; Signature = SpriteSignature; break;
+	case 3: Name = "Tibia.pic"; ReloadEvent = 0x43; CompleteEvent = 0x47; Signature = PictureSignature; break;
 	case 4: Name = "Patch.exe"; ReloadEvent = 0x44; Signature = 0; break;
 	default: TERROR("unknown patch file number");
 	}
