@@ -58,6 +58,9 @@ bool CheckAnyRight();
 void ClearRights();
 int GetActionNumber();
 void IncrementActionNumber();
+// The action state of no action (name from MainWindow.cpp's
+// "GetActionState()==ACTIONSTATE_NONE"; the other states are numbers).
+#define ACTIONSTATE_NONE 0
 void SetActionState(int State);
 int GetActionState();
 void SetMousePosition(int x, int y);

@@ -232,16 +232,21 @@ struct TGUIPoint {
 // zero-initialised members (TGUIPoint, TRGBColor or TRect) are guesses from
 // the values InitSkinProperties stores.
 
-// GUIStyle+0xd8 (0x5cd0a0); compiler-generated constructor 0x495480.
+// GUIStyle+0xd8 (0x5cd0a0); compiler-generated constructor 0x495480. The
+// start window's buttons (MainWindow.cpp): the size of their panel, its
+// position and the positions of "Enter Game", "Options", "Info", "Exit
+// Game" and "Access Account" in it (the constructor zeroes +0x08-+0x47,
+// which leaves the types open; MainWindow.cpp reads +0x08-+0x37 as points).
 struct TSkinProperties0D8 {
-	int Data00; // +0x00
-	int Data04; // +0x04
-	TGUIPoint Data08; // +0x08
-	TRGBColor Data10; // +0x10
-	TGUIPoint Data1C; // +0x1c
-	TGUIPoint Data24; // +0x24
-	TGUIPoint Data2C; // +0x2c
-	TGUIPoint Data34; // +0x34
+	int Data00; // +0x00, panel width
+	int Data04; // +0x04, panel height
+	TGUIPoint Data08; // +0x08, panel position (SetChildPosition)
+	TGUIPoint Data10; // +0x10, "Enter Game"
+	TGUIPoint Data18; // +0x18, "Options"
+	TGUIPoint Data20; // +0x20, "Info"
+	TGUIPoint Data28; // +0x28, "Exit Game"
+	TGUIPoint Data30; // +0x30, "Access Account"
+	int Data38; // +0x38
 	TRGBColor Data3C; // +0x3c
 	TFont Data48; // +0x48
 };
@@ -635,8 +640,8 @@ struct TSkinProperties {
 	TRGBColor Data0C8; // +0x0c8
 	int Data0D4; // +0x0d4
 	TSkinProperties0D8 Style0D8; // +0x0d8, 0x5c bytes
-	int Data134; // +0x134
-	int Data138; // +0x138
+	int Data134; // +0x134, the border of the start window's frame
+	int Data138; // +0x138, the height of MainWindow.cpp's splitter
 	int Data13C; // +0x13c
 	TGUIPoint Data140; // +0x140
 	TGUIPoint Data148; // +0x148
@@ -651,7 +656,7 @@ struct TSkinProperties {
 	int Data178; // +0x178
 	int Data17C; // +0x17c
 	int Data180; // +0x180
-	int Data184; // +0x184
+	int Data184; // +0x184, the width of the side bar (MainWindow.cpp)
 	TRGBColor Data188; // +0x188
 	TSkinProperties194 Style194; // +0x194, 0x8c bytes
 	int Data220; // +0x220

@@ -948,10 +948,37 @@ address	name	kind	confidence	note
 0x4ab9d0	CMainFrame_SetDefaultWindowPosition	game	low	MainFrm.cpp line 375
 0x4abbc0	CMainFrame_OnCreate	game	high	MainFrm.cpp line 273
 0x4abe40	CMainFrame_OnDisplayChange	game	medium	MainFrm.cpp line 295, ON_MESSAGE(WM_DISPLAYCHANGE)
-0x4ac010	MainWindow_class_dtor	game	low	MainWindow.cpp: destructor of the window class with vtable 0x56c498 (clears the open dialogs)
-0x4ac090	FUN_004ac090	game	low	MainWindow.cpp: deletes MainWindow and ModalWindow
-0x4ac0d0	MainWindow_class_scalar_deleting_dtor	stl	medium	compiler-generated
-0x4ac0f0	MainWindow_class_Draw	game	low	MainWindow.cpp: draws five child windows (Surface)
+0x4ac010	TMainWindow_dtor	game	medium	MainWindow.cpp: vtable 0x56c498 slot 0 via 0x4ac0d0; stores the open sub-windows of SidePanel and DialogWindow (ClearOpenDialogs, 0x4865b0) when in the game; class name ours
+0x4ac090	ExitMainWindow	game	medium	MainWindow.cpp: deletes MainWindow and ModalWindow (SetActionState(0) after the modal window); called by ExitControl; name ours
+0x4ac0d0	TMainWindow_scalar_deleting_dtor	stl	high	compiler-generated, vtable 0x56c498 slot 0
+0x4ac0f0	TMainWindow_Draw	game	high	MainWindow.cpp line 127, vtable +0x44: the start window through TWindow::Draw (errors become PROGRAM_ERROR 12) or the five children in the game
+0x4ac340	TMainWindow_SetSize	game	high	MainWindow.cpp line 177, vtable +0x34: lays out the two columns or the start window
+0x4ac610	TMainWindow_ResizeConsole	game	medium	MainWindow.cpp line 475 (ConsoleHeight): at least the console minimum height; name ours
+0x4ac7c0	TMainWindow_GetConsoleWindowHeight	game	medium	MainWindow.cpp: Console->Height; no try block left (FuncInfo shared with 0x4ae430); name ours
+0x4ac7f0	TMainWindow_Walk	game	medium	MainWindow.cpp line 503 (dx, dy): SetPlayerDestination, then SendWalk (1) or SendStop (2); name ours
+0x4ac9e0	TMainWindow_OpenContainer	game	medium	MainWindow.cpp lines 511-539 (Container): DialogWindow sub-window 0x40+Container, created by 0x43c520 or refilled; called by Control.cpp; name ours
+0x4acdb0	TMainWindow_CloseContainer	game	medium	MainWindow.cpp line 552 (Container); name ours
+0x4acf60	TMainWindow_UpdateTrade	game	medium	MainWindow.cpp lines 576-579 ("Window->getBody()!=NULL"): sends event 0x15 to the trade window body; Control.cpp packet 0x7e; name ours
+0x4ad1e0	TMainWindow_OpenContentWindow	game	medium	MainWindow.cpp lines 606-610 (Identifier, "unknown identifier"): creates sub-window 6, 7, 8 or 9 (jump table 0x4ad48c); name ours
+0x4ad4a0	TMainWindow_CloseContentWindow	game	medium	MainWindow.cpp line 621 (Identifier); name ours
+0x4ad650	TMainWindow_SetConsoleActive	game	low	MainWindow.cpp line 632: Console->0x41e960(Active); name ours
+0x4ad7f0	TStartWindow_ctor	game	medium	MainWindow.cpp line 671: vtable 0x56c5c0, 0x30 bytes; five buttons on a TWindow in a frame (0x454e30); class name ours
+0x4adc60	TStartWindow_Draw	game	high	MainWindow.cpp line 691, vtable +0x44: picture 1 on surface 2 stretched over the window
+0x4ade70	TStartWindow_SetSize	game	high	MainWindow.cpp line 703, vtable +0x34
+0x4ae030	TStartWindow_HandleEvent	game	high	MainWindow.cpp line 731, vtable +0x70 (Event), only in connection state 0
+0x4ae240	TSplitter_ctor	game	medium	MainWindow.cpp line 749: vtable 0x56c660, 0x30 bytes, three drawing entries; class name ours
+0x4ae420	TSplitter_ReleaseCapture	game	high	MainWindow.h inline, vtable 0x56c660 +0x7c: Dragging=false, jmp TElement::ReleaseCapture; not found by Ghidra
+0x4ae430	TSplitter_Arrange	game	high	MainWindow.cpp, vtable +0x48: skins 8, 7, 9; no try block left
+0x4ae530	TSplitter_MouseMove	game	high	MainWindow.cpp line 780 (y), vtable +0x4c: mouse cursor 2, resizes the console while dragging
+0x4ae700	TSplitter_LeftButtonDown	game	high	MainWindow.cpp line 795 (x, y), vtable +0x50
+0x4ae8b0	TSplitter_LeftButtonUp	game	high	MainWindow.cpp line 807, vtable +0x54
+0x4aea50	TMainWindow_KeyPress	game	high	MainWindow.cpp line 203 (Key), vtable +0x6c: walking and turning in connection state 8, else the console (jump table 0x4aecd4)
+0x4aed10	TMainWindow_HandleEvent	game	high	MainWindow.cpp lines 308-339 (Event), vtable +0x70; jump tables 0x4af424, 0x4af478, 0x4af55c with byte tables
+0x4af5e0	TMainWindow_ChangeMode	game	medium	MainWindow.cpp line 463: rebuilds the children for the game or the start window (jump table 0x4afea8); called by Control.cpp EnterGame/LeaveGame; name ours
+0x4afec0	TMainWindow_OpenTrade	game	medium	MainWindow.cpp lines 560-565 ("DialogWindow!=NULL", "!DialogWindow->hasContentWindow(TRADE_WINDOW)"); Control.cpp packet 0x7d; name ours
+0x4b0230	TMainWindow_CloseTrade	game	medium	MainWindow.cpp line 590; Control.cpp packet 0x7f; name ours
+0x4b03c0	TMainWindow_ctor	game	medium	MainWindow.cpp line 85 (Width, Height): vtable 0x56c498, 0x4c bytes; ChangeMode(false), hotkeys 0x446/0x80d (event 0x1f8)
+0x4b05b0	InitMainWindow	game	medium	MainWindow.cpp lines 822-828 (Width, Height, "GetActionState()==ACTIONSTATE_NONE"): creates MainWindow and keeps the frame callbacks; called by CMainFrame::OnCreate; name ours
 0x44b740	TCreature_GetHealthColor	game	medium	Creatures.cpp gap (no EH frame): colour of the health bar from Health (+0x84), returned by value
 0x44b800	TCreature_IsMarked	game	medium	Creatures.cpp gap: GetMilliseconds() <= MarkTime (+0x80)
 0x44b820	TCreature_SetSkull	game	medium	Creatures.cpp gap: Skull +0x90; with Delay a removed skull stays (SkullTime +0x98 = _time32)
@@ -1352,7 +1379,7 @@ address	name	kind	confidence	note
 0x4c1ea0	TMapFrame_GetMinimumWidth	game	medium	MapWindow.cpp line 1595, vtable +0x3c
 0x4c2040	TMapFrame_GetMinimumHeight	game	medium	MapWindow.cpp line 1606, vtable +0x40
 0x4c21e0	TMapFrame_Arrange	game	medium	MapWindow.cpp no exception frame, vtable +0x48: the eight drawing list entries
-0x4adc40	TMapFrame_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TMapFrame (vtable 0x56d0b8 slot 0), kept in MainWindow.obj; the implicit destructor is the folded 0x443e10 (jmp ~TWindow)
+0x4adc40	TStartWindow_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TStartWindow (vtable 0x56c5c0 slot 0), shared by folding with TMapFrame (vtable 0x56d0b8 slot 0); calls the thunk 0x443e10 (jmp ~TWindow)
 0x443e10	TWindow_derived_dtor	stl	medium	implicit destructor of a TWindow subclass without members to destroy: jmp to ~TWindow 0x4a2590 (folded copy, used by TMapFrame and others)
 0x4174f0	TRGBColor_ctor_default	game	high	inline TRGBColor() (graphics.h), zeroes R, G, B; out-of-line copy for the vector constructor iterator (MapWindow.cpp DrawCreature)
 0x4175e0	vector_constructor_iterator	stl	high	compiler helper `vector constructor iterator'(array, size, count, constructor), no exception frame

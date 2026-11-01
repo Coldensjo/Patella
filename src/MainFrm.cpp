@@ -248,7 +248,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 	RECT Client;
 	GetClientRect(m_hWnd, &Client);
-	FUN_004b05b0(Client.right, Client.bottom, ExitProgram, SetDisplayMode, OpenURL);
+	InitMainWindow(Client.right, Client.bottom, ExitProgram, SetDisplayMode, OpenURL);
 	InitWindow(m_hWnd, ExitProgram, CloseProgram, SetDisplayMode, OpenURL);
 	int x, y, Width, Height;
 	bool Maximized;

@@ -82,7 +82,7 @@ void Resize(int Width, int Height)
 			delete ModalWindow;
 			ModalWindow = NULL;
 			SetActionState(0);
-			MainWindow->FUN_004ad650(1);
+			MainWindow->SetConsoleActive(true);
 		}
 		if (ModalWindow != NULL && GetActionState() == 10)
 			ModalWindow->SetPosition(MainWindow->Width / 2 - ModalWindow->Width / 2,
@@ -302,10 +302,10 @@ void SendErrorReports()
 void EnterGame()
 {
 	TBEGIN
-	MainWindow->FUN_004af5e0(1);
+	MainWindow->ChangeMode(true);
 	if (ModalWindow == NULL) {
 		SetActionState(0);
-		MainWindow->FUN_004ad650(1);
+		MainWindow->SetConsoleActive(true);
 	}
 	ClearMap();
 	InitInventory();
@@ -320,11 +320,11 @@ void EnterGame()
 void LeaveGame()
 {
 	TBEGIN
-	MainWindow->FUN_004af5e0(0);
+	MainWindow->ChangeMode(false);
 	if (ModalWindow != NULL) {
 		delete ModalWindow;
 		ModalWindow = NULL;
-		MainWindow->FUN_004ad650(1);
+		MainWindow->SetConsoleActive(true);
 	}
 	SetActionState(0);
 	SavePreferences();
@@ -430,7 +430,7 @@ void LeftButtonUp(int x, int y, int Flags)
 		if (GetActionState() == 0 || GetActionState() == 7 || GetActionState() == 8) {
 			delete ModalWindow;
 			ModalWindow = NULL;
-			MainWindow->FUN_004ad650(1);
+			MainWindow->SetConsoleActive(true);
 		}
 		break;
 	case 9:
@@ -466,7 +466,7 @@ void LeftButtonDoubleClick(int x, int y, int Flags)
 		if (GetActionState() == 0 || GetActionState() == 7 || GetActionState() == 8) {
 			delete ModalWindow;
 			ModalWindow = NULL;
-			MainWindow->FUN_004ad650(1);
+			MainWindow->SetConsoleActive(true);
 		}
 		break;
 	}
@@ -523,7 +523,7 @@ void RightButtonUp(int x, int y, int Flags)
 		if (GetActionState() == 0) {
 			delete ModalWindow;
 			ModalWindow = NULL;
-			MainWindow->FUN_004ad650(1);
+			MainWindow->SetConsoleActive(true);
 		}
 		break;
 	case 9:
@@ -577,7 +577,7 @@ void KeyPress(int Key)
 		if (GetActionState() == 0) {
 			delete ModalWindow;
 			ModalWindow = NULL;
-			MainWindow->FUN_004ad650(1);
+			MainWindow->SetConsoleActive(true);
 		}
 	} else if (!CheckHotkey(Key)) {
 		MainWindow->KeyPress(Key);
@@ -708,13 +708,13 @@ void ReceivePackets()
 			case 0x6e: {
 				int Container;
 				ReceiveOpenContainer(Container);
-				MainWindow->FUN_004ac9e0(Container);
+				MainWindow->OpenContainer(Container);
 				break;
 			}
 			case 0x6f: {
 				int Container;
 				ReceiveCloseContainer(Container);
-				MainWindow->FUN_004acdb0(Container);
+				MainWindow->CloseContainer(Container);
 				break;
 			}
 			case 0x70: ReceiveContainerAddObject(); break;
@@ -722,9 +722,9 @@ void ReceivePackets()
 			case 0x72: ReceiveContainerDeleteObject(); break;
 			case 0x78: ReceiveInventoryObject(); break;
 			case 0x79: ReceiveDeleteInventoryObject(); break;
-			case 0x7d: ReceiveOwnTrade(); MainWindow->FUN_004afec0(); break;
-			case 0x7e: ReceiveCounterTrade(); MainWindow->FUN_004acf60(); break;
-			case 0x7f: ReceiveCloseTrade(); MainWindow->FUN_004b0230(); break;
+			case 0x7d: ReceiveOwnTrade(); MainWindow->OpenTrade(); break;
+			case 0x7e: ReceiveCounterTrade(); MainWindow->UpdateTrade(); break;
+			case 0x7f: ReceiveCloseTrade(); MainWindow->CloseTrade(); break;
 			case 0x82: ReceiveWorldLight(); break;
 			case 0x83: ReceiveMagicEffect(); break;
 			case 0x84: ReceiveAnimatedText(); break;
@@ -857,7 +857,7 @@ void ProcessEvents()
 		delete ModalWindow;
 		ModalWindow = NULL;
 		SetActionState(0);
-		MainWindow->FUN_004ad650(1);
+		MainWindow->SetConsoleActive(true);
 		Redraw(false);
 	}
 	while (MainWindow->GetCapture() == NULL && ModalWindow == NULL && PeekMessageType() != 0) {
@@ -1149,7 +1149,7 @@ void ProcessEvents()
 			} else {
 				SetActionState(11);
 			}
-			MainWindow->FUN_004ad650(0);
+			MainWindow->SetConsoleActive(false);
 		}
 	}
 Done:
@@ -1216,7 +1216,7 @@ void InitControl(bool Gamemaster)
 void ExitControl()
 {
 	TBEGIN
-	FUN_004ac090();
+	ExitMainWindow();
 	ExitHotkeys();
 	ExitCommunication();
 	ExitNetwork();

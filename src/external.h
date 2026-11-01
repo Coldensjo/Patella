@@ -49,42 +49,69 @@ struct TFullscreenMode; // Preferences.h
 // graphics.h, which has the graphics types TRect, TRGBColor and TFont.
 #include "GUI.h"
 
-// ConsoleWindow.cpp. Not instantiated here; the arrays stand for the members
-// before the ones used.
+// ConsoleWindow.cpp. The arrays stand for the members not known yet.
 struct TConsoleData34 {
 	int Data00[11];
 	int Data2C; // +0x2c, passed to the console text context menu
 };
 
-class TConsoleWindow {
+// The console (vtable 0x55e1a0, 0x6c bytes), MainWindow.cpp's Console.
+class TConsoleWindow : public TWindow {
 public:
+	TConsoleWindow();                                               // 0x422410
+	void FUN_0041e960(bool Active);                                 // 0x41e960, lines 1869-1871 ("Active?1:0")
+	void FUN_00422e70(TTalkBuffer *TextBuffer, const char *Title);  // 0x422e70, MainWindow.cpp opens "Default" with it
 	void FUN_00423060(TTalkBuffer *TextBuffer, const char *Title); // 0x423060, lines 1977-1988
 	TTalkBuffer *FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
 		INT_PTR Param5);                                            // 0x425070, line 1965
 	void FUN_00425330(INT_PTR Param);                               // 0x425330, lines 2033-2044
 
-	int Data00[13];
+	int Data2C[2];          // +0x2c
 	TConsoleData34 *Data34; // +0x34
+	int Data38[(0x6c - 0x38) / 4];
 };
 
-// MainWindow.cpp: the main game window (0x5d16b0).
-class TMainWindow : public TWindow {
+// DialogWindow.cpp: the window of a container, the skills, the battle list,
+// the VIP list, the trade or one of the side-bar windows, as held by a
+// TDialogWindow (MainWindow.cpp's "Window->getBody()"). The class name is
+// ours (Preferences.h has a TContentWindow already); size and vtable not
+// known yet.
+class TSubWindowBody : public TWindow {
 public:
-	void FUN_004ac9e0(int Container);  // 0x4ac9e0, line 511
-	void FUN_004acdb0(int Container);  // 0x4acdb0
-	void FUN_004acf60();               // 0x4acf60, line 576
-	void FUN_004ad650(int Value);      // 0x4ad650
-	void FUN_004af5e0(int InGame);     // 0x4af5e0, 1 entering the game, 0 leaving it
-	void FUN_004afec0();               // 0x4afec0, lines 560-561
-	void FUN_004b0230();               // 0x4b0230
+	virtual void UnknownA0(); virtual void UnknownA4();
+	virtual bool UnknownA8();                         // +0xa8, MainWindow.cpp's OpenContainer
+	virtual void UnknownAC(); virtual void UnknownB0(); virtual void UnknownB4();
+	virtual void UnknownB8();                         // +0xb8, MainWindow.cpp's OpenContainer
+};
+class TSubWindow : public TWindow {
+public:
+	TSubWindowBody *getBody() { return Body; }        // inlined ("Window->getBody()!=NULL")
+	void FUN_004897d0();                              // 0x4897d0
+	void FUN_00489970();                              // 0x489970
+	void FUN_0048a0b0(TComponent *Element);           // 0x48a0b0
+	void FUN_0048a2a0(TComponent *Element);           // 0x48a2a0
 
-	int Data2C[4];                     // +0x2c, after TWindow's members
-	TConsoleWindow *Console;           // +0x3c
+	int Data2C[(0x44 - 0x2c) / 4];
+	TSubWindowBody *Body;   // +0x44
+};
+// A column of sub-windows (vtable 0x563f80, 0x4c bytes; constructor in the
+// Dialogs/DialogWindow gap). Identifier: 1 and 2 the two inventory windows,
+// 3-5 the other side-bar windows, 6, 7, 9 and TRADE_WINDOW (MainWindow.h),
+// 0x40 plus a container number.
+class TDialogWindow : public TWindow {
+public:
+	TDialogWindow();                                  // 0x4856c0
+	TSubWindow *FUN_00486400(int Identifier);         // 0x486400, the sub-window with the identifier or NULL
+	void FUN_004865b0();                              // 0x4865b0, adds the open sub-windows to Preferences.cpp's open dialogs
+	// Inline ("!DialogWindow->hasContentWindow(TRADE_WINDOW)", MainWindow.cpp).
+	bool hasContentWindow(int Identifier) { return FUN_00486400(Identifier) != NULL; }
+	virtual void UnknownA0(int Value, TWindow *Window); // +0xa0, MainWindow.cpp adds windows with (16, Window), rearranges with (32, NULL)
+
+	int Data2C[(0x4c - 0x2c) / 4];
 };
 
-// Owner unknown (after Control.cpp's data); also used by GUI and MainWindow code.
-extern TWindow *ModalWindow;      // 0x5d16ac, name from an assertion string
-extern TMainWindow *MainWindow;   // 0x5d16b0
+// MainWindow.cpp: the main game window, the modal window (MainWindow.h).
+#include "MainWindow.h"
 
 // ContextMenus.cpp: the context menus and the help bubble, all modal windows.
 class TContextMenu : public TWindow {
@@ -186,7 +213,67 @@ extern const char *TextRuleViolations;       // 0x5c0d78
 extern const char *TextReceiveHint;          // 0x5c2130, "Receive hint"
 extern const char *TextSelectPlayerToTrade;  // 0x5c2258, "Select a player to trade with."
 
+// MainWindow.obj's copy of the text table.
+extern const char *TextNoBugReportRight;     // 0x5c1ffc, "You are not authorised to send bug reports."
+extern const char *TextAccountURL;           // 0x5c2048, "http://www.tibia.com/home/?subtopic=account"
+
 // Communication.cpp
+
+// DialogElements.cpp: a frame of nine skins around one window (vtable
+// 0x561358, 0x68 bytes); MainWindow.cpp's side bar and start window frame.
+class TBorder : public TWindow {
+public:
+	TBorder(TWindow *_Window, int Param);             // 0x4547f0, line 166
+	TBorder(TWindow *_Window, int Skin1, int Skin2, int Skin3, int Skin4, int Skin5, int Skin6,
+		int Skin7, int Skin8, int Skin9, int Border); // 0x454e30, line 217
+	void FUN_00455500();                              // 0x455500
+	uint8 Data2C[0x68 - 0x2c];
+};
+// DialogElements.cpp: a button with a text (vtable 0x561c40, 0x78 bytes).
+class TTextButton : public TElement {
+public:
+	TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
+		int Param);                                   // 0x466bc0, lines 1378-1379
+	uint8 Data24[0x78 - 0x24];
+};
+// DialogElements.cpp: a text (vtable 0x560bb8, 0x4c bytes).
+class TLabel : public TElement {
+public:
+	TLabel(TFont Font, const char *_Text);            // 0x465b40, line 376
+	uint8 Data24[0x4c - 0x24];
+};
+// DialogElements.cpp: an object (vtable 0x560d88, 0x50 bytes).
+class TObjectIcon : public TElement {
+public:
+	TObjectIcon(TObject Obj, const TRGBColor *Color, int Param); // 0x4526c0
+	uint8 Data24[0x50 - 0x24];
+};
+
+// ContentWindows.cpp: the windows of a TDialogWindow. The first ones create
+// and return them; the classes below are the side-bar windows MainWindow.cpp
+// creates itself.
+TWindow *FUN_004362b0(TMainWindow *Receiver);  // 0x4362b0, the inventory window (identifier 1)
+TWindow *FUN_00436510(TMainWindow *Receiver);  // 0x436510, the small inventory window (identifier 2)
+TWindow *FUN_0043c520(int Container);          // 0x43c520, a container's window
+TWindow *FUN_0043c920();                       // 0x43c920, identifier 6, "Skills" (Ctrl+S)
+TWindow *FUN_0043cc90();                       // 0x43cc90, identifier 7, "Battle" (Ctrl+B)
+TWindow *FUN_0043d000();                       // 0x43d000, TRADE_WINDOW, "Trade"
+TWindow *FUN_0043d390();                       // 0x43d390, identifier 9 (Ctrl+P)
+class TSideWindow3 : public TWindow {          // identifier 3 (vtable 0x55ea08, 0x80 bytes)
+public:
+	TSideWindow3();                            // 0x4368c0
+	uint8 Data2C[0x80 - 0x2c];
+};
+class TSideWindow4 : public TWindow {          // identifier 4 (vtable 0x55f500, 0x4c bytes)
+public:
+	TSideWindow4();                            // 0x438310
+	uint8 Data2C[0x4c - 0x2c];
+};
+class TSideWindow5 : public TWindow {          // identifier 5, the buttons "Skills", ... (vtable 0x55e968, 0x58 bytes)
+public:
+	TSideWindow5(TDialogWindow *_CheckObject, TMainWindow *Receiver); // 0x426480, line 292
+	uint8 Data2C[0x58 - 0x2c];
+};
 
 // DialogElements.cpp: a button that blinks until it is pressed (vtable
 // 0x561b90, 0x5c bytes; base constructor 0x466860). MapWindow.cpp's hint
@@ -238,9 +325,6 @@ TWindow *FUN_00484400();                                                // 0x484
 TWindow *FUN_00485290(INT_PTR Param1, INT_PTR Param2);                  // 0x485290, "Rule Violation"
 
 
-// Between MainFrm.cpp and MainWindow.cpp
-void FUN_004ac090();                   // 0x4ac090
-
 // Map.cpp
 
 // Objects.cpp
@@ -261,10 +345,6 @@ void FUN_004ac090();                   // 0x4ac090
 
 // MainFrm.cpp (MainFrm.h)
 #include "MainFrm.h"
-
-// MainWindow.cpp: creates the main game window with the frame's callbacks.
-void FUN_004b05b0(int Width, int Height, void (*ExitProgram)(), void (*SetDisplayMode)(int Mode),
-	void (*OpenURL)(const char *URL));  // 0x4b05b0
 
 // Owner unknown (.data after Status.cpp's 0x5c2560): set by "engine N" on
 // the command line, read by SurfaceInitInstance; -1 = none.

@@ -38,7 +38,7 @@ const CWnd CWnd::wndNoTopMost = CWnd();
 BOOL CWnd::DestroyWindow() STUB
 BOOL CWnd::PreCreateWindow(CREATESTRUCT &) STUB
 void CWnd::MoveWindow(int, int, int, int, BOOL) STUB
-void FUN_004b05b0(int, int, void (*)(), void (*)(int), void (*)(const char *)) STUB
+void InitMainWindow(int, int, void (*)(), void (*)(int), void (*)(const char *)) STUB
 bool CloseRequest() STUB
 const char *GetResolvedIPAddress() STUB
 void ConnectToLoginServer() STUB
