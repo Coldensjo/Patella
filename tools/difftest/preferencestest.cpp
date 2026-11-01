@@ -244,3 +244,259 @@ void TestPreferences()
 	CheckAllOptions("the end");
 	CheckLists("the end");
 }
+
+// --- Tibia.cfg loader and saver ------------------------------------------------
+//
+// Runs after TestScript: uses its stdio redirection (PatchScript). Only valid
+// files are generated; a parse error would throw inside the original.
+
+#include <string>
+#include <stdarg.h>
+
+static void __cdecl ImageFree2(void *Block) { free(Block); }
+static char *__cdecl ImageStrtok(char *Text, const char *Delimiters) { return strtok(Text, Delimiters); }
+static int __cdecl ImageSnprintf(char *Buffer, size_t Count, const char *Format, ...)
+{
+	va_list Args;
+	va_start(Args, Format);
+	int Result = _vsnprintf(Buffer, Count, Format, Args);
+	va_end(Args);
+	return Result;
+}
+
+static std::string ReadWholeFile(const char *Name, bool *Exists)
+{
+	std::string Text;
+	FILE *File = fopen(Name, "rb");
+	*Exists = File != NULL;
+	if (File == NULL)
+		return Text;
+	int c;
+	while ((c = getc(File)) != EOF)
+		Text += (char)c;
+	fclose(File);
+	return Text;
+}
+
+static std::string CfgNumber(bool Negative = false)
+{
+	char Help[16];
+	int Value = (int)(Random() % 4 == 0 ? Random() % 100000 : Random() % 50);
+	if (Negative && Random() % 4 == 0)
+		Value = -Value;
+	sprintf(Help, "%d", Value);
+	return Help;
+}
+
+static std::string CfgYes()
+{
+	switch (Random() % 4) {
+	case 0: return "no";
+	case 1: return "YES"; // identifiers are lower-cased
+	case 2: return "maybe";
+	default: return "yes";
+	}
+}
+
+static std::string CfgString(int MaxLength)
+{
+	static const char Chars[] = "abc XYZ 019 .,:!?()=-#'";
+	std::string s = "\"";
+	int n = (int)(Random() % (MaxLength + 1));
+	for (int i = 0; i < n; i++) {
+		switch (Random() % 14) {
+		case 0: s += "\\\""; break;
+		case 1: s += "\\\\"; break;
+		case 2: s += "\\n"; break;
+		default: s += Chars[Random() % (sizeof(Chars) - 1)]; break;
+		}
+	}
+	return s + "\"";
+}
+
+static std::string CfgName()
+{
+	std::string s = "\"";
+	int n = 1 + (int)(Random() % 12);
+	for (int i = 0; i < n; i++)
+		s += (char)((i == 0 ? 'A' : 'a') + Random() % 26);
+	return s + "\"";
+}
+
+static std::string CfgList(std::string (*Item)())
+{
+	std::string s = "{";
+	int n = (int)(Random() % 6);
+	for (int i = 0; i < n; i++) {
+		if (i > 0)
+			s += Random() % 8 ? "," : " ";
+		s += Item();
+	}
+	return s + "}";
+}
+
+static std::string CfgSkill() { char Help[4]; sprintf(Help, "%d", (int)(Random() % SKILLS)); return Help; }
+static std::string CfgHint() { return CfgNumber(); }
+
+static std::string CfgLine()
+{
+	switch (Random() % 41) {
+	case 0: return "TestServer = " + CfgYes();
+	case 1: return "ServerAddress = " + CfgString(20);
+	case 2: return "ServerPort = " + CfgNumber();
+	case 3: return "FullscreenMode = (" + CfgNumber() + "," + CfgNumber() + "," + CfgNumber() + ")";
+	case 4: return "WindowsMousepointer = " + CfgYes();
+	case 5: return "LightEffects = " + CfgYes();
+	case 6: return "TextualEffects = " + CfgYes();
+	case 7: return "CreatureInfo = " + CfgNumber(true);
+	case 8: return "NoStretching = " + CfgYes();
+	case 9: return "ConfineFramerate = " + CfgNumber();
+	case 10: return "Engine = " + CfgNumber(true);
+	case 11: case 12: {
+		char Help[8];
+		sprintf(Help, "%d", (int)(Random() % HOTKEYS));
+		std::string Text = CfgString(Random() % 4 ? 40 : 300);
+		if (Random() % 3 == 0)
+			Text.insert(Text.size() - 1, "\\n");
+		return std::string("Hotkey = (") + Help + "," + Text + ")";
+	}
+	case 13: return "WindowedMode = (" + CfgNumber(true) + "," + CfgNumber(true) + "," + CfgNumber() + "," + CfgNumber() + "," + CfgYes() + ")";
+	case 14: return "ConsoleHeight = " + CfgNumber();
+	case 15: return "AutomapZoom = " + CfgNumber(true);
+	case 16: return "ContentWindow = (" + CfgNumber() + "," + CfgNumber() + ")";
+	case 17: return "BuddySortmethods = (" + CfgNumber() + "," + CfgNumber() + "," + CfgNumber() + ")";
+	case 18: return "BuddyHideOffline = " + CfgYes();
+	case 19: case 20: { char Help[8]; sprintf(Help, "%d", (int)(Random() % 12) - 1); return std::string("OpenDialogs = ") + Help; }
+	case 21: return "LastMotD = " + CfgNumber();
+	case 22: return "InfoMessages = " + CfgYes();
+	case 23: return "EventMessages = " + CfgYes();
+	case 24: return "LoginMessages = " + CfgYes();
+	case 25: return "StatusMessages = " + CfgYes();
+	case 26: return "TimeStamps = " + CfgYes();
+	case 27: return "PrivateMessages = " + CfgYes();
+	case 28: return "OpenChannel = " + CfgNumber();
+	case 29: return "ClassicControl = " + CfgYes();
+	case 30: return "AutoChaseOff = " + CfgYes();
+	case 31: return "AttackMode = " + CfgNumber();
+	case 32: { char Help[4]; sprintf(Help, "%d", (int)(Random() % 4)); return std::string("ChaseMode = ") + Help; }
+	case 33: return "SecureMode = " + CfgNumber();
+	case 34: case 35: {
+		char Help[8];
+		sprintf(Help, "%d", Random() % 5 == 0 ? 0 : (int)(1 + Random() % 30));
+		return std::string("Buddy = (") + Help + "," + CfgNumber() + "," + CfgString(60) + "," + CfgYes() + ")";
+	}
+	case 36: return "White = " + CfgList(CfgName);
+	case 37: return "Ignore = " + CfgList(CfgName);
+	case 38: return "KnownHints = " + CfgList(CfgHint);
+	case 39: return "SkillBars = " + CfgList(CfgSkill);
+	default: return Random() % 2 ? "ShowNewHints = " + CfgYes() : (Random() % 2 ? "LevelBar = " : "MagLevelBar = ") + CfgYes();
+	}
+}
+
+static void CheckTalkLists(const char *When)
+{
+	char *A = GetIgnoreListText();
+	char *B = At<char *(__cdecl *)()>(0x501010)();
+	CHECK((A == NULL) == (B == NULL) && (A == NULL || strcmp(A, B) == 0), "ignore list after %s", When);
+	free(A);
+	free(B);
+	A = GetBuddyIgnoreText();
+	B = At<char *(__cdecl *)()>(0x5002d0)();
+	CHECK((A == NULL) == (B == NULL) && (A == NULL || strcmp(A, B) == 0), "white list after %s", When);
+	free(A);
+	free(B);
+}
+
+static void CompareSaved(const char *When)
+{
+	SavePreferences();
+	bool HaveA, HaveB;
+	std::string A = ReadWholeFile("Tibia.cfg", &HaveA);
+	remove("Tibia.cfg");
+	At<void (__cdecl *)()>(0x4de890)();
+	std::string B = ReadWholeFile("Tibia.cfg", &HaveB);
+	remove("Tibia.cfg");
+	CHECK(HaveA == HaveB && A == B, "Tibia.cfg written after %s differs (%d and %d bytes)", When, (int)A.size(), (int)B.size());
+}
+
+void TestPreferencesFile()
+{
+	PatchScript();
+	PatchJump(0x523812, (void *)ImageFree2);
+	PatchJump(0x513544, (void *)ImageStrtok);
+	PatchJump(0x51233d, (void *)ImageSnprintf);
+	// The original's Talk filter lists (static initialisers, see talktest.cpp).
+	for (uint32 Address : {0x71ef70u, 0x71ef90u, 0x71efb0u, 0x71efd0u})
+		if (Global<void *>(Address + 28) == NULL)
+			At<VectorInitCtorFn>(0x4fd6e0)((void *)(uintptr_t)Address, NULL, 0, Address == 0x71efd0 ? 4 : 9,
+				Address == 0x71efd0 ? 5 : 10, 0);
+	char OldDirectory[MAX_PATH], Help[MAX_PATH];
+	GetCurrentDirectoryA(MAX_PATH, OldDirectory);
+	GetTempPathA(MAX_PATH, Help);
+	std::string Directory = std::string(Help) + "tibia-difftest-cfg";
+	CreateDirectoryA(Directory.c_str(), NULL);
+	SetCurrentDirectoryA(Directory.c_str());
+	remove("Tibia.cfg");
+
+	// Before InitPreferences nothing is written.
+	CompareSaved("no InitPreferences");
+
+	for (int Round = 0; Round < 400; Round++) {
+		std::string Text;
+		int n = (int)(Random() % 60);
+		for (int i = 0; i < n; i++) {
+			if (Random() % 10 == 0)
+				Text += "# comment\n";
+			Text += CfgLine();
+			Text += Random() % 6 ? "\r\n" : " ";
+		}
+		FILE *File = fopen("Tibia.cfg", "wb");
+		fwrite(Text.data(), 1, Text.size(), File);
+		fclose(File);
+		if (getenv("DIFFTEST_TRACE") != NULL) {
+			fprintf(stderr, "cfg round %d\n", Round);
+			FILE *Copy = fopen("last.cfg", "wb");
+			fwrite(Text.data(), 1, Text.size(), Copy);
+			fclose(Copy);
+		}
+		InitPreferences();
+		At<void (__cdecl *)()>(0x4ddc00)();
+		CHECK(Global<bool>(0x71c319), "PreferencesLoaded not set");
+		CheckAllOptions("InitPreferences");
+		CheckLists("InitPreferences");
+		CheckTalkLists("InitPreferences");
+		CompareSaved("InitPreferences");
+		// Saving and loading again must give the same file.
+		if (Round % 10 == 0) {
+			bool Trace = getenv("DIFFTEST_TRACE") != NULL;
+			SavePreferences();
+			if (Trace) fprintf(stderr, "ours init\n");
+			InitPreferences();
+			remove("Tibia.cfg");
+			if (Trace) fprintf(stderr, "original save\n");
+			At<void (__cdecl *)()>(0x4de890)();
+			if (Trace) fprintf(stderr, "original init\n");
+			At<void (__cdecl *)()>(0x4ddc00)();
+			if (Trace) fprintf(stderr, "done\n");
+			CheckAllOptions("a second InitPreferences");
+			CheckLists("a second InitPreferences");
+			CompareSaved("a second InitPreferences");
+		}
+	}
+
+	// ExitPreferences frees the MotD and saves.
+	SetMotD("7\nToday's news");
+	At<bool (__cdecl *)(const char *)>(0x4dcac0)("7\nToday's news");
+	ExitPreferences();
+	bool HaveA, HaveB;
+	std::string A = ReadWholeFile("Tibia.cfg", &HaveA);
+	remove("Tibia.cfg");
+	At<void (__cdecl *)()>(0x4df520)();
+	std::string B = ReadWholeFile("Tibia.cfg", &HaveB);
+	remove("Tibia.cfg");
+	CHECK(HaveA && HaveB && A == B, "ExitPreferences output differs");
+	CheckAllOptions("ExitPreferences");
+
+	SetCurrentDirectoryA(OldDirectory);
+	RemoveDirectoryA(Directory.c_str());
+}

@@ -483,10 +483,6 @@ void FUN_004bf620(void (*Callback)(int CreatureID)); // 0x4bf620
 
 // Preferences.cpp
 
-// Between Preferences.cpp and Script.cpp
-void FUN_004ddc00();                   // 0x4ddc00
-void FUN_004de890();                   // 0x4de890
-void FUN_004df520();                   // 0x4df520
 
 // Script.cpp
 

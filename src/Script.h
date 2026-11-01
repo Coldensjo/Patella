@@ -106,10 +106,14 @@ public:
 		Line = 0;
 	}
 
-	// The destructor is close() (identical code; one copy at 0x4df660).
+	// Only closes the file; the copy the linker kept is 0x4df6b0, folded with
+	// the binary files' close() (the Tibia.cfg saver calls close() and then
+	// this destructor).
 	~TWriteScriptFile()
 	{
-		close();
+		if (File != NULL)
+			fclose(File);
+		File = NULL;
 	}
 
 	// 0x4df660

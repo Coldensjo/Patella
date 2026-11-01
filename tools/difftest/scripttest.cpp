@@ -40,7 +40,7 @@ static int __cdecl ImageSprintf(char *Buffer, const char *Format, ...)
 	return Result;
 }
 
-static void PatchScript()
+void PatchScript()
 {
 	static bool Done = false;
 	if (Done)

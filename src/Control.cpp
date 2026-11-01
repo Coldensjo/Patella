@@ -276,7 +276,7 @@ void LeaveGame()
 		MainWindow->FUN_004ad650(1);
 	}
 	SetActionState(0);
-	FUN_004de890();
+	SavePreferences();
 	if (!Reconnect)
 		AddMessage(10, 300, 0);
 	TEND
@@ -1138,7 +1138,7 @@ void InitControl(bool Gamemaster)
 		FUN_00452190();
 		InitStatus(Gamemaster, LinkCopyWarning);
 		FUN_004a2ae0();
-		FUN_004ddc00();
+		InitPreferences();
 		InitTalk();
 		FUN_00494af0(0xa00000);
 		InitSkins();
@@ -1170,7 +1170,7 @@ void ExitControl()
 	FUN_0048b4a0();
 	FUN_004eaa90()->ExitSurfaces();
 	SurfaceExitInstance();
-	FUN_004df520();
+	ExitPreferences();
 	ExitTalk();
 	FUN_00496160();
 	ExitStatus();

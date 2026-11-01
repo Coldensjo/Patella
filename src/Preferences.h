@@ -118,3 +118,6 @@ const char *GetBuddyDescription(int CharacterID);
 bool GetBuddyNotify(int CharacterID);
 bool GetSkillBar(int SkillNumber);
 void SetSkillBar(int SkillNumber, bool Value);
+void InitPreferences();
+void SavePreferences();
+void ExitPreferences();

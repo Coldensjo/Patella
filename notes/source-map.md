@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 264 | 39315 |
+| range | 269 | 45752 |
 | header | 21 | 14301 |
-| gap | 445 | 77956 |
+| gap | 440 | 71519 |
 
 ## Source files
 
@@ -49,7 +49,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Network.cpp | 36 | 93 | 21574 | `0x4ca450` | `0x4cf982` | 132-961 |
 | Objects.cpp | 62 | 184 | 31867 | `0x4cfbb0` | `0x4d7c29` | 67-1023 |
 | Player.cpp | 47 | 36 | 12247 | `0x4d7ce0` | `0x4db286` | 62-456 |
-| Preferences.cpp | 82 | 0 | 8501 | `0x4db2a0` | `0x4ddaa0` | 223-850 |
+| Preferences.cpp | 85 | 2 | 14938 | `0x4db2a0` | `0x4df520` | 223-850 |
 | Script.h | 7 | 0 | 342 | `0x4df550` | `0x4df6b0` |  |
 | Script.cpp | 33 | 20 | 17216 | `0x4df6d0` | `0x4e3bf7` | 48-883 |
 | Skins.cpp | 2 | 0 | 12531 | `0x4e3cb0` | `0x4e6da0` |  |
@@ -91,7 +91,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | MainWindow.cpp / Map.cpp | 10 | 581 | `0x4b08a0`-`0x4b0b2b` |
 | Map.cpp / MapWindow.cpp | 6 | 616 | `0x4bf860`-`0x4bfb0c` |
 | MapWindow.cpp / Network.cpp | 8 | 502 | `0x4ca0e0`-`0x4ca2f5` |
-| Preferences.cpp / Script.cpp | 5 | 6437 | `0x4ddc00`-`0x4df541` |
 | Status.cpp / SurfaceDX.cpp | 34 | 6203 | `0x4eaa80`-`0x4ed19f` |
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |

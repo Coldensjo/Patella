@@ -1,4 +1,4 @@
-// Preferences.cpp: reconstructed from Tibia.exe 7.72 (0x4db2a0-0x4ddbfc).
+// Preferences.cpp: reconstructed from Tibia.exe 7.72 (0x4db2a0-0x4df53f).
 //
 // The functions without line evidence (0x4db2a0-0x4dc170, the gap after
 // Player.cpp) come first, in binary order; they use only Preferences data
@@ -6,12 +6,15 @@
 // 0x5c2558-0x5c255f in .data). The asserted functions follow in line order,
 // which is also their binary order. None of them has a try block.
 //
-// The option loader and saver (0x4ddc00, 0x4de890) and a few helpers after
-// them use the same data and are probably the end of this file, but they
-// lie in the gap before Script.cpp, which is not settled yet.
+// The Tibia.cfg loader, saver and ExitPreferences (0x4ddc00-0x4df53f, in the
+// gap before Script.cpp) use the same data and end the file, in binary
+// order. The inline TReadScriptFile/TWriteScriptFile code after them
+// (0x4df550-0x4df6c9) is Script.h's, kept from this object.
 
 #include "Preferences.h"
+#include "Script.h"
 #include "Talk.h"
+#include "Utils.h"
 #include "external.h"
 
 // Data, in .data/.bss order.
@@ -55,7 +58,7 @@ static bool WindowsMousepointer;              // 0x71c302
 static TFullscreenMode FullscreenMode;        // 0x71c304, Width 0 = not set
 static int ViewMode;                          // 0x71c314, "ViewMode" in a MainFrm.cpp catch block
 static bool TestServerLogin;                  // 0x71c318, "TestServer = yes"
-// 0x71c319 is a flag of the loader/saver ("save Tibia.cfg"), not used here.
+static bool PreferencesLoaded;               // 0x71c319, set by InitPreferences; SavePreferences writes only then
 static int WindowedX;                         // 0x71c31c
 static int WindowedY;                         // 0x71c320
 static vector<TContentWindow> ContentWindows(0, 9, 10); // 0x71c324, initialiser at 0x55a050
@@ -688,4 +691,477 @@ void SetSkillBar(int SkillNumber, bool Value)
 {
 	TASSERT1(In(SkillNumber,0,SKILLS-1), SkillNumber);
 	SkillBars[SkillNumber] = Value;
+}
+
+// 0x4ddc00. Loads Tibia.cfg. Every key is tested on its own (no else), so
+// a key runs one block only because the names differ. Unknown keys raise
+// no error but leave their value unread, which then fails as the next key.
+// Any error (also a missing file) resets everything to the defaults. In
+// both cases the options count as loaded, so SavePreferences writes them.
+// ServerAddress, ServerPort and LoginMessages are read and dropped.
+void InitPreferences()
+{
+	SetDefaultPreferences();
+	try {
+		TReadScriptFile Script;
+		Script.open("Tibia.cfg");
+		for (;;) {
+			Script.nextToken();
+			if (Script.Token == ENDOFFILE) {
+				Script.close();
+				break;
+			}
+			if (Script.Token != IDENTIFIER)
+				Script.error("Identifier expected");
+			char Identifier[MAX_IDENT_LENGTH];
+			CopyString(Identifier, Script.getIdentifier(), MAX_IDENT_LENGTH);
+			Script.readSymbol('=');
+			if (strcmp(Identifier, "testserver") == 0)
+				TestServerLogin = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "serveraddress") == 0)
+				Script.readString();
+			if (strcmp(Identifier, "serverport") == 0)
+				Script.readNumber();
+			if (strcmp(Identifier, "fullscreenmode") == 0) {
+				Script.readSymbol('(');
+				FullscreenMode.Width = Script.readNumber();
+				Script.readSymbol(',');
+				FullscreenMode.Height = Script.readNumber();
+				Script.readSymbol(',');
+				FullscreenMode.Depth = Script.readNumber();
+				Script.readSymbol(')');
+			}
+			if (strcmp(Identifier, "windowsmousepointer") == 0)
+				WindowsMousepointer = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "lighteffects") == 0)
+				LightEffects = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "textualeffects") == 0)
+				TextualEffects = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "creatureinfo") == 0)
+				CreatureInfo = Script.readNumber();
+			if (strcmp(Identifier, "nostretching") == 0)
+				NoStretching = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "confineframerate") == 0)
+				ConfineFramerate = Script.readNumber();
+			if (strcmp(Identifier, "engine") == 0)
+				Engine = Script.readNumber();
+			if (strcmp(Identifier, "hotkey") == 0) {
+				// A trailing line break marks a hotkey that is sent at once;
+				// other line breaks become spaces.
+				Script.readSymbol('(');
+				int Number = Script.readNumber();
+				if (Number < 0 || Number > HOTKEYS - 1)
+					Script.error("Illegal number");
+				Script.readSymbol(',');
+				char *Text = Hotkeys[Number];
+				CopyString(Text, Script.readString(), HOTKEY_LENGTH);
+				int Length = (int)strlen(Text);
+				if (Length != 0) {
+					if (Text[Length - 1] == '\n') {
+						Text[Length - 1] = 0;
+						HotkeyAutoSend[Number] = true;
+						Length--;
+					}
+					for (int i = 0; i < Length; i++) {
+						if (Text[i] == '\n')
+							Text[i] = ' ';
+					}
+				}
+				Script.readSymbol(')');
+			}
+			if (strcmp(Identifier, "windowedmode") == 0) {
+				Script.readSymbol('(');
+				WindowedX = Script.readNumber();
+				Script.readSymbol(',');
+				WindowedY = Script.readNumber();
+				Script.readSymbol(',');
+				WindowedWidth = Script.readNumber();
+				Script.readSymbol(',');
+				WindowedHeight = Script.readNumber();
+				Script.readSymbol(',');
+				WindowedMaximized = strcmp(Script.readIdentifier(), "yes") == 0;
+				Script.readSymbol(')');
+			}
+			if (strcmp(Identifier, "consoleheight") == 0)
+				ConsoleHeight = Script.readNumber();
+			if (strcmp(Identifier, "automapzoom") == 0)
+				AutomapZoom = Script.readNumber();
+			if (strcmp(Identifier, "contentwindow") == 0) {
+				Script.readSymbol('(');
+				ContentWindows(NumberOfContentWindows).ID = Script.readNumber();
+				Script.readSymbol(',');
+				ContentWindows(NumberOfContentWindows).Size = Script.readNumber();
+				Script.readSymbol(')');
+				NumberOfContentWindows++;
+			}
+			if (strcmp(Identifier, "buddysortmethods") == 0) {
+				Script.readSymbol('(');
+				BuddySortmethods[0] = Script.readNumber();
+				Script.readSymbol(',');
+				BuddySortmethods[1] = Script.readNumber();
+				Script.readSymbol(',');
+				BuddySortmethods[2] = Script.readNumber();
+				Script.readSymbol(')');
+			}
+			if (strcmp(Identifier, "buddyhideoffline") == 0)
+				BuddyHideOffline = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "opendialogs") == 0) {
+				// The duplicate check reads the vector's fields directly: from
+				// min to max-1 (not up to NumberOfOpenDialogs) and without the
+				// start offset that operator() subtracts.
+				int Dialog = Script.readNumber();
+				int i = OpenDialogs.min;
+				for (;;) {
+					if (i >= OpenDialogs.max) {
+						OpenDialogs(NumberOfOpenDialogs) = Dialog;
+						NumberOfOpenDialogs++;
+						break;
+					}
+					if (OpenDialogs.entry[i++] == Dialog)
+						break;
+				}
+			}
+			if (strcmp(Identifier, "lastmotd") == 0)
+				LastMotD = Script.readNumber();
+			if (strcmp(Identifier, "infomessages") == 0)
+				InfoMessages = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "eventmessages") == 0)
+				EventMessages = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "loginmessages") == 0)
+				Script.readIdentifier();
+			if (strcmp(Identifier, "statusmessages") == 0)
+				StatusMessages = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "timestamps") == 0)
+				TimeStamps = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "privatemessages") == 0)
+				PrivateMessages = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "openchannel") == 0) {
+				OpenChannels(NumberOfOpenChannels) = Script.readNumber();
+				NumberOfOpenChannels++;
+			}
+			if (strcmp(Identifier, "classiccontrol") == 0)
+				ClassicControl = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "autochaseoff") == 0)
+				AutoChaseOff = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "attackmode") == 0)
+				AttackMode = Script.readNumber();
+			if (strcmp(Identifier, "chasemode") == 0) {
+				ChaseMode = Script.readNumber();
+				if (ChaseMode == 2)
+					ChaseMode = 0;
+			}
+			if (strcmp(Identifier, "securemode") == 0)
+				SecureMode = Script.readNumber() == 1;
+			if (strcmp(Identifier, "buddy") == 0) {
+				// The description is copied without a length limit.
+				Script.readSymbol('(');
+				Buddies(NumberOfBuddyEntries).CharacterID = Script.readNumber();
+				Script.readSymbol(',');
+				Buddies(NumberOfBuddyEntries).Icon = Script.readNumber();
+				Script.readSymbol(',');
+				char *Description = Script.readString();
+				strcpy(Buddies(NumberOfBuddyEntries).Description, Description);
+				Script.readSymbol(',');
+				char *Notify = Script.readIdentifier();
+				Buddies(NumberOfBuddyEntries).Notify = strcmp(Notify, "yes") == 0;
+				Script.readSymbol(')');
+				NumberOfBuddyEntries++;
+			}
+			if (strcmp(Identifier, "white") == 0) {
+				Script.readSymbol('{');
+				for (;;) {
+					Script.nextToken();
+					if (Script.Token == SPECIAL && Script.getSpecial() == '}')
+						break;
+					if (Script.Token != SPECIAL || Script.getSpecial() != ',')
+						AddBuddyIgnore(Script.getString(), true);
+				}
+			}
+			if (strcmp(Identifier, "ignore") == 0) {
+				Script.readSymbol('{');
+				for (;;) {
+					Script.nextToken();
+					if (Script.Token == SPECIAL && Script.getSpecial() == '}')
+						break;
+					if (Script.Token != SPECIAL || Script.getSpecial() != ',')
+						IgnoreName(Script.getString(), true);
+				}
+			}
+			if (strcmp(Identifier, "knownhints") == 0) {
+				Script.readSymbol('{');
+				for (;;) {
+					Script.nextToken();
+					if (Script.Token == SPECIAL && Script.getSpecial() == '}')
+						break;
+					if (Script.Token != SPECIAL || Script.getSpecial() != ',') {
+						KnownHints(NumberOfKnownHints) = Script.getNumber();
+						NumberOfKnownHints++;
+					}
+				}
+			}
+			if (strcmp(Identifier, "shownewhints") == 0)
+				ShowNewHints = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "levelbar") == 0)
+				LevelBar = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "maglevelbar") == 0)
+				MagLevelBar = strcmp(Script.readIdentifier(), "yes") == 0;
+			if (strcmp(Identifier, "skillbars") == 0) {
+				for (int i = 0; i < SKILLS; i++)
+					SetSkillBar(i, false);
+				Script.readSymbol('{');
+				for (;;) {
+					Script.nextToken();
+					if (Script.Token == SPECIAL && Script.getSpecial() == '}')
+						break;
+					if (Script.Token != SPECIAL || Script.getSpecial() != ',')
+						SetSkillBar(Script.getNumber(), true);
+				}
+			}
+		}
+	} catch (TMyException &) {
+		SetDefaultPreferences();
+	}
+	PreferencesLoaded = true;
+}
+
+// 0x4de890. Writes Tibia.cfg, only after InitPreferences ran; errors are
+// ignored. Odd behaviour kept: one counter serves all loops, and the White
+// list does not reset it, so it starts at NumberOfBuddyEntries and writes a
+// ',' before its first entry when there were buddies. SkillBars writes ','
+// before every skill above 0, also when nothing came before it. Deleted
+// buddies (CharacterID 0) are skipped. The fourth FullscreenMode value is
+// not saved.
+void SavePreferences()
+{
+	int i = 0;
+	if (!PreferencesLoaded)
+		return;
+	try {
+		TWriteScriptFile Script;
+		Script.open("Tibia.cfg");
+		Script.writeText("# Tibia - graphical Multi-User-Dungeon");
+		Script.writeLn();
+		Script.writeText("# DO NOT EDIT THIS FILE");
+		Script.writeLn();
+		Script.writeLn();
+		Script.writeText("TestServer = ");
+		Script.writeText(TestServerLogin ? "yes" : "no");
+		Script.writeLn();
+		if (FullscreenMode.Width != 0) {
+			Script.writeText("FullscreenMode = (");
+			Script.writeNumber(FullscreenMode.Width);
+			Script.writeText(",");
+			Script.writeNumber(FullscreenMode.Height);
+			Script.writeText(",");
+			Script.writeNumber(FullscreenMode.Depth);
+			Script.writeText(")");
+			Script.writeLn();
+		}
+		Script.writeText("WindowsMousepointer = ");
+		Script.writeText(WindowsMousepointer ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("LightEffects = ");
+		Script.writeText(LightEffects ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("TextualEffects = ");
+		Script.writeText(TextualEffects ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("CreatureInfo = ");
+		Script.writeNumber(CreatureInfo);
+		Script.writeLn();
+		Script.writeText("NoStretching = ");
+		Script.writeText((NoStretching == 1) ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("ConfineFramerate = ");
+		Script.writeNumber(ConfineFramerate);
+		Script.writeLn();
+		for (; i < HOTKEYS; i++) {
+			const char *Text = Hotkeys[i];
+			if (Text[0] == 0)
+				continue;
+			char Help[HOTKEY_LENGTH + 1];
+			Script.writeText("Hotkey = (");
+			Script.writeNumber(i);
+			Script.writeText(",");
+			if (HotkeyAutoSend[i]) {
+				_snprintf(Help, HOTKEY_LENGTH + 1, "%s\n", Text);
+				Text = Help;
+			}
+			Script.writeString(Text);
+			Script.writeText(")");
+			Script.writeLn();
+		}
+		Script.writeText("WindowedMode = (");
+		Script.writeNumber(WindowedX);
+		Script.writeText(",");
+		Script.writeNumber(WindowedY);
+		Script.writeText(",");
+		Script.writeNumber(WindowedWidth);
+		Script.writeText(",");
+		Script.writeNumber(WindowedHeight);
+		Script.writeText(",");
+		Script.writeText(WindowedMaximized ? "yes" : "no");
+		Script.writeText(")");
+		Script.writeLn();
+		Script.writeText("ConsoleHeight = ");
+		Script.writeNumber(ConsoleHeight);
+		Script.writeLn();
+		Script.writeText("AutomapZoom = ");
+		Script.writeNumber(AutomapZoom);
+		Script.writeLn();
+		for (i = 0; i < NumberOfContentWindows; i++) {
+			Script.writeText("ContentWindow = (");
+			Script.writeNumber(ContentWindows(i).ID);
+			Script.writeText(",");
+			Script.writeNumber(ContentWindows(i).Size);
+			Script.writeText(")");
+			Script.writeLn();
+		}
+		Script.writeText("BuddySortmethods = (");
+		Script.writeNumber(BuddySortmethods[0]);
+		Script.writeText(",");
+		Script.writeNumber(BuddySortmethods[1]);
+		Script.writeText(",");
+		Script.writeNumber(BuddySortmethods[2]);
+		Script.writeText(")");
+		Script.writeLn();
+		Script.writeText("BuddyHideOffline = ");
+		Script.writeText(BuddyHideOffline ? "yes" : "no");
+		Script.writeLn();
+		for (i = 0; i < NumberOfOpenDialogs; i++) {
+			Script.writeText("OpenDialogs = ");
+			Script.writeNumber(OpenDialogs(i));
+			Script.writeLn();
+		}
+		Script.writeText("LastMotD = ");
+		Script.writeNumber(LastMotD);
+		Script.writeLn();
+		Script.writeText("InfoMessages = ");
+		Script.writeText(InfoMessages ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("EventMessages = ");
+		Script.writeText(EventMessages ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("StatusMessages = ");
+		Script.writeText(StatusMessages ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("TimeStamps = ");
+		Script.writeText(TimeStamps ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("PrivateMessages = ");
+		Script.writeText(PrivateMessages ? "yes" : "no");
+		Script.writeLn();
+		for (i = 0; i < NumberOfOpenChannels; i++) {
+			Script.writeText("OpenChannel = ");
+			Script.writeNumber(OpenChannels(i));
+			Script.writeLn();
+		}
+		Script.writeText("ClassicControl = ");
+		Script.writeText(ClassicControl ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("AutoChaseOff = ");
+		Script.writeText(AutoChaseOff ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("AttackMode = ");
+		Script.writeNumber(AttackMode);
+		Script.writeLn();
+		Script.writeText("ChaseMode = ");
+		Script.writeNumber(ChaseMode);
+		Script.writeLn();
+		Script.writeText("SecureMode = ");
+		Script.writeNumber(SecureMode);
+		Script.writeLn();
+		for (i = 0; i < NumberOfBuddyEntries; i++) {
+			if (Buddies(i).CharacterID == 0)
+				continue;
+			Script.writeText("Buddy = (");
+			Script.writeNumber(Buddies(i).CharacterID);
+			Script.writeText(",");
+			Script.writeNumber(Buddies(i).Icon);
+			Script.writeText(",");
+			Script.writeString(Buddies(i).Description);
+			Script.writeText(",");
+			Script.writeText(Buddies(i).Notify ? "yes" : "no");
+			Script.writeText(")");
+			Script.writeLn();
+		}
+		char *List = GetBuddyIgnoreText();
+		Script.writeText("White = {");
+		if (List != NULL) {
+			char *Name = List;
+			while ((Name = strtok(Name, "\n")) != NULL) {
+				int Length = (int)strlen(Name);
+				if (Length != 0 && IsPermanentBuddyIgnore(Name)) {
+					if (i > 0)
+						Script.writeText(",");
+					Script.writeString(Name);
+					i++;
+				}
+				Name = NULL;
+			}
+			free(List);
+		}
+		Script.writeText("}");
+		Script.writeLn();
+		List = GetIgnoreListText();
+		i = 0;
+		Script.writeText("Ignore = {");
+		if (List != NULL) {
+			char *Name = List;
+			while ((Name = strtok(Name, "\n")) != NULL) {
+				int Length = (int)strlen(Name);
+				if (Length != 0 && IsPermanentIgnore(Name)) {
+					if (i > 0)
+						Script.writeText(",");
+					Script.writeString(Name);
+					i++;
+				}
+				Name = NULL;
+			}
+			free(List);
+		}
+		Script.writeText("}");
+		Script.writeLn();
+		Script.writeText("KnownHints = {");
+		for (i = 0; i < NumberOfKnownHints; i++) {
+			if (i > 0)
+				Script.writeText(",");
+			Script.writeNumber(KnownHints(i));
+		}
+		Script.writeText("}");
+		Script.writeLn();
+		Script.writeText("ShowNewHints = ");
+		Script.writeText(ShowNewHints ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("LevelBar = ");
+		Script.writeText(LevelBar ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("MagLevelBar = ");
+		Script.writeText(MagLevelBar ? "yes" : "no");
+		Script.writeLn();
+		Script.writeText("SkillBars = {");
+		for (i = 0; i < SKILLS; i++) {
+			if (GetSkillBar(i)) {
+				if (i > 0)
+					Script.writeText(",");
+				Script.writeNumber(i);
+			}
+		}
+		Script.writeText("}");
+		Script.writeLn();
+		Script.writeText("Engine = ");
+		Script.writeNumber(Engine);
+		Script.writeLn();
+		Script.close();
+	} catch (TMyException &) {
+	}
+}
+
+// 0x4df520. Frees the message of the day and saves Tibia.cfg.
+void ExitPreferences()
+{
+	if (MotD != NULL)
+		free(MotD);
+	MotD = NULL;
+	SavePreferences();
 }

@@ -485,9 +485,9 @@ address	name	kind	confidence	note
 0x4df5b0	TReadScriptFile_dtor	game	high	Script.h inline: fclose if open
 0x4df5d0	TReadScriptFile_close	game	medium	Script.h inline: fclose and reset all fields like the constructor
 0x4df640	TWriteScriptFile_ctor	game	high	Script.h inline
-0x4df660	TWriteScriptFile_close	game	medium	Script.h inline; also the destructor (identical code)
+0x4df660	TWriteScriptFile_close	game	high	Script.h inline: fclose and reset; the saver calls it before the destructor (0x4df6b0)
 0x4df690	TReadBinaryFile_ctor	game	medium	Script.h inline; folded with TWriteBinaryFile's constructor
-0x4df6b0	TReadBinaryFile_close	game	medium	Script.h inline; folded with TWriteBinaryFile::close and both destructors
+0x4df6b0	TReadBinaryFile_close	game	high	Script.h inline; folded with TWriteBinaryFile::close, both binary-file destructors and ~TWriteScriptFile
 0x4df6d0	TReadScriptFile_open	game	high	Script.cpp lines 48-50; method names follow CipSoft's game server
 0x4df9b0	TReadScriptFile_error	game	high	Script.cpp line 84: closes the file, throws "error in script file '%s' in line %d"
 0x4dfb60	TReadScriptFile_nextToken	game	high	Script.cpp lines 93-230, tokenizer state machine (State)
@@ -735,3 +735,6 @@ address	name	kind	confidence	note
 0x4d8e60	std_filebuf_seekoff	stl	high	basic_filebuf<char>::seekoff; not in the source
 0x4d8fa0	std_filebuf_seekpos	stl	high	basic_filebuf<char>::seekpos; not in the source
 0x4d90b0	std_filebuf_close	stl	high	basic_filebuf<char>::close, used by Player.cpp; not in the source
+0x4ddc00	InitPreferences	game	medium	Preferences.cpp: loads Tibia.cfg (defaults on any error), sets PreferencesLoaded; called by InitControl
+0x4de890	SavePreferences	game	medium	Preferences.cpp: writes Tibia.cfg if PreferencesLoaded, errors ignored
+0x4df520	ExitPreferences	game	medium	Preferences.cpp: frees the MotD and saves; called by ExitControl

@@ -270,3 +270,32 @@ callcheck differences, caller integration and differential coverage.
   enumerator (name unknown); common.h is unchanged.
 - **TObject stays in external.h** (Status.h uses it); Objects.h includes
   external.h for it.
+
+## Preferences/Script gap (Tibia.cfg loader and saver)
+
+- **0x4ddc00-0x4df53f is Preferences.cpp** (high): the loader, saver and
+  0x4df520 use only Preferences data (0x719e70-0x71c44f and 0x5c2558), plus
+  the flag 0x71c319 that only they touch; Script.cpp has no globals. They
+  follow SetSkillBar (line 850) in the binary and have no line evidence, so
+  they end the file in binary order.
+- **Names InitPreferences, SavePreferences, ExitPreferences, PreferencesLoaded**
+  (medium): InitControl calls the loader where the other modules are
+  initialised, ExitControl calls 0x4df520 where the others exit, and the
+  Init/Exit pairs of the other files (InitObjects/ExitObjects) are named so.
+  The flag is set after loading whether or not that failed, and the saver
+  writes only when it is set: "loaded" rather than "save requested".
+- **TWriteScriptFile's destructor** (high, corrects the Script.cpp entry):
+  the saver calls close() (0x4df660) and then 0x4df6b0, so the destructor is
+  only `if (File) fclose(File); File = NULL;`, folded with the binary files'
+  close(), not close() itself. Script.h fixed.
+- **No yes/no helper**: the comparison with "yes" and the "yes"/"no" choice
+  are written out at every use. The binary's code differs per site (the
+  buddy's Notify keeps the full strcmp result), which a shared helper would
+  not produce.
+- **The OpenDialogs duplicate check reads the vector's fields** (`min`,
+  `max`, `entry[i]`) directly: the binary loops from min to max-1 and indexes
+  entry without the start offset, which operator() would subtract. Written
+  that way.
+- **Buffer sizes**: the loader's identifier copy is 20 bytes (CopyString
+  limit 0x14); the saver's hotkey buffer is written as HOTKEY_LENGTH+1 (the
+  `_snprintf` limit 0x101; the stack slot is 264 bytes with padding).

@@ -5,7 +5,7 @@ Read this and `git log` first when resuming.
 ## Backlog
 
 1. Script.cpp — **done** (commit "Reconstruct Script.cpp").
-2. Preferences/Script gap (0x4ddc00-0x4df6ca) — next.
+2. Preferences/Script gap (0x4ddc00-0x4df6ca) — **done**: loader/saver/ExitPreferences in Preferences.cpp, inline code in Script.h.
 3. Player.cpp, incl. the error.txt reader (0x4da140).
 4. Small gaps: ContextMenus/Control (0x445900-0x445aeb), start/Communication
    (0x401000-0x40434f), Status/SurfaceDX (0x4eaa80-0x4ed19f).
@@ -18,14 +18,15 @@ Read this and `git log` first when resuming.
 
 ## Current item
 
-2: Preferences/Script gap. The Script.h inline functions in it
-(0x4df550-0x4df6cf) are settled (file-ranges.tsv); left are the Tibia.cfg
-loader 0x4ddc00, the saver 0x4de890 and 0x4df520.
+3: Player.cpp, incl. the error.txt reader (0x4da140) and the three game
+functions left in the Objects/Player gap (0x4d7cd0 message map, 0x4d7cf0
+app constructor, 0x4d7d80 FatalError).
 
 ## Delegates (running)
 
-- Map.cpp + MainWindow/Map and Map/MapWindow gaps (item 6): ChatGPT
-  gpt-6.1-sol, own worktree (the first Claude attempt failed on a rate limit).
+- Map.cpp (item 6): not running. The Claude delegate hit an API rate limit,
+  the gpt-6.1-sol retry hit the ChatGPT subscription usage limit. Do it
+  myself or retry a delegate later.
 - Creatures.cpp + Control/Creatures and Creatures/DialogElements gaps
   (item 8): Claude Opus 5.5, own worktree.
 Both told: real names only, no shims, replace their external.h views and
@@ -38,7 +39,7 @@ merging.
 
 ## Last difftest
 
-2,796,382 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
+2,870,593 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
