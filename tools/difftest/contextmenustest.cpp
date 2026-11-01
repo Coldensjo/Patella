@@ -31,6 +31,7 @@
 
 #include "difftest.h"
 #include "../../src/ContextMenus.h"
+#include "../../src/ContentWindows.h"
 #include "../../src/Communication.h"
 #include "../../src/Creatures.h"
 #include "../../src/GUI.h"
@@ -86,8 +87,11 @@ enum { OURS = 0, ORIGINAL = 1 };
 static int Side;
 static std::string Log[2];
 
+static bool Running; // the shared fakes (TSeparator) log only while this test runs
 static void Logf(const char *Format, ...)
 {
+	if (!Running)
+		return;
 	char Buffer[512];
 	va_list Args;
 	va_start(Args, Format);
@@ -339,8 +343,9 @@ TSeparator::TSeparator(bool _Horizontal)
 {
 	Horizontal = _Horizontal;
 	Logf("NSep%d;", _Horizontal ? 1 : 0);
-	if (SeparatorVtable != NULL)
+	if (Running && SeparatorVtable != NULL)
 		*(void **)this = SeparatorVtable;
+	ReportElement(this, "Separator", "%d", _Horizontal ? 1 : 0);
 }
 class TTestSeparator : public TSeparator {
 public:
@@ -372,12 +377,18 @@ public:
 	TTestEdit() : TEditLine(TRect(0, 0, 0, 0), 0, 0) {}
 	void HandleEvent(int Event) { Logf("EditEvent%d;", Event); }
 };
-class TTestSkills : public TSkillsWindowBody {
+// A stand-in of the skill window body (ContentWindows.cpp) with its layout up
+// to ContextMenu: the menu sets ContextMenu and calls Arrange (+0x48).
+class TMenuSkillsStandIn : public TWindow {
 public:
 	void Arrange() { Logf("SkillsArrange;"); }
+	bool Minimized;                 // +0x2c
+	TSkillContextMenu *ContextMenu; // +0x30
 };
+static_assert(offsetof(TMenuSkillsStandIn, ContextMenu) == offsetof(TSkillsWindowBody, ContextMenu),
+	"the skill window stand-in has the body's layout");
 static TTestEdit *Edit;
-static TTestSkills *SkillsWindow[2];
+static TSkillsWindowBody *SkillsWindow[2];
 
 // --- Fakes of the callees ------------------------------------------------------------------
 
@@ -1070,7 +1081,7 @@ static TArguments RandomArguments(int K)
 	}
 	A.Data.Mark.Type = Random() % 20;
 	strcpy(A.Data.Mark.Text, Random() % 2 ? "Depot" : "");
-	A.Data.Window = (void *)(uintptr_t)(0x1000 + Random() % 0x1000);
+	A.Data.Window = (TAutomapWindow *)(uintptr_t)(0x1000 + Random() % 0x1000);
 	TextChildWidth = 1 + Random() % 300;
 	TextChildHeight = 1 + Random() % 300;
 	return A;
@@ -1337,6 +1348,7 @@ void TestContextMenus()
 	At<void (__cdecl *)()>(0x498160)();
 	Surface = new TMenuSurface;
 	PatchCallees();
+	Running = true;
 
 	Buffer = new TTestBuffer;
 	TextWindow = (TTextWindow *)calloc(1, sizeof(TTextWindow));
@@ -1347,9 +1359,10 @@ void TestContextMenus()
 	Console->CurrentConsole = ConsoleView;
 	Edit = new TTestEdit;
 	for (int s = 0; s < 2; s++) {
-		SkillsWindow[s] = new TTestSkills;
-		SkillsWindow[s]->Data2C = 0;
-		SkillsWindow[s]->ContextMenu = NULL;
+		TMenuSkillsStandIn *StandIn = new TMenuSkillsStandIn;
+		StandIn->Minimized = false;
+		StandIn->ContextMenu = NULL;
+		SkillsWindow[s] = (TSkillsWindowBody *)(TWindow *)StandIn;
 	}
 
 	// Our vtables, from instances.
@@ -1395,6 +1408,8 @@ void TestContextMenus()
 	}
 
 	RestoreAll();
+	Running = false;
+	SeparatorVtable = NULL;
 	delete Surface;
 	delete Buffer;
 	free(TextWindow);
@@ -1402,7 +1417,7 @@ void TestContextMenus()
 	free(Console);
 	delete Edit;
 	for (int s = 0; s < 2; s++)
-		delete SkillsWindow[s];
+		delete (TMenuSkillsStandIn *)(TWindow *)SkillsWindow[s];
 	ExitSkins();
 	Global<TSkin *>(0x71c454) = NULL;
 	int Least = KindCount[0], LeastAction = ActionCount[0];

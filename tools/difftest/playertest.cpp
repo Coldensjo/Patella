@@ -79,9 +79,9 @@ void OutputControlErrorInformations(std::ostream &) STUB
 int DAT_005c2564;
 // The constructor and the slots graphics.cpp calls are graphicstest.cpp's recorders, those
 // MapWindow.cpp calls mapwindowtest.cpp's.
-void TSurfaceGL::Unknown0C() STUB
-void TSurfaceGL::Unknown10() STUB
-void TSurfaceGL::Unknown18() STUB
+void TSurfaceGL::SetPixel(int, int, int, TRGBColor) STUB
+void TSurfaceGL::FillRectangleClipped(int, TRect, TRGBColor, TRect) STUB
+void TSurfaceGL::DrawHorizontalLine(int, int, int, int, TRGBColor) STUB
 void TSurfaceGL::Unknown1C() STUB
 void TSurfaceGL::DrawFrame(int, TRect, int, TRGBColor) STUB
 void TSurfaceGL::Unknown38() STUB

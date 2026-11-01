@@ -25,6 +25,7 @@
 
 #include "difftest.h"
 #include "../../src/DialogWindow.h"
+#include "../../src/ContentWindows.h"
 #include "../../src/GUI.h"
 #include "../../src/Preferences.h"
 #include "../../src/Skins.h"
@@ -55,19 +56,12 @@ static_assert(sizeof(TResizer) == 0x38, "TResizer is 0x38 bytes");
 
 TDialogFakes DialogFakes;
 
-void TSubWindowBody::UnknownA0() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A0"); }
-void TSubWindowBody::UnknownA4() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A4"); }
-bool TSubWindowBody::UnknownA8()
+// The container body's UpdateUpButton (the image's 0x42e4e0 and ours).
+void __fastcall FakeUpdateUpButton(void *Body, void *)
 {
 	if (DialogFakes.Body != NULL)
-		DialogFakes.Body(this, "A8");
-	return DialogFakes.BodyAccepts != NULL ? DialogFakes.BodyAccepts(this) : false;
+		DialogFakes.Body((TSubWindowBody *)Body, "Up");
 }
-void TSubWindowBody::UnknownAC() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "AC"); }
-void TSubWindowBody::UnknownB0() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "B0"); }
-void TSubWindowBody::UnknownB4() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "B4"); }
-void TSubWindowBody::UnknownB8() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "B8"); }
-void TSubWindowBody::FUN_0042e4e0() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "Up"); }
 
 TResizer::TResizer(TComponent *_ToResize, bool Param2, bool Param3, bool Param4)
 {
@@ -144,9 +138,15 @@ static int Class(int s, const void *Object)
 
 static int Answer(int a, int b, int c) { return (a * 7 + b * 3 + c) % 4 == 0; }
 
+// The test body reports the calls of TSubWindow's Minimize and Maximize (the
+// body's +0xa0, +0xa4).
 class TTestBody : public TSubWindowBody {
 public:
 	int MinHeight;
+	void Minimize() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A0"); }
+	void Maximize() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A4"); }
+	int GetInitialHeight() { return MinHeight; }
+	int GetContentHeight() { return MinHeight; }
 	int GetMinimumHeight() { return MinHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DBody%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 	bool LeftButtonDown(int x, int y, int Flags)
@@ -301,7 +301,8 @@ static void PatchCallees()
 	}
 	Redirect((void *)(uintptr_t)0x453be0, (void *)ImageResizer);
 	Redirect((void *)(uintptr_t)0x458b20, Member(&TSkinButton::SetSkins));
-	Redirect((void *)(uintptr_t)0x42e4e0, Member(&TSubWindowBody::FUN_0042e4e0));
+	Redirect((void *)(uintptr_t)0x42e4e0, (void *)FakeUpdateUpButton);
+	Redirect(Member(&TContainerWindowBody::UpdateUpButton), (void *)FakeUpdateUpButton);
 }
 
 // --- The objects ----------------------------------------------------------------------

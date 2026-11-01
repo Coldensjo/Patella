@@ -25,6 +25,7 @@
 
 #include "difftest.h"
 #include "../../src/MainWindow.h"
+#include "../../src/ContentWindows.h"
 #include "../../src/MapWindow.h"
 #include "../../src/Communication.h"
 #include "../../src/Control.h"
@@ -54,12 +55,13 @@ static_assert(sizeof(TBorder) == 0x68, "TBorder is 0x68 bytes");
 static_assert(sizeof(TTextButton) == 0x78, "TTextButton is 0x78 bytes");
 static_assert(sizeof(TLabel) == 0x4c, "TLabel is 0x4c bytes");
 static_assert(sizeof(TObjectIcon) == 0x50, "TObjectIcon is 0x50 bytes");
-static_assert(sizeof(TSideWindow3) == 0x80 && sizeof(TSideWindow4) == 0x4c && sizeof(TSideWindow5) == 0x58,
+static_assert(sizeof(TAutomapWindow) == 0x80 && sizeof(TStatusWindow) == 0x4c && sizeof(TButtonsWindow) == 0x58,
 	"side-bar window sizes");
 
 enum { OURS = 0, ORIGINAL = 1 };
 static int Side;
 static bool Quiet;
+static bool Running; // the shared fakes (TTextButton, TLabel, TObjectIcon) register only while this test runs
 static std::string Log[2];
 
 static void Logf(const char *Format, ...)
@@ -173,9 +175,22 @@ public:
 	TFakeButton() : TTextButton(0, 0, "", 0, 0, TCallback(), 0) {}
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
-// A body needs a height (TSubWindow fits it into its frame).
+// A body needs a height (TSubWindow fits it into its frame). Update is its
+// first new virtual (+0xb8, the container body's, which OpenContainer calls).
+static void HookBody(TSubWindowBody *Body, const char *Call);
+static bool BodyAccepts;
 class TFakeBody : public TSubWindowBody {
 public:
+	virtual void Update() { HookBody(this, "B8"); }
+	void Minimize() { HookBody(this, "A0"); }
+	void Maximize() { HookBody(this, "A4"); }
+	bool IsMinimized()
+	{
+		HookBody(this, "A8");
+		return BodyAccepts;
+	}
+	int GetInitialHeight() { return BodyMinHeight; }
+	int GetContentHeight() { return BodyMinHeight; }
 	int GetMinimumHeight() { return BodyMinHeight; }
 	void HandleEvent(int Event) { Logf("HBody%s,%d;", Name(this).c_str(), Event); }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
@@ -210,9 +225,8 @@ extern "C" void OurConsoleConstructor();
 // The open dialogs of the preferences, per side (ClearOpenDialogs,
 // GetOpenDialogs and AddOpenDialog).
 static std::vector<int> OpenDialogs[2];
-static bool BodyAccepts;
 
-// The shared fakes of dialogwindowtest.cpp report here.
+// The test bodies and dialogwindowtest.cpp's FakeUpdateUpButton report here.
 static void HookBody(TSubWindowBody *Body, const char *Call) { Logf("B%s%s;", Call, Name(Body).c_str()); }
 static bool HookBodyAccepts(TSubWindowBody *) { return BodyAccepts; }
 static void HookSetSkins(TSkinButton *Button, int ButtonUp, int ButtonDown)
@@ -256,28 +270,67 @@ static TWindow *NewSubWindow(int Identifier)
 	Logf("NSub%s;", NameOf(Side, Window).c_str());
 	return Window;
 }
-TWindow *FUN_004362b0(TMainWindow *Receiver) { Logf("NInv1%s;", Name(Receiver).c_str()); return NewSubWindow(1); }
-TWindow *FUN_00436510(TMainWindow *Receiver) { Logf("NInv2%s;", Name(Receiver).c_str()); return NewSubWindow(2); }
-TWindow *FUN_0043c520(int Container) { Logf("NCont%d;", Container); return NewSubWindow(0x40 + Container); }
-TWindow *FUN_0043c920() { return NewSubWindow(6); }
-TWindow *FUN_0043cc90() { return NewSubWindow(7); }
-TWindow *FUN_0043d000() { return NewSubWindow(8); }
-TWindow *FUN_0043d390() { return NewSubWindow(9); }
-TSideWindow3::TSideWindow3() : TContentWindow(3, false)
+// The creators (the image's and ours jump here).
+static TWindow *FakeCreateInventoryWindow(TMainWindow *Receiver)
 {
-	Register(this, "Side3", 3);
-	Logf("N%s;", Name(this).c_str());
+	Logf("NInv1%s;", Name(Receiver).c_str());
+	return NewSubWindow(1);
 }
-TSideWindow4::TSideWindow4() : TContentWindow(4, false)
+static TWindow *FakeCreateSmallInventoryWindow(TMainWindow *Receiver)
 {
-	Register(this, "Side4", 4);
-	Logf("N%s;", Name(this).c_str());
+	Logf("NInv2%s;", Name(Receiver).c_str());
+	return NewSubWindow(2);
 }
-TSideWindow5::TSideWindow5(TDialogWindow *_CheckObject, TMainWindow *Receiver) : TContentWindow(5, false)
+static TWindow *FakeCreateContainerWindow(int Container)
 {
-	Register(this, "Side5", 5);
-	Logf("N%s,%s,%s;", Name(this).c_str(), Name(_CheckObject).c_str(), Name(Receiver).c_str());
+	Logf("NCont%d;", Container);
+	return NewSubWindow(0x40 + Container);
 }
+static TWindow *FakeCreateSkillsWindow() { return NewSubWindow(6); }
+static TWindow *FakeCreateBattleWindow() { return NewSubWindow(7); }
+static TWindow *FakeCreateTradeWindow() { return NewSubWindow(8); }
+static TWindow *FakeCreateBuddylistWindow() { return NewSubWindow(9); }
+// The side-bar windows the main window makes itself (TAutomapWindow,
+// TStatusWindow, TButtonsWindow): content windows of the same sizes; the
+// image's constructors and ours (through their decorated names) build them.
+class TMainSide3 : public TContentWindow {
+public:
+	TMainSide3() : TContentWindow(3, false)
+	{
+		Register(this, "Side3", 3);
+		Logf("N%s;", Name(this).c_str());
+		memset(Data44, 0, sizeof(Data44));
+	}
+	uint8 Data44[0x80 - 0x44];
+};
+class TMainSide4 : public TContentWindow {
+public:
+	TMainSide4() : TContentWindow(4, false)
+	{
+		Register(this, "Side4", 4);
+		Logf("N%s;", Name(this).c_str());
+		memset(Data44, 0, sizeof(Data44));
+	}
+	uint8 Data44[0x4c - 0x44];
+};
+class TMainSide5 : public TContentWindow {
+public:
+	TMainSide5(TDialogWindow *_CheckObject, TMainWindow *Receiver) : TContentWindow(5, false)
+	{
+		Register(this, "Side5", 5);
+		Logf("N%s,%s,%s;", Name(this).c_str(), Name(_CheckObject).c_str(), Name(Receiver).c_str());
+		memset(Data44, 0, sizeof(Data44));
+	}
+	uint8 Data44[0x58 - 0x44];
+};
+static_assert(sizeof(TMainSide3) == sizeof(TAutomapWindow) && sizeof(TMainSide4) == sizeof(TStatusWindow)
+	&& sizeof(TMainSide5) == sizeof(TButtonsWindow), "the side-bar fakes have the real sizes");
+extern "C" void OurAutomapConstructor();
+extern "C" void OurStatusConstructor();
+extern "C" void OurButtonsConstructor();
+#pragma comment(linker, "/alternatename:_OurAutomapConstructor=??0TAutomapWindow@@QAE@XZ")
+#pragma comment(linker, "/alternatename:_OurStatusConstructor=??0TStatusWindow@@QAE@XZ")
+#pragma comment(linker, "/alternatename:_OurButtonsConstructor=??0TButtonsWindow@@QAE@PAVTDialogWindow@@PAVTMainWindow@@@Z")
 
 TBorder::TBorder(TWindow *_Window, int Param)
 {
@@ -307,6 +360,10 @@ void TBorder::FUN_00455500() { Logf("Fit%s;", Name(this).c_str()); }
 
 TTextButton::TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback, int Param)
 {
+	ReportElement(this, "TextButton", "%d,%d,%s,%d,%d,@%p/%d,%d", x, y, _Text, Skin1, Skin2, (void *)Callback.Receiver,
+		Callback.Event, Param);
+	if (!Running)
+		return;
 	TInfo &I = Register(this, "Button");
 	char Buffer[160];
 	sprintf(Buffer, "%d,%d,%s,%d,%d,%s,%d,%d", x, y, _Text, Skin1, Skin2, Name(Callback.Receiver).c_str(),
@@ -319,6 +376,10 @@ TTextButton::TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, 
 }
 TLabel::TLabel(TFont Font, const char *_Text)
 {
+	ReportElement(this, "Label", "%d,%d,%d,%d,%d,%s", Font.FontNumber, Font.Color.R, Font.Color.G, Font.Color.B,
+		Font.Alignment, _Text);
+	if (!Running)
+		return;
 	TInfo &I = Register(this, "Label");
 	char Buffer[160];
 	sprintf(Buffer, "%d,%d,%d,%d,%d,%s", Font.FontNumber, Font.Color.R, Font.Color.G, Font.Color.B, Font.Alignment,
@@ -328,6 +389,10 @@ TLabel::TLabel(TFont Font, const char *_Text)
 }
 TObjectIcon::TObjectIcon(TObject Obj, const TRGBColor *Color, int Param)
 {
+	ReportElement(this, "ObjectIcon", "%d,%d,%d,%d,%d,%d,%d", Obj.Type, Obj.Data1, Obj.Data2, Color->R, Color->G,
+		Color->B, Param);
+	if (!Running)
+		return;
 	TInfo &I = Register(this, "Icon");
 	char Buffer[160];
 	sprintf(Buffer, "%d,%d,%d,%d,%d,%d,%d", Obj.Type, Obj.Data1, Obj.Data2, Color->R, Color->G, Color->B, Param);
@@ -352,11 +417,11 @@ static void *__fastcall ImageIcon(void *This, void *, TObject Obj, const TRGBCol
 {
 	return new (This) TObjectIcon(Obj, Color, P);
 }
-static void *__fastcall ImageSide3(void *This, void *) { return new (This) TSideWindow3; }
-static void *__fastcall ImageSide4(void *This, void *) { return new (This) TSideWindow4; }
+static void *__fastcall ImageSide3(void *This, void *) { return new (This) TMainSide3; }
+static void *__fastcall ImageSide4(void *This, void *) { return new (This) TMainSide4; }
 static void *__fastcall ImageSide5(void *This, void *, TDialogWindow *D, TMainWindow *M)
 {
-	return new (This) TSideWindow5(D, M);
+	return new (This) TMainSide5(D, M);
 }
 
 // --- Fakes of the other callees -------------------------------------------------
@@ -540,17 +605,33 @@ static void PatchCallees()
 		{0x404c10, (void *)SendTurnWest}, {0x409140, (void *)SendCancel}, {0x404350, (void *)SendLogout},
 		{0x4074a0, (void *)SendJoinChannel}, {0x445c20, (void *)ChangeEngine},
 		{0x422410, (void *)FakeConsoleNew}, {0x41e960, (void *)FakeConsoleActive}, {0x422e70, (void *)FakeConsoleOpen},
-		{0x42e4e0, Member(&TSubWindowBody::FUN_0042e4e0)}, {0x458b20, Member(&TSkinButton::SetSkins)},
+		{0x42e4e0, (void *)FakeUpdateUpButton}, {0x458b20, Member(&TSkinButton::SetSkins)},
 		{0x4547f0, (void *)ImageBorder1}, {0x454e30, (void *)ImageBorder2},
 		{0x455500, Member(&TBorder::FUN_00455500)},
 		{0x466bc0, (void *)ImageButton}, {0x465b40, (void *)ImageLabel}, {0x4526c0, (void *)ImageIcon},
-		{0x4362b0, (void *)FUN_004362b0}, {0x436510, (void *)FUN_00436510}, {0x43c520, (void *)FUN_0043c520},
-		{0x43c920, (void *)FUN_0043c920}, {0x43cc90, (void *)FUN_0043cc90}, {0x43d000, (void *)FUN_0043d000},
-		{0x43d390, (void *)FUN_0043d390},
 		{0x4368c0, (void *)ImageSide3}, {0x438310, (void *)ImageSide4}, {0x426480, (void *)ImageSide5},
 	};
 	for (auto &I : Images)
 		PatchJump(I.Image, I.Ours);
+	// ContentWindows.cpp: the creators and the side-bar constructors, the image's and ours.
+	static const struct { uint32 Image; void *Ours; void *Fake; } Content[] = {
+		{0x4362b0, (void *)CreateInventoryWindow, (void *)FakeCreateInventoryWindow},
+		{0x436510, (void *)CreateSmallInventoryWindow, (void *)FakeCreateSmallInventoryWindow},
+		{0x43c520, (void *)CreateContainerWindow, (void *)FakeCreateContainerWindow},
+		{0x43c920, (void *)CreateSkillsWindow, (void *)FakeCreateSkillsWindow},
+		{0x43cc90, (void *)CreateBattleWindow, (void *)FakeCreateBattleWindow},
+		{0x43d000, (void *)CreateTradeWindow, (void *)FakeCreateTradeWindow},
+		{0x43d390, (void *)CreateBuddylistWindow, (void *)FakeCreateBuddylistWindow},
+		{0, (void *)OurAutomapConstructor, (void *)ImageSide3},
+		{0, (void *)OurStatusConstructor, (void *)ImageSide4},
+		{0, (void *)OurButtonsConstructor, (void *)ImageSide5},
+		{0, Member(&TContainerWindowBody::UpdateUpButton), (void *)FakeUpdateUpButton},
+	};
+	for (auto &C : Content) {
+		if (C.Image != 0)
+			PatchJump(C.Image, C.Fake);
+		PatchOwn(C.Ours, C.Fake);
+	}
 	PatchOwn((void *)OurConsoleConstructor, (void *)FakeConsoleNew);
 	PatchOwn(Member(&TConsoleWindow::SetActive), (void *)FakeConsoleActive);
 	PatchOwn(Member(&TConsoleWindow::OpenDefaultChannel), (void *)FakeConsoleOpen);
@@ -1083,6 +1164,7 @@ static void Operation()
 void TestMainWindow()
 {
 	int Before = Checks, BeforeFailures = Failures;
+	Running = true;
 	PatchImage();
 	InitSkins();
 	Global<int>(0x71c450) = NumberOfSkins;
@@ -1129,9 +1211,9 @@ void TestMainWindow()
 		TSubWindow *Sub = new TSubWindow(6, Body, false, false);
 		TContentWindow *Content = new TContentWindow(1, false);
 		TDialogWindow *Dialog = new TDialogWindow;
-		TSideWindow3 *S3 = new TSideWindow3;
-		TSideWindow4 *S4 = new TSideWindow4;
-		TSideWindow5 *S5 = new TSideWindow5(NULL, NULL);
+		TMainSide3 *S3 = new TMainSide3;
+		TMainSide4 *S4 = new TMainSide4;
+		TMainSide5 *S5 = new TMainSide5(NULL, NULL);
 		TFont Font;
 		TLabel *Label = new TLabel(Font, "");
 		TObject Obj;

@@ -368,10 +368,11 @@ int main(int argc, char **argv)
 #ifdef DIFFTEST_SYSINC
 	TestSysinc();
 #else
-	// DIFFTEST_ONLY=MainWindow, DialogWindow, ContextMenus or ConsoleWindow runs
-	// only mainwindowtest.cpp, dialogwindowtest.cpp, contextmenustest.cpp or
-	// consolewindowtest.cpp (they need none of the earlier tests), for quick
-	// runs while working on them.
+	// DIFFTEST_ONLY=MainWindow, DialogWindow, ContextMenus, ConsoleWindow or
+	// ContentWindows runs only mainwindowtest.cpp, dialogwindowtest.cpp,
+	// contextmenustest.cpp, consolewindowtest.cpp or contentwindowstest.cpp
+	// (they need none of the earlier tests), for quick runs while working on
+	// them.
 	const char *Only = getenv("DIFFTEST_ONLY");
 	if (Only != NULL && strcmp(Only, "MainWindow") == 0) {
 		TestMainWindow();
@@ -390,6 +391,11 @@ int main(int argc, char **argv)
 	}
 	if (Only != NULL && strcmp(Only, "ConsoleWindow") == 0) {
 		TestConsoleWindow();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
+	if (Only != NULL && strcmp(Only, "ContentWindows") == 0) {
+		TestContentWindows();
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
@@ -416,6 +422,7 @@ int main(int argc, char **argv)
 	TestDialogWindow();
 	TestContextMenus();
 	TestConsoleWindow();
+	TestContentWindows();
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif

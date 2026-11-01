@@ -209,7 +209,7 @@ public:
 	void HandleEvent(int Event) { Logf("EEvent%d;", Event); }
 };
 
-TScrollBar::TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, bool Param6)
+TScrollBar::TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, int Step)
 {
 	Range = new TScrollBarRange;
 	memset(Range, 0, sizeof(*Range));
@@ -218,9 +218,11 @@ TScrollBar::TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param
 	if (Testing) {
 		Role(this, "Scroll");
 		Logf("NScroll%d,%d,%d,%d,%d,%d,%d,%d,%d;", Area.x, Area.y, Area.Width, Area.Height, Param2, Param3, Param4,
-			Param5, Param6 ? 1 : 0);
+			Param5, Step);
 		SetVtable(this, TestScrollVtable);
 	}
+	ReportElement(this, "ScrollBar", "%d,%d,%d,%d,%d,%d,%d,%d,%d", Area.x, Area.y, Area.Width, Area.Height, Param2,
+		Param3, Param4, Param5, Step);
 }
 // The range is kept in Data00 for the wheel; the value stays inside it.
 void TScrollBarRange::SetRange(int Minimum, int Maximum, int _Value, int Visible)
@@ -236,7 +238,7 @@ void TScrollBarRange::SetRange(int Minimum, int Maximum, int _Value, int Visible
 }
 class TTestScrollBar : public TScrollBar {
 public:
-	TTestScrollBar() : TScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, false) {}
+	TTestScrollBar() : TScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
 	~TTestScrollBar() { delete Range; }
 	int GetMinimumHeight() { return ScrollMinimumHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DScroll%d,%d,%d,%dx%d;", Surface, x, y, Width, Height); }
@@ -267,6 +269,8 @@ TSkinButton::TSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback
 			Callback.Event, Tooltip == NULL ? "-" : Tooltip, Param);
 		SetVtable(this, TestButtonVtable);
 	}
+	ReportElement(this, "SkinButton", "%d,%d,%d,%d,@%p/%d,%s,%d", x, y, _ButtonUp, _ButtonDown, (void *)Callback.Receiver,
+		Callback.Event, Tooltip == NULL ? "-" : Tooltip, Param);
 }
 static TCallback &ButtonCallback(TSkinButton *Button) { return *(TCallback *)Button->Data2C; }
 TToggleButton::TToggleButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip1,
@@ -279,6 +283,7 @@ TToggleButton::TToggleButton(int x, int y, int _ButtonUp, int _ButtonDown, TCall
 		Logf("NToggle%s;", Tooltip2);
 		SetVtable(this, TestToggleVtable);
 	}
+	ReportElement(this, "ToggleButton", "%s,%s", Tooltip1 == NULL ? "-" : Tooltip1, Tooltip2 == NULL ? "-" : Tooltip2);
 }
 static void InitStates(TMultiStateButton *Button, int States, va_list Arguments)
 {
@@ -339,7 +344,7 @@ static void *__fastcall ImageEditLine(void *This, void *, TRect Area, int MaxLen
 {
 	return new (This) TEditLine(Area, MaxLength, Param);
 }
-static void *__fastcall ImageScrollBar(void *This, void *, TRect Area, int P2, int P3, int P4, int P5, bool P6)
+static void *__fastcall ImageScrollBar(void *This, void *, TRect Area, int P2, int P3, int P4, int P5, int P6)
 {
 	return new (This) TScrollBar(Area, P2, P3, P4, P5, P6);
 }

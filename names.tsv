@@ -1576,5 +1576,175 @@ address	name	kind	confidence	note
 0x4671e0	TToggleButton_ctor	game	low	DialogElements.cpp: TSkinButton with a state (+0x44) and two tooltips, vtable 0x561cd0, 0x50 bytes; the console's server message button; names ours
 0x4672d0	TMultiStateButton_ctor	game	low	DialogElements.cpp: varargs constructor (__cdecl, this pushed): (x, y, tooltip, States, then skin pair and TCallback per state), vtable 0x560e10, 0x58 bytes; the console's volume; names ours
 0x467b50	TEditLine_ctor	game	low	DialogElements.cpp: TWindow, vtable 0x560e98, 0x68 bytes, (TRect area, maximum length, flag); the console's Input; names ours
-0x469a80	TScrollBar_ctor	game	low	DialogElements.cpp: TWindow, vtable 0x561f70, 0x38 bytes, (TRect area, 0, 0, 0, 0, true) in ConsoleWindow.cpp; names ours
+0x469a80	TScrollBar_ctor	game	low	DialogElements.cpp: TWindow, vtable 0x561f70, 0x38 bytes, (TRect area, 0, 0, 0, 0, step): 1 in ConsoleWindow.cpp, 10 or a part of a row in ContentWindows.cpp; names ours
 0x512050	strstr	stl	high	CRT strstr (ConsoleWindow.cpp's account data check)
+0x425920	Limit	game	medium	common.h inline Limit(int *Value, int Min, int Max): clamps in either order; ContentWindows.obj's out-of-line copy (TTradeWindowBody::SetSize inlines it), called by DialogElements.cpp; name ours
+0x4259a0	TMark_ctor	game	medium	Map.h inline TMark(): clears x, y, Type and Text; out-of-line copy for the eh vector constructor iterator of vector<TMark> (0x426170)
+0x4259b0	TTradeWindowBody_Draw	game	medium	ContentWindows.h inline, vtable 0x55f370 +0x44: TWindow::Draw unless Minimized
+0x4259c0	TSubWindowBody_Minimize	game	medium	ContentWindows.h inline, body vtables +0xa0: Minimized=true (TSubWindow::Minimize)
+0x4259d0	TSubWindowBody_Maximize	game	medium	ContentWindows.h inline, body vtables +0xa4: Minimized=false (TSubWindow::Maximize)
+0x4259e0	TSubWindowBody_IsMinimized	game	medium	ContentWindows.h inline, body vtables +0xa8: returns Minimized (+0x2c)
+0x425a10	TContainerWindowBody_GetInitialHeight	game	medium	ContentWindows.h inline, vtable 0x55eed0 +0xac: rows of ObjectCount times Data64C plus Data630.x
+0x425a40	TContainerWindowBody_GetContentHeight	game	medium	ContentWindows.h inline, vtable 0x55eed0 +0xb4: rows of Capacity times Data64C plus Data630.x
+0x425a70	TBattleWindowBody_dtor	game	medium	ContentWindows.h inline ~TBattleWindowBody (vtable 0x55e710): SetHighlightID(0)
+0x425ad0	TBuddylistWindowBody_dtor	game	medium	ContentWindows.h inline ~TBuddylistWindowBody (vtable 0x55e7c8): delete[] MouseOverText
+0x425b00	TSubWindowBody_GetMaximumHeight	game	medium	ContentWindows.h inline, body vtables +0xb0: INT_MAX
+0x425dc0	TBattleWindowBody_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor (vtable 0x55e710 slot 0), calls 0x425a70
+0x425de0	TBuddylistWindowBody_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor (vtable 0x55e7c8 slot 0), calls 0x425ad0
+0x425e00	TCombatControls_dtor	game	medium	ContentWindows.h inline ~TCombatControls (vtable 0x55e880): deletes both radio groups (their vectors' entries inline)
+0x425e50	TCombatControls_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor (vtable 0x55e880 slot 0), calls 0x425e00
+0x425e70	vector_TSkinButtonPtr_ctor_init	game	high	Container.h vector<TSkinButton *>::vector(min, max, block, init), lines 355-356; TRadioButtonGroup's inline constructor (ContentWindows.cpp)
+0x426480	TButtonsWindow_ctor	game	high	ContentWindows.cpp lines 292-309 (_CheckObject!=NULL): identifier 5, vtable 0x55e968, 0x58 bytes; the buttons Skills, Battle, VIP, Logout; class name ours
+0x4268c0	TButtonsWindow_Draw	game	high	ContentWindows.cpp line 322, vtable 0x55e968 +0x44: the buttons show whether windows 6, 7, 9 are open
+0x426aa0	TButtonsWindow_HelpMouseMove	game	high	ContentWindows.cpp line 334, vtable 0x55e968 +0x68: help 16
+0x426c40	TAutomapWindow_dtor	game	high	ContentWindows.cpp line 406, vtable 0x55ea08: stores the zoom, removes the hotkeys
+0x426e40	TAutomapWindow_HelpMouseMove	game	high	ContentWindows.cpp line 418, vtable 0x55ea08 +0x68: help 10
+0x426fe0	TAutomapWindow_MouseHover	game	high	ContentWindows.cpp line 433 (x, y), vtable 0x55ea08 +0x64: a mark's text; prints the buffer to stdout
+0x427200	TAutomapWindow_Arrange	game	high	ContentWindows.cpp line 465, vtable 0x55ea08 +0x48: the frame of the view (skins 8-11)
+0x4274c0	TAutomapWindow_Scroll	game	high	ContentWindows.cpp line 550 (Direction): 0 centres, 1-4 move by 24 pixels; jump table 0x4276e0
+0x4276f0	TAutomapView_Draw	game	high	ContentWindows.cpp line 652, vtable 0x55e688 +0x44: renders the automap into cache surface 5 (pixels, cross, marks), blits it
+0x427e40	TAutomapView_LeftButtonUp	game	high	ContentWindows.cpp line 696 (x, y), vtable 0x55e688 +0x54: walks to the mark or the point
+0x428080	TAutomapView_RightButtonUp	game	high	ContentWindows.cpp line 732 (x, y), vtable 0x55e688 +0x5c: TMarkMenuData and message 59
+0x4282e0	TAutomapView_GetMark	game	high	ContentWindows.cpp line 784 (x, y), vtable 0x55e688 +0x84 (new slot): the mark within 5 pixels, returned by value
+0x428680	TCompassRose_ctor	game	high	ContentWindows.cpp line 791 (_RoseSkin<NumberOfSkins): TElement, vtable 0x55eaf0, 0x28 bytes; no try block
+0x428800	TCompassRose_Draw	game	high	ContentWindows.cpp line 803, vtable 0x55eaf0 +0x44
+0x4289c0	TCompassRose_LeftButtonUp	game	high	ContentWindows.cpp line 825 (x, y), vtable 0x55eaf0 +0x54: centres or scrolls the automap
+0x428cb0	TCompassRose_MouseHover	game	high	ContentWindows.cpp line 836, vtable 0x55eaf0 +0x64
+0x428e40	TCapacityLabel_Draw	game	high	ContentWindows.cpp line 858, vtable 0x55e578 +0x44 (TElement, 0x24 bytes): "Cap:" and the capacity
+0x429090	TSoulLabel_Draw	game	high	ContentWindows.cpp line 875, vtable 0x55e600 +0x44 (TElement, 0x24 bytes): "Soul:" and the soul points
+0x4292e0	TPlayerStates_ctor	game	high	ContentWindows.cpp line 901 (islarge?1:0): TElement, vtable 0x55eb98, 0x2c bytes; class name from SkinProperties.PlayerStates
+0x4295b0	TPlayerStates_GetNumberOfIcons	game	high	ContentWindows.cpp line 947: the player states that are on, at most MaxIcons
+0x4297a0	TPlayerStates_GetIconAt	game	high	ContentWindows.cpp line 995 (x, y): the icon under x, y or -1
+0x429990	TPlayerStates_GetIcon	game	high	ContentWindows.cpp lines 1036-1070 (Position): the skin of the Position'th state; jump tables 0x429e78, 0x429ea0
+0x429eb0	TSmallInventoryWindow_ctor	game	high	ContentWindows.cpp line 1083: identifier 2, vtable 0x55ec98, 0x44 bytes; the drop area (skin 99)
+0x42a0c0	TSmallInventoryWindow_Draw	game	high	ContentWindows.cpp line 1099, vtable 0x55ec98 +0x44
+0x42a300	TSmallInventoryWindow_LeftButtonUp	game	high	ContentWindows.cpp line 1127 (x, y), vtable 0x55ec98 +0x54: drops into the inventory
+0x42a590	TSmallInventoryWindow_HelpMouseMove	game	high	ContentWindows.cpp line 1141 (x, y), vtable 0x55ec98 +0x68: help 13
+0x42a750	TInventoryView_ctor	game	high	ContentWindows.cpp line 1170: TWindow, vtable 0x55ed38, 0x2c bytes; the ten body slots
+0x42aa90	TInventoryView_Draw	game	high	ContentWindows.cpp lines 1181-1209, vtable 0x55ed38 +0x44
+0x42b1b0	TInventoryView_HelpMouseMove	game	high	ContentWindows.cpp lines 1339-1344, vtable 0x55ed38 +0x68: help 12
+0x42b450	TInventoryView_GetSlotAt	game	high	ContentWindows.cpp: the body slot 1-10 under x, y or 0; TBEGIN/TEND without a try block
+0x42b4d0	TCombatControls_ctor	game	high	ContentWindows.cpp line 1425: TWindow, vtable 0x55e880, 0x44 bytes; the fight, chase and secure modes, stop, options, help
+0x42bb70	TCombatControls_Draw	game	high	ContentWindows.cpp line 1450, vtable 0x55e880 +0x44: the chase selection follows the mode
+0x42bd30	TCombatControls_HelpMouseMove	game	high	ContentWindows.cpp lines 1461-1466, vtable 0x55e880 +0x68: help 14 or 15
+0x42bff0	TCombatControls_HandleEvent	game	high	ContentWindows.cpp line 1502 (Event), vtable 0x55e880 +0x70: events 100-105; jump table 0x42c1c8
+0x42c1e0	TStatusWindow_Draw	game	high	ContentWindows.cpp lines 1550-1559, vtable 0x55f500 +0x44: hit point and mana bars (SkinProperties.StatusWindow)
+0x42c830	TStatusWindow_HelpMouseMove	game	high	ContentWindows.cpp line 1571, vtable 0x55f500 +0x68: help 11
+0x42c9d0	TStatusWindow_Arrange	game	high	ContentWindows.cpp line 1598, vtable 0x55f500 +0x48
+0x42cc70	TContainerWindowBody_dtor	game	high	ContentWindows.cpp line 1628, vtable 0x55eed0: SendCloseContainer
+0x42ce10	TContainerWindowBody_Draw	game	high	ContentWindows.cpp lines 1644-1666, vtable 0x55eed0 +0x44
+0x42d420	TContainerWindowBody_SetSize	game	high	ContentWindows.cpp lines 1675-1683 (ScrollbarX>0), vtable 0x55eed0 +0x34
+0x42d6f0	TContainerWindowBody_GetMinimumHeight	game	high	ContentWindows.cpp line 1693, vtable 0x55eed0 +0x40
+0x42d890	TContainerWindowBody_GetMaximumHeight	game	high	ContentWindows.cpp line 1712, vtable 0x55eed0 +0xb0
+0x42da20	TContainerWindowBody_Arrange	game	high	ContentWindows.cpp line 1744, vtable 0x55eed0 +0x48: counts, scroll range, icon and title
+0x42dcb0	TContainerWindowBody_MouseWheel	game	high	ContentWindows.cpp line 1875 (Code), vtable 0x55eed0 +0x60
+0x42de80	TContainerWindowBody_HelpMouseMove	game	high	ContentWindows.cpp lines 1885-1890, vtable 0x55eed0 +0x68: help 20
+0x42e120	TContainerWindowBody_HandleEvent	game	high	ContentWindows.cpp line 1904, vtable 0x55eed0 +0x70: event 3 sends SendContainerUp
+0x42e2c0	TContainerWindowBody_GetSlotAt	game	high	ContentWindows.cpp line 1940 (x, y): the slot under x, y or -1
+0x42e4e0	TContainerWindowBody_UpdateUpButton	game	high	ContentWindows.cpp line 1960: shows or hides the window's up button; TSubWindow::Arrange calls it
+0x42e6b0	TSkillsWindowBody_dtor	game	high	ContentWindows.cpp, vtable 0x55efa8: an open skill menu forgets the window; TBEGIN/TEND without a try block
+0x42e700	TSkillsWindowBody_MouseWheel	game	high	ContentWindows.cpp line 2076 (Code), vtable 0x55efa8 +0x60
+0x42e8d0	TSkillsWindowBody_HelpMouseMove	game	high	ContentWindows.cpp lines 2086-2091, vtable 0x55efa8 +0x68: help 17
+0x42eb70	TSkillsWindowBody_RightButtonUp	game	high	ContentWindows.cpp line 2144, vtable 0x55efa8 +0x5c: message 60 (the skill menu)
+0x42ed10	TSkillsWindowBody_SetSize	game	high	ContentWindows.cpp lines 2153-2160 (ScrollbarX>0), vtable 0x55efa8 +0x34
+0x42efd0	TSkillsWindowBody_Arrange	game	high	ContentWindows.cpp line 2173, vtable 0x55efa8 +0x48
+0x42f190	TSkillsWindowBody_GetMinimumHeight	game	high	ContentWindows.cpp line 2183, vtable 0x55efa8 +0x40
+0x42f330	TSkillsWindowBody_GetInitialHeight	game	high	ContentWindows.cpp line 2196, vtable 0x55efa8 +0xac: GetContentWindowSize(6)
+0x42f500	TSkillsWindowBody_GetMaximumHeight	game	high	ContentWindows.cpp line 2206, vtable 0x55efa8 +0xb0
+0x42f6a0	TSkillsWindowBody_GetLine	game	high	ContentWindows.cpp lines 2234-2280 (NumberOfLine, Lines, Value, Progress): text, value and progress of a line; jump table 0x42fc44
+0x42fc80	TBattleWindowBody_SetSize	game	high	ContentWindows.cpp lines 2465-2472 (ScrollbarX>0), vtable 0x55e710 +0x34
+0x42ff30	TBattleWindowBody_Arrange	game	high	ContentWindows.cpp line 2487, vtable 0x55e710 +0x48
+0x4300e0	TBattleWindowBody_LeftButtonDown	game	high	ContentWindows.cpp line 2498 (x, y), vtable 0x55e710 +0x50
+0x430280	TBattleWindowBody_MouseWheel	game	high	ContentWindows.cpp line 2606 (Code), vtable 0x55e710 +0x60
+0x430450	TBattleWindowBody_HelpMouseMove	game	high	ContentWindows.cpp lines 2616-2621, vtable 0x55e710 +0x68: help 18
+0x4306f0	TBattleWindowBody_GetMinimumHeight	game	high	ContentWindows.cpp line 2631, vtable 0x55e710 +0x40
+0x430890	TBattleWindowBody_GetInitialHeight	game	high	ContentWindows.cpp line 2644, vtable 0x55e710 +0xac: GetContentWindowSize(7)
+0x430a50	TBattleWindowBody_GetContentHeight	game	high	ContentWindows.cpp line 2654, vtable 0x55e710 +0xb4
+0x430be0	TBattleWindowBody_GetOpponentAt	game	high	ContentWindows.cpp line 2668: the opponent row under x, y or -1
+0x430dc0	TTradeOffers_ctor	game	high	ContentWindows.cpp line 2687: TWindow, vtable 0x55f138, 0x34 bytes; scroll bar and separator
+0x430fd0	TTradeOffers_Draw	game	high	ContentWindows.cpp lines 2698-2730 (x+DestX>=0), vtable 0x55f138 +0x44: both offers
+0x4317b0	TTradeOffers_SetSize	game	high	ContentWindows.cpp line 2745, vtable 0x55f138 +0x34
+0x4319b0	TTradeOffers_GetMinimumHeight	game	high	ContentWindows.cpp line 2755, vtable 0x55f138 +0x40
+0x431b40	TTradeOffers_GetContentHeight	game	high	ContentWindows.cpp line 2769: the rows of the longer offer
+0x431d10	TTradeOffers_Arrange	game	high	ContentWindows.cpp line 2782, vtable 0x55f138 +0x48
+0x431ec0	TTradeOffers_LeftButtonDown	game	high	ContentWindows.cpp line 2812 (x, y), vtable 0x55f138 +0x50
+0x432060	TTradeOffers_MouseWheel	game	high	ContentWindows.cpp line 2844 (Code), vtable 0x55f138 +0x60
+0x432230	TTradeOffers_GetOfferAt	game	high	ContentWindows.cpp line 2877 (x, y): side and position under x, y
+0x432470	TTradeNames_ctor	game	high	ContentWindows.cpp line 2894: TWindow, vtable 0x55f200, 0x38 bytes; both names and a separator
+0x432770	TTradeNames_Draw	game	high	ContentWindows.cpp lines 2901-2907, vtable 0x55f200 +0x44
+0x432b00	TTradeNames_SetSize	game	high	ContentWindows.cpp line 2919, vtable 0x55f200 +0x34
+0x432d40	TTradeNames_Arrange	game	high	ContentWindows.cpp line 2930, vtable 0x55f200 +0x48: the names once the offers came
+0x432f00	TTradeButtons_ctor	game	high	ContentWindows.cpp line 2947: TWindow, vtable 0x55f2a0, 0x4c bytes; the wait text, a separator, Callback
+0x433140	TTradeButtons_Draw	game	high	ContentWindows.cpp lines 2954-2960, vtable 0x55f2a0 +0x44
+0x4334d0	TTradeButtons_SetSize	game	high	ContentWindows.cpp line 2974, vtable 0x55f2a0 +0x34
+0x433720	TTradeButtons_SetCancelButton	game	high	ContentWindows.cpp line 2988: "Cancel" or "Reject"
+0x433940	TTradeButtons_ShowAcceptButton	game	high	ContentWindows.cpp lines 2995-3005 (EventComponent!=NULL): "Reject" and "Accept"
+0x433c40	TTradeButtons_Wait	game	high	ContentWindows.cpp line 3020: the accepted offer waits for the partner
+0x433e60	TTradeWindowBody_dtor	game	high	ContentWindows.cpp line 3048, vtable 0x55f370: rejects an open offer, clears the offers
+0x434000	TTradeWindowBody_GetContentHeight	game	high	ContentWindows.cpp, vtable 0x55f370 +0xb4: GetMinimumHeight; no frame, missed by Ghidra
+0x434010	TTradeWindowBody_SetSize	game	high	ContentWindows.cpp line 3066 (Width, Height), vtable 0x55f370 +0x34: Limit inlined
+0x4342b0	TTradeWindowBody_HelpMouseMove	game	high	ContentWindows.cpp lines 3076-3081, vtable 0x55f370 +0x68: help 21
+0x434550	TTradeWindowBody_GetMinimumHeight	game	high	ContentWindows.cpp line 3092, vtable 0x55f370 +0x40
+0x4346f0	TTradeWindowBody_GetInitialHeight	game	high	ContentWindows.cpp line 3102, vtable 0x55f370 +0xac
+0x434880	TTradeWindowBody_GetMaximumHeight	game	high	ContentWindows.cpp line 3112, vtable 0x55f370 +0xb0
+0x434a20	TTradeWindowBody_HandleEvent	game	high	ContentWindows.cpp line 3130, vtable 0x55f370 +0x70: event 21 (counter offer), event 1 (accept)
+0x434bf0	TBuddylistWindowBody_Draw	game	high	ContentWindows.cpp lines 3176-3214, vtable 0x55e7c8 +0x44: the VIP list (SkinProperties.BuddylistWindow)
+0x4352e0	TBuddylistWindowBody_SetSize	game	high	ContentWindows.cpp lines 3225-3232 (ScrollbarX>0), vtable 0x55e7c8 +0x34
+0x435590	TBuddylistWindowBody_MouseWheel	game	high	ContentWindows.cpp line 3280 (Code), vtable 0x55e7c8 +0x60
+0x435760	TBuddylistWindowBody_HelpMouseMove	game	high	ContentWindows.cpp lines 3322-3327, vtable 0x55e7c8 +0x68: help 19
+0x435a00	TBuddylistWindowBody_Arrange	game	high	ContentWindows.cpp line 3340, vtable 0x55e7c8 +0x48
+0x435bb0	TBuddylistWindowBody_GetMinimumHeight	game	high	ContentWindows.cpp line 3350, vtable 0x55e7c8 +0x40
+0x435d50	TBuddylistWindowBody_GetInitialHeight	game	high	ContentWindows.cpp line 3363, vtable 0x55e7c8 +0xac: GetContentWindowSize(9)
+0x435f20	TBuddylistWindowBody_GetContentHeight	game	high	ContentWindows.cpp line 3374, vtable 0x55e7c8 +0xb4
+0x4360c0	TBuddylistWindowBody_GetBuddyAt	game	high	ContentWindows.cpp line 3389 (x, y): the buddy row under x, y or -1
+0x4362b0	CreateInventoryWindow	game	high	ContentWindows.cpp line 106: identifier 1 (TContentWindow, TInventoryView, large TCombatControls); takes the main window; name ours
+0x436510	CreateSmallInventoryWindow	game	high	ContentWindows.cpp line 140: identifier 2 (TSmallInventoryWindow); takes the main window; name ours
+0x4368c0	TAutomapWindow_ctor	game	high	ContentWindows.cpp line 387: identifier 3, vtable 0x55ea08, 0x80 bytes; view, compass rose, buttons, hotkeys
+0x436e80	TAutomapWindow_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor (vtable 0x55ea08 slot 0), calls 0x426c40
+0x436ea0	TAutomapWindow_HandleEvent	game	high	ContentWindows.cpp line 523 (Event), vtable 0x55ea08 +0x70: 3, 4, 106-112; jump table 0x43716c
+0x437210	TPlayerStates_Draw	game	high	ContentWindows.cpp lines 920-925 (x+destx>=0), vtable 0x55eb98 +0x44
+0x437630	TPlayerStates_MouseHover	game	high	ContentWindows.cpp lines 973-976 (x, y, "unknown skin"), vtable 0x55eb98 +0x64; jump table 0x4378f8
+0x437930	TInventoryView_LeftButtonDown	game	high	ContentWindows.cpp line 1229 (x, y), vtable 0x55ed38 +0x50: drags a slot's object
+0x437b30	TInventoryView_LeftButtonUp	game	high	ContentWindows.cpp lines 1251-1277 (x, y), vtable 0x55ed38 +0x54
+0x437fe0	TInventoryView_RightButtonUp	game	high	ContentWindows.cpp line 1329 (x, y), vtable 0x55ed38 +0x5c
+0x438310	TStatusWindow_ctor	game	high	ContentWindows.cpp line 1522: identifier 4, vtable 0x55f500, 0x4c bytes; class name from SkinProperties.StatusWindow
+0x438500	TContainerWindowBody_ctor	game	high	ContentWindows.cpp line 1618 (_Container): vtable 0x55eed0, 0x44 bytes
+0x438700	TContainerWindowBody_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor (vtable 0x55eed0 slot 0), calls 0x42cc70
+0x438720	TContainerWindowBody_LeftButtonDown	game	high	ContentWindows.cpp line 1764 (x, y), vtable 0x55eed0 +0x50
+0x438920	TContainerWindowBody_LeftButtonUp	game	high	ContentWindows.cpp lines 1785-1812 (x, y), vtable 0x55eed0 +0x54
+0x438dd0	TContainerWindowBody_RightButtonUp	game	high	ContentWindows.cpp line 1862 (x, y), vtable 0x55eed0 +0x5c
+0x439100	TContainerWindowBody_Update	game	high	ContentWindows.cpp line 1917, vtable 0x55eed0 +0xb8 (new slot): MainWindow.cpp's OpenContainer on an open window
+0x4392a0	TSkillsWindowBody_ctor	game	high	ContentWindows.cpp line 1980: vtable 0x55efa8, 0x3c bytes; Lines 15
+0x4394b0	TSkillsWindowBody_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor (vtable 0x55efa8 slot 0), calls 0x42e6b0
+0x4394d0	TSkillsWindowBody_Draw	game	high	ContentWindows.cpp lines 2003-2063, vtable 0x55efa8 +0x44
+0x439c30	TSkillsWindowBody_MouseHover	game	high	ContentWindows.cpp line 2133 (x, y), vtable 0x55efa8 +0x64: "You have %d percent to go"
+0x439ef0	TSkillsWindowBody_GetContentHeight	game	high	ContentWindows.cpp line 2225, vtable 0x55efa8 +0xb4
+0x43a0c0	TBattleWindowBody_ctor	game	high	ContentWindows.cpp line 2300: vtable 0x55e710, 0x58 bytes
+0x43a2c0	TBattleWindowBody_Draw	game	high	ContentWindows.cpp lines 2328-2452, vtable 0x55e710 +0x44; jump tables 0x43adf8, 0x43ae08
+0x43ae20	TBattleWindowBody_LeftButtonUp	game	high	ContentWindows.cpp lines 2521-2544 (x, y), vtable 0x55e710 +0x54
+0x43b2f0	TBattleWindowBody_RightButtonUp	game	high	ContentWindows.cpp line 2573 (x, y), vtable 0x55e710 +0x5c: attack (0x800), look, menu (message 53)
+0x43b510	TBattleWindowBody_MouseHover	game	high	ContentWindows.cpp line 2593 (x, y), vtable 0x55e710 +0x64
+0x43b710	TTradeOffers_LeftButtonUp	game	high	ContentWindows.cpp line 2801 (x, y), vtable 0x55f138 +0x54: SendInspectTrade
+0x43b900	TTradeOffers_RightButtonUp	game	high	ContentWindows.cpp line 2831 (x, y), vtable 0x55f138 +0x5c: SendInspectTrade
+0x43baf0	TTradeWindowBody_ctor	game	high	ContentWindows.cpp line 3037: vtable 0x55f370, 0x3c bytes; buttons, offers, names
+0x43bd20	TTradeWindowBody_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor (vtable 0x55f370 slot 0), calls 0x433e60
+0x43bd40	TBuddylistWindowBody_ctor	game	high	ContentWindows.cpp line 3150: vtable 0x55e7c8, 0x3c bytes
+0x43bf40	TBuddylistWindowBody_RightButtonUp	game	high	ContentWindows.cpp line 3249 (x, y), vtable 0x55e7c8 +0x5c: message 54 (the VIP menu)
+0x43c110	TBuddylistWindowBody_LeftButtonDoubleClick	game	high	ContentWindows.cpp line 3267 (x, y), vtable 0x55e7c8 +0x58: SendOpenPrivateConversation
+0x43c2e0	TBuddylistWindowBody_MouseHover	game	high	ContentWindows.cpp line 3312 (x, y), vtable 0x55e7c8 +0x64
+0x43c520	CreateContainerWindow	game	high	ContentWindows.cpp line 170: the TSubWindow of a container (0x40 plus the number); name ours
+0x43c920	CreateSkillsWindow	game	high	ContentWindows.cpp line 197: TSubWindow 6, "Skills"; name ours
+0x43cc90	CreateBattleWindow	game	high	ContentWindows.cpp line 225: TSubWindow 7, "Battle"; name ours
+0x43d000	CreateTradeWindow	game	high	ContentWindows.cpp line 253: TSubWindow TRADE_WINDOW, "Trade"; name ours
+0x43d390	CreateBuddylistWindow	game	high	ContentWindows.cpp line 280: TSubWindow 9, "VIP"; name ours
+0x466bc0	TTextButton_ctor	game	low	DialogElements.cpp lines 1378-1379: TElement-based button with a text, vtable 0x561c40, 0x78 bytes; MainWindow.cpp; names ours
+0x466ed0	TTextButton_ctor_tooltip	game	low	DialogElements.cpp lines 1390-1391 (_Text, strlen(_Text)<50): TTextButton with skins 12/13 and a tooltip; ContentWindows.cpp; names ours
+0x467230	TTextToggleButton_ctor	game	low	DialogElements.cpp: TTextButton with State (+0x78) and two tooltips, vtable 0x561d58, 0x84 bytes; ContentWindows.cpp's TButtonsWindow; names ours
+0x465b40	TLabel_ctor	game	low	DialogElements.cpp line 376 (_Text!=NULL): TElement text, vtable 0x560bb8, 0x4c bytes, (TFont, text); names ours
+0x465510	TLabel_ctor_area	game	low	DialogElements.cpp line 337 (_Text!=NULL): TLabel with an area, (x, y, width, height, TFont, text, flag); ContentWindows.cpp's TTradeNames; names ours
+0x455e40	TLabel_SetText	game	low	DialogElements.cpp: TLabel vtable +0x84 (text, flag); ContentWindows.cpp's TTradeNames::Arrange; names ours
+0x457710	TSkinIcon_ctor	game	low	DialogElements.cpp line 1002: TElement drawing one skin, vtable 0x5614f8, 0x28 bytes, sized to the skin; ContentWindows.cpp's window icons; names ours
+0x4526c0	TObjectIcon_ctor	game	low	DialogElements.cpp: TElement drawing an object, vtable 0x560d88, 0x50 bytes, (TObject, colour, flag); names ours
+0x458de0	TSkinButton_SetRadioButtonGroup	game	low	DialogElements.cpp line 1239 (RadioButtonGroup==NULL): adds the button to a TRadioButtonGroup (+0x38); names ours
+0x460710	TScrollBarRange_SetValue	game	low	DialogElements.cpp (_Value): sets the value within the range, then Arrange; names ours
+0x427697	TAutomapWindow_Scroll_block	game	medium	Ghidra split basic block of 0x4274c0 (case 1 of its jump table 0x4276e0), not an independent function

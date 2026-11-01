@@ -616,7 +616,7 @@ TConsole::TConsole()
 	DrawingListLength = 8;
 	DrawingList = new TDrawing[8];
 	TextWindow = new TTextWindow;
-	ScrollBar = new TScrollBar(TRect(0, 0, SkinProperties.Data878, SkinProperties.Data874), 0, 0, 0, 0, true);
+	ScrollBar = new TScrollBar(TRect(0, 0, SkinProperties.Data878, SkinProperties.Data874), 0, 0, 0, 0, 1);
 	InsertChild(ScrollBar);
 	InsertChild(TextWindow);
 	TEND

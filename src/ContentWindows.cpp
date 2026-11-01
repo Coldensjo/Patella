@@ -36,7 +36,7 @@
 static char AutomapMouseOverText[100]; // 0x5c4398, a mark's text (TAutomapWindow::MouseHover)
 static char SkillMouseOverText[256];   // 0x5c4400, "You have %d percent to go"
 // At 0x5c4500, constructed by the static initialiser 0x559dd0 as
-// TCallback(NULL, 0) like the other window files' (ConsoleWindow.obj's is
+// TCallback(NULL, 0) like the other window files' (ConsoleWindow.obj's is at
 // 0x5c4390, initialiser 0x559dc0); here TTradeButtons' constructor copies it.
 static TCallback NoCallback(NULL, 0);
 
@@ -858,8 +858,8 @@ int TPlayerStates::GetIconAt(int x, int y)
 }
 
 // 0x429990, lines 1036-1070. The assertion comes before the try block. The
-// skin of the Position'th state that is on, in the order of the jump table
-// 0x429e78 (0-9; the skull has its own table 0x429ea0, 1-4); 0 when fewer
+// skin of the Position'th state that is on, in the order of the jump
+// table 0x429e78 (0-9; the skull has its own table 0x429ea0, 1-4); 0 when fewer
 // states are on. State 9 has no icon.
 int TPlayerStates::GetIcon(int Position)
 {

@@ -49,6 +49,7 @@ void TestGraphics(const char *ExePath); // graphicstest.cpp, loads Tibia.spr, Ti
 void TestDialogWindow();                 // dialogwindowtest.cpp, after TestGUI (restores its patches)
 void TestContextMenus();                 // contextmenustest.cpp, after TestDialogWindow (restores its patches)
 void TestConsoleWindow();                // consolewindowtest.cpp, after TestContextMenus (restores its patches)
+void TestContentWindows();               // contentwindowstest.cpp, after TestConsoleWindow (restores its patches)
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
 
 // dialogwindowtest.cpp defines the shared fakes of the classes DialogWindow.cpp
@@ -59,10 +60,20 @@ class TResizer;
 class TSkinButton;
 class TSubWindowBody;
 struct TDialogFakes {
-	void (*Body)(TSubWindowBody *Body, const char *Call);   // UnknownA0-B8 (A8 too) and FUN_0042e4e0 ("Up")
-	bool (*BodyAccepts)(TSubWindowBody *Body);              // UnknownA8's result
+	void (*Body)(TSubWindowBody *Body, const char *Call);   // the test bodies' Minimize ("A0"), Maximize ("A4"), the container body's UpdateUpButton ("Up")
+	bool (*BodyAccepts)(TSubWindowBody *Body);              // unused
 	void (*NewResizer)(TResizer *Resizer, TComponent *ToResize, bool Param2, bool Param3, bool Param4);
 	void (*SetSkins)(TSkinButton *Button, int ButtonUp, int ButtonDown);
 };
 extern TDialogFakes DialogFakes;
+// dialogwindowtest.cpp: the fake of the container body's UpdateUpButton
+// (0x42e4e0, called by TSubWindow::Arrange); dialogwindowtest.cpp and
+// mainwindowtest.cpp redirect the image's and ours to it.
+void __fastcall FakeUpdateUpButton(void *Body, void *);
+// contentwindowstest.cpp: while it is set (that test), the shared fakes of the
+// DialogElements.cpp classes (the constructors in consolewindowtest.cpp,
+// contextmenustest.cpp, mainwindowtest.cpp and contentwindowstest.cpp)
+// report every object they make, with its kind and the arguments.
+extern void (*ElementCreated)(void *Object, const char *Kind, const char *Arguments);
+void ReportElement(void *Object, const char *Kind, const char *Format, ...);
 void TestMainWindow();                   // mainwindowtest.cpp, after TestMapWindow (patches for good as well)
