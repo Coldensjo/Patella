@@ -314,7 +314,7 @@ address	name	kind	confidence	note
 0x453300	vector_int_ctor_init	game	high	Container.h vector<int>::vector(min, max, block, init), lines 355-356
 0x4a2b90	vector_int_ctor	game	high	Container.h vector<int>::vector(min, max, block), lines 369-370; not found by Ghidra
 0x452ac0	vector_int_at	game	high	Container.h vector<int>::operator()
-0x501400	FUN_00501400	game	low	Talk.cpp line 982: frees the strings of a list; called by SetDefaultPreferences
+0x501400	ClearIgnoreList	game	medium	Frees every ignore filter and clears its vector entry; called by SetDefaultPreferences; inferred spelling, binary-verified role
 0x51262a	atol	library	high	CRT atol
 0x513620	strchr	library	high	CRT strchr
 0x404350	SendLogout	game	high	Communication.cpp line 178 (catch blocks); the body lies in the gap before the first assertion
@@ -522,9 +522,8 @@ address	name	kind	confidence	note
 0x4e39d0	TReadScriptFile_readSymbol	game	high	Script.cpp
 0x4e3a10	TReadBinaryFile_readString	game	high	Script.cpp lines 644-653, new[]'d string
 
-0x502f70	BuddyIgnoreList	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fd450	GetNumberOfTalkboxes	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x4fd4c0	FUN_004fd4c0	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x4fd4c0	SetTalkChanged	game	medium	Sets the talkbox/status redraw latch; inferred spelling, binary-verified role
 0x4fd4d0	GetStatusMessage	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fd4e0	SetIgnoreEnabled	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fd4f0	GetIgnoreEnabled	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
@@ -532,10 +531,10 @@ address	name	kind	confidence	note
 0x4fd510	GetBuddyIgnore	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fd520	SetIgnoreListEnabled	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fd530	GetIgnoreListEnabled	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x4fd540	FUN_004fd540	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x4fd540	SetTalkThrottle	game	medium	Restarts the ignored-talk throttle for 1000 milliseconds; inferred spelling, binary-verified role
 0x4fd550	IsTalkThrottled	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fd580	GetConsoleChanged	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x4fd590	FUN_004fd590	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x4fd590	SetConsoleChanged	game	medium	Sets the console redraw latch; inferred spelling, binary-verified role
 0x4fd9e0	GetTalkColor	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fdd80	GetTalkbox	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fdf10	GetTalkboxMode	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
@@ -547,25 +546,25 @@ address	name	kind	confidence	note
 0x4fe960	RemoveTalkbox	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x505120	FindFreeTalkbox	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4fecc0	WrapTalkbox	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x5052e0	FUN_005052e0	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x505ac0	FUN_00505ac0	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x5052e0	AddTalkbox	game	medium	Adds or merges positioned speech/private/broadcast text with its speaker prefix; inferred spelling, binary-verified role
+0x505ac0	AddMessageTalkbox	game	medium	Adds queued event/admin text or replaces the information talkbox; inferred spelling, binary-verified role
 0x4fef70	SetTalkboxRectangle	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x4ff130	FUN_004ff130	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x4ff130	UpdateTalkboxes	game	medium	Expires talkboxes using elapsed milliseconds since the previous update; inferred spelling, binary-verified role
 0x4ff330	RemoveOldestTalkbox	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x4ff500	FUN_004ff500	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x4ff7d0	FUN_004ff7d0	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x4ff500	SetStatusMessage	game	medium	Copies or clears the status message and sets its permanent/50-tick lifetime; inferred spelling, binary-verified role
+0x4ff7d0	UpdateStatusMessage	game	medium	Decrements the status-message tick counter and requests redraw on expiration; inferred spelling, binary-verified role
 0x4ff810	TTalkFilter_Matches	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4ff9c0	FindTalkFilter	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4ffb90	FindTextBuffer	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x4ffe40	AddTalkFilter	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x500060	FUN_00500060	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x500060	IsTalkIgnored	game	medium	Tests the ignore filters after temporary and buddy-name exemptions; inferred spelling, binary-verified role
 0x5002d0	GetBuddyIgnoreText	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x500520	ClearBuddyIgnore	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x5006f0	AddBuddyIgnore	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x5008d0	IsPermanentBuddyIgnore	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x500a90	ClearTemporaryIgnore	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x500c60	FUN_00500c60	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x500e40	FUN_00500e40	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x500c60	AddTemporaryIgnore	game	medium	Replaces the temporary name exemption used when buddy ignoring is enabled; inferred spelling, binary-verified role
+0x500e40	RemoveTemporaryIgnore	game	medium	Removes the temporary name exemption; inferred spelling, binary-verified role
 0x501010	GetIgnoreListText	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x501260	IsModeIgnored	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x5015d0	AddIgnoreFilter	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
@@ -575,14 +574,14 @@ address	name	kind	confidence	note
 0x501ca0	RemoveIgnoreFilter	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x501e70	UnignoreMode	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x502010	UnignoreName	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x5076e0	FUN_005076e0	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x505f10	FUN_00505f10	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x5061f0	FUN_005061f0	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x5076e0	ShowPermanentIgnoreWarning	game	medium	Appends the permanent-ignore warning to the default console when named permanent filters exist; inferred spelling, binary-verified role
+0x505f10	AddTextBufferLine	game	medium	Constructs a statement with optional addressee and appends it to the supplied text buffer; inferred spelling, binary-verified role
+0x5061f0	AddConsoleText	game	medium	Routes statements through console filters or broadcasts messages according to preferences; inferred spelling, binary-verified role
 0x506720	AddChannelNotice	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x5021a0	ClearDefaultTextBuffer	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x502340	ClearTextBuffer	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x5025c0	FUN_005025c0	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x507bc0	CreateTextBuffer	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x5025c0	GetTextBuffer	game	medium	Looks up the console text buffer matching receive mode, addressee and channel; inferred spelling, binary-verified role
+0x507bc0	CreateTextBuffer	game	medium	Creates the matching concrete buffer and registers its filter; send mode is an integer; inferred spelling, binary-verified role
 0x507fa0	DeleteTextBuffer	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x502880	HasUnreadConsoleText	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x506920	TTalkBuffer_dtor	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
@@ -592,7 +591,7 @@ address	name	kind	confidence	note
 0x502f00	TTalkBuffer_Remove_line	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x503210	TTalkBuffer_Remove_number	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x503670	TTalkBuffer_GetLine	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x503920	TTalkBuffer_GetNext	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x503920	TTalkBuffer_GetNext	game	medium	Advances the non-null statement cursor and returns the advanced cursor; inferred spelling, binary-verified role
 0x503a70	TTalkBuffer_Write	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x506bf0	TPrivateTalkBuffer_ctor	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x506ec0	TChannelTalkBuffer_ctor	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
@@ -605,10 +604,10 @@ address	name	kind	confidence	note
 0x5041f0	TRuleViolationChannel_Append	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x5044b0	TTalkLine_ctor	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x5048a0	TTalkLine_ctor_named	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x504d70	FUN_00504d70	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x504f30	FUN_00504f30	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x504d70	ResetTalk	game	medium	Clears all talkboxes, status text and the default text buffer and resets talk order; inferred spelling, binary-verified role
+0x504f30	InitTalk	game	medium	Initializes ignore flags, resets talk and allocates the default text buffer; inferred spelling, binary-verified role
 0x5079c0	TPrivateChannel_ctor	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x507a00	FUN_00507a00	game	low	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x507a00	ExitTalk	game	medium	Clears ignore/exemption lists and destroys the default text buffer; inferred spelling, binary-verified role
 0x4fd5a0	TTalkBuffer_ctor	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd5f0	TTalkBuffer_GetChanged	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd600	TTalkBuffer_Close	game	medium	Talk.h inline, confirmed by vtable references and disassembly
@@ -633,7 +632,7 @@ address	name	kind	confidence	note
 0x5079f0	TPrivateChannel_IsPrivateChannel	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x5036c0	TTalkBuffer_GetLine_block	game	medium	Ghidra split basic block, not an independent function
 
-0x502f70	TTalkBuffer_Remove_line_block	game	high	append-only correction of the earlier autogenerated BuddyIgnoreList row: this is an internal basic block of 0x502f00, not a function or a global
+0x502f70	TTalkBuffer_Remove_line_block	game	high	Internal basic block of TTalkBuffer::Remove(TTalkLine*) at 0x502f00, not a function or global
 
 0x4fd440	GetTalkChanged	game	low	Talk.cpp changed latch at 0x71dde4; name inferred from read-and-clear behavior
 0x4cfa30	array_TProperties_ctor	game	high	Container.h array<TProperties>::array(min, max), line 152 (d>0); class name ours

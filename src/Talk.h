@@ -2,16 +2,33 @@
 #include "common.h"
 #include "Container.h"
 #include "Preferences.h"
-#include "external.h"
 #include <time.h>
 
-enum {
-	TALK_SAY = 1, TALK_WHISPER = 2, TALK_YELL = 3,
-	TALK_PRIVATE_MESSAGE = 4, TALK_GAMEMASTER_BROADCAST = 9,
-	TALK_GAMEMASTER_MESSAGE = 11, TALK_ANIMAL_LOW = 16, TALK_ANIMAL_LOUD = 17,
-	TALK_ADMIN_MESSAGE = 18, TALK_EVENT_MESSAGE = 19, TALK_INFO_MESSAGE = 22,
-	TALK_MODE_BEYONDLAST = 27, TALKBOXES = 10, STATUSMESSAGE_LENGTH = 512
+struct TRGBColor;
+
+enum TALK_MODE {
+	TALK_SAY = 1,
+	TALK_WHISPER = 2,
+	TALK_YELL = 3,
+	TALK_PRIVATE_MESSAGE = 4,
+	TALK_CHANNEL_CALL = 5,
+	TALK_GAMEMASTER_REQUEST = 6,
+	TALK_GAMEMASTER_ANSWER = 7,
+	TALK_PLAYER_ANSWER = 8,
+	TALK_GAMEMASTER_BROADCAST = 9,
+	TALK_GAMEMASTER_CHANNELCALL = 10,
+	TALK_GAMEMASTER_MESSAGE = 11,
+	TALK_ANONYMOUS_BROADCAST = 13,
+	TALK_ANONYMOUS_CHANNELCALL = 14,
+	TALK_ANONYMOUS_MESSAGE = 15,
+	TALK_ANIMAL_LOW = 16,
+	TALK_ANIMAL_LOUD = 17,
+	TALK_ADMIN_MESSAGE = 18,
+	TALK_EVENT_MESSAGE = 19,
+	TALK_INFO_MESSAGE = 22,
+	TALK_MODE_BEYONDLAST = 27
 };
+enum { TALKBOXES = 10, STATUSMESSAGE_LENGTH = 512 };
 struct TTalkbox {
 	int State, Order, RemainingTime, Mode;
 	int x, y, z, Lines;
@@ -181,4 +198,27 @@ void ClearTextBuffer(TTalkBuffer *TextBuffer);
 bool HasUnreadConsoleText();
 void AddChannelNotice(const char *Addressee, const char *Text, int Mode, const char *Name, int Channel);
 void DeleteTextBuffer(TTalkBuffer *TextBuffer);
-TCommunicationChannel *CreateTextBuffer(int ReceiveTalkMode, int SendTalkMode, const char *Name, int Channel);
+TTalkBuffer *CreateTextBuffer(int ReceiveTalkMode, int SendTalkMode, const char *Name, int Channel);
+
+void SetTalkChanged();
+void SetTalkThrottle();
+void SetConsoleChanged();
+void AddTalkbox(int Mode, const char *Speaker, int x, int y, int z, const char *Text);
+void AddMessageTalkbox(int Mode, const char *Text);
+void UpdateTalkboxes();
+void SetStatusMessage(const char *Message, bool Permanent);
+void UpdateStatusMessage();
+bool IsTalkIgnored(int Mode, const char *Name, int Channel);
+void AddTemporaryIgnore(const char *Addressee);
+void RemoveTemporaryIgnore(const char *Addressee);
+void ClearIgnoreList();
+void ShowPermanentIgnoreWarning();
+void AddTextBufferLine(TTalkBuffer *TargetBuffer, uint32 StatementID, const char *Text,
+	int TalkMode, const char *Name, int Time);
+void AddConsoleText(uint32 StatementID, const char *Text, int TalkMode, const char *Name, int Channel, int Time);
+TTalkBuffer *GetTextBuffer(int Mode, const char *Name, int Channel);
+void ResetTalk();
+void InitTalk();
+void ExitTalk();
+extern const char *PTR_s_Your_request_has_been_closed__005c0348;
+extern const char *PTR_s_The_channel_has_been_closed__You_005c034c;

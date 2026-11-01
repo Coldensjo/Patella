@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common.h"
+#include "Talk.h"
 
 // First 16 bytes of the last received packet, at 0x5d1644 (owner unknown).
 extern uint8 PacketHeader[16];
@@ -18,9 +19,6 @@ struct TObject {
 	int Data2;
 };
 
-// Talk.cpp, line 982: frees the strings of a list (called when the options are reset).
-void FUN_00501400();                            // 0x501400
-
 // sysinc.cpp and the gap before it.
 int GetMilliseconds();                          // 0x4fcb90, timeGetTime() minus the start time
 bool RemoveFile(const char *FileName);          // 0x4fcbc0, true when the file was removed
@@ -33,7 +31,7 @@ int regexec(regexp *prog, char *string);        // 0x50f360, 1 on a match
 
 // --- added for Communication.cpp ---
 
-// Temporary binary-layout views, to be moved into Creatures.cpp/Map.cpp/Talk.cpp headers.
+// Temporary binary-layout views, to be moved into Creatures.cpp/Map.cpp headers.
 struct TCommunicationObject {
 	int Type;
 	uint32 Data;
@@ -66,21 +64,6 @@ struct TCommunicationCreature {
 	void FUN_0044b820(int Skull, bool Delay);           // 0x44b820, Creatures.cpp (leading gap)
 	void FUN_0044bc70(int dx, int dy, int GroundSpeed); // 0x44bc70, Creatures.cpp (leading gap)
 	void FUN_0044bf20(int Mark);                        // 0x44bf20, Creatures.cpp
-};
-
-struct TCommunicationStatement {
-	uint8 Unknown00[20];
-	char Name[30];                     // +0x14
-};
-
-struct TCommunicationChannel {
-	void **VTable;                     // +0x00, close at +0x10, remove statement at +0x20
-	uint8 Unknown04[12];
-	TCommunicationStatement *First;    // +0x10
-	uint32 Unknown14;
-	TCommunicationStatement *Cursor;   // +0x18
-
-	TCommunicationStatement *FUN_00503920(); // 0x503920, Talk.cpp; EAX is the advanced cursor
 };
 
 int FUN_0044b870(); // 0x44b870, Control.cpp|Creatures.cpp
@@ -150,23 +133,10 @@ void FUN_004bd560(int dx, int dy); // 0x4bd560, Map.cpp
 void FUN_004bdb70(int dz); // 0x4bdb70, Map.cpp
 void FUN_004bdd70(int rx, int ry, int rz); // 0x4bdd70, Map.cpp
 void FUN_004beb90(int rx, int ry); // 0x4beb90, Map.cpp
-void FUN_004fd4c0(); // 0x4fd4c0, sysinc.cpp|Talk.cpp
-void FUN_004fd540(); // 0x4fd540, sysinc.cpp|Talk.cpp
-void FUN_004fd590(); // 0x4fd590, sysinc.cpp|Talk.cpp
-void FUN_004ff500(const char *Text, bool Permanent); // 0x4ff500, Talk.cpp
-bool FUN_00500060(int Mode, const char *Name, int Channel); // 0x500060, Talk.cpp
-TCommunicationChannel *FUN_005025c0(int Type, const char *Name, int ChannelID); // 0x5025c0, Talk.cpp
-void FUN_005052e0(int Mode, const char *Name, int x, int y, int z, const char *Text); // 0x5052e0, Talk.cpp
-void FUN_00505ac0(int Mode, const char *Text); // 0x505ac0, Talk.cpp
-void FUN_00505f10(TCommunicationChannel *Channel, uint32 StatementID, const char *Text, int Mode, const char *Name, int Time); // 0x505f10, Talk.cpp
-void FUN_005061f0(uint32 StatementID, const char *Text, int Mode, const char *Name, int ChannelID, int Time); // 0x5061f0, Talk.cpp
-TCommunicationChannel *FUN_00507bc0(int Type, bool Open, const char *Name, int ChannelID); // 0x507bc0, Talk.cpp
 
 bool FieldRefreshRequested(int rx, int ry, int rz); // 0x4be750, Map.cpp
 extern uint32 DAT_005cc758; // 0x5cc758, graphics.cpp; Tibia.pic signature
 extern uint32 DAT_005ccb64; // 0x5ccb64, graphics.cpp; Tibia.spr signature
-extern const char *PTR_s_Your_request_has_been_closed__005c0348; // 0x5c0348, Talk.cpp
-extern const char *PTR_s_The_channel_has_been_closed__You_005c034c; // 0x5c034c, Talk.cpp
 
 // --- added for Control.cpp ---
 
@@ -246,39 +216,15 @@ struct TConsoleData34 {
 	int Data2C; // +0x2c, passed to the console text context menu
 };
 
-class TTextBuffer;
-
 class TConsoleWindow {
 public:
-	void FUN_00423060(TTextBuffer *TextBuffer, const char *Title); // 0x423060, lines 1977-1988
-	TTextBuffer *FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
+	void FUN_00423060(TTalkBuffer *TextBuffer, const char *Title); // 0x423060, lines 1977-1988
+	TTalkBuffer *FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
 		INT_PTR Param5);                                            // 0x425070, line 1965
 	void FUN_00425330(INT_PTR Param);                               // 0x425330, lines 2033-2044
 
 	int Data00[13];
 	TConsoleData34 *Data34; // +0x34
-};
-
-// Talk.cpp: the text buffer of a channel, returned by FUN_00425070.
-class TTextBuffer {
-public:
-	virtual void Unknown00();
-	virtual void Unknown04();
-	virtual void Unknown08();
-	virtual void Unknown0C();
-	virtual void Unknown10();
-	virtual void Unknown14();
-	virtual void Unknown18();
-	virtual void Unknown1C();
-	virtual void Unknown20();
-	virtual void Unknown24();
-	virtual void Unknown28();
-	virtual void Unknown2C();
-	virtual void Unknown30();
-	virtual void Unknown34();
-	virtual void Unknown38();
-	virtual void Unknown3C();
-	virtual void Unknown40(int Value); // +0x40
 };
 
 // MainWindow.cpp: the main game window (0x5d16b0).
@@ -554,13 +500,3 @@ bool FUN_004fcba0(const char *FileName); // 0x4fcba0, the file exists
 bool FUN_004fcbc0(const char *FileName); // 0x4fcbc0, deletes the file
 void FUN_004fcd00();                   // 0x4fcd00, seeds rand
 void FUN_004fcd30();                   // 0x4fcd30
-
-// Talk.cpp
-void FUN_004ff130();                   // 0x4ff130
-void FUN_004ff7d0();                   // 0x4ff7d0
-void FUN_00500c60(INT_PTR Param);      // 0x500c60
-void FUN_00500e40(INT_PTR Param);      // 0x500e40
-void FUN_00504d70();                   // 0x504d70
-void FUN_00504f30();                   // 0x504f30
-void FUN_005076e0();                   // 0x5076e0, line 1144
-void FUN_00507a00();                   // 0x507a00

@@ -19,13 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 229 | 35185 |
+| range | 264 | 39315 |
 | header | 21 | 14301 |
-| gap | 480 | 82086 |
-| between | 2030 | 236072 |
-| range | 246 | 38201 |
-| header | 22 | 15065 |
-| gap | 461 | 78302 |
+| gap | 445 | 77956 |
 
 ## Source files
 

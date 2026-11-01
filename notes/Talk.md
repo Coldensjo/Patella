@@ -102,7 +102,10 @@ executable header/template helper except the unconditional error function:
 - all six factory shapes, duplicate detection, inherited getters/setters,
   rule-violation replacement/removal behavior, write enabling, 500 routing
   sequences with preference changes, channel notices, default/direct posts,
-  clearing, deletion, the legacy bool factory bridge and ExitTalk.
+  clearing, deletion, integer send-mode factories and ExitTalk;
+- integration regressions for the +0x10 write-enabled slot (not Close),
+  +0x40 selection slot, and typed first/cursor/addressee rule-violation
+  traversal followed by virtual +0x20 removal.
 
 Base constructor untouched bytes are compared using prefilled storage.
 Factory-created uninitialized Closed bytes are set identically before
@@ -114,13 +117,12 @@ verified from instructions/macros, not executed in the mapped image.
 
 ## Remaining callcheck differences
 
-Final validation on November 1, 2026: Talk contributes **1,202,416 checks**;
-the complete mapped-image suite reports **2,470,456 checks, 0 failures**.
+Final validation on November 1, 2026: Talk contributes **1,202,522 checks**;
+the complete mapped-image suite reports **2,796,382 checks, 0 failures**.
 The exact-arithmetic suite reports **3,201 checks, 0 failures**.
 tools\compile-check.cmd compiles all reconstructed sources with **no
 warnings or errors**, using the existing MFC shim because MFC is absent.
-The generated symbols.tsv retains its required empty trailing TSV columns;
-git diff --check is clean for all other changed files.
+The merged suite includes both Talk and Objects tests. git diff --check is clean.
 
 python -I tools/callcheck.py src/Talk.cpp reports **36 of 88** source entries.
 These are lexical-count differences, not unexplained binary behavior.
@@ -162,33 +164,94 @@ The complete address list follows; parentheses give ours/decompiled counts.
 | 0x5076e0 | vector operator 0/1. |
 | 0x5079c0 | Base channel constructor 0/1: C++ base initializer versus explicit pseudocode call. |
 | 0x507a00 | Clear 0/1: destructor call versus the image's inlined destructor. |
-| 0x507bc0 | Six constructors each 0/1: new/base-initializer syntax instead of explicit named calls. The compatibility bridge's self-address is intentionally discarded by callcheck. |
+| 0x507bc0 | Six constructors each 0/1: new/base-initializer syntax instead of explicit named calls. |
 | 0x507fa0 | vector operator 0/2; Clear 0/1 is destructor/inlining as at 0x507a00. |
 
-## Existing external.h declarations now defined
+## Integration with the finished files
 
-The append-only header is deliberately unchanged. Its retained declarations
-are fulfilled by Talk.cpp (and the compatible forwarding member):
+Integrated f5ccfa7 with main at 75cbeaa in a separate worktree. The merged
+metadata retains both Talk and Objects/Script ownership and decisions, and
+the differential executable builds/runs talktest.cpp and objectstest.cpp
+in one invocation. No original executable process or entry point is run.
+The local executable/data are copies of C:\Tibia's inputs; decomp/raw is a
+read-only-use junction to C:\Tibia\decomp\raw. No files in C:\Tibia are edited.
 
-- FUN_00501400; FUN_004fd4c0; FUN_004fd540; FUN_004fd590.
-- FUN_004ff500; FUN_00500060; FUN_005025c0; FUN_005052e0;
-  FUN_00505ac0; FUN_00505f10; FUN_005061f0; FUN_00507bc0.
-- FUN_004ff130; FUN_004ff7d0; FUN_00500c60; FUN_00500e40;
-  FUN_00504d70; FUN_00504f30; FUN_005076e0; FUN_00507a00.
-- TCommunicationChannel::FUN_00503920.
-- PTR_s_Your_request_has_been_closed__005c0348 and
-  PTR_s_The_channel_has_been_closed__You_005c034c.
+Talk.h owns the full buffer/line/filter types, all Talk function declarations,
+closed-channel string declarations and the shared TALK_MODE enum formerly
+in Communication.h. external.h now includes Talk.h for ConsoleWindow's buffer
+parameters; all three Talk layout views and all Talk declarations are gone.
+TRGBColor remains owned by external.h, forward-declared in Talk.h. The only
+unfinished-file function used by Talk is the existing GetMilliseconds.
 
-No new dependency on an unfinished file required an external declaration:
-GetMilliseconds was already declared there. Future cleanup may consolidate
-TTextBuffer/TCommunicationChannel with Talk.h, but no caller is renamed in
-this reconstruction.
+The factory at 0x507bc0 returns TTalkBuffer* and takes integer receive/send
+modes. There is no bool forwarding definition. 0x503920 is exclusively
+TTalkBuffer::GetNext; its old cast-based forwarding member is gone. No FUN
+name or compatibility-type cast remains in Talk.cpp/Talk.h. names.tsv has
+one row per address, including only the correct 0x502f70 internal-block row.
+All 21 reviewed names and their confidence are in notes/decisions.md.
+
+### Caller audit
+
+Each changed caller was compared with its regenerated decomp/clean function
+and objdump instructions in the copied Tibia.exe. Free-function renames keep
+all argument expressions, conditions, call order and exception macros.
+The following instruction addresses are call sites, not function entries.
+
+| Caller(s) | Real Talk calls | Binary call-site evidence |
+|---|---|---|
+| Communication::SendMoveObject | SetStatusMessage | 0x404df4; same text and false |
+| ReceiveMap / North / East / South / West | SetTalkChanged | 0x415276 / 0x415437 / 0x415607 / 0x4157d7 / 0x4159a7 |
+| ReceiveFloorUp / ReceiveFloorDown | SetTalkChanged | 0x4170a5 / 0x4172fd |
+| ReceiveTalk | IsTalkIgnored, SetTalkThrottle, AddTalkbox, AddConsoleText | ignore at 0x410be6/0x410c44/0x410ca2/0x410d62; throttle 0x410d99; talkboxes 0x410c08/0x410c63/0x410d80; console 0x410cf5 |
+| ReceiveRuleViolationChannel | CreateTextBuffer, GetTextBuffer | 0x4115dd / 0x4115ee; send mode is push 1 at 0x4115d6, not a source bool; fallback remains (6,NULL,-1) |
+| ReceiveRemoveRuleViolation | GetTextBuffer, TTalkBuffer::GetNext, virtual Remove(line), SetConsoleChanged | 0x41179f / 0x4117bb / 0x4117dd / 0x4117e2 |
+| ReceiveCancelRuleViolation | GetTextBuffer, AddTextBufferLine, SetWriteEnabled(false) | 0x411981 / 0x4119b4 / 0x4119c2 |
+| ReceiveLockRuleViolation | GetTextBuffer, AddTextBufferLine, SetWriteEnabled(false) | 0x411b51 / 0x411b6e / 0x411b7c |
+| ReceiveCloseChannel | GetTextBuffer, AddTextBufferLine, SetWriteEnabled(false) | 0x411edb / 0x411ef5 / 0x411f02 |
+| ReceiveTextMessage | AddMessageTalkbox, SetStatusMessage, AddConsoleText | 0x4120cf / 0x4120ee / 0x412108 |
+| Control::EnterGame | ResetTalk, ShowPermanentIgnoreWarning | 0x446657 / 0x44665c |
+| Control::TimerEvent | UpdateTalkboxes, UpdateStatusMessage | 0x448a4a / 0x448a4f |
+| Control::ProcessEvents, events 0x19/0x1a | AddTemporaryIgnore, RemoveTemporaryIgnore | 0x449c62 / 0x449c7f; Param1 is the original char pointer on the 32-bit stack and is still freed after the call |
+| ProcessEvents, events 0x31/0x32 | SetSelected(true), ConsoleWindow's typed TTalkBuffer* parameter | 0x449efb creates/gets the buffer, 0x449f06 invokes +0x40 with 1; 0x449f2e passes Param1 unchanged |
+| InitControl / ExitControl | InitTalk / ExitTalk | 0x44b57b / 0x448e92 |
+| Preferences::SetDefaultPreferences | ClearIgnoreList | tail jump at 0x4db86e to 0x501400; source retains its final call |
+
+ReceiveTalk has four source branches that call SetTalkThrottle, but the
+pseudocode/binary share one return block at 0x410d99. All other renamed
+free calls have identical source/pseudocode/instruction call counts, except
+SetDefaultPreferences' final call, implemented as a tail jump in the image.
+Arguments were checked against the pseudocode and stack setup; no caller
+logic was changed to force lexical-count agreement.
+
+### Layout and vtable correction
+
+The old views' field offsets are correct: buffer first at +0x10, cursor at
++0x18, and line Addressee at +0x14. These now have static_asserts against
+the real types. ReceiveRemoveRuleViolation loads/stores those offsets at
+0x4117ad/0x4117b0/0x4117c6, obtains the advanced cursor before freeing a
+matching statement, and calls Remove(TTalkLine*) at vtable +0x20. The typed
+loop preserves that order and the case-insensitive comparison.
+
+The old TCommunicationChannel view's **close-at-+0x10 comment was wrong**.
+Actual vtables put Close at +0x08 and SetWriteEnabled(bool) at +0x10. The
+three false calls are therefore write disabling, not channel closure;
+Closed must not be set or consumed by them. The new named virtual calls
+keep exactly those slots and arguments. TTextBuffer::Unknown40(int) was an
+unnamed view of SetSelected(bool) at +0x40 (0x4fd660 writes byte +0x29).
+Changing 1 to true preserves its argument byte and four-byte x86 stack slot.
+The byte/field layouts themselves required no changes.
+
+The integration regressions in talktest.cpp check that write disabling does
+not set Closed on any factory shape, select a rule-violation buffer through
+the actual +0x40 slot, and compare typed cursor/name matching/removal with
+the original 0x503920 and +0x20 virtual operations. The former bool-bridge
+test now directly checks CreateTextBuffer(6,1,NULL,4) against 0x507bc0.
 
 ## Open questions
 
 Only original spellings and source-level type syntax remain uncertain:
-class/helper/flag names are inferred, colors may originally have returned
-TRGBColor by value, and the old external.h factory has a narrower bool view.
-The explicit ABI bridge and tested layouts settle runtime behavior on valid
-inputs. Original exception/allocation-failure execution remains outside the
-mapped-image harness's coverage.
+class/helper/flag names are inferred, and colors may originally have
+returned TRGBColor by value. The factory's integer send mode and the caller
+field/vtable layouts are settled; there are no remaining compatibility
+shims or unexplained callcheck differences. Original exception/allocation-
+failure execution remains outside the mapped-image harness's coverage.

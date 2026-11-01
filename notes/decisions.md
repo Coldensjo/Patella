@@ -48,6 +48,39 @@ with the evidence, for review. Confidence: high, medium, low.
 
 ## Talk.cpp
 
+Integration naming audit, November 1, 2026, by ChatGPT gpt-6.1-sol. No
+original function spellings are present in these entries' assertion/catch
+strings, so the TitleCase names below are inferred from behavior and callers.
+Confidence is **medium** for the chosen name/role and **low** for its exact
+original spelling; the field offsets, flags, arguments and vtable slots are
+**high** confidence from instructions and differential tests. Assertion/catch
+identifiers (Speaker, TargetBuffer, ReceiveTalkMode, Addressee, etc.) are kept.
+
+| Address | Chosen name | Confidence | Behavior |
+|---|---|---|---|
+| 0x4fd4c0 | SetTalkChanged | medium; spelling low | Sets the talkbox/status redraw latch |
+| 0x4fd540 | SetTalkThrottle | medium; spelling low | Restarts the ignored-talk throttle for 1000 milliseconds |
+| 0x4fd590 | SetConsoleChanged | medium; spelling low | Sets the console redraw latch |
+| 0x5052e0 | AddTalkbox | medium; spelling low | Adds or merges positioned speech/private/broadcast text with its speaker prefix |
+| 0x505ac0 | AddMessageTalkbox | medium; spelling low | Adds queued event/admin text or replaces the information talkbox |
+| 0x4ff130 | UpdateTalkboxes | medium; spelling low | Expires talkboxes using elapsed milliseconds since the previous update |
+| 0x4ff500 | SetStatusMessage | medium; spelling low | Copies or clears the status message and sets its permanent/50-tick lifetime |
+| 0x4ff7d0 | UpdateStatusMessage | medium; spelling low | Decrements the status-message tick counter and requests redraw on expiration |
+| 0x500060 | IsTalkIgnored | medium; spelling low | Tests the ignore filters after temporary and buddy-name exemptions |
+| 0x500c60 | AddTemporaryIgnore | medium; spelling low | Replaces the temporary name exemption used when buddy ignoring is enabled |
+| 0x500e40 | RemoveTemporaryIgnore | medium; spelling low | Removes the temporary name exemption |
+| 0x501400 | ClearIgnoreList | medium; spelling low | Frees every ignore filter and clears its vector entry; called by SetDefaultPreferences |
+| 0x5076e0 | ShowPermanentIgnoreWarning | medium; spelling low | Appends the permanent-ignore warning to the default console when named permanent filters exist |
+| 0x505f10 | AddTextBufferLine | medium; spelling low | Constructs a statement with optional addressee and appends it to the supplied text buffer |
+| 0x5061f0 | AddConsoleText | medium; spelling low | Routes statements through console filters or broadcasts messages according to preferences |
+| 0x5025c0 | GetTextBuffer | medium; spelling low | Looks up the console text buffer matching receive mode, addressee and channel |
+| 0x504d70 | ResetTalk | medium; spelling low | Clears all talkboxes, status text and the default text buffer and resets talk order |
+| 0x504f30 | InitTalk | medium; spelling low | Initializes ignore flags, resets talk and allocates the default text buffer |
+| 0x507a00 | ExitTalk | medium; spelling low | Clears ignore/exemption lists and destroys the default text buffer |
+| 0x507bc0 | CreateTextBuffer | medium; spelling low | Creates the matching concrete buffer and registers its filter; send mode is an integer |
+| 0x503920 | TTalkBuffer::GetNext | medium; spelling low | Advances the non-null statement cursor and returns the advanced cursor |
+
+
 - **Leading sysinc/Talk gap** (high). 0x4fd440-0x4fd59f is Talk.cpp:
   fourteen helpers use the same status message, ten talkboxes, console-change
   flag and ignore flags at 0x71dbd0-0x71ef6c as asserted Talk functions. None
@@ -82,23 +115,34 @@ with the evidence, for review. Confidence: high, medium, low.
   ehinfo's scan can also mistake the following function's prologue for the
   frame of the four-byte getter at 0x507060 and the tail-call destructor at
   0x506920; disassembly establishes that both have no frame of their own.
-- **Names and source types** (low for original spelling; medium/high for
-  inferred roles/layouts). TTalkBuffer, TTalkLine, TTalkFilter, the five
-  derived class names, flag names and helper names not present in assertion
-  strings are ours. names.tsv's medium labels describe confidence in the
-  role, not recovery of those original spellings. TTextBuffer in external.h
-  and TCommunicationChannel are pre-existing incomplete layout views; they
-  cannot be rewritten under the append-only rule, so Talk.h defines the full
-  compatible layout as TTalkBuffer and the existing calls receive explicit
-  ABI bridges. Existing FUN names/calls are retained. The closed-channel
-  string globals keep their existing declarations and binary names.
-- **Factory's second parameter** (high for int from catches and callers;
-  low for the old bool interface). 0x507bc0 takes ReceiveTalkMode and an
-  integer SendTalkMode. CreateTextBuffer exposes that real signature. The
-  existing FUN_00507bc0(int,bool,...) declaration remains intact and is a
-  compatibility bridge: Communication.cpp's (6,true,NULL,ChannelID) still
-  passes send mode 1 and creates the original rule-violation channel. Full
-  integer modes, including equal receive/send modes, are differentially tested.
+- **Names and source types** (low for original spelling; high for tested
+  layouts). TTalkBuffer, TTalkLine, TTalkFilter, the five derived class names,
+  flag names and helpers not present in assertion strings are ours. Talk.h
+  now owns the full types, the shared TALK_MODE enum and all Talk declarations.
+  TTextBuffer/TCommunicationChannel/TCommunicationStatement views and all Talk
+  declarations were removed from external.h. It includes Talk.h only for its
+  unfinished ConsoleWindow declarations. TRGBColor stays in external.h;
+  Talk.h forward-declares it for its pointer-only color interfaces.
+- **One definition per entry** (high). CreateTextBuffer is the only definition
+  of 0x507bc0, and TTalkBuffer::GetNext the only definition of 0x503920.
+  Both compatibility shims and all Talk-to-TCommunicationChannel casts are
+  removed. Every names.tsv address is unique; reviewed Talk rows are edited
+  in place and now describe each function's behavior.
+- **Factory's second parameter** (high). 0x507bc0 takes integer SendTalkMode,
+  not bool. ReceiveRuleViolationChannel pushes 1 at 0x4115d6 and calls the
+  factory at 0x4115dd. Its source now uses (6,1,NULL,ChannelID), preserving
+  the binary request, including the fallback lookup and event 0x32. Equal
+  modes and full integer send modes remain differentially tested.
+- **Old channel-view correction** (high). First +0x10, Cursor +0x18 and the
+  statement Name +0x14 exactly match TTalkBuffer::first/cursor and
+  TTalkLine::Addressee; static assertions enforce them in Communication.cpp.
+  The old view's comment calling slot +0x10 close was wrong: that slot is
+  SetWriteEnabled(bool), not Close (slot +0x08). ReceiveCancelRuleViolation,
+  ReceiveLockRuleViolation and ReceiveCloseChannel all pass false to +0x10;
+  those calls now use SetWriteEnabled(false) without changing Closed.
+  Removal remains virtual Remove(TTalkLine*) at +0x20, and event 0x31's
+  Unknown40(1) becomes SetSelected(true), the same +0x40 slot. See the full
+  caller/instruction audit and regression coverage in notes/Talk.md.
 - **Source order** (high where lines exist). The compiler placed the free
   slot finder (line 300), speech/message insertion (352-474), permanent-ignore
   warning (1144-1149), routing (1179-1279), factory/deletion (1361-1383), and
@@ -142,15 +186,15 @@ with the evidence, for review. Confidence: high, medium, low.
   second-boundary races. Only explicitly invoked mapped functions execute;
   the original executable's loader, imports and entry point never run.
   Error/exception and allocation-failure paths are not invoked in the image.
-- **Append-only metadata correction** (high). An initial automatic names
-  extraction mistook the explanatory 0x502f70 comment for a function and
-  appended BuddyIgnoreList for that address. It is superseded by a later
-  TTalkBuffer_Remove_line_block row (last row wins in simplify.py). The
-  erroneous historical row is retained to honor the append-only constraint;
-  the actual global is BuddyExemptionList, so it cannot pollute callcheck.
+- **Metadata correction** (high). The old automatic names extraction
+  mistook the 0x502f70 explanatory comment for a function and appended
+  BuddyIgnoreList. The erroneous duplicate is removed; the single remaining
+  TTalkBuffer_Remove_line_block row identifies an internal block of 0x502f00,
+  not a function or global. No separate source definition is added.
 
-See notes/Talk.md for exception-table checks, switch tables, every remaining
-callcheck difference, test coverage and the retained external.h declarations.
+See notes/Talk.md for exception-table checks, switch tables, all remaining
+callcheck differences, caller integration and differential coverage.
+
 ## Objects.cpp
 
 - **The whole Objects/Player gap (0x4d7cd0-0x4d913e) is Player.obj** (high).

@@ -12,6 +12,7 @@
 #include "Preferences.h"
 #include "Script.h"
 #include "Status.h"
+#include "Talk.h"
 #include "external.h"
 #include <cstddef>
 
@@ -31,7 +32,9 @@ static_assert(sizeof(TCommunicationObject) == 12, "object layout");
 static_assert(offsetof(TCommunicationCreature, Direction) == 0x50, "creature direction");
 static_assert(offsetof(TCommunicationCreature, OutfitType) == 0x60, "creature outfit");
 static_assert(offsetof(TCommunicationCreature, Skull) == 0x90, "creature skull");
-static_assert(offsetof(TCommunicationChannel, Cursor) == 0x18, "channel cursor");
+static_assert(offsetof(TTalkBuffer, first) == 0x10, "channel first statement");
+static_assert(offsetof(TTalkBuffer, cursor) == 0x18, "channel cursor");
+static_assert(offsetof(TTalkLine, Addressee) == 0x14, "statement addressee");
 
 // Not in this file's source: the linker placed VC7.1 STL template code that
 // this file instantiates (through std::stringstream in SendLogin and
@@ -276,7 +279,7 @@ void SendMoveObject(int x, int y, int z, int ObjectType, int Position, int Desti
 {
 	TBEGIN
 	if (GetObjectFlag(ObjectType, 13)) {
-		FUN_004ff500("You cannot move this object.", false);
+		SetStatusMessage("You cannot move this object.", false);
 		return;
 	}
 	if (x != 0xffff)
@@ -1245,7 +1248,7 @@ void ReceiveMap()
 	FUN_004bccb0();
 	FUN_0044b8e0();
 	ReadMap(0, 0, 17, 13);
-	FUN_004fd4c0();
+	SetTalkChanged();
 	FUN_004516e0();
 	FUN_004a3690(PlayerX, PlayerY, PlayerZ);
 	TEND2(PlayerX, PlayerY)
@@ -1257,7 +1260,7 @@ void ReceiveMapNorth()
 	TBEGIN
 	FUN_004bd560(0, 1);
 	ReadMap(0, 0, 17, 0);
-	FUN_004fd4c0();
+	SetTalkChanged();
 	int x;
 	int y;
 	int z;
@@ -1272,7 +1275,7 @@ void ReceiveMapEast()
 	TBEGIN
 	FUN_004bd560(-1, 0);
 	ReadMap(17, 0, 17, 13);
-	FUN_004fd4c0();
+	SetTalkChanged();
 	int x;
 	int y;
 	int z;
@@ -1287,7 +1290,7 @@ void ReceiveMapSouth()
 	TBEGIN
 	FUN_004bd560(0, -1);
 	ReadMap(0, 13, 17, 13);
-	FUN_004fd4c0();
+	SetTalkChanged();
 	int x;
 	int y;
 	int z;
@@ -1302,7 +1305,7 @@ void ReceiveMapWest()
 	TBEGIN
 	FUN_004bd560(1, 0);
 	ReadMap(0, 0, 0, 13);
-	FUN_004fd4c0();
+	SetTalkChanged();
 	int x;
 	int y;
 	int z;
@@ -2065,22 +2068,22 @@ void ReceiveTalk()
 		int y = GetWord();
 		int z = GetByte();
 		GetString(Text, 512);
-		if (FUN_00500060(Mode, Name, -1)) {
-			FUN_004fd540();
+		if (IsTalkIgnored(Mode, Name, -1)) {
+			SetTalkThrottle();
 			return;
 		}
-		FUN_005052e0(Mode, Name, x, y, z, Text);
+		AddTalkbox(Mode, Name, x, y, z, Text);
 		break;
 	}
 	case 4:
 	case 9:
 	case 11:
 		GetString(Text, 512);
-		if (FUN_00500060(Mode, Name, -1)) {
-			FUN_004fd540();
+		if (IsTalkIgnored(Mode, Name, -1)) {
+			SetTalkThrottle();
 			return;
 		}
-		FUN_005052e0(Mode, Name, 0, 0, 0, Text);
+		AddTalkbox(Mode, Name, 0, 0, 0, Text);
 		break;
 	case 5:
 	case 10:
@@ -2088,8 +2091,8 @@ void ReceiveTalk()
 	case 14:
 		Channel = GetWord();
 		GetString(Text, 512);
-		if (FUN_00500060(Mode, Name, -1)) {
-			FUN_004fd540();
+		if (IsTalkIgnored(Mode, Name, -1)) {
+			SetTalkThrottle();
 			return;
 		}
 		TargetChannel = Channel;
@@ -2108,17 +2111,17 @@ void ReceiveTalk()
 		int y = GetWord();
 		int z = GetByte();
 		GetString(Text, 512);
-		if (!FUN_00500060(Mode, Name, -1)) {
-			FUN_005052e0(Mode, Name, x, y, z, Text);
+		if (!IsTalkIgnored(Mode, Name, -1)) {
+			AddTalkbox(Mode, Name, x, y, z, Text);
 			return;
 		}
-		FUN_004fd540();
+		SetTalkThrottle();
 		return;
 	}
 	default:
 		TERROR1("unknown talk mode", Mode);
 	}
-	FUN_005061f0(StatementID, Text, Mode, Name, TargetChannel, Time);
+	AddConsoleText(StatementID, Text, Mode, Name, TargetChannel, Time);
 	TEND2(Mode, Channel)
 }
 
@@ -2169,9 +2172,9 @@ void ReceiveRuleViolationChannel()
 	int ChannelID;
 	TBEGIN
 	ChannelID = GetWord();
-	TCommunicationChannel *Channel = FUN_00507bc0(6, true, NULL, ChannelID);
+	TTalkBuffer *Channel = CreateTextBuffer(6, 1, NULL, ChannelID);
 	if (Channel == NULL)
-		Channel = FUN_005025c0(6, NULL, -1);
+		Channel = GetTextBuffer(6, NULL, -1);
 	AddMessage(0x32, (INT_PTR)Channel, 0);
 	TEND1(ChannelID)
 }
@@ -2182,19 +2185,18 @@ void ReceiveRemoveRuleViolation()
 	TBEGIN
 	char Name[44];
 	GetString(Name, 30);
-	TCommunicationChannel *Channel = FUN_005025c0(6, NULL, -1);
+	TTalkBuffer *Channel = GetTextBuffer(6, NULL, -1);
 	if (Channel != NULL) {
-		Channel->Cursor = Channel->First;
-		TCommunicationStatement *Statement = Channel->First;
+		Channel->cursor = Channel->first;
+		TTalkLine *Statement = Channel->first;
 		while (Statement != NULL) {
-			TCommunicationStatement *Current = Statement;
-			Statement = Channel->FUN_00503920();
-			if (CompareStrings(Current->Name, Name, -1) == 0) {
-				typedef void (__thiscall *TRemove)(TCommunicationChannel *, TCommunicationStatement *);
-				((TRemove)Channel->VTable[8])(Channel, Current);
+			TTalkLine *Current = Statement;
+			Statement = Channel->GetNext();
+			if (CompareStrings(Current->Addressee, Name, -1) == 0) {
+				Channel->Remove(Current);
 			}
 		}
-		FUN_004fd590();
+		SetConsoleChanged();
 	}
 	TEND
 }
@@ -2205,13 +2207,12 @@ void ReceiveCancelRuleViolation()
 	TBEGIN
 	char Name[44];
 	GetString(Name, 30);
-	TCommunicationChannel *Channel = FUN_005025c0(8, Name, -1);
+	TTalkBuffer *Channel = GetTextBuffer(8, Name, -1);
 	if (Channel != NULL) {
 		char Text[444];
 		sprintf(Text, "%s has finished the request.", Name);
-		FUN_00505f10(Channel, 0, Text, 18, NULL, 0);
-		typedef void (__thiscall *TClose)(TCommunicationChannel *, bool);
-		((TClose)Channel->VTable[4])(Channel, false);
+		AddTextBufferLine(Channel, 0, Text, 18, NULL, 0);
+		Channel->SetWriteEnabled(false);
 	}
 	TEND
 }
@@ -2220,12 +2221,11 @@ void ReceiveCancelRuleViolation()
 void ReceiveLockRuleViolation()
 {
 	TBEGIN
-	TCommunicationChannel *Channel = FUN_005025c0(7, NULL, -1);
+	TTalkBuffer *Channel = GetTextBuffer(7, NULL, -1);
 	if (Channel != NULL) {
 		const char *Text = PTR_s_Your_request_has_been_closed__005c0348;
-		FUN_00505f10(Channel, 0, Text, 18, NULL, 0);
-		typedef void (__thiscall *TClose)(TCommunicationChannel *, bool);
-		((TClose)Channel->VTable[4])(Channel, false);
+		AddTextBufferLine(Channel, 0, Text, 18, NULL, 0);
+		Channel->SetWriteEnabled(false);
 	}
 	TEND
 }
@@ -2248,12 +2248,11 @@ void ReceiveCloseChannel()
 	int ChannelID;
 	TBEGIN
 	ChannelID = GetWord();
-	TCommunicationChannel *Channel = FUN_005025c0(5, NULL, ChannelID);
+	TTalkBuffer *Channel = GetTextBuffer(5, NULL, ChannelID);
 	if (Channel != NULL) {
 		const char *Text = PTR_s_The_channel_has_been_closed__You_005c034c;
-		FUN_00505f10(Channel, 0, Text, 18, NULL, 0);
-		typedef void (__thiscall *TClose)(TCommunicationChannel *, bool);
-		((TClose)Channel->VTable[4])(Channel, false);
+		AddTextBufferLine(Channel, 0, Text, 18, NULL, 0);
+		Channel->SetWriteEnabled(false);
 	}
 	TEND1(ChannelID)
 }
@@ -2268,11 +2267,11 @@ void ReceiveTextMessage()
 	char Text[632];
 	GetString(Text, 512);
 	if (Mode == 18 || Mode == 19 || Mode == 22)
-		FUN_00505ac0(Mode, Text);
+		AddMessageTalkbox(Mode, Text);
 	if (Mode == 23 || Mode == 21 || Mode == 20)
-		FUN_004ff500(Text, false);
+		SetStatusMessage(Text, false);
 	if (Mode != 23)
-		FUN_005061f0(0, Text, Mode, NULL, -1, 0);
+		AddConsoleText(0, Text, Mode, NULL, -1, 0);
 	TEND1(Mode)
 }
 
@@ -2340,7 +2339,7 @@ void ReceiveFloorUp()
 		SkipFields = 0;
 		ReadFloor(4);
 	}
-	FUN_004fd4c0();
+	SetTalkChanged();
 	FUN_004516e0();
 	FUN_004a3690(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {
@@ -2375,7 +2374,7 @@ void ReceiveFloorDown()
 		if (z < 14)
 			ReadFloor(0);
 	}
-	FUN_004fd4c0();
+	SetTalkChanged();
 	FUN_004516e0();
 	FUN_004a3690(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {

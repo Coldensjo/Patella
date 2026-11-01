@@ -2,6 +2,8 @@
 // Only mapped functions run: no imports, entry point or original client loader.
 #include "difftest.h"
 #include "../../src/Talk.h"
+#include "../../src/Utils.h"
+#include "../../src/external.h"
 #include <new>
 #include <stdarg.h>
 #include <vector>
@@ -143,28 +145,28 @@ static void TestHelpers()
 			CHECK(Flag.OurGet() == At<BoolFn>(Flag.Get)(), "Talk flag");
 		}
 	for (int Round = 0; Round < 30; Round++) {
-		FUN_004fd4c0(); At<VoidFn>(0x4fd4c0)();
+		SetTalkChanged(); At<VoidFn>(0x4fd4c0)();
 		CHECK(GetTalkChanged() == At<BoolFn>(0x4fd440)() && !GetTalkChanged() && !At<BoolFn>(0x4fd440)(), "talk changed latch");
-		FUN_004fd590(); At<VoidFn>(0x4fd590)();
+		SetConsoleChanged(); At<VoidFn>(0x4fd590)();
 		CHECK(GetConsoleChanged() == At<BoolFn>(0x4fd580)() && !GetConsoleChanged() && !At<BoolFn>(0x4fd580)(), "console changed latch");
 		for (int Delta : {0, 999, 1000, 1001}) {
 			SetTestClock(10000);
-			FUN_004fd540(); At<VoidFn>(0x4fd540)();
+			SetTalkThrottle(); At<VoidFn>(0x4fd540)();
 			SetTestClock(10000 + Delta);
 			CHECK(IsTalkThrottled() == At<BoolFn>(0x4fd550)(), "throttle %d", Delta);
 			CHECK(IsTalkThrottled() == At<BoolFn>(0x4fd550)(), "throttle repeated");
 		}
 	}
 	for (bool Permanent : {false, true}) {
-		FUN_004ff500("status", Permanent);
+		SetStatusMessage("status", Permanent);
 		At<void (__cdecl *)(const char *, bool)>(0x4ff500)("status", Permanent);
 		for (int Tick = 0; Tick < 70; Tick++) {
 			CHECK(SameText(GetStatusMessage(), At<const char *(__cdecl *)()>(0x4fd4d0)()), "status timer %d", Tick);
-			FUN_004ff7d0(); At<VoidFn>(0x4ff7d0)();
+			UpdateStatusMessage(); At<VoidFn>(0x4ff7d0)();
 			CHECK(GetTalkChanged() == At<BoolFn>(0x4fd440)(), "status changed");
 		}
 	}
-	FUN_004ff500(NULL, false); At<void (__cdecl *)(const char *, bool)>(0x4ff500)(NULL, false);
+	SetStatusMessage(NULL, false); At<void (__cdecl *)(const char *, bool)>(0x4ff500)(NULL, false);
 	CHECK(GetStatusMessage() == NULL && At<const char *(__cdecl *)()>(0x4fd4d0)() == NULL, "clear status");
 	const char *Edges[] = {"", "\n", "\n\n", "a\nb\n", "                                        ",
 		"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "abc\tdef\rghi"};
@@ -231,24 +233,24 @@ static void TestFilters()
 		case 2: IgnoreMode(Mode); At<void (__cdecl *)(int)>(0x5017b0)(Mode); break;
 		case 3: UnignoreName(Name); At<void (__cdecl *)(const char *)>(0x502010)(Name); break;
 		case 4: UnignoreMode(Mode); At<void (__cdecl *)(int)>(0x501e70)(Mode); break;
-		case 5: FUN_00500c60((INT_PTR)Name); At<void (__cdecl *)(const char *)>(0x500c60)(Name); break;
-		case 6: FUN_00500e40((INT_PTR)Name); At<void (__cdecl *)(const char *)>(0x500e40)(Name); break;
+		case 5: AddTemporaryIgnore(Name); At<void (__cdecl *)(const char *)>(0x500c60)(Name); break;
+		case 6: RemoveTemporaryIgnore(Name); At<void (__cdecl *)(const char *)>(0x500e40)(Name); break;
 		case 7: ClearBuddyIgnore(); At<VoidFn>(0x500520)(); break;
 		case 8: ClearTemporaryIgnore(); At<VoidFn>(0x500a90)(); break;
-		case 9: FUN_00501400(); At<VoidFn>(0x501400)(); break;
+		case 9: ClearIgnoreList(); At<VoidFn>(0x501400)(); break;
 		case 10: SetIgnoreEnabled(Permanent); At<SetBoolFn>(0x4fd4e0)(Permanent); break;
 		case 11: SetBuddyIgnore(Permanent); At<SetBoolFn>(0x4fd500)(Permanent); break;
 		case 12: SetIgnoreListEnabled(Permanent); At<SetBoolFn>(0x4fd520)(Permanent); break;
 		case 13: AddIgnoreFilter(Mode, Name, Permanent); At<void (__cdecl *)(int, const char *, bool)>(0x5015d0)(Mode, Name, Permanent); break;
 		case 14: RemoveIgnoreFilter(Mode, Name); At<void (__cdecl *)(int, const char *)>(0x501ca0)(Mode, Name); break;
-		case 15: FUN_005076e0(); At<VoidFn>(0x5076e0)(); break;
+		case 15: ShowPermanentIgnoreWarning(); At<VoidFn>(0x5076e0)(); break;
 		case 16: ClearDefaultTextBuffer(); At<VoidFn>(0x5021a0)(); break;
 		}
 		CHECK(IsModeIgnored(Mode) == At<bool (__cdecl *)(int)>(0x501260)(Mode), "ignored mode");
 		CHECK(IsPermanentIgnore(Name) == At<bool (__cdecl *)(const char *)>(0x501ae0)(Name), "permanent ignore");
 		CHECK(IsPermanentBuddyIgnore(Name) == At<bool (__cdecl *)(const char *)>(0x5008d0)(Name), "permanent buddy ignore");
 		for (int TestMode : {0, 1, 4, 9, 10, 11, 12, 18, 26})
-			CHECK(FUN_00500060(TestMode, Name, -1)
+			CHECK(IsTalkIgnored(TestMode, Name, -1)
 				== At<bool (__cdecl *)(int, const char *, int)>(0x500060)(TestMode, Name, -1), "ignore decision");
 		char *OurBuddy = GetBuddyIgnoreText(), *OriginalBuddy = At<char *(__cdecl *)()>(0x5002d0)();
 		char *OurIgnore = GetIgnoreListText(), *OriginalIgnore = At<char *(__cdecl *)()>(0x501010)();
@@ -260,14 +262,14 @@ static void TestFilters()
 
 static void TestTalkboxes()
 {
-	FUN_00504d70(); At<VoidFn>(0x504d70)();
+	ResetTalk(); At<VoidFn>(0x504d70)();
 	SetPrivateMessages(true); At<SetBoolFn>(0x4db5b0)(true);
-	FUN_005052e0(1, "Alice", 1, 2, 3, "seed");
+	AddTalkbox(1, "Alice", 1, 2, 3, "seed");
 	At<void (__cdecl *)(int, const char *, int, int, int, const char *)>(0x5052e0)(1, "Alice", 1, 2, 3, "seed");
 	TTalkbox *OurBoxes = GetTalkbox(1);
 	TTalkbox *OriginalBoxes = (TTalkbox *)(uintptr_t)0x71dde8;
 	SetTestClock(10000);
-	FUN_004ff130(); At<VoidFn>(0x4ff130)();
+	UpdateTalkboxes(); At<VoidFn>(0x4ff130)();
 	int Clock = 10000;
 	int Modes[] = {1, 2, 3, 4, 9, 11, 16, 17};
 	for (int Round = 0; Round < 6000; Round++) {
@@ -277,11 +279,11 @@ static void TestTalkboxes()
 			int Mode = Modes[Random() % 8];
 			const char *Speaker = Round % 2 == 0 ? "Alice" : "Bob";
 			int x = Random() % 3, y = Random() % 3, z = Random() % 2;
-			FUN_005052e0(Mode, Speaker, x, y, z, Text);
+			AddTalkbox(Mode, Speaker, x, y, z, Text);
 			At<void (__cdecl *)(int, const char *, int, int, int, const char *)>(0x5052e0)(Mode, Speaker, x, y, z, Text);
 		} else if (Choice == 7) {
 			int Mode = Round % 3 == 0 ? 18 : Round % 3 == 1 ? 19 : 22;
-			FUN_00505ac0(Mode, "information\nsecond line");
+			AddMessageTalkbox(Mode, "information\nsecond line");
 			At<void (__cdecl *)(int, const char *)>(0x505ac0)(Mode, "information\nsecond line");
 		} else if (Choice == 8) {
 			int Position = Random() % 10;
@@ -290,7 +292,7 @@ static void TestTalkboxes()
 			RemoveOldestTalkbox(); At<VoidFn>(0x4ff330)();
 		} else if (Choice == 10) {
 			Clock += Random() % 1500; SetTestClock(Clock);
-			FUN_004ff130(); At<VoidFn>(0x4ff130)();
+			UpdateTalkboxes(); At<VoidFn>(0x4ff130)();
 		} else {
 			bool Enabled = (Random() & 1) != 0;
 			SetPrivateMessages(Enabled); At<SetBoolFn>(0x4db5b0)(Enabled);
@@ -430,7 +432,7 @@ static void TestRouting()
 	};
 	std::vector<TTalkBuffer *> Ours, Original;
 	for (auto &Case : Cases) {
-		TTalkBuffer *OurBuffer = (TTalkBuffer *)CreateTextBuffer(Case.Receive, Case.Send, Case.Name, Case.Channel);
+		TTalkBuffer *OurBuffer = CreateTextBuffer(Case.Receive, Case.Send, Case.Name, Case.Channel);
 		TTalkBuffer *OtherBuffer = At<CreateFn>(0x507bc0)(Case.Receive, Case.Send, Case.Name, Case.Channel);
 		CHECK(OurBuffer != NULL && OtherBuffer != NULL, "CreateTextBuffer receive %d send %d", Case.Receive, Case.Send);
 		if (OurBuffer == NULL || OtherBuffer == NULL)
@@ -446,7 +448,7 @@ static void TestRouting()
 		CHECK((CreateTextBuffer(Case.Receive, Case.Send, Case.Name, Case.Channel) == NULL)
 			== (At<CreateFn>(0x507bc0)(Case.Receive, Case.Send, Case.Name, Case.Channel) == NULL), "duplicate factory");
 		int LookupChannel = Case.Receive == 6 ? -1 : Case.Channel;
-		CHECK((TTalkBuffer *)FUN_005025c0(Case.Receive, Case.Name, LookupChannel) == OurBuffer
+		CHECK(GetTextBuffer(Case.Receive, Case.Name, LookupChannel) == OurBuffer
 			&& At<TTalkBuffer *(__cdecl *)(int, const char *, int)>(0x5025c0)(Case.Receive, Case.Name, LookupChannel) == OtherBuffer,
 			"buffer lookup");
 		Ours.push_back(OurBuffer); Original.push_back(OtherBuffer);
@@ -469,6 +471,7 @@ static void TestRouting()
 			const char *Name = Count % 2 == 0 ? "Alice" : "Bob";
 			OurBuffer->SetWriteEnabled(false);
 			Virtual<ThisSetBoolFn>(OtherBuffer, 0x10)(OtherBuffer, NULL, false);
+			CHECK(!OurBuffer->Closed && !OtherBuffer->Closed, "write disabling is not Close");
 			OurBuffer->Append(new TTalkLine(Count, 7, Name, "report", 0));
 			Virtual<ThisLineFn>(OtherBuffer, 0x14)(OtherBuffer, NULL, OriginalLine(Count, 7, Name, "report", 0));
 			if (!OurBuffer->IsRuleViolationChannel()) {
@@ -494,11 +497,11 @@ static void TestRouting()
 		SetEventMessages(Enabled); At<SetBoolFn>(0x4db580)(Enabled);
 		SetStatusMessages(!Enabled); At<SetBoolFn>(0x4db590)(!Enabled);
 		SetInfoMessages(Enabled); At<SetBoolFn>(0x4db570)(Enabled);
-		FUN_005061f0(Round, "routed text", Mode, Name, Channel, 100);
+		AddConsoleText(Round, "routed text", Mode, Name, Channel, 100);
 		At<void (__cdecl *)(uint32, const char *, int, const char *, int, int)>(0x5061f0)(Round, "routed text", Mode, Name, Channel, 100);
 		AddChannelNotice("notice", "channel event", Mode, Name, Channel);
 		At<void (__cdecl *)(const char *, const char *, int, const char *, int)>(0x506720)("notice", "channel event", Mode, Name, Channel);
-		FUN_00505f10((TCommunicationChannel *)DefaultTextBuffer, Round, "direct", Mode, Name, 300);
+		AddTextBufferLine(DefaultTextBuffer, Round, "direct", Mode, Name, 300);
 		At<void (__cdecl *)(TTalkBuffer *, uint32, const char *, int, const char *, int)>(0x505f10)(
 			Global<TTalkBuffer *>(0x71ef68), Round, "direct", Mode, Name, 300);
 		CHECK(GetConsoleChanged() == At<BoolFn>(0x4fd580)(), "console changed after routing");
@@ -519,23 +522,48 @@ static void TestRouting()
 	for (size_t Index = 0; Index < Ours.size(); Index++) {
 		DeleteTextBuffer(Ours[Index]); At<DeleteFn>(0x507fa0)(Original[Index]);
 	}
-	TTalkBuffer *Legacy = (TTalkBuffer *)FUN_00507bc0(6, true, NULL, 4);
-	TTalkBuffer *LegacyOriginal = At<CreateFn>(0x507bc0)(6, 1, NULL, 4);
-	CHECK(Legacy != NULL && LegacyOriginal != NULL, "legacy factory declaration");
-	if (Legacy != NULL && LegacyOriginal != NULL) {
-		CheckBuffer(Legacy, LegacyOriginal);
-		DeleteTextBuffer(Legacy); At<DeleteFn>(0x507fa0)(LegacyOriginal);
+	TTalkBuffer *RuleChannel = CreateTextBuffer(6, 1, NULL, 4);
+	TTalkBuffer *RuleChannelOriginal = At<CreateFn>(0x507bc0)(6, 1, NULL, 4);
+	CHECK(RuleChannel != NULL && RuleChannelOriginal != NULL, "rule-violation factory send mode 1");
+	if (RuleChannel != NULL && RuleChannelOriginal != NULL) {
+		RuleChannel->SetSelected(true);
+		Virtual<ThisSetBoolFn>(RuleChannelOriginal, 0x40)(RuleChannelOriginal, NULL, true);
+		CHECK(RuleChannel->GetSelected() && RuleChannelOriginal->Selected, "console selection slot");
+		for (const char *Name : {"Alice", "Bob", "Carol"}) {
+			AddTextBufferLine(RuleChannel, 1, "request", 6, Name, 0);
+			At<void (__cdecl *)(TTalkBuffer *, uint32, const char *, int, const char *, int)>(0x505f10)
+				(RuleChannelOriginal, 1, "request", 6, Name, 0);
+		}
+		RuleChannel->cursor = RuleChannel->first;
+		RuleChannelOriginal->cursor = RuleChannelOriginal->first;
+		TTalkLine *OurStatement = RuleChannel->first;
+		TTalkLine *OtherStatement = RuleChannelOriginal->first;
+		while (OurStatement != NULL && OtherStatement != NULL) {
+			TTalkLine *OurCurrent = OurStatement;
+			TTalkLine *OtherCurrent = OtherStatement;
+			OurStatement = RuleChannel->GetNext();
+			OtherStatement = At<NextFn>(0x503920)(RuleChannelOriginal, NULL);
+			CHECK(SameText(OurCurrent->Addressee, OtherCurrent->Addressee), "rule-violation statement view");
+			if (CompareStrings(OurCurrent->Addressee, "aLiCe", -1) == 0)
+				RuleChannel->Remove(OurCurrent);
+			if (CompareStrings(OtherCurrent->Addressee, "aLiCe", -1) == 0)
+				Virtual<ThisLineFn>(RuleChannelOriginal, 0x20)(RuleChannelOriginal, NULL, OtherCurrent);
+		}
+		CHECK(OurStatement == NULL && OtherStatement == NULL, "rule-violation cursor end");
+		CHECK(RuleChannel->lines == 2 && RuleChannelOriginal->lines == 2, "rule-violation matching removal");
+		CheckBuffer(RuleChannel, RuleChannelOriginal);
+		DeleteTextBuffer(RuleChannel); At<DeleteFn>(0x507fa0)(RuleChannelOriginal);
 	}
 	DeleteTextBuffer(DefaultTextBuffer); At<DeleteFn>(0x507fa0)(Global<TTalkBuffer *>(0x71ef68));
 	CHECK(!HasUnreadConsoleText() && !At<BoolFn>(0x502880)(), "deleted console buffers");
-	FUN_00504d70(); At<VoidFn>(0x504d70)();
+	ResetTalk(); At<VoidFn>(0x504d70)();
 	CheckBuffer(DefaultTextBuffer, Global<TTalkBuffer *>(0x71ef68));
 }
 void TestTalk()
 {
 	int Before = Checks, BeforeFailures = Failures;
 	PatchTalk();
-	FUN_00504f30(); At<VoidFn>(0x504f30)();
+	InitTalk(); At<VoidFn>(0x504f30)();
 	DefaultTextBuffer->Closed = Global<TTalkBuffer *>(0x71ef68)->Closed = false;
 	CheckBuffer(DefaultTextBuffer, Global<TTalkBuffer *>(0x71ef68));
 	TestHelpers();
@@ -543,7 +571,7 @@ void TestTalk()
 	TestTalkboxes();
 	TestLinesAndBuffers();
 	TestRouting();
-	FUN_00507a00(); At<VoidFn>(0x507a00)();
+	ExitTalk(); At<VoidFn>(0x507a00)();
 	CHECK(DefaultTextBuffer == NULL && Global<TTalkBuffer *>(0x71ef68) == NULL, "ExitTalk");
 	DWORD Protection;
 	VirtualProtect(TestClockFunction, 5, PAGE_EXECUTE_READWRITE, &Protection);

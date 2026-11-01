@@ -25,6 +25,7 @@
 #include "Skins.h"
 #include "Script.h"
 #include "Status.h"
+#include "Talk.h"
 #include "external.h"
 
 // Data, in .data/.bss order. 0x5c4540-0x5c4553 is not used by any code.
@@ -258,8 +259,8 @@ void EnterGame()
 	FUN_004bccb0();
 	FUN_004a7d20();
 	FUN_004509e0();
-	FUN_00504d70();
-	FUN_005076e0();
+	ResetTalk();
+	ShowPermanentIgnoreWarning();
 	FUN_004b09e0(-1, 0);
 	TEND
 }
@@ -768,8 +769,8 @@ void TimerEvent()
 		if (GetMouseOverText() != NULL)
 			SetMouseOverTextPosition(GetMouseX(), GetMouseY());
 	}
-	FUN_004ff130();
-	FUN_004ff7d0();
+	UpdateTalkboxes();
+	UpdateStatusMessage();
 	if (GetActionNumber() % 10 == 0)
 		FUN_004b0a70();
 	FUN_004bba70();
@@ -909,11 +910,11 @@ void ProcessEvents()
 			ModalWindow = FUN_00482a70(Param1);
 			break;
 		case 0x19:
-			FUN_00500c60(Param1);
+			AddTemporaryIgnore((const char *)Param1);
 			delete[] (char *)Param1;
 			break;
 		case 0x1a:
-			FUN_00500e40(Param1);
+			RemoveTemporaryIgnore((const char *)Param1);
 			delete[] (char *)Param1;
 			break;
 		case 0x1b:
@@ -991,11 +992,11 @@ void ProcessEvents()
 			delete[] (char *)Param2;
 			break;
 		case 0x31:
-			MainWindow->Console->FUN_00425070(5, 5, 0, Param1, Param2)->Unknown40(1);
+			MainWindow->Console->FUN_00425070(5, 5, 0, Param1, Param2)->SetSelected(true);
 			delete[] (char *)Param2;
 			break;
 		case 0x32:
-			MainWindow->Console->FUN_00423060((TTextBuffer *)Param1, TextRuleViolations);
+			MainWindow->Console->FUN_00423060((TTalkBuffer *)Param1, TextRuleViolations);
 			delete[] (char *)Param2;
 			break;
 		case 0x33:
@@ -1138,7 +1139,7 @@ void InitControl(bool Gamemaster)
 		InitStatus(Gamemaster, LinkCopyWarning);
 		FUN_004a2ae0();
 		FUN_004ddc00();
-		FUN_00504f30();
+		InitTalk();
 		FUN_00494af0(0xa00000);
 		InitSkins();
 		FUN_00498160();
@@ -1170,7 +1171,7 @@ void ExitControl()
 	FUN_004eaa90()->ExitSurfaces();
 	SurfaceExitInstance();
 	FUN_004df520();
-	FUN_00507a00();
+	ExitTalk();
 	FUN_00496160();
 	ExitStatus();
 	FUN_00496160();

@@ -11,6 +11,7 @@
 // lie in the gap before Script.cpp, which is not settled yet.
 
 #include "Preferences.h"
+#include "Talk.h"
 #include "external.h"
 
 // Data, in .data/.bss order.
@@ -484,7 +485,7 @@ void SetDefaultPreferences()
 	for (int i = 0; i < SKILLS; i++)
 		SkillBars[i] = true;
 	TestServerLogin = false;
-	FUN_00501400();
+	ClearIgnoreList();
 }
 
 // 0x4db880: vector<TContentWindow>::operator() (Container.h).
