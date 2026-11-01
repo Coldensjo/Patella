@@ -847,3 +847,17 @@ address	name	kind	confidence	note
 0x4eac10	TSurface_Unknown80	game	medium	Surface.cpp: vtable +0x80, empty (missed by Ghidra)
 0x4eac20	SurfaceInitInstance	game	low	Surface.cpp: chooses the engine at start-up; name after SurfaceExitInstance
 0x4eae50	TSurface_scalar_deleting_dtor	stl	high	compiler-generated, kept in Surface.obj
+0x4fcba0	FileExists	game	medium	sysinc.cpp: _access(Name, 0) == 0
+0x4fcbe0	IsClipboardEmpty	game	low	sysinc.cpp: no CF_TEXT on the clipboard
+0x4fcbf0	GetErrorText	game	medium	sysinc.cpp: what failed, for a PROGRAM_ERROR code
+0x4fcc90	GetErrorHint	game	medium	sysinc.cpp: what to do, for a PROGRAM_ERROR code
+0x4fcd00	InitSysinc	game	low	sysinc.cpp: clipboard buffer of 1024 bytes, srand(timeGetTime())
+0x4fcd30	ExitSysinc	game	low	sysinc.cpp: frees the clipboard buffer
+0x4fcd50	AtlGetConversionACP_impl	stl	low	ATL header code (GetThreadLocale + LOCALE_IDEFAULTANSICODEPAGE, else GetACP), kept in sysinc.obj
+0x4fcdb0	AtlGetConversionACP_thread	stl	low	ATL header code, returns CP_THREAD_ACP (missed by Ghidra)
+0x4fcdc0	AtlGetConversionACP_init	stl	low	ATL header code: picks the code page function once (InterlockedExchange on 0x5c2588)
+0x4fce10	AtlThrowImpl	stl	low	ATL header code: E_OUTOFMEMORY becomes a memory exception, noreturn
+0x4fce30	CAtlPlex_FreeDataChain	stl	low	ATL/MFC header code: frees a singly linked block chain
+0x4fce50	ResizeClipboardBuffer	game	medium	sysinc.cpp line 63 (help)
+0x4fcff0	GetClipboardText	game	medium	sysinc.cpp line 104; 0x4fd02c is its interior, not a function
+0x4fd02c	GetClipboardText_interior	game	high	interior block of 0x4fcff0 (Ghidra split), not a separate function

@@ -80,8 +80,9 @@ TSurface *FUN_004eca00() STUB
 TSurface *FUN_004f1430() STUB
 bool FUN_004efd10() STUB
 bool FUN_004f9710(HDC) STUB
-const char *FUN_004fcbf0(int) STUB
-const char *FUN_004fcc90(int) STUB
+const char *GetErrorText(int) STUB
+const char *GetErrorHint(int) STUB
+
 const char *DAT_005c249c;
 void Redraw(bool) STUB
 void MouseMove(int, int) STUB

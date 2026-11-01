@@ -32,7 +32,7 @@ static void Record(char *Buffer, size_t Size, const char *Text)
 // The reconstructed side's external functions.
 int GetMilliseconds() { return Clock; }
 bool RemoveFile(const char *FileName) { Record(Removed[OURS], 64, FileName); RemoveCalls[OURS]++; return true; }
-void SetClipboardText(char *textdata) { Record(Clipboard[OURS], 4096, textdata); ClipboardCalls[OURS]++; }
+bool SetClipboardText(const char *textdata) { Record(Clipboard[OURS], 4096, textdata); ClipboardCalls[OURS]++; return true; }
 regexp *regcomp(char *exp) { return At<regexp *(__cdecl *)(char *)>(0x50fa40)(exp); }
 int regexec(regexp *prog, char *string) { return At<int (__cdecl *)(regexp *, char *)>(0x50f360)(prog, string); }
 

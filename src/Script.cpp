@@ -713,7 +713,7 @@ void InstallPatch(const char *FileName)
 	char Name[1024];
 	strcpy(Name, FileName);
 	Name[strlen(FileName) - 1] = '_';
-	if (!FUN_004fcba0(Name))
+	if (!FileExists(Name))
 		TERROR("file does not exists");
 	remove(FileName);
 	rename(Name, FileName);

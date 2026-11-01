@@ -32,7 +32,7 @@
 static int LastPacketType = -1;               // 0x5c0d8c, only written (ReceivePackets)
 static int LastPacketIndex;                   // 0x5c4510, next slot in LastPacketTypes
 static uint8 LastPacketTypes[10];             // 0x5c4514, the last ten packet types, a ring
-static int ReconnectTimeout;                  // 0x5c4520, FUN_004fcb90 time
+static int ReconnectTimeout;                  // 0x5c4520, GetMilliseconds time
 static bool Reconnect;                        // 0x5c4524, set by event 0x3f
 static int LastMouseMove;                     // 0x5c4528, timer tick of the last mouse move, 0 after a click
 static void (*URLCallback)(const char *URL);  // 0x5c452c
@@ -288,8 +288,8 @@ void SendErrorReports()
 	for (i = 0; i < Count; i++)
 		SendDebugReport(GetErrorReportTitle(i), GetErrorReportDate(i), GetErrorReportText(i), GetErrorReportComment(i));
 	ClearErrorReports();
-	if (FUN_004fcba0("error.txt"))
-		FUN_004fcbc0("error.txt");
+	if (FileExists("error.txt"))
+		RemoveFile("error.txt");
 	TEND1(i)
 }
 
@@ -786,7 +786,7 @@ void ConnectionClosed()
 	if (Reconnect) {
 		Reconnect = false;
 		if (InGame) {
-			if (FUN_004fcb90() < ReconnectTimeout) {
+			if (GetMilliseconds() < ReconnectTimeout) {
 				AddMessage(0x3e, 0, 0);
 				AddMessage(4, 0, 0);
 			}
@@ -1096,7 +1096,7 @@ void ProcessEvents()
 		case 0x3f:
 			if (GetConnectionState() != 0) {
 				Reconnect = true;
-				ReconnectTimeout = FUN_004fcb90() + 5000;
+				ReconnectTimeout = GetMilliseconds() + 5000;
 			} else {
 				AddMessage(0x3d, 0, 0);
 				AddMessage(3, 0, 0);
@@ -1177,7 +1177,7 @@ void InitControl(bool Gamemaster)
 {
 	TBEGIN
 	try {
-		FUN_004fcd00();
+		InitSysinc();
 		InitObjects();
 		FUN_004bf620(FUN_0044c8c0);
 		FUN_004a7d70();
@@ -1224,6 +1224,6 @@ void ExitControl()
 	FUN_00496160();
 	FUN_004b5760();
 	ExitObjects();
-	FUN_004fcd30();
+	ExitSysinc();
 	TEND
 }

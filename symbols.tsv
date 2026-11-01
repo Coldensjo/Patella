@@ -5116,18 +5116,18 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4fb7f0	955	FUN_004fb7f0	game	SurfaceGL.cpp	assert	767,768		
 0x4fbbb0	1392	FUN_004fbbb0	game	SurfaceGL.cpp	assert	802,803		
 0x4fc130	840	FUN_004fc130	game	SurfaceGL.cpp	assert	1023		
-0x4fcb90	13	FUN_004fcb90	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcba0	21	FUN_004fcba0	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcbc0	19	FUN_004fcbc0	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcbe0	15	FUN_004fcbe0	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcbf0	90	FUN_004fcbf0	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcc90	60	FUN_004fcc90	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcd00	42	FUN_004fcd00	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcd30	25	FUN_004fcd30	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcd50	87	FUN_004fcd50	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fcdc0	73	FUN_004fcdc0	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fce10	22	FUN_004fce10	game	SurfaceGL.cpp|sysinc.cpp	gap			
-0x4fce30	31	FUN_004fce30	game	SurfaceGL.cpp|sysinc.cpp	gap			
+0x4fcb90	13	FUN_004fcb90	game	sysinc.cpp	range			
+0x4fcba0	21	FUN_004fcba0	game	sysinc.cpp	range			
+0x4fcbc0	19	FUN_004fcbc0	game	sysinc.cpp	range			
+0x4fcbe0	15	FUN_004fcbe0	game	sysinc.cpp	range			
+0x4fcbf0	90	FUN_004fcbf0	game	sysinc.cpp	range			
+0x4fcc90	60	FUN_004fcc90	game	sysinc.cpp	range			
+0x4fcd00	42	FUN_004fcd00	game	sysinc.cpp	range			
+0x4fcd30	25	FUN_004fcd30	game	sysinc.cpp	range			
+0x4fcd50	87	FUN_004fcd50	game	sysinc.cpp	range			
+0x4fcdc0	73	FUN_004fcdc0	game	sysinc.cpp	range			
+0x4fce10	22	FUN_004fce10	game	sysinc.cpp	range			
+0x4fce30	31	FUN_004fce30	game	sysinc.cpp	range			
 0x4fce50	413	FUN_004fce50	game	sysinc.cpp	assert	63		
 0x4fcff0	60	FUN_004fcff0	game	sysinc.cpp	assert	104		
 0x4fd02c	384	FUN_004fd02c	game	sysinc.cpp	assert	104		

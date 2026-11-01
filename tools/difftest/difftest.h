@@ -37,5 +37,6 @@ void TestScript();
 void PatchScript(); // scripttest.cpp: the image's stdio, remove, rename and sprintf
 void TestPreferencesFile();
 void TestPlayer();
+void TestSysinc(); // sysinctest.cpp, in sysinctest.exe only
 void TestTalk();
 void TestObjects(const char *ExePath); // objectstest.cpp, loads Tibia.dat next to Tibia.exe

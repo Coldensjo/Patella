@@ -19,10 +19,8 @@ struct TObject {
 	int Data2;
 };
 
-// sysinc.cpp and the gap before it.
-int GetMilliseconds();                          // 0x4fcb90, timeGetTime() minus the start time
-bool RemoveFile(const char *FileName);          // 0x4fcbc0, true when the file was removed
-void SetClipboardText(char *textdata);          // 0x4fd1b0, sysinc.cpp lines 139-143
+// sysinc.cpp
+#include "sysinc.h"
 
 // Library region: Henry Spencer's regexp ("regexp too big", "corrupted program").
 struct regexp;
@@ -456,12 +454,6 @@ void FUN_004bf620(void (*Callback)(int CreatureID)); // 0x4bf620
 // 3 both down, 4 and 5 one of both released, 7 and 8 set by events 0x2c and
 // 0x2d, 9 help mode, 10 dialog open, 11 context menu open.
 
-// Between SurfaceGL.cpp and sysinc.cpp
-int FUN_004fcb90();                    // 0x4fcb90, milliseconds since the start
-bool FUN_004fcba0(const char *FileName); // 0x4fcba0, the file exists
-bool FUN_004fcbc0(const char *FileName); // 0x4fcbc0, deletes the file
-void FUN_004fcd00();                   // 0x4fcd00, seeds rand
-void FUN_004fcd30();                   // 0x4fcd30
 
 // --- added for Player.cpp ---
 
@@ -484,9 +476,6 @@ void FUN_0048da50();                    // 0x48da50, after the surfaces are crea
 // the command line, read by SurfaceInitInstance; -1 = none.
 extern int DAT_005c2564;                // 0x5c2564
 
-// Between SurfaceGL.cpp and sysinc.cpp: texts for a PROGRAM_ERROR code.
-const char *FUN_004fcbf0(int Error);    // 0x4fcbf0, what failed ("Cannot find file ...")
-const char *FUN_004fcc90(int Error);    // 0x4fcc90, what to do ("Please re-install ...")
 
 // Owner unknown: a table of message texts in .data (0x5c2480-0x5c2517).
 extern const char *DAT_005c249c;        // 0x5c249c, "The Tibia client encountered a critical error ..."

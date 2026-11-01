@@ -14,7 +14,7 @@
 #include <vector>
 
 // The reconstructed side's external function (sysinc.cpp).
-bool FUN_004fcba0(const char *FileName) { return _access(FileName, 0) == 0; }
+bool FileExists(const char *FileName) { return _access(FileName, 0) == 0; }
 
 // --- Replacements patched into the image -----------------------------------
 

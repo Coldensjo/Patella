@@ -396,3 +396,29 @@ callcheck differences, caller integration and differential coverage.
 - **0x5c2564** (the "engine N" value) stays DAT_005c2564 in external.h: it is
   in .data after Status.cpp's 0x5c2560, written by Player.cpp and read here;
   its owner is not clear.
+
+## sysinc.cpp and the SurfaceGL/sysinc gap
+
+- **The whole gap 0x4fcb90-0x4fce4f is sysinc.cpp** (high): the functions use
+  only sysinc.cpp's data (the clipboard buffer 0x71dbc4/0x71dbc8 that the
+  asserted functions grow and fill, the start time 0x71dbcc with its static
+  initialiser 0x55a130). 0x4fcd50-0x4fce4f is ATL header code (the code
+  page lookup _AtlGetConversionACP with its InterlockedExchange init, AtlThrow
+  for E_OUTOFMEMORY, a block-chain free) kept in sysinc.obj: rows of kind
+  stl, generic names (low).
+- **Names** (low unless noted): FileExists, IsClipboardEmpty, GetErrorText,
+  GetErrorHint (medium), InitSysinc, ExitSysinc, ResizeClipboardBuffer,
+  GetClipboardText, ClipboardBuffer, ClipboardBufferSize, StartTime. textdata
+  and help are from the assertions; textdata is the locked clipboard memory,
+  so the parameter of SetClipboardText is Text (the earlier external.h
+  declaration had called it textdata).
+- **SetClipboardText returns bool** (high: it returns 1/0); the earlier
+  declaration was void.
+- **0x4fd02c is not a function**: Ghidra split GetClipboardText at the branch
+  after OpenClipboard.
+- **Odd behaviour kept**: the clipboard buffer comes from new and is
+  released with free; removing a CR moves one byte past the data.
+- **Tests**: GetErrorText/GetErrorHint run in a separate sysinctest.exe,
+  because difftest.exe gives Status.cpp recorders for GetMilliseconds,
+  RemoveFile and SetClipboardText. The rest needs the clipboard or the
+  original's CRT (srand).

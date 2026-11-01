@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 396 | 62755 |
+| range | 408 | 63253 |
 | header | 21 | 14301 |
-| gap | 313 | 54516 |
+| gap | 301 | 54018 |
 
 ## Source files
 
@@ -58,7 +58,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | SurfaceDX.cpp | 24 | 2 | 8990 | `0x4eae90` | `0x4eed40` | 1106-1114 |
 | surfaceDX9.cpp | 1 | 0 | 1490 | `0x4f2040` | `0x4f2040` | 982-983 |
 | SurfaceGL.cpp | 3 | 0 | 3187 | `0x4fb7f0` | `0x4fc130` | 767-1023 |
-| sysinc.cpp | 4 | 0 | 1510 | `0x4fce50` | `0x4fd1b0` | 63-143 |
+| sysinc.cpp | 16 | 0 | 2008 | `0x4fcb90` | `0x4fd1b0` | 63-143 |
 | Talk.cpp | 90 | 192 | 42314 | `0x4fd440` | `0x5081b5` | 81-1952 |
 | Talk.h | 3 | 0 | 90 | `0x4fd5a0` | `0x507060` |  |
 | Container.h | 1 | 0 | 764 | `0x4fd6e0` | `0x4fd6e0` | 355-356 |
@@ -92,7 +92,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | MapWindow.cpp / Network.cpp | 8 | 502 | `0x4ca0e0`-`0x4ca2f5` |
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |
-| SurfaceGL.cpp / sysinc.cpp | 12 | 498 | `0x4fcb90`-`0x4fce4f` |
 
 ## Header code
 

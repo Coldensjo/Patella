@@ -14,7 +14,7 @@ Read this and `git log` first when resuming.
 7. MapWindow.cpp and the MapWindow/Network gap.
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps.
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
-10. The remaining files in link order, smallest first.
+10. The remaining files in link order, smallest first. Done: sysinc.cpp.
 
 ## Current item
 
@@ -37,7 +37,7 @@ merging.
 
 ## Last difftest
 
-2,870,603 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
+2,870,603 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 

@@ -124,7 +124,7 @@ void CPlayerApp::HandleProgramError(PROGRAM_ERROR Error)
 		return;
 	}
 	std::stringstream Message;
-	Message << FUN_004fcbf0(Error) << " (Error Code " << Error << ")\r\n\r\n" << FUN_004fcc90(Error);
+	Message << GetErrorText(Error) << " (Error Code " << Error << ")\r\n\r\n" << GetErrorHint(Error);
 	FatalError(Message.str().c_str(), "Tibia Error");
 }
 
@@ -210,7 +210,7 @@ void CPlayerApp::HandleException(TMyException &Exception)
 // " (truncated input line)"; a read error replaces the line.
 void CPlayerApp::ReadErrorFile()
 {
-	if (!FUN_004fcba0("error.txt"))
+	if (!FileExists("error.txt"))
 		return;
 	std::ifstream In("error.txt", std::ios::in);
 	if (In.is_open()) {
