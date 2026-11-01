@@ -31,6 +31,7 @@ the non-GUI files: SurfaceGL.cpp, surfaceDX9.cpp, SurfaceDX.cpp, graphics.cpp.
 
 ## Delegates (running)
 
+- GUI.cpp + graphics/GUI gap: Claude Opus 5.5, own worktree.
 - Map.cpp (item 6): third attempt, Claude Opus 5.5 delegate (the first hit
   a Claude rate limit, the gpt-6.1-sol retry the ChatGPT usage limit).
 Both told: real names only, no shims, replace their external.h views and
