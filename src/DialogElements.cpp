@@ -22,8 +22,10 @@
 #include "Utils.h"
 #include "sysinc.h"
 
-// Data. DialogElements.obj's copy of DefaultFontColor is 0x5c1230
-// (graphics.h); it has no statics and no copy of the text table.
+// Data. DialogElements.obj has no statics and no static initialiser. It keeps
+// a copy of the text table (0x5c0d8c-0x5c1228, then its regular expression
+// pointer 0x5c122c) that no function uses, and its copy of DefaultFontColor
+// (graphics.h) is 0x5c1230.
 
 // --- TSeparator -------------------------------------------------------------------
 

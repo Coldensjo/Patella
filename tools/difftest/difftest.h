@@ -50,6 +50,7 @@ void TestDialogWindow();                 // dialogwindowtest.cpp, after TestGUI 
 void TestContextMenus();                 // contextmenustest.cpp, after TestDialogWindow (restores its patches)
 void TestConsoleWindow();                // consolewindowtest.cpp, after TestContextMenus (restores its patches)
 void TestContentWindows();               // contentwindowstest.cpp, after TestConsoleWindow (restores its patches)
+void TestDialogElements();               // dialogelementstest.cpp, after TestContentWindows (restores its patches)
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
 
 // dialogwindowtest.cpp defines the shared fakes of the classes DialogWindow.cpp

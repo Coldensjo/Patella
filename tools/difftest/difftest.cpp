@@ -368,9 +368,10 @@ int main(int argc, char **argv)
 #ifdef DIFFTEST_SYSINC
 	TestSysinc();
 #else
-	// DIFFTEST_ONLY=MainWindow, DialogWindow, ContextMenus, ConsoleWindow or
-	// ContentWindows runs only mainwindowtest.cpp, dialogwindowtest.cpp,
-	// contextmenustest.cpp, consolewindowtest.cpp or contentwindowstest.cpp
+	// DIFFTEST_ONLY=MainWindow, DialogWindow, ContextMenus, ConsoleWindow,
+	// ContentWindows or DialogElements runs only mainwindowtest.cpp,
+	// dialogwindowtest.cpp, contextmenustest.cpp, consolewindowtest.cpp,
+	// contentwindowstest.cpp or dialogelementstest.cpp
 	// (they need none of the earlier tests), for quick runs while working on
 	// them.
 	const char *Only = getenv("DIFFTEST_ONLY");
@@ -399,6 +400,11 @@ int main(int argc, char **argv)
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
+	if (Only != NULL && strcmp(Only, "DialogElements") == 0) {
+		TestDialogElements();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
 	TestXTEA();
 	TestCharacters();
 	TestColors();
@@ -423,6 +429,7 @@ int main(int argc, char **argv)
 	TestContextMenus();
 	TestConsoleWindow();
 	TestContentWindows();
+	TestDialogElements();
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif

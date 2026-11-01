@@ -17,15 +17,16 @@ Read this and `git log` first when resuming.
 7c. ContextMenus.cpp and the ContentWindows/ContextMenus gap — **done** (issue #4, Claude Opus 5.5).
 7d. ConsoleWindow.cpp and the gaps on both sides — **done** (issue #5, Claude Opus 5.5; the second gap is ContentWindows.obj).
 7e. ContentWindows.cpp — **done** (issue #6, Claude Opus 5.5; the gap before it was settled in issue #5).
+7f. DialogElements.cpp and the DialogElements/Dialogs gap — **done** (issue #7, Claude Opus 5.5; the gap is Dialogs.obj).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-ContentWindows.cpp done (issue #6, November 1, 2026). Next: the other window files smallest first
-(DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
-surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
+DialogElements.cpp done (issue #7, November 1, 2026). Next: Dialogs.cpp (with the DialogElements/Dialogs
+gap settled as its leading run), and the surface files (SurfaceDX.cpp with its settled range
+0x4eae70-0x4ed19f, surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
 
 ## Delegates (running)
 
@@ -37,7 +38,8 @@ None.
 
 ## Last difftest
 
-12,509,284 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,645,939 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(after issue #7; DialogElements: 135,478).
 
 ## Notes for later files
 
@@ -157,3 +159,20 @@ None.
   BuddylistWindow.Data3C/Data48 are colours (issue #6). TSurface's +0x0c, +0x10, +0x18 have names.
 - DIFFTEST_ONLY=ContentWindows runs contentwindowstest.cpp alone (CT_TRACE=1 traces rounds and actions,
   CT_LOGS=<file> writes every compared log, for checking the coverage).
+- DialogElements.cpp (issue #7): DialogElements.h includes external.h (for TObject), Status.h and
+  Skins.h; its users include it directly. The window tests' DialogElements fakes are mirror classes of
+  the old sketches (tools/difftest/elementfakes.h, TFake*): elementfakes.cpp's PatchElementFakes
+  redirects the image's and our constructors (decorated names through /alternatename) and non-virtual
+  members to them; each of those tests calls it with its own Redirect. TObjectIcon's and TSeparator's
+  constructors and TMultiStateButton::Reset are inline in DialogElements.h (our callers inline them), so
+  they run for real on both sides. A new window test that needs element fakes calls PatchElementFakes;
+  one that needs real elements (dialogelementstest.cpp) must run while no fake is patched.
+- GUI.h's +0x3c/+0x40 are getMinimumWidth/getMinimumHeight (DialogElements.cpp's assertions).
+- Surface.h's +0x1c is DrawVerticalLine; SkinProperties.CheckBox.Data08 is a TRect.
+- tools/ehinfo.py also reads the prologue PUSH -1; MOV EAX, FS:[0]; PUSH stub.
+- Dialogs.cpp (next window file): the DialogElements/Dialogs gap 0x46b790-0x46c0ce is Dialogs.obj's
+  leading run (Dialogs.h's TLabel subclasses and other inline constructors and destructors, Container.h's
+  vector of a 31-byte element); Dialogs.cpp calls the DialogElements.h inline copies (SetOutfit,
+  TSkinButton::SetEnabled, TListBox::GetSelection/SetEditable, TFontListBox, TEditText,
+  THorizontalScrollBar with its callback, TLink with OpenURL).
+- DIFFTEST_ONLY=DialogElements runs dialogelementstest.cpp alone (DE_TRACE=1, DE_LOGS=<file>).

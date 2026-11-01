@@ -21,13 +21,17 @@
 // earlier object: constructors 0x453300 (with init) and 0x4a2b90,
 // operator() 0x452ac0. 0x453300 and 0x452ac0 sit at the start of
 // DialogElements.obj (the first user), next to its other instance:
-//   vector<TDialogText>     constructor 0x453600, operator() 0x452eb0
-//                           (a 0x18-byte DialogElements.cpp element with the
-//                           constructor 0x452c70; type name ours)
-// The class also has a destructor, not reconstructed yet: its instances
-// 0x452c50 (vector<int>, entry at +0x1c) and 0x452c60 (vector<TDialogText>,
-// entry at +0x30) free entry, and the static initialisers register atexit
-// handlers (0x55a320 and following) that do the same inline.
+//   vector<TListBoxLine>    constructor 0x453600, operator() 0x452eb0
+//                           (DialogElements.h's TFontListBox lines, 0x18 bytes,
+//                           the implicit element constructor 0x452c70)
+// DialogElements.cpp also uses vector<int> (TEditText's line starts) and
+// vector<TEditLine *> and vector<char *> (folded with vector<int>'s code).
+// The destructor's out-of-line instances are 0x452c50 (vector<int>, entry at
+// +0x1c) and 0x452c60 (vector<TListBoxLine>, entry at +0x30), called from
+// unwind funclets; the static initialisers register atexit handlers
+// (0x55a320 and following) that free entry inline. Dialogs.obj adds a vector
+// of a 31-byte element (destructor 0x46bb60, operator() 0x46bb70,
+// constructor 0x46c0d0).
 
 #pragma once
 

@@ -1903,3 +1903,176 @@ Reconstructed by Claude Opus 5.5 (issue #6), November 1, 2026.
   register only while it runs. Not exercised: the error paths, the button
   callbacks (dumped, not sent) and inputs the original fails on as well (the
   counter offer twice, help mode over a hidden body).
+
+## DialogElements.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
+
+- **Range** (high). DialogElements.obj is 0x4524e0-0x46b773: the leading run of
+  header code settled in an earlier issue (now every function named: the
+  inline accessors, destructors with their deleting forms, the inline
+  constructors of TObjectIcon, TSeparator and TProgressBar, Container.h's
+  vector<int> and vector<TListBoxLine> with their destructors 0x452c50 and
+  0x452c60), the line-numbered functions (lines 42-4301) and between them the
+  functions without lines where the binary has them; the last catch block
+  (TEditText's constructor, line 2466) ends at 0x46b773. The binary moves the
+  functions that call functions defined further down to the end of the object
+  (the labels', buttons', check box's, edit line's, scroll bars' and list boxes'
+  constructors, TFormattedText::Arrange, TCheckBox::SetEnabled, several
+  TEditLine, TEditText and TListBox members, TLink's constructor); the source
+  follows the line numbers. TEditText's compiler-generated destructor and its
+  deleting form (0x46b540, 0x46b520) sit before its constructor (emitted with
+  the vtable). 0x469144 is a Ghidra split of TEditText::SetText 0x469120.
+- **DialogElements/Dialogs gap** (high): Dialogs.obj's leading run, recorded in
+  file-ranges.tsv as Dialogs.cpp (0x46b790-0x46bb5f, 0x46bdf0-0x46c0cf) and
+  Container.h (0x46bb60-0x46bdef): inline constructors of Dialogs.h's TLabel
+  subclasses (vtables 0x562110-0x562370, whose own slots 0x46db80, 0x46dd40,
+  0x46e0e0, ... are Dialogs.cpp code and which Dialogs.cpp also constructs),
+  the reconnect text (Dialogs.obj's text table), inline destructors whose
+  vtables Dialogs.cpp constructs (0x4733dd, 0x479a70, ...), a label destructor
+  that jumps to ~TLabel, the deleting destructors, and the vector of a 31-byte
+  element (destructor 0x46bb60, operator() 0x46bb70; its constructor 0x46c0d0
+  was Container.h already). Not reconstructed here.
+- **Data** (high). DialogElements.obj has no statics, no static initialiser
+  (0x559df0 is Control.obj's NoCallback 0x5c4558, 0x559e00 Creatures.obj's
+  0x5cc418, 0x559e10 Dialogs.obj's 0x5cc420) and uses none of its copy of the
+  text table (0x5c0d8c-0x5c1228, its regular expression pointer 0x5c122c, then
+  its DefaultFontColor 0x5c1230, which TFont's constructor reads). Its code
+  reads only SkinProperties, Skins and NumberOfSkins.
+- **Classes** (high for layouts, vtables and sizes; names see below). 28
+  classes and two helper types; sizes from the new-expressions, vtables from
+  vtscan.py, the overrides from comparing every vtable with TElement's and
+  TWindow's (build/scratch/de7/vtdiff.py): TSeparator (0x5610b0, 0x28),
+  TResizer (0x5612b0, 0x38), TBorder (0x561358, 0x68), TLabel (0x560bb8, 0x4c,
+  new slot +0x84 SetText), TFormattedText (0x560c40, 0x38, +0xa0 SetText),
+  TLink (0x560ce8, 0x3c), TOutfitIcon (0x561970, 0x48), TSkinIcon (0x5614f8,
+  0x28), TObjectIcon (0x560d88, 0x50), TSkinButton (0x5619f8, 0x44, +0x84
+  IsPressed) with TColorButton (0x561a80, 0x50), TIconButton (0x561b08, 0x48),
+  TBlinkingButton (0x561b90, 0x5c), TTextButton (0x561c40, 0x78, +0x88
+  SetText), TToggleButton (0x561cd0, 0x50), TTextToggleButton (0x561d58,
+  0x84), TMultiStateButton (0x560e10, 0x58), TRadioButtonGroup (inline),
+  TCheckBox (0x561de8, 0x34, +0xa0/+0xa4), TEditLine (0x560e98, 0x68, slots
+  +0xa0-+0xc4), TPasswordEditLine (0x560f60, 0x6c), TEditText (0x562040,
+  0x9c, new +0xc8 SetActive and +0xcc SetText(text, KeepPosition)),
+  TFocusGroup (no vtable, 0x28), THorizontalScrollBarRange (0x5617e0, 0x54,
+  with a TCallback), THorizontalScrollBar (0x561ed0, 0x38), TScrollBarRange
+  (0x561868, 0x4c), TScrollBar (0x561f70, 0x38), TListBox (0x561138, 0x7c,
+  +0xa0 StartEdit, +0xa4 StopEdit), TFontListBox (0x5611e0, 0xb0) with
+  TListBoxLine (0x18 bytes, formerly "TDialogText") and TProgressBar
+  (0x561028, 0x2c). The two scroll ranges are separate classes: their Pressed
+  and Dragging flags sit in swapped bytes (+0x38/+0x39), and only the
+  horizontal one has a callback.
+- **Names**. From the binary: TCheckBox (SkinProperties.CheckBox), TFocusGroup
+  (_FocusGroup), getMinimumWidth/getMinimumHeight (see below), the members
+  Text, Cursor, MaxLength, FocusGroup, MemberList, Active, FieldWidth, Lines,
+  RadioButtonGroup, ToResize, the locals Next, insertlength, appendlength,
+  Width, and every parameter named in an assertion or catch block. Kept from
+  the sketches (low): TResizer, TBorder, TLabel, TFormattedText, TSkinIcon,
+  TObjectIcon, TSkinButton, TToggleButton, TMultiStateButton, TTextButton,
+  TTextToggleButton, TBlinkingButton, TEditLine, TScrollBar, TScrollBarRange,
+  TSeparator. New and ours (low): TLink, TOutfitIcon, TColorButton, TIconButton,
+  TPasswordEditLine, TEditText, THorizontalScrollBar(Range), TListBox,
+  TFontListBox, TListBoxLine, TProgressBar; members without evidence are ours
+  (Pressed, MouseInside, Repeat, Enabled, SingleLine, Disabled, ReadOnly,
+  SelectionStart/Length, FirstVisible, ...). Corrected sketch rows:
+  TSkinButton's last parameter is Repeat (a held button resends its callback),
+  TTextButton's last parameter of the first constructor is a tooltip, TLabel's
+  flag is Shorten, TObjectIcon's flag Framed, TEditLine's flag ReadOnly, the
+  console's SetReadOnly (+0xb8) is SetDisabled (+0x65; ReadOnly is the
+  constructor's +0x66), TBorder::FUN_00455500 is FitToWindow, TScrollBar's
+  parameters are (Min, Max, Value, Visible, ButtonRange).
+- **getMinimumWidth/getMinimumHeight** (high): the assertions of
+  TBorder::SetSize name "Width>=getMinimumWidth()" and
+  "Height>=getMinimumHeight()" (lines 242-243), so GUI.h's virtuals +0x3c/+0x40
+  are renamed from GetMinimumWidth/GetMinimumHeight in every file, test and
+  names.tsv row.
+- **Header code** (medium). The out-of-line copies at the start of the object
+  are inline in DialogElements.h; several are called only by later objects
+  (TOutfitIcon::SetOutfit, TSkinButton::SetEnabled, TListBox::GetSelection and
+  SetEditable from Dialogs.cpp; TMultiStateButton::Reset from ConsoleWindow.cpp;
+  TEditLine::HasSelection's copy is ConsoleWindow.obj's 0x417520). The folded
+  "return false" slots 0x452620 (x, y) and 0x457700 (x, y, Flags) are inline
+  overrides of TLabel and the three icons (TSkinIcon also for MouseWheel). The
+  scroll bars' KeyPress slot is 0x4731d0, ICF-folded with a Dialogs.cpp
+  function of the same code (Range->KeyPress(Key)). 0x4672c0 is GUI.h's
+  implicit ~TElement (jumps to ~TComponent), kept here.
+- **Exception tables and switches** (high), checked with ehinfo.py for every
+  function (build/scratch/de7/ehcheck.py compares the assertions before TBEGIN
+  with the try ranges): constructors' try blocks start after the base class,
+  the vector members and the assertions; the frames without try blocks (eleven
+  states: Arrange of the separator, resizer, frame, check box, edit line,
+  ranges and progress bar, TSkinButton::MouseMove, the IsPressed functions,
+  TEditLine::SetActive) are TBEGIN/TEND around code that cannot throw; the
+  functions with only assertions and no TBEGIN are noted. tools/ehinfo.py now
+  also finds the prologue PUSH -1; MOV EAX, FS:[0]; PUSH stub (0x45dfc0,
+  TFocusGroup::AddMember, and a few Container.h instances). The link's and the
+  password line's HandleEvent name Event with a constant in their catch
+  blocks: their try blocks are inside the test of the event. Jump tables:
+  GetToken 0x4567ec (states 0-7, 2-4 unused), TFormattedText::Arrange 0x466650
+  (token types 0-3, 10-18), TEditLine::HandleEvent 0x45bc6c (16-20),
+  TEditText::KeyPress 0x4690d0 with the byte table 0x4690e4 and 0x4690f0.
+- **Odd behaviour kept**: TEditLine::RightButtonUp calls TWindow::LeftButtonUp;
+  InsertText inserts at the cursor (Position enters only the assertion and the
+  rest's length); select all puts the cursor at max(length, 0); a backspace
+  with a selection moves the cursor before deleting it; TEditText::Arrange and
+  TListBox::Arrange size the scroll bar with skin widths (11, 10) where skin
+  heights would fit; TEditText's PageUp moves one line more than a page and
+  reads LineStart(-1) on the first line; TFocusGroup::AddMember does not test
+  the last member for a duplicate; TToggleButton and TTextToggleButton pass
+  their own unset Tooltip to the base class; TMultiStateButton::Reset sets
+  State past the last state (it wraps to 0); a '<' that starts no token
+  advances TFormattedText's layout twice; a failed <name=...> token keeps its
+  type for the next piece; TCheckBox::SetEnabled rebuilds the label from its
+  first line only; TObjectIcon's frame only narrows the clipping area; the
+  horizontal range sends its callback before limiting the value in KeyPress
+  and twice for a held button beside the slider; TListBox::Draw stops at
+  VisibleLines or Lines lines; TFontListBox::Clear frees the texts and keeps
+  the pointers; TOutfitIcon keeps a direction it never draws.
+- **SkinProperties retyped** (medium; GUI.cpp's stores rewritten, guitest.cpp
+  compares the bytes): CheckBox.Data08/Data10 are one TRect Data08 (the area
+  TCheckBox fits its label into). Surface.h's slot +0x1c is DrawVerticalLine
+  (the edit line's cursor), external.h's TSurfaceGL and playertest.cpp follow.
+- **Callers** (high): external.h's sketches are gone; DialogElements.h includes
+  external.h (TObject), Status.h and Skins.h, so its users include it
+  directly (ConsoleWindow.cpp, ContentWindows.h, ContextMenus.cpp,
+  DialogWindow.cpp, MainWindow.cpp, MapWindow.cpp; Control.cpp needs only
+  ContextMenus.h's forward declaration). Renamed: Input->SetDisabled,
+  SelectionStart/SelectionLength/ReadOnly in ConsoleWindow.cpp and
+  ContextMenus.cpp, Frame->FitToWindow in MainWindow.cpp; the placeholder
+  literals became false (Repeat, Framed, ReadOnly, State) and NULL (tooltips).
+- **callcheck** (all differences explained): constructors of base classes,
+  members and new-expressions (TElement, TWindow, TCallback, TDrawing's
+  vector constructor iterator, the vectors, the controls' parts) and
+  Container.h's operator() are not lexical calls; virtual calls (Arrange,
+  IsPressed, IsDisabled, IsChecked, GetPosition, the edit members, StartEdit
+  and StopEdit, ReleaseCapture, SetSize, getMinimum*, SetChildArea,
+  SetChildPosition, ClipChildren) are indirect in the binary; the binary
+  inlines Limit, SetCursor, LimitCursor and SetSelection in places and calls
+  them in others; calls of a member of another class with the same name
+  (SetActive, SetValue) are resolved to the own class by the tool; OpenURL is
+  a function pointer; two SetRange calls of an if/else are one call site in
+  the binary; _ftol (0x5124c4) is the compiler's float conversion.
+- **Tests**. dialogelementstest.cpp (new; 135,478 checks in the full run over 1,600
+  rounds): every round builds one of 27 kinds
+  of controls on both sides (the image's constructors at their addresses,
+  ours with new) as a child of a root window, three edit lines of a focus
+  group or one with a radio group, then 20-60 random operations (sizes,
+  Arrange, drawing, mouse moves, clicks with drags and held-button ticks,
+  double and right clicks, the wheel, hovering, keys, events, and each
+  class's members, the header's inline members against their out-of-line
+  copies); the logs of every callee with an effect (text and picture drawing,
+  the surface, the mouse-over text, cursor, messages, clipboard, callbacks and
+  OpenURL) and a dump of every member of the control and its children are
+  compared after each. The metrics, drawing and world are fakes for both
+  sides; the image's operator new and ours fill memory with a pattern. A
+  mutation check (twenty changes, one at a time) failed each run.
+  DIFFTEST_ONLY=DialogElements runs it alone (DE_TRACE, DE_LOGS).
+  The earlier window tests keep their fakes as mirror classes of the old
+  sketches (tools/difftest/elementfakes.h): PatchElementFakes redirects the
+  image's and our constructors (decorated names through /alternatename) and
+  non-virtual members to them while each test runs. TObjectIcon's and
+  TSeparator's constructors and TMultiStateButton::Reset are inline (inlined
+  into our callers), so they run for real on both sides: contextmenustest.cpp
+  gives the real separators its test vtable after each construction,
+  contentwindowstest.cpp and mainwindowtest.cpp name the real icons and
+  separators by vtable (mainwindowtest.cpp fakes DrawObject now).
