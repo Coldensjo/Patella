@@ -31,6 +31,7 @@ the non-GUI files: SurfaceGL.cpp, surfaceDX9.cpp, SurfaceDX.cpp, graphics.cpp.
 
 ## Delegates (running)
 
+- graphics.cpp + DialogWindow/graphics gap: Claude Opus 5.5, own worktree.
 - GUI.cpp + graphics/GUI gap: Claude Opus 5.5, own worktree.
 Both told: real names only, no shims, replace their external.h views and
 rename the callers. Review each against decomp/clean and the binary before
