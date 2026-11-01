@@ -11,19 +11,17 @@ Read this and `git log` first when resuming.
    (InitCommunication + STL), Status/SurfaceDX (Surface.cpp + SurfaceDX.cpp range).
 5. Objects.cpp and the Objects/Player gap — **done** (Claude Opus 5.5 delegate, reviewed, merged). The gap is all Player.obj.
 6. Map.cpp and the gaps on both sides — **done** (Claude Opus 5.5 delegate, third attempt, reviewed, merged).
-7. MapWindow.cpp and the MapWindow/Network gap.
+7. MapWindow.cpp and the MapWindow/Network gap — **done** (issue #1, Claude Opus 5.5; the gap is Network.cpp).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-Stopped at the user's request after merging GUI.cpp and graphics.cpp
-(November 1, 2026). Next when resuming: MapWindow.cpp (item 7, derives from
-GUI.cpp), then MainWindow.cpp and the other window files smallest first
-(DialogWindow, ContextMenus, ConsoleWindow, ContentWindows, DialogElements,
-Dialogs), and the surface files (SurfaceDX.cpp with its settled range
-0x4eae70-0x4ed19f, surfaceDX9.cpp, SurfaceGL.cpp) with their gaps.
+MapWindow.cpp done (issue #1, November 1, 2026). Next: MainWindow.cpp and the other window
+files smallest first (DialogWindow, ContextMenus, ConsoleWindow, ContentWindows, DialogElements,
+Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
+surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
 
 ## Delegates (running)
 
@@ -35,7 +33,7 @@ None.
 
 ## Last difftest
 
-12,238,330 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,354,624 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -59,3 +57,22 @@ None.
   Git Bash tool it sometimes ends with exit 1 and no output, while the same
   build passes from PowerShell; build.cmd sets a private TEMP per checkout
   because the tests write to fixed folders under %TEMP%.
+- MapWindow.cpp: TObject converts to int (Type), so TEND1(Obj) and
+  comparisons like "SrcObj!=0" compile as in the original; an rvalue TObject
+  now also matches GetObjectFlag(int, int). Status.cpp's Set/Get*Object take
+  (Index, x, y, z). The surface slots +0x20, +0x30, +0x40, +0x4c, +0xa4 have
+  names and parameters (Surface.h); a test that needs them defines the
+  TSurfaceGL methods (mapwindowtest.cpp), the others stay playertest.cpp's
+  stubs.
+- MainWindow.cpp creates TMapFrame (MapWindow.h) with operator new(0x40); its
+  deleting destructor 0x4adc40 is in MainWindow.obj.
+- The text header's table is copied into every object that includes it; use
+  the copy of the object at hand (external.h lists Control.obj's and
+  MapWindow.obj's entries).
+- mapwindowtest.cpp's PatchWorld redirects many functions of our Map, Creatures,
+  Status, Preferences, Talk, Help, graphics, GUI and Inventory code for good;
+  keep it the last test in difftest.cpp or restore them.
+- A difftest crash that depends on the environment (TEMP's length) is a
+  heap error that the memory layout hides: talktest.cpp had a double delete
+  (fixed). _heapchk() between the tests finds the first one that breaks the
+  heap.

@@ -1031,3 +1031,156 @@ finished it), November 1, 2026.
 - **Left for graphics.cpp**: the two picture functions keep their FUN_ names
   (FUN_00490c60, FUN_004910e0); FUN_004910e0's declaration was added to
   external.h in its own block so the graphics.cpp lines stay untouched.
+
+## MapWindow.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
+
+- **Ranges** (high). The Map/MapWindow gap 0x4bf860-0x4bf9ff holds the
+  out-of-line copies of TMapWindow's inline members (destructor, the two
+  minimum sizes, IsFieldVisible, SetLightColor, the deleting destructor):
+  they open the object before the constructor (line 130), as the inline
+  copies of the other files do. The MapWindow/Network gap 0x4ca0e0-0x4ca2ff
+  is Network.cpp (file-ranges.tsv): InitServerList and the setters use only
+  Network data (0x7152f0 on), 0x4ca2d0/0x4ca2f0 are TSocket's deleting and
+  implicit destructor (a jmp to CAsyncSocket::~CAsyncSocket), 0x4ca2c0 is
+  MFC's inline CObject::operator delete (PASCAL, ret 4), called only by
+  unwind funclets of new-expressions. MapWindow.obj's data: the TCallback
+  0x7152e8 (static initialiser 0x559fc0, TCallback(NULL, 0), never used;
+  written as a static of ours, NoCallback) and, in .data before Network's
+  0x5c22c4, its copy of the text header's table (the strings up to "Report
+  Rule Violation" at 0x5c22ac, then DefaultFontColor's copy 0x5c22b4). Every
+  object that includes the text header has such a copy (Control.obj's is
+  external.h's 0x5c0c80 table); the two texts MapWindow uses are declared in
+  external.h with this object's addresses (TextReceiveHint 0x5c2130,
+  TextSelectPlayerToTrade 0x5c2258).
+- **Two classes** (high for the layouts, low for the names). TMapWindow
+  (vtable 0x56cf38, 0x92d8 bytes) is the map view; TMapFrame (vtable
+  0x56d0b8, 0x40 bytes, created by MainWindow.cpp with operator new(0x40))
+  holds it at +0x2c, keeps it at 15:11 and draws the border. The names
+  TMapWindow (the file's name for the view) and TMapFrame are ours. Every
+  vtable slot was compared with TWindow's: TMapWindow overrides SetSize, the
+  minimum sizes, Draw, Arrange, LeftButtonDown/Up, RightButtonUp,
+  HelpMouseMove and HandleEvent; TMapFrame SetSize, the minimum sizes and
+  Arrange. TMapFrame's destructor is the implicit one (deleting destructor
+  0x4adc40 in MainWindow.obj, which calls the folded 0x443e10, a jmp to
+  ~TWindow).
+- **Member layout** (high for offsets and types, low for the names except
+  MAP_WIDTH/MAP_HEIGHT): the creature names (150 entries of ID and position),
+  the textual effects to draw (200 entries of number, position and field),
+  Light[18][14] (TRGBColor: the constructor clears it with the inline
+  TRGBColor constructor before the try block), the map position, MaxLevel,
+  CoverLevel[18][14] (the highest level with a FULLBANK ground), the scroll
+  offset (the player's walk offset + 32), the 16x12 tile cache (TCacheField,
+  0x8c bytes) and the hint button.
+- **TObject converts to int** (medium). Draw's TEND1(Obj) prints "Obj" with
+  the value of Obj.Type, and the assertions "SrcObj!=0", "TradeObject!=0" and
+  "Obj!=CREATURE" compare an object with a number while the code tests its
+  Type. external.h's TObject got `operator int() const { return Type; }`.
+- **Status.cpp's object slots take the index first** (high). LeftButtonDown
+  calls SetDragObject(Obj, Position, x, y, z), and the getters' first output
+  goes to the Position argument of SendMoveObject, SendLook and the other
+  messages. The parameters of Set/GetDragObject, Set/GetTradeObject and
+  Set/GetUseObject and the variables behind them were renamed by address
+  (DragX at 0x71c5c8 is DragIndex now, and so on); the code is unchanged.
+- **TCreature's PKFlag and PARTYFlag** (high): the errors "unknown creature PK
+  flag" (Creature->PKFlag, +0x90) and "unknown creature party flag"
+  (Creature->PARTYFlag, +0x94) name them; Creatures.h's Skull and Shield were
+  renamed (Communication.cpp, Creatures.cpp, creaturestest.cpp).
+- **SkinProperties +0x60-+0x9b are five colours** (high for the types, low for
+  the names): the values InitSkinProperties stores there are (248,248,248),
+  (224,64,64), (64,224,64), (248,164,164), (180,248,180), and DrawField reads
+  them as the frames of the creature under the mouse, attacked, followed, and
+  attacked or followed under the mouse. GUI.h had a TRGBColor and three TRects
+  (same size); InitSkinProperties' stores were rewritten member by member.
+- **TDrawing constructors** (medium): `new TDrawing[8]` in TMapFrame's
+  constructor zeroes the entries in a loop (an inline default constructor),
+  and Arrange assigns whole entries built from seven values.
+- **Surface slots** (high for the arguments, low for the names): +0x20
+  DrawFrameClipped(Surface, TRect, LineWidth, TRGBColor, TRect Clip), +0x30
+  BlitRect(ToSurface, x, y, FromSurface, TRect Source), +0x40
+  StretchBlitRect(ToSurface, TRect, FromSurface, TRect), +0x4c
+  ShadeRectangles(Surface, Count, TRect *, TRGBColor *) with four corner
+  colours per rectangle, +0xa4 CanShadeRectangles(). +0x9c(2) returning true
+  makes Draw forget the tile cache (the surface lost its contents, low).
+- **FULLBANK = 30** (low for the name): the Tibia.dat flag after LENSHELP;
+  Draw takes the highest level whose first object has it as the field's
+  cover level. **EVENTHELPS** moved from Help.cpp to Help.h
+  ("In(Hint,1,EVENTHELPS)").
+- **Names of Map.cpp's GetTop*Object** (medium now): LeftButtonDown drags the
+  "move" object, RightButtonUp makes the "look" object the trade (look) object
+  and the "use" object the use object, LeftButtonUp in action state 7 uses
+  the use object with the "multi-use" object, and HelpMouseMove shows the
+  look object's help.
+- **Limit** (low): a clamp between two bounds in either order appears inlined
+  about thirty times (with constant bounds only one branch is left); the
+  binary has no copy. Written as a static inline function of MapWindow.cpp.
+  **TERROR1B** (local macro): the party flag error has "[bug0001106]" as its
+  expression, like Map.cpp's TASSERTB.
+- **Odd behaviour kept** (high): the light of a graphical effect is added
+  with the field's level as its radius and its brightness as its level (the
+  arguments are swapped; the missile light has them right); Draw reads
+  Light[][] of a creature's field without checking it is on the map;
+  HelpMouseMove asks GetObjectFlag(Type, LENSHELP) even when the look object
+  is empty (type 0 fails the assertion); CacheSprite and FlushField draw the
+  matching sprites of a tile again over it without clearing it; a party
+  shield of type 1 is drawn only while the player is in no party; the classic
+  control attacks only when the use object is not FORCEUSE; only creatures
+  on the player's level get names; HandleEvent(27) without a hint button
+  fails the assertion of RemoveChild.
+- **Arithmetic**: TMapFrame::SetSize's 15:11 height is floor(width *
+  0.73333335f) (0x512b50 is floor: its error path reports operation 11,
+  _FpCodeFloor; the product is a float multiplication, fild/fmul m32). x87
+  and SSE give the same floor here: the float constant is slightly above
+  11/15, so the product is either a whole number plus a tiny excess or at
+  least 1/15 away from one. AddLightSource's distance is
+  (int)sqrt((double)dx * dx + dy * dy), as in Map.cpp.
+- **Try blocks from the exception tables** (high): Draw (0-136) has the inner
+  blocks of lines 477, 495, 527 (TEND1(Obj) each, with their own TObject),
+  550, 757 (with 599 inside the creature-name loop, one try per iteration),
+  776, 815 (with 794 inside the loop) and 830; DrawField (0-76) those of lines
+  874, 884, 927, 987 (TEND2(i, Creatures[i]->OutfitType), i declared before
+  the try), 1054 (TEND1(EffectNumber)) and 1060. AddLightSource's inner try
+  has a single TMyException & handler that wraps the error with a
+  stringstream text. The assertions of DrawObject, DrawCreature and
+  DrawLightMask come before TBEGIN; GetCacheField and TMapFrame::Arrange have
+  no try block. Switches: ArrangeTalkboxes' modes (tables 0x4c12b4/0x4c12c4:
+  4; 9, 11, 18, 19; 22), Draw's party and PK flags (0x4ca0bc, 0x4ca0cc).
+- **Source order**: line order (TMapWindow 130-1545, TMapFrame 1564-1606, its
+  Arrange without lines last, where the binary has it). The binary emits the
+  functions in a different order (the asserted helpers after HandleEvent, the
+  mouse handlers after TMapFrame, Draw last).
+- **SetChildArea** (note only): Arrange passes the hint button's area as one
+  16-byte block (sub esp,0x10 and four stores) while GUI.h's SetChildArea
+  takes four ints; the stack is the same. GUI.cpp's decision found plain
+  pushes elsewhere, so the signature was left.
+- **callcheck** (14 of 26 functions differ, all explained): constructor calls
+  (TWindow's, TCallback's, TMapWindow's, TBlinkingButton's, the vector
+  constructor iterator of DrawCreature's colours) are not lexical; qualified
+  TWindow:: calls are not resolved; virtual calls (Arrange, SetChildArea,
+  RightButtonUp, HandleEvent, InsertChild) are indirect in the decompile;
+  LeftButtonDown/LeftButtonUp/RightButtonUp and DrawObject also resolve to
+  Control.cpp's and graphics.cpp's free functions of these names; the
+  compiler merged call sites (SetAttackID/SendAttack/GetAttackID/AddMessage in
+  RightButtonUp, SetHelpSize in HelpMouseMove, DrawSkin in Draw); four of the
+  eight IsFieldVisible calls of DrawFieldSprite are inlined; floor, _ftol and
+  the stream operators are not in names.tsv.
+- **Tests** (mapwindowtest.cpp, about 116,000 checks): one fake world for both
+  sides (map objects and effects, creatures, talkboxes, preferences, event
+  helps, action state; TCreature's GetDeltaX/Y and GetDrawDirection are fakes
+  because they read Creatures.cpp's player step), logs of every drawing,
+  surface, Communication, Status, Talk, Help and hotkey call, and the windows
+  compared byte for byte after each of 24 kinds of random operations
+  (constructor, the inline members against their out-of-line copies, the
+  cache, sprites, objects, creatures, fields, whole frames with talkboxes,
+  the mouse handlers in every action state, HandleEvent, the hint button's
+  Arrange and removal, TMapFrame). Every message, send and drawing kind of
+  the file was reached (counts in the summary line). Not exercised: the error
+  paths and the hint button's creation (TBlinkingButton is
+  DialogElements.cpp's). playertest.cpp's TSurfaceGL stubs for the new slots
+  moved to mapwindowtest.cpp as recorders.
+- **talktest.cpp fixed** (high): TestFilters deleted the filter vector's
+  entries itself and vector<T>'s destructor (since Map.cpp) deleted them
+  again. The double delete corrupted the heap only with some memory layouts:
+  with this file's test added, build.cmd's longer TEMP path made difftest
+  end with 0xc0000374 and no output. The test now clears the pointer.
