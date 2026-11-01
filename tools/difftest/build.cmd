@@ -10,6 +10,11 @@ call "%VCVARS%" x86 >nul || exit /b 1
 set ROOT=%~dp0..\..
 set OUT=%ROOT%\build\difftest
 if not exist "%OUT%" mkdir "%OUT%"
+rem The tests write to fixed directories under %TEMP%; a private TEMP per checkout keeps
+rem concurrent runs in other worktrees from overwriting each other's files.
+if not exist "%OUT%\tmp" mkdir "%OUT%\tmp"
+set "TEMP=%OUT%\tmp"
+set "TMP=%OUT%\tmp"
 set BASEFLAGS=/nologo /std:c++17 /MT /O2 /W3 /DTIBIA_MFC_SHIM /D_WIN32_WINNT=0x0601 /I"%ROOT%\src"
 set FLAGS=%BASEFLAGS% /Fo"%OUT%\\"
 

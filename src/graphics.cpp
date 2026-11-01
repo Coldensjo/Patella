@@ -1,4 +1,4 @@
-// graphics.cpp: reconstructed from Tibia.exe 7.72 (0x48b380-0x49546f).
+// graphics.cpp: reconstructed from Tibia.exe 7.72 (0x48b380-0x49547f).
 //
 // Sprites (Tibia.spr), pictures (Tibia.pic), the fonts cut from pictures, the
 // memory and video caches of 32x32 tiles, and the functions that draw
@@ -12,9 +12,9 @@
 // the end.
 //
 // Also in this object: the out-of-line copies of TRGBColor's operator== and
-// operator!= (0x48b380, 0x48b3b0; external.h) and TVideoCacheItem's
-// constructor (0x48b3f0, below), which the binary emits before the first
-// function.
+// operator!= (0x48b380, 0x48b3b0; inline members of TRGBColor, which is
+// still declared in external.h) and TVideoCacheItem's constructor (0x48b3f0,
+// below), which the binary emits before the first function.
 //
 // Names: see graphics.h and notes/decisions.md ("graphics.cpp").
 
@@ -663,10 +663,8 @@ TVideoCacheItem *GetVideoSprite(int SpriteNumber)
 		Position = LeastRecentVideoItem;
 		TVideoCacheItem &Item = VideoCache[LeastRecentVideoItem];
 		TMemoryCacheItem *Tile = GetMemorySprite(SpriteNumber);
-		if (curEngine == 1 || curEngine == 2) {
-			TRGBColor &ColorKey = Sprites[SpriteNumber - 1].ColorKey;
-			GetSurface()->Unknown50(Item.Surface + 6, ColorKey.R, ColorKey.G, ColorKey.B);
-		}
+		if (curEngine == 1 || curEngine == 2)
+			GetSurface()->Unknown50(Item.Surface + 6, Sprites[SpriteNumber - 1].ColorKey);
 		GetSurface()->WriteImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data);
 		Item.Type = SPRITE_ITEM;
 		Item.Number = SpriteNumber;
@@ -691,10 +689,8 @@ TVideoCacheItem *GetVideoMaskedSprite(int SpriteNumber, int MaskNumber, TRGBColo
 		TVideoCacheItem &Item = VideoCache[LeastRecentVideoItem];
 		TMemoryCacheItem *Tile = GetMemorySprite(SpriteNumber);
 		TMemoryCacheItem *Mask = GetMemorySprite(MaskNumber);
-		if (curEngine == 1 || curEngine == 2) {
-			TRGBColor &ColorKey = Sprites[SpriteNumber - 1].ColorKey;
-			GetSurface()->Unknown50(Item.Surface + 6, ColorKey.R, ColorKey.G, ColorKey.B);
-		}
+		if (curEngine == 1 || curEngine == 2)
+			GetSurface()->Unknown50(Item.Surface + 6, Sprites[SpriteNumber - 1].ColorKey);
 		GetSurface()->WriteMaskedImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data, Mask->Data,
 			Colors);
 		Item.MaskNumber = MaskNumber;
@@ -724,11 +720,10 @@ TVideoCacheItem *GetVideoPicture(int PictureNumber, int TileX, int TileY)
 		TVideoCacheItem &Item = VideoCache[LeastRecentVideoItem];
 		TMemoryCacheItem *Tile = GetMemoryPicture(PictureNumber, TileX, TileY);
 		if (curEngine == 1 || curEngine == 2) {
-			TRGBColor &ColorKey = Pictures[PictureNumber - 1].ColorKey;
 			if (Pictures[PictureNumber].ColorKey != TRGBColor(1, 1, 1))
-				GetSurface()->Unknown50(Item.Surface + 6, ColorKey.R, ColorKey.G, ColorKey.B);
+				GetSurface()->Unknown50(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
 			else
-				GetSurface()->Unknown50(Item.Surface + 6, ColorKey.R, ColorKey.G, ColorKey.B);
+				GetSurface()->Unknown50(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
 		}
 		GetSurface()->WriteImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data);
 		Item.TileY = TileY;
@@ -759,10 +754,8 @@ TVideoCacheItem *GetVideoFontChar(int FontNumber, int TileX, int TileY, TRGBColo
 		TMemoryCacheItem *Tile = GetMemoryPicture(PictureNumber, TileX, TileY);
 		TRGBColor Colors[4] = {Color, Pictures[PictureNumber - 1].ColorKey, TRGBColor(0, 0, 0),
 			TRGBColor(0, 0, 0)};
-		if (curEngine == 1 || curEngine == 2) {
-			TRGBColor &ColorKey = Pictures[PictureNumber - 1].ColorKey;
-			GetSurface()->Unknown50(Item.Surface + 6, ColorKey.R, ColorKey.G, ColorKey.B);
-		}
+		if (curEngine == 1 || curEngine == 2)
+			GetSurface()->Unknown50(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
 		GetSurface()->WriteMaskedImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data, NULL,
 			Colors);
 		Item.TileX = TileX;

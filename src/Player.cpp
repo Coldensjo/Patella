@@ -19,6 +19,7 @@
 
 #include "Player.h"
 #include "Control.h"
+#include "graphics.h"
 #include "Network.h"
 #include "Preferences.h"
 #include "Status.h"

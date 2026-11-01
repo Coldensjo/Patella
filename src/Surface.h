@@ -22,9 +22,11 @@ extern int curEngine; // 0x71d0c4
 // the others have the default bodies in Surface.cpp. Unknown slots keep
 // their offsets; their parameters are known only where a default body
 // shows them (by its RET n). The slots graphics.cpp calls (+0x28, +0x2c,
-// +0x34, +0x3c, +0x48, +0x90, +0x94) have their parameters from those calls
-// (ToSurface from SurfaceGL.cpp's assertions; the names are ours). Surfaces
-// 6 and up are the video cache surfaces.
+// +0x34, +0x3c, +0x48, +0x50, +0x90, +0x94) have their parameters from those
+// calls (ToSurface and FromSurface from SurfaceGL.cpp's assertions; the other
+// names are ours); +0x50 gets a colour key by value (the callers copy a
+// TRGBColor to the stack) and passes it on to +0x54. Surfaces 6 and up are
+// the video cache surfaces.
 class TSurface {
 public:
 	TSurface();
@@ -53,8 +55,8 @@ public:
 		int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight,
 		TRect Clip) = 0;                                              // +0x48
 	virtual void Unknown4C() = 0;
-	virtual void Unknown50(int a, int b, int c, int d);               // +0x50, calls +0x54; graphics.cpp passes a surface and a colour key
-	virtual void Unknown54(int a, int b, int c, int d) = 0;
+	virtual void Unknown50(int Surface, TRGBColor ColorKey);         // +0x50, calls +0x54; graphics.cpp sets a cache surface's colour key
+	virtual void Unknown54(int Surface, TRGBColor ColorKey) = 0;
 	virtual void Unknown58() = 0;
 	virtual void Unknown5C() = 0;
 	virtual void Unknown60() = 0;

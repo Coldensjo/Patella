@@ -39,7 +39,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Container.h | 8 | 0 | 3664 | `0x452ac0` | `0x4fd6e0` | 355-370 |
 | Dialogs.cpp | 139 | 408 | 101452 | `0x46c3e0` | `0x48540d` | 48-4084 |
 | DialogWindow.cpp | 39 | 119 | 22972 | `0x485843` | `0x48b287` | 63-1127 |
-| external.h | 2 | 0 | 96 | `0x48b380` | `0x48b3b0` |  |
+| graphics.h | 2 | 0 | 96 | `0x48b380` | `0x48b3b0` |  |
 | graphics.cpp | 56 | 106 | 40578 | `0x48b430` | `0x4953c3` | 130-1539 |
 | GUI.cpp | 51 | 114 | 42555 | `0x497a00` | `0x4a291e` | 42-2004 |
 | Help.cpp | 18 | 0 | 5560 | `0x4a29e0` | `0x4a4440` | 354-691 |

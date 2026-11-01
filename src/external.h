@@ -30,10 +30,6 @@ struct regexp;
 regexp *regcomp(char *exp);                     // 0x50fa40, the result is malloc'd
 int regexec(regexp *prog, char *string);        // 0x50f360, 1 on a match
 
-// --- added for Communication.cpp ---
-
-// graphics.cpp's PictureSignature (0x5cc758) and SpriteSignature (0x5ccb64): graphics.h.
-
 // --- added for Control.cpp ---
 
 struct TFullscreenMode; // Preferences.h
@@ -238,7 +234,7 @@ public:
 	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
 		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip);
 	void Unknown4C();
-	void Unknown54(int a, int b, int c, int d); void Unknown58(); void Unknown5C(); void Unknown60();
+	void Unknown54(int Surface, TRGBColor ColorKey); void Unknown58(); void Unknown5C(); void Unknown60();
 	void Unknown68(); void Unknown6C(); void Unknown70(); void Unknown74(); void Unknown78();
 	void Unknown7C(); void FinishFrame();
 	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force);
@@ -319,9 +315,6 @@ TWindow *FUN_00483fe0(void (*OpenURL)(const char *URL));                // 0x483
 TWindow *FUN_00484200(void (*OpenURL)(const char *URL));                // 0x484200, "Hotkey Options"
 TWindow *FUN_00484400();                                                // 0x484400, "Error Report"
 TWindow *FUN_00485290(INT_PTR Param1, INT_PTR Param2);                  // 0x485290, "Rule Violation"
-
-// graphics.cpp (with the DialogWindow/graphics gap)
-#include "graphics.h"
 
 // Between graphics.cpp and GUI.cpp
 void FUN_00496150();                   // 0x496150, clears 0x5ccf98

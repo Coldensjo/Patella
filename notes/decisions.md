@@ -756,3 +756,143 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   tested (the original would raise an exception), so deleted marks (at 0,0,
   block 0,0) are never looked up. FindPath reached every result except -4
   (no path).
+
+## graphics.cpp
+
+Reconstructed by Claude Opus 5.5 (delegate; a first delegate's unreviewed
+WIP, checked and finished by a second one), November 1, 2026.
+
+- **DialogWindow/graphics gap (0x48b380-0x48b547)** (high for the split).
+  DialogWindow.cpp ends with the catch block 0x48b287 (line 297, to 0x48b334).
+  0x48b380 and 0x48b3b0 are TRGBColor's operator== and operator!= (`ret 0xc`,
+  ECX = this, the other colour by value; operator!= negates the inlined ==):
+  out-of-line copies of inline members, kept in graphics.obj because it is
+  the first object in link order that calls them (FindVideoMaskedSprite
+  0x48e09e, GetVideoPicture 0x48f1df; the only other caller is SurfaceGL.cpp
+  0x4fbe47). file-ranges.tsv gives them to graphics.h (low: inferred because
+  TRGBColor, TRect and TFont are the types of graphics.cpp's interface; the
+  types are still declared in external.h, and the GUI.cpp delegate moves them
+  to GUI.h, so where they end up is for the merge). The rest, 0x48b3f0-0x48b54f,
+  is graphics.cpp: 0x48b3f0 is TVideoCacheItem's constructor (missed by
+  Ghidra; pushed to the eh vector constructor iterator by InitVideoCache at
+  0x48db0b); 0x48b430, 0x48b460 and 0x48b4a0 use only graphics.cpp data
+  (Fonts, NumberOfFonts, the memory cache and its hash table, the tables).
+  GetFontLineHeight is called only from other objects, but its first caller
+  (0x41a070) precedes graphics.obj in link order, so it is not an inline copy
+  but graphics.cpp's own function. The three have no exception frame and no
+  line evidence and open the file in binary order (as in Creatures.cpp).
+- **Graphics/GUI gap**: not reconstructed (the GUI.cpp delegate settles it).
+  No graphics.cpp function was found in it: 0x495480-0x495700 construct
+  objects with TFonts whose colour comes from GUI.obj's copy at 0x5c1954, and
+  0x496150 clears 0x5ccf98, which only GUI.cpp code uses. graphics.cpp's
+  data ends at 0x5ccf97 and its code at 0x49547f (padding after the last
+  catch block 0x4953c3).
+- **Names** (from the binary, high): FileName, PATH_MAX, SpriteNumber,
+  NumberOfSprites, MaskNumber, PictureNumber, NumberOfPictures, TileX, TileY,
+  Picture.TilesX/TilesY, Buffer, Position, MemoryCacheSize, VideoCacheSize,
+  Item.Type, EMPTY_ITEM, HashValue, HASH_TABLE_SIZE, FontNumber,
+  NumberOfFonts, FontName, CharsPerLine, CharWidth, CharHeight, Surface,
+  Width, Height, Text, Length, Alignment, LEFT_ALIGN, CENTER_ALIGN,
+  RIGHT_ALIGN, Format.Alignment (so TFont's third field is Alignment, renamed
+  from Unknown10), MemoryCacheBytes. Ours: every function name (medium where
+  the behaviour is clear, low for the cache helpers Touch/Find/Remove/Insert
+  and for GetFittingTextLength, GetTextPosition and GetFontLineHeight), the
+  types TSprite, TPicture, TFontInfo, TMemoryCacheItem, TVideoCacheItem, the
+  other fields and globals, SPRITE_ITEM and PICTURE_ITEM. PrintText* rather
+  than DrawText* because windows.h defines DrawText. The values PATH_MAX 1024
+  and HASH_TABLE_SIZE 100 are from the checks (`< 0x400`, `% 100`).
+- **Surface slots** (medium for the parameters, low for the names): the
+  calls give the parameters of TSurface +0x28 WriteImage, +0x2c
+  WriteMaskedImage, +0x34 Blit, +0x3c BlitClipped, +0x48 StretchBlit, +0x90
+  GetCacheSurfaces and +0x94 GetSurfaceRect; ToSurface and FromSurface are
+  SurfaceGL.cpp's assertion names. +0x50 (Unknown50, whose default body calls
+  +0x54) takes a surface and a colour key: every caller copies a TRGBColor to
+  the stack (`sub esp,0xc`), so it was changed from four ints to
+  (int Surface, TRGBColor ColorKey), and +0x54 likewise (same ABI). Only
+  engines 1 and 2 (OpenGL and DirectX 9) get the call.
+- **TVideoCacheItem's overlapping fields** (medium): masked sprites keep the
+  mask number and four colours at +0x14/+0x18, pictures and font characters
+  TileX, TileY and the text colour at +0x14/+0x18/+0x1c (the Find and Get
+  functions read them so). Written as unions. Its constructor 0x48b3f0 clears
+  the four colours and then the text colour, in that order; written as a
+  user constructor with these stores. A C++03 union cannot hold a TRGBColor
+  with a constructor, so the original declaration was probably different
+  (low); the stores are what the binary shows.
+- **TRGBColor's default constructor**: the binary zeroes default-constructed
+  colours (DrawOutfit's local array, the `new TSprite[]` and `new TPicture[]`
+  loops, 0x48b3f0). TRGBColor() in external.h does not, so graphics.cpp zeroes
+  explicitly (TSprite and TPicture constructors with ColorKey(0, 0, 0),
+  DrawOutfit's loop). The GUI.cpp delegate makes TRGBColor() zero; after that
+  merge the explicit zeroing can give way to the compiler-generated
+  constructors (same behaviour either way).
+- **Dropped code with exception states left** (medium): FindMemorySprite,
+  FindMemoryPicture, the four FindVideo* functions (11 states, no try block),
+  GetTextHeight and GetFittingTextLength (21) and GetTextPartWidth (26) are
+  written with TBEGIN/TEND whose try blocks the compiler removed (nothing in
+  them throws). DrawPicturePart has 26 states and a try at 15-15, that is
+  three assertions before TBEGIN, but only the PictureNumber one is in the
+  code: it returns early when Width or Height is not positive, and the two
+  assertions `Width>0` and `Height>0` after that return (as in
+  DrawPicturePartClipped, lines 1192-1193) were removed as always true. Their
+  line numbers are unknown.
+- **Try blocks from the exception tables**: the four file functions have an
+  inner try (states 11-12; the TReadBinaryFile is state 12) whose
+  catch (TMyException &) throws PROGRAM_ERROR 2 (LoadSprites), 4
+  (LoadSprite), 3 (LoadPictures) or 5 (LoadPictureTile); LoadPictureTile's
+  tile assertions (lines 289-290) are inside it (states 11-22), so a bad tile
+  becomes PROGRAM_ERROR 5 too. DrawMaskedSprite and DrawMaskedSpriteScaled
+  have their assertions inside the try (states 0-10). DrawSprite,
+  GetFontHeight and the Touch/Remove/Insert functions have no try block. No
+  function has a switch (no jump table in 0x48b380-0x49547f).
+- **Exact oddities kept**: the files are closed twice (close() and the
+  destructor); LoadSprite and LoadPictureTile open the file for every sprite
+  or tile and write past the buffer on malformed runs; GetFontLineHeight
+  maps numbers below 0 and above NumberOfFonts to font 3 but reads before the
+  table for 0; RemoveVideoItem ignores position 0, so a reused slot 0 stays in
+  its old hash chain (the video Find functions give up after
+  VideoCacheSize+2 steps); FindVideoPicture matches font characters of the
+  picture (no colour test) and FindVideoFontChar matches a plain tile for
+  colour 0,0,0; GetVideoPicture tests the colour key of Pictures[PictureNumber]
+  (the next picture; past the end for the last one) against 1,1,1 and does
+  the same in both branches; a blank advances text by the width of character
+  index 12 (','); InitFont never looks at column 0 or row 0 and lets a blank
+  character take part in the Height maximum with -1; DrawSpriteClipped skips
+  negative sprite numbers, the other DrawSprite* only 0; DrawObject's count
+  buffer holds three digits; DrawPicturePartClipped fails its assertions on
+  an empty part where DrawPicturePart returns.
+- **Data not static** (judgement): only SpriteSignature and
+  PictureSignature are used by another file (Communication.cpp), but all
+  graphics.cpp globals are declared in graphics.h so that graphicstest.cpp
+  can compare the caches, hash tables and LRU lists directly (Objects.h
+  exports its property tables the same way). They are in .bss order with
+  their addresses; 0x5cc75c is unused.
+- **Header structure**: graphics.h includes external.h for TRGBColor,
+  TRect, TFont and TObject. external.h no longer declares any graphics.cpp
+  function; Communication.cpp, Control.cpp and Player.cpp include graphics.h
+  (the WIP's `#include "graphics.h"` inside external.h made the two headers
+  include each other).
+- **Source order**: line order; the three gap functions first, the Find
+  functions (no lines) between TouchMemoryItem (466) and RemoveMemoryItem
+  (522) and between TouchVideoItem (644) and RemoveVideoItem (762), and
+  GetTextPosition (no frame) after GetFittingTextLength (1410), where the
+  binary has them. The compiler placed InitFont and InitFonts (348-403) after
+  ReloadSprites, GetTextWidth (1373) before ReloadPictures, and DrawObject
+  and DrawOutfit (1100, 1137) at the end.
+- **callcheck** (10 of 56 functions differ, all explained): the four file
+  functions' TReadBinaryFile constructor, open and close calls are not
+  resolved (several classes have methods of these names; 0x4df6b0 is both
+  close() and the destructor, as in Map.cpp); InitVideoCache's eh vector
+  constructor iterator 0x4175e0 is compiler-generated; the TRGBColor
+  operators in FindVideoMaskedSprite and GetVideoPicture are not lexical
+  calls; the Unknown50 calls (0x4eabb0) are virtual calls in the binary.
+- **Tests** (graphicstest.cpp): the image's malloc/free and stdio are
+  redirected (PatchScript); both sides load the real Tibia.spr and Tibia.pic,
+  and every sprite and every picture tile is decoded on both sides and
+  compared. The surface is a recording TSurfaceGL shared by both sides (the
+  image's surface pointer 0x71d0cc is set to it); after every operation the
+  logs of surface calls (with the tiles written), the memory and video
+  caches, hash tables, LRU lists and font tables are compared. Small caches
+  make items be replaced all the time, so the slot-0 behaviour is reached.
+  Objects and outfits use the real Tibia.dat. Every function is tested
+  except the assertion-failure paths; InitGraphics, ReloadSprites and
+  ReloadPictures run in the directory of the data files.

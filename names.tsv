@@ -839,7 +839,7 @@ address	name	kind	confidence	note
 0x4eab60	SurfaceExitInstance	game	high	Surface.cpp: deletes the surface; name from ChangeEngine's error messages
 0x4eab80	TSurface_TestEngine	game	high	Surface.cpp: default TestEngine (vtable +0xbc) takes the main window, returns true
 0x4eab90	TSurface_ctor	game	high	Surface.cpp
-0x4eabb0	TSurface_Unknown50	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same four arguments (missed by Ghidra)
+0x4eabb0	TSurface_Unknown50	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same arguments, a surface and a colour key (TRGBColor by value; graphics.cpp sets the cache surfaces' key with it) (missed by Ghidra)
 0x4eabd0	TSurface_dtor	game	high	Surface.cpp
 0x4eabe0	GetAvailableEngines	game	low	Surface.cpp: bit 0 OpenGL, bit 1 DirectX 9
 0x4eabf0	TSurface_Unknown98	game	medium	Surface.cpp: vtable +0x98, empty (missed by Ghidra)
@@ -1154,8 +1154,8 @@ address	name	kind	confidence	note
 0x425950	TRGBColor_ctor_palette	game	medium	inline TRGBColor(int Color) of a header (6x6x6 palette, steps of 51), out-of-line copy between ConsoleWindow.cpp and ContentWindows.cpp; inlined in SetAmbientLight; returns this
 0x426170	vector_TMark_ctor	game	high	Container.h vector<TMark>::vector(min, max, block); copy kept from an object before Map.obj; used by TAutomapBlock's constructor
 0x425b20	vector_TMark_at	game	high	Container.h vector<TMark>::operator(); copy kept from an object before Map.obj; used by Map.cpp
-0x48b380	TRGBColor_operator_eq	game	high	inline TRGBColor::operator==(TRGBColor) (external.h); out-of-line copy kept in graphics.obj, first called by FindVideoMaskedSprite (0x48e09e); SurfaceGL.cpp calls it too
-0x48b3b0	TRGBColor_operator_ne	game	high	inline TRGBColor::operator!=(TRGBColor), !(==); out-of-line copy kept in graphics.obj, called by GetVideoPicture (0x48f1df)
+0x48b380	TRGBColor_operator_eq	game	high	inline TRGBColor::operator==(TRGBColor) (graphics.h by inference; declared in external.h); out-of-line copy kept in graphics.obj, first called by FindVideoMaskedSprite (0x48e09e); SurfaceGL.cpp calls it too
+0x48b3b0	TRGBColor_operator_ne	game	high	inline TRGBColor::operator!=(TRGBColor), !(==) (graphics.h by inference); out-of-line copy kept in graphics.obj, called by GetVideoPicture (0x48f1df)
 0x48b3f0	TVideoCacheItem_ctor	game	medium	graphics.cpp: clears the colours at +0x18..+0x47; passed to the eh vector constructor iterator by InitVideoCache (missed by Ghidra); class name ours
 0x48b430	GetFontLineHeight	game	low	graphics.cpp gap: Fonts[n-1]+0x718, out-of-range numbers (not 0) give font 3; GUI callers use it for every text line after the first
 0x48b460	ClearMemoryCache	game	medium	graphics.cpp gap: every memory cache item EMPTY_ITEM, hash table -1

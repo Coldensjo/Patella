@@ -24,6 +24,7 @@
 #include "Objects.h"
 #include "Communication.h"
 #include "Creatures.h"
+#include "graphics.h"
 #include "Preferences.h"
 #include "Skins.h"
 #include "Script.h"

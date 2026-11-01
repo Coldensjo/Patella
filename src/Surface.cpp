@@ -62,9 +62,9 @@ TSurface::TSurface()
 }
 
 // 0x4eabb0
-void TSurface::Unknown50(int a, int b, int c, int d)
+void TSurface::Unknown50(int Surface, TRGBColor ColorKey)
 {
-	Unknown54(a, b, c, d);
+	Unknown54(Surface, ColorKey);
 }
 
 // 0x4eabd0

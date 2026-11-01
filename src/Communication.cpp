@@ -8,6 +8,7 @@
 #include "Help.h"
 #include "Inventory.h"
 #include "Creatures.h"
+#include "graphics.h"
 #include "Map.h"
 #include "Network.h"
 #include "Objects.h"

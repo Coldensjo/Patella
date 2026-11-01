@@ -91,9 +91,9 @@ void TSurfaceGL::StretchBlit(int ToSurface, int x, int y, int Width, int Height,
 	Put(0x48); Put(ToSurface); Put(x); Put(y); Put(Width); Put(Height); Put(FromSurface); Put(FromX);
 	Put(FromY); Put(FromWidth); Put(FromHeight); PutColor(ColorKey); PutColor(Highlight); PutRect(Clip);
 }
-void TSurfaceGL::Unknown54(int a, int b, int c, int d)
+void TSurfaceGL::Unknown54(int Surface, TRGBColor ColorKey)
 {
-	Put(0x54); Put(a); Put(b); Put(c); Put(d);
+	Put(0x54); Put(Surface); PutColor(ColorKey);
 }
 int TSurfaceGL::GetCacheSurfaces()
 {
