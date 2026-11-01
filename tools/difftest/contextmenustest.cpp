@@ -1,0 +1,1395 @@
+// Differential tests of ContextMenus.cpp against the original code.
+//
+// Every round builds one of the ten windows twice, from the image's
+// constructors and from ours: the help bubble and the nine context menus.
+// The callees from other files are logging fakes on both sides that answer
+// from a random "world" (the looked-at and used objects, the creatures, the
+// VIP list, the console lines, the preferences, the rights, the flags of
+// object types, ...): Communication.cpp's Send functions, the getters and
+// setters of Status.cpp, Creatures.cpp, Preferences.cpp, Talk.cpp,
+// Inventory.cpp, Objects.cpp, Help.cpp and Map.cpp, the text measurement and
+// output of graphics.cpp, DrawSkin, DrawPicturePart and the surface. The
+// classes of the files that are not reconstructed are test objects shared by
+// both sides: the console window and its text window (ConsoleWindow.cpp),
+// the edit line, the formatted text and the separator (DialogElements.cpp;
+// the image's constructors 0x465e60 and 0x452cb0 build the same fakes), the
+// skill window's body (ContentWindows.cpp) and the text buffers. TWindow,
+// TElement and TCallback are the image's for the original objects and ours
+// for ours.
+//
+// After the constructor and after each of a few random operations (drawing
+// with the mouse anywhere, clicks on the entries, right clicks, keys, every
+// event of the menu's entries and, for the menus without "unknown event",
+// arbitrary events; the help bubble's SetSize, Place, FitsIn and Arrange;
+// AddEntry, AddSeparator and Show on a fresh menu) the logs and a dump of
+// both windows (geometry, drawing lists, every member, the entries with
+// their texts, shortcuts and callbacks) are compared; then both are deleted
+// (the skill menu's destructor clears the body's pointer). The menus created
+// by the rule violation entries are compared by their fields (the image's
+// clock is a fake, so the time stamps are left out). Failing assertions and
+// "unknown event" errors are not exercised.
+
+#include "difftest.h"
+#include "../../src/ContextMenus.h"
+#include "../../src/Communication.h"
+#include "../../src/Creatures.h"
+#include "../../src/GUI.h"
+#include "../../src/Help.h"
+#include "../../src/Inventory.h"
+#include "../../src/Map.h"
+#include "../../src/Objects.h"
+#include "../../src/Preferences.h"
+#include "../../src/Skins.h"
+#include "../../src/Status.h"
+#include "../../src/Surface.h"
+#include "../../src/Talk.h"
+#include "../../src/graphics.h"
+#include "../../src/external.h"
+#include <map>
+#include <new>
+#include <stdarg.h>
+#include <string>
+#include <vector>
+
+static_assert(sizeof(THelpBubble) == 0x30, "THelpBubble is 0x30 bytes");
+static_assert(offsetof(THelpBubble, Text) == 0x2c, "THelpBubble::Text at +0x2c");
+static_assert(sizeof(TContextMenuEntry) == 0x74, "TContextMenuEntry is 0x74 bytes");
+static_assert(offsetof(TContextMenuEntry, Text) == 0x24, "TContextMenuEntry::Text at +0x24");
+static_assert(offsetof(TContextMenuEntry, Shortcut) == 0x56, "TContextMenuEntry::Shortcut at +0x56");
+static_assert(offsetof(TContextMenuEntry, Callback) == 0x6c, "TContextMenuEntry::Callback at +0x6c");
+static_assert(sizeof(TContextMenu) == 0x34, "TContextMenu is 0x34 bytes");
+static_assert(offsetof(TContextMenu, EntryWidth) == 0x2c, "TContextMenu::EntryWidth at +0x2c");
+static_assert(offsetof(TContextMenu, Empty) == 0x31, "TContextMenu::Empty at +0x31");
+static_assert(sizeof(TObjectContextMenu) == 0x70, "TObjectContextMenu is 0x70 bytes");
+static_assert(offsetof(TObjectContextMenu, LookedObjectX) == 0x44, "LookedObjectX at +0x44");
+static_assert(offsetof(TObjectContextMenu, UsedObject) == 0x50, "UsedObject at +0x50");
+static_assert(offsetof(TObjectContextMenu, CreatureID) == 0x6c, "TObjectContextMenu::CreatureID at +0x6c");
+static_assert(sizeof(TCreatureContextMenu) == 0x38, "TCreatureContextMenu is 0x38 bytes");
+static_assert(sizeof(TBuddyContextMenu) == 0x38, "TBuddyContextMenu is 0x38 bytes");
+static_assert(sizeof(TTextContextMenu) == 0x3c, "TTextContextMenu is 0x3c bytes");
+static_assert(sizeof(TRequestContextMenu) == 0x3c, "TRequestContextMenu is 0x3c bytes");
+static_assert(sizeof(TChannelContextMenu) == 0x3c, "TChannelContextMenu is 0x3c bytes");
+static_assert(offsetof(TChannelContextMenu, ShowServerMessages) == 0x38, "ShowServerMessages at +0x38");
+static_assert(sizeof(TEditContextMenu) == 0x38, "TEditContextMenu is 0x38 bytes");
+static_assert(sizeof(TMarkMenuData) == 0x80, "TMarkMenuData is 0x80 bytes");
+static_assert(sizeof(TMarkContextMenu) == 0xb4, "TMarkContextMenu is 0xb4 bytes");
+static_assert(sizeof(TSkillContextMenu) == 0x38, "TSkillContextMenu is 0x38 bytes");
+static_assert(offsetof(TEditLine, Data5C) == 0x5c && offsetof(TEditLine, Data66) == 0x66, "TEditLine layout");
+static_assert(offsetof(TTextWindow, TextBuffer) == 0x24, "TTextWindow::TextBuffer at +0x24");
+static_assert(offsetof(TSkillsWindowBody, ContextMenu) == 0x30, "TSkillsWindowBody::ContextMenu at +0x30");
+static_assert(sizeof(TFormattedText) == 0x38, "TFormattedText is 0x38 bytes");
+static_assert(sizeof(TSeparator) == 0x28, "TSeparator is 0x28 bytes");
+
+// --- Logs and names ------------------------------------------------------------------
+
+enum { OURS = 0, ORIGINAL = 1 };
+static int Side;
+static std::string Log[2];
+
+static void Logf(const char *Format, ...)
+{
+	char Buffer[512];
+	va_list Args;
+	va_start(Args, Format);
+	vsnprintf(Buffer, sizeof(Buffer), Format, Args);
+	va_end(Args);
+	Log[Side] += Buffer;
+}
+
+static void *VtableOf(const void *Object) { return *(void **)Object; }
+template <class T> static void *Member(T Function) { return *(void **)&Function; }
+
+// The test objects of both sides, by role (one object per role and side for
+// the per-side objects, NULL for the shared ones).
+static std::map<const void *, std::string> Names[2];
+static std::string Name(const void *Object)
+{
+	if (Object == NULL)
+		return "0";
+	auto I = Names[Side].find(Object);
+	return I == Names[Side].end() ? "?" : I->second;
+}
+
+static uint32 Hash(uint32 a, uint32 b)
+{
+	uint32 h = a * 2654435761u ^ (b + 0x9e3779b9u + (a << 6) + (a >> 2));
+	h ^= h >> 15;
+	h *= 0x85ebca6bu;
+	h ^= h >> 13;
+	return h;
+}
+static uint32 HashText(const char *Text)
+{
+	uint32 h = 2166136261u;
+	for (; *Text != 0; Text++)
+		h = (h ^ (uint8)*Text) * 16777619u;
+	return h;
+}
+
+// --- The world ---------------------------------------------------------------------------
+
+static const char *const CreatureNames[] = {"Bubble", "Eternal Oblivion", "Xa", "Mr Very Long Namexx",
+	"Seymour", "Cip Tester", "Lady Ohne Namen", "Avar Tar"};
+enum { NCREATURES = 6, NLINES = 8, NBUDDIES = 5 };
+
+class TTestBuffer;
+
+struct TWorld {
+	uint32 Seed;
+	int MouseX, MouseY;
+	TObject Trade, Use;
+	int TradeIndex, TradeX, TradeY, TradeZ;
+	int UseIndex, UseX, UseY, UseZ;
+	uint32 TradeInfo;
+	uint32 PlayerID, AttackID, FollowID;
+	TCreature Creatures[NCREATURES];
+	int PartyFlag;
+	bool InParty, InFight, AnyRight, Classic, HideOffline, LevelBar, MagLevelBar, SkillBar[7];
+	bool Unread, ClipboardEmpty, HasParent, TimeStamps, HasSelection, ServerMessages;
+	int FreeContainer, Destination;
+	int HelpX, HelpY, HelpWidth, HelpHeight;
+	uint32 BuddyIDs[NBUDDIES];
+	bool BuddyOnline[NBUDDIES];
+	const char *BuddyNames[NBUDDIES];
+	TTalkLine *Lines[NLINES];
+	const char *Selection;
+	bool RuleViolation, Selected, PrivateChannel, Default, RuleViolationChannel;
+};
+static TWorld World;
+static TTestBuffer *Buffer;
+
+// The console lines (TTalkLine without its constructors: the fields only).
+static TTalkLine *NewLine(uint32 ID, int Mode, const char *Speaker, const char *Text)
+{
+	TTalkLine *L = (TTalkLine *)calloc(1, sizeof(TTalkLine));
+	L->StatementID = ID;
+	L->Mode = Mode;
+	strcpy(L->Addressee, Speaker);
+	char Buffer[200];
+	sprintf(Buffer, "12:34 %s: %s", Speaker, Text);
+	L->Line = _strdup(Buffer);
+	L->WithoutTime = L->Line + 6;
+	L->Text = L->WithoutTime + strlen(Speaker) + 2;
+	return L;
+}
+
+static void RandomFlags()
+{
+	TWorld &W = World;
+	W.Seed = Random();
+	W.MouseX = (int)(Random() % 400) - 20;
+	W.MouseY = (int)(Random() % 400) - 20;
+	W.PartyFlag = Random() % 5;
+	W.InParty = Random() % 2 != 0;
+	W.InFight = Random() % 2 != 0;
+	W.AnyRight = Random() % 2 != 0;
+	W.Classic = Random() % 2 != 0;
+	W.HideOffline = Random() % 2 != 0;
+	W.LevelBar = Random() % 2 != 0;
+	W.MagLevelBar = Random() % 2 != 0;
+	for (int i = 0; i < 7; i++)
+		W.SkillBar[i] = Random() % 2 != 0;
+	W.Unread = Random() % 2 != 0;
+	W.ClipboardEmpty = Random() % 2 != 0;
+	W.HasParent = Random() % 2 != 0;
+	W.TimeStamps = Random() % 2 != 0;
+	W.HasSelection = Random() % 2 != 0;
+	W.ServerMessages = Random() % 2 != 0;
+	W.FreeContainer = Random() % 16;
+	W.Destination = Random() % 4;
+	W.RuleViolation = Random() % 3 == 0;
+	W.Selected = Random() % 2 != 0;
+	W.PrivateChannel = Random() % 2 != 0;
+	W.Default = Random() % 3 == 0;
+	W.RuleViolationChannel = Random() % 3 == 0;
+	W.Selection = Random() % 3 == 0 ? NULL : "selected text";
+	for (int i = 0; i < NCREATURES; i++)
+		W.Creatures[i].PARTYFlag = Random() % 5;
+	for (int i = 0; i < NBUDDIES; i++)
+		W.BuddyOnline[i] = Random() % 2 != 0;
+}
+
+static void RandomWorld()
+{
+	TWorld &W = World;
+	RandomFlags();
+	static const int Types[] = {0, 99, 100, 101, 102, 1987, 2000, 3031, 2148, 1740};
+	W.Trade.Type = Types[1 + Random() % 9];
+	W.Trade.Data1 = Random() % 100;
+	W.Trade.Data2 = Random() % 3;
+	W.Use.Type = Types[Random() % 10];
+	W.Use.Data1 = Random() % 100;
+	W.Use.Data2 = 0;
+	bool TradeInContainer = Random() % 2 != 0, UseInContainer = Random() % 2 != 0;
+	W.TradeX = TradeInContainer ? 0xFFFF : 32000 + Random() % 100;
+	W.TradeY = TradeInContainer ? (Random() % 3 == 0 ? Random() % 11 : 64 + Random() % 16) : 32000 + Random() % 100;
+	W.TradeZ = Random() % 16;
+	W.TradeIndex = Random() % 10;
+	W.UseX = UseInContainer ? 0xFFFF : 32000 + Random() % 100;
+	W.UseY = UseInContainer ? (Random() % 3 == 0 ? Random() % 11 : 64 + Random() % 16) : 32000 + Random() % 100;
+	W.UseZ = Random() % 16;
+	W.UseIndex = Random() % 10;
+	for (int i = 0; i < NCREATURES; i++) {
+		TCreature &C = W.Creatures[i];
+		C.CreatureID = (i % 3 == 2 ? 0x40000000u : 0x10000000u) + Random() % 1000;
+		strcpy(C.Name, CreatureNames[Random() % 8]);
+	}
+	W.PlayerID = W.Creatures[0].CreatureID;
+	uint32 Some[] = {0, W.PlayerID, W.Creatures[1].CreatureID, W.Creatures[2].CreatureID,
+		W.Creatures[3].CreatureID, 0x10000999u};
+	W.TradeInfo = Some[Random() % 6];
+	W.AttackID = Some[Random() % 6];
+	W.FollowID = Some[Random() % 6];
+	W.HelpX = Random() % 500;
+	W.HelpY = Random() % 400;
+	W.HelpWidth = Random() % 200;
+	W.HelpHeight = Random() % 200;
+	for (int i = 0; i < NBUDDIES; i++) {
+		W.BuddyIDs[i] = i == 0 ? W.PlayerID : 0x10000000u + Random() % 1000;
+		W.BuddyNames[i] = CreatureNames[Random() % 8];
+	}
+	static const int Modes[] = {1, 4, 5, 7, 8, 19};
+	for (int i = 0; i < NLINES; i++) {
+		const char *Speaker = i == 0 ? "" : i == 1 ? W.Creatures[0].Name : CreatureNames[Random() % 8];
+		W.Lines[i] = NewLine(Random(), Modes[Random() % 6], Speaker, "some words");
+	}
+}
+
+static void FreeWorld()
+{
+	for (int i = 0; i < NLINES; i++) {
+		free(World.Lines[i]->Line);
+		free(World.Lines[i]);
+		World.Lines[i] = NULL;
+	}
+}
+
+// --- Shared test objects -----------------------------------------------------------------
+
+class TTestBuffer : public TTalkBuffer {
+public:
+	TTestBuffer() : TTalkBuffer(1) {}
+	void Clear() { Logf("BufClear;"); }
+	bool SetWriteEnabled(bool Value) { Logf("BufWrite%d;", Value ? 1 : 0); return true; }
+	bool IsDefault() { Logf("BufDef;"); return World.Default; }
+	bool IsRuleViolation() { Logf("BufRV;"); return World.RuleViolation; }
+	bool IsRuleViolationChannel() { Logf("BufRVC;"); return World.RuleViolationChannel; }
+	bool IsPrivateChannel() { Logf("BufPriv;"); return World.PrivateChannel; }
+	bool GetSelected() { Logf("BufSel;"); return World.Selected; }
+};
+
+// ConsoleWindow.cpp's text window and console (memory only: the menus read
+// Data34 and TextBuffer and call the methods below).
+static TTextWindow *TextWindow;
+static TConsoleWindow *Console;
+static TConsoleData34 ConsoleData;
+
+TTalkLine *TTextWindow::FUN_00419030(int LineNumber)
+{
+	Logf("GetLine%d;", LineNumber);
+	return LineNumber >= 0 && LineNumber < NLINES ? World.Lines[LineNumber] : NULL;
+}
+bool TTextWindow::FUN_00417590() { Logf("HasSel;"); return World.HasSelection; }
+const char *TTextWindow::FUN_00419bd0() { Logf("GetSel;"); return World.Selection; }
+void TTextWindow::FUN_004199e0() { Logf("SelAll;"); }
+
+bool TConsoleWindow::FUN_0041f1c0() { Logf("ServerMsgs;"); return World.ServerMessages; }
+void TConsoleWindow::FUN_0041f470(bool Show) { Logf("ShowServerMsgs%d;", Show ? 1 : 0); }
+TTalkBuffer *TConsoleWindow::FUN_0041f7f0() { Logf("CurBuf;"); return Buffer; }
+void TConsoleWindow::FUN_00420090() { Logf("SaveWin;"); }
+void TConsoleWindow::FUN_004234b0() { Logf("CloseChan;"); }
+TTalkBuffer *TConsoleWindow::FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
+	INT_PTR Param5)
+{
+	Logf("OpenChan%d,%d,%s,%d,%s;", RecvMode, SendMode, (const char *)Param3, (int)Param4, (const char *)Param5);
+	return NULL;
+}
+
+// DialogElements.cpp's formatted text (with one child, so that it has a
+// size) and separator, the same objects for both sides: their constructors
+// give them the vtables of the test classes below (Draw logs).
+class TTestChild : public TElement {
+public:
+	void Draw(int Surface, int x, int y) { Logf("DChild%d,%d,%d;", Surface, x, y); }
+};
+static void *TextVtable, *SeparatorVtable;
+static int TextChildWidth = 10, TextChildHeight = 10;
+TFormattedText::TFormattedText(const char *_Text)
+{
+	memset(Data2C, 0, sizeof(Data2C));
+	Logf("NText%s;", _Text);
+	TTestChild *Child = new TTestChild;
+	Child->SetSize(TextChildWidth, TextChildHeight);
+	Child->SetPosition(1, 2);
+	AppendChild(Child);
+	if (TextVtable != NULL)
+		*(void **)this = TextVtable;
+}
+TSeparator::TSeparator(bool _Horizontal)
+{
+	Horizontal = _Horizontal;
+	Logf("NSep%d;", _Horizontal ? 1 : 0);
+	if (SeparatorVtable != NULL)
+		*(void **)this = SeparatorVtable;
+}
+class TTestSeparator : public TSeparator {
+public:
+	TTestSeparator() : TSeparator(true) {}
+	void Draw(int Surface, int x, int y) { Logf("DSep%d,%d,%d,%dx%d;", Surface, x, y, Width, Height); }
+};
+class TTestFormattedText : public TFormattedText {
+public:
+	TTestFormattedText() : TFormattedText("") {}
+	void Draw(int Surface, int x, int y)
+	{
+		Logf("DText%d,%d,%d,%dx%d;", Surface, x, y, Width, Height);
+		TWindow::Draw(Surface, x, y);
+	}
+};
+// The image's constructors build the same objects.
+static void *__fastcall ImageFormattedText(void *This, void *, const char *Text)
+{
+	return new (This) TFormattedText(Text);
+}
+static void *__fastcall ImageSeparator(void *This, void *, bool Horizontal)
+{
+	return new (This) TSeparator(Horizontal);
+}
+
+// The edit line and the skill window's body, one per side.
+class TTestEdit : public TEditLine {
+public:
+	void HandleEvent(int Event) { Logf("EditEvent%d;", Event); }
+};
+class TTestSkills : public TSkillsWindowBody {
+public:
+	void Arrange() { Logf("SkillsArrange;"); }
+};
+static TTestEdit *Edit;
+static TTestSkills *SkillsWindow[2];
+
+// --- Fakes of the callees ------------------------------------------------------------------
+
+static TCreature *FindCreature(uint32 ID)
+{
+	for (int i = 0; i < NCREATURES; i++) {
+		if (World.Creatures[i].CreatureID == ID)
+			return &World.Creatures[i];
+	}
+	return NULL;
+}
+
+static void __cdecl FakeSetActionState(int State) { Logf("Action%d;", State); }
+static int __cdecl FakeGetMouseX() { return World.MouseX; }
+static int __cdecl FakeGetMouseY() { return World.MouseY; }
+static TObject *__cdecl FakeGetTradeObject(int *Index, int *x, int *y, int *z)
+{
+	Logf("GetTrade;");
+	*Index = World.TradeIndex;
+	*x = World.TradeX;
+	*y = World.TradeY;
+	*z = World.TradeZ;
+	return &World.Trade;
+}
+static TObject *__cdecl FakeGetUseObject(int *Index, int *x, int *y, int *z)
+{
+	Logf("GetUse;");
+	*Index = World.UseIndex;
+	*x = World.UseX;
+	*y = World.UseY;
+	*z = World.UseZ;
+	return &World.Use;
+}
+static int __cdecl FakeGetTradeInfo() { Logf("TradeInfo;"); return (int)World.TradeInfo; }
+static void __cdecl FakeAddMessage(int Type, INT_PTR Param1, INT_PTR Param2)
+{
+	Logf("Msg%d", Type);
+	if (Type == 0x1c) {
+		if (Param1 != 0) {
+			Logf(",name %s", (const char *)Param1);
+			delete[] (char *)Param1;
+		}
+		if (Param2 != 0) {
+			TTalkLine *L = (TTalkLine *)Param2;
+			Logf(",line %u,%d,%s,%s", L->StatementID, L->Mode, L->Addressee, L->Text);
+			// The line's text was allocated by the side's operator new[] (the
+			// image's goes to the same CRT).
+			delete[] L->Line;
+			free(L);
+		}
+	} else if (Type == 0x1d || Type == 0x1e) {
+		TCoordinate *C = (TCoordinate *)Param1;
+		Logf(",coord %d,%d,%d", C->x, C->y, C->z);
+		delete C;
+		if (Param2 != 0) {
+			TMark *M = (TMark *)Param2;
+			Logf(",mark %d,%d,%d,%s", M->x, M->y, M->Type, M->Text);
+			delete M;
+		}
+	} else {
+		Logf(",%d,%d", (int)Param1, (int)Param2);
+	}
+	Logf(";");
+}
+static void __cdecl FakeCopyToClipboard(const char *Text) { Logf("Clip%s;", Text); }
+static bool __cdecl FakeCheckAnyRight() { Logf("Right;"); return World.AnyRight; }
+static uint32 __cdecl FakeGetPlayerID() { Logf("PID;"); return World.PlayerID; }
+static TCreature *__cdecl FakeGetCreature(uint32 ID) { Logf("Cr%u;", ID); return FindCreature(ID); }
+static bool __cdecl FakeIsPlayer(uint32 ID) { Logf("IsPl%u;", ID); return ID < 0x40000000u; }
+static uint32 __cdecl FakeGetAttackID() { Logf("AID;"); return World.AttackID; }
+static uint32 __cdecl FakeGetFollowID() { Logf("FID;"); return World.FollowID; }
+static void __cdecl FakeSetAttackID(uint32 ID) { Logf("SetA%u;", ID); }
+static void __cdecl FakeSetFollowID(uint32 ID) { Logf("SetF%u;", ID); }
+static bool __cdecl FakeIsBuddy(const char *Name) { Logf("IsBuddy%s;", Name); return Hash(HashText(Name), World.Seed) % 2 != 0; }
+static int __cdecl FakeGetBuddyPosition(uint32 ID)
+{
+	Logf("BPos%u;", ID);
+	for (int i = 0; i < NBUDDIES; i++) {
+		if (World.BuddyIDs[i] == ID)
+			return i;
+	}
+	return -1;
+}
+static const char *__cdecl FakeGetBuddyListName(int Position) { Logf("BName%d;", Position); return World.BuddyNames[Position]; }
+static bool __cdecl FakeGetBuddyListOnline(int Position) { Logf("BOn%d;", Position); return World.BuddyOnline[Position]; }
+static bool __cdecl FakeIsPlayerInParty() { Logf("InParty;"); return World.InParty; }
+static bool __cdecl FakeIsPlayerInFight() { Logf("InFight;"); return World.InFight; }
+static int __cdecl FakeGetPlayerPartyFlag() { Logf("Party;"); return World.PartyFlag; }
+static void __cdecl FakeRemoveBuddy(uint32 ID) { Logf("RemBuddy%u;", ID); }
+static void __cdecl FakeSetBuddySortMethod(int Method) { Logf("Sort%d;", Method); }
+static void __cdecl FakeHideOfflineBuddies(bool Hide) { Logf("HideOff%d;", Hide ? 1 : 0); }
+static int __cdecl FakeSetPlayerDestination(int x, int y, int z, bool Exact, bool Diagonal)
+{
+	Logf("Dest%d,%d,%d,%d,%d;", x, y, z, Exact ? 1 : 0, Diagonal ? 1 : 0);
+	return World.Destination;
+}
+static bool __cdecl FakeGetClassicControl() { Logf("Classic;"); return World.Classic; }
+static bool __cdecl FakeGetBuddyHideOffline() { Logf("GetHideOff;"); return World.HideOffline; }
+static bool __cdecl FakeGetLevelBar() { Logf("GLB;"); return World.LevelBar; }
+static bool __cdecl FakeGetMagLevelBar() { Logf("GMB;"); return World.MagLevelBar; }
+static bool __cdecl FakeGetSkillBar(int Skill) { Logf("GSB%d;", Skill); return World.SkillBar[Skill]; }
+static void __cdecl FakeSetLevelBar(bool Value) { Logf("SLB%d;", Value ? 1 : 0); }
+static void __cdecl FakeSetMagLevelBar(bool Value) { Logf("SMB%d;", Value ? 1 : 0); }
+static void __cdecl FakeSetSkillBar(int Skill, bool Value) { Logf("SSB%d,%d;", Skill, Value ? 1 : 0); }
+static bool __cdecl FakeGetTimeStamps() { return World.TimeStamps; }
+static bool __cdecl FakeHasUnreadConsoleText() { Logf("Unread;"); return World.Unread; }
+static bool __cdecl FakeIsTalkIgnored(int Mode, const char *Name, int Channel)
+{
+	Logf("Ign%d,%s,%d;", Mode, Name, Channel);
+	return Hash(HashText(Name), World.Seed + 7) % 2 != 0;
+}
+static void __cdecl FakeIgnoreName(const char *Name, bool Permanent) { Logf("DoIgn%s,%d;", Name, Permanent ? 1 : 0); }
+static void __cdecl FakeUnignoreName(const char *Name) { Logf("Unign%s;", Name); }
+static void __cdecl FakeAddConsoleText(uint32 ID, const char *Text, int Mode, const char *Name, int Channel, int Time)
+{
+	Logf("Console%u,%s,%d,%s,%d,%d;", ID, Text, Mode, Name == NULL ? "-" : Name, Channel, Time);
+}
+static TTalkBuffer *__cdecl FakeGetTextBuffer(int Mode, const char *Name, int Channel)
+{
+	Logf("GetBuf%d,%s,%d;", Mode, Name, Channel);
+	return Buffer;
+}
+static void __cdecl FakeAddTextBufferLine(TTalkBuffer *Target, uint32 ID, const char *Text, int Mode,
+	const char *Name, int Time)
+{
+	Logf("AddLine%d,%u,%s,%d,%s,%d;", Target == Buffer ? 1 : 0, ID, Text, Mode, Name, Time);
+}
+static void __cdecl FakeClearTextBuffer(TTalkBuffer *Target) { Logf("ClearBuf%d;", Target == Buffer ? 1 : 0); }
+static void __cdecl FakeSendLook(int x, int y, int z, int Type, int Position)
+{
+	Logf("Look%d,%d,%d,%d,%d;", x, y, z, Type, Position);
+}
+static void __cdecl FakeSendUseObject(int x, int y, int z, int Type, int Position, int Container)
+{
+	Logf("Use%d,%d,%d,%d,%d,%d;", x, y, z, Type, Position, Container);
+}
+static void __cdecl FakeSendRotateObject(int x, int y, int z, int Type, int Position)
+{
+	Logf("Rot%d,%d,%d,%d,%d;", x, y, z, Type, Position);
+}
+static void __cdecl FakeSendAttack(uint32 ID) { Logf("Att%u;", ID); }
+static void __cdecl FakeSendFollow(uint32 ID) { Logf("Fol%u;", ID); }
+static void __cdecl FakeSendRequestOutfit() { Logf("Outfit;"); }
+static void __cdecl FakeSendMoveObject(int x, int y, int z, int Type, int Position, int dx, int dy, int dz, int Count)
+{
+	Logf("Move%d,%d,%d,%d,%d,%d,%d,%d,%d;", x, y, z, Type, Position, dx, dy, dz, Count);
+}
+static void __cdecl FakeSendAddBuddy(const char *Name) { Logf("AddBuddy%s;", Name); }
+static void __cdecl FakeSendInvite(const char *Name) { Logf("Invite%s;", Name); }
+static void __cdecl FakeSendExclude(const char *Name) { Logf("Exclude%s;", Name); }
+static void __cdecl FakeSendOpenPrivate(const char *Name) { Logf("Private%s;", Name); }
+static void __cdecl FakeSendInviteToParty(uint32 ID) { Logf("PInv%u;", ID); }
+static void __cdecl FakeSendJoinParty(uint32 ID) { Logf("PJoin%u;", ID); }
+static void __cdecl FakeSendRevoke(uint32 ID) { Logf("PRev%u;", ID); }
+static void __cdecl FakeSendPass(uint32 ID) { Logf("PPass%u;", ID); }
+static void __cdecl FakeSendLeaveParty() { Logf("PLeave;"); }
+static void __cdecl FakeSendRemoveBuddy(uint32 ID) { Logf("SRemBuddy%u;", ID); }
+static void __cdecl FakeSendProcess(const char *Name) { Logf("Process%s;", Name); }
+static void __cdecl FakeSendClose(const char *Name) { Logf("CloseRV%s;", Name); }
+static void __cdecl FakeSendWalk() { Logf("Walk;"); }
+static void __cdecl FakeSendStop() { Logf("Stop;"); }
+static bool __cdecl FakeGetContainerHasParent(int Container) { Logf("HasParent%d;", Container); return World.HasParent; }
+static int __cdecl FakeGetFreeContainer() { Logf("FreeCont;"); return World.FreeContainer; }
+static bool __cdecl FakeGetObjectFlag(int Type, int Flag)
+{
+	Logf("Flag%d,%d;", Type, Flag);
+	return Hash((uint32)(Type * 64 + Flag), World.Seed + 3) % 3 == 0;
+}
+static void __cdecl FakeGetHelpArea(int *x, int *y, int *Width, int *Height)
+{
+	Logf("HelpArea;");
+	*x = World.HelpX;
+	*y = World.HelpY;
+	*Width = World.HelpWidth;
+	*Height = World.HelpHeight;
+}
+static bool __cdecl FakeIsClipboardEmpty() { Logf("ClipEmpty;"); return World.ClipboardEmpty; }
+static void __cdecl FakeDeleteAutomapMark(TMark &Mark, int z) { Logf("DelMark%d,%d,%d;", Mark.x, Mark.y, z); }
+static int __cdecl FakeGetFontLineHeight(int Font) { Logf("LineH%d;", Font); return 10 + Font; }
+static int __cdecl FakeGetFontHeight(int Font) { Logf("FontH%d;", Font); return 8 + Font % 3; }
+static int __cdecl FakeGetTextWidth(int Font, const char *Text)
+{
+	Logf("TextW%d,%s;", Font, Text);
+	return (int)strlen(Text) * (5 + Font % 3);
+}
+static void __cdecl FakePrintText(int Surface, int x, int y, int Font, TRGBColor Color, const char *Text, int Alignment)
+{
+	Logf("Print%d,%d,%d,%d,%d,%d,%d,%s,%d;", Surface, x, y, Font, Color.R, Color.G, Color.B, Text, Alignment);
+}
+static void __cdecl FakeDrawSkin(int Surface, int x, int y, int width, int height, int skin, int srcx, int srcy)
+{
+	Logf("Skin%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, width, height, skin, srcx, srcy);
+}
+static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNumber, int srcx, int srcy, int Width,
+	int Height)
+{
+	Logf("Part%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, srcx, srcy, Width, Height);
+}
+
+// Communication.cpp is not in the test: our side's definitions of the Send
+// functions no other test defines (redirected to the fakes as well).
+void SendRotateObject(int x, int y, int z, int Type, int Position) { FakeSendRotateObject(x, y, z, Type, Position); }
+void SendOpenPrivateConversation(const char *Name) { FakeSendOpenPrivate(Name); }
+void SendProcessRuleViolation(const char *Name) { FakeSendProcess(Name); }
+void SendCloseRuleViolation(const char *Name) { FakeSendClose(Name); }
+void SendFollow(uint32 ID) { FakeSendFollow(ID); }
+void SendInviteToPrivateChannel(const char *Name) { FakeSendInvite(Name); }
+void SendExcludeFromPrivateChannel(const char *Name) { FakeSendExclude(Name); }
+void SendInviteToParty(uint32 ID) { FakeSendInviteToParty(ID); }
+void SendJoinParty(uint32 ID) { FakeSendJoinParty(ID); }
+void SendRevokePartyInvitation(uint32 ID) { FakeSendRevoke(ID); }
+void SendPassPartyLeadership(uint32 ID) { FakeSendPass(ID); }
+void SendLeaveParty() { FakeSendLeaveParty(); }
+void SendRequestOutfit() { FakeSendRequestOutfit(); }
+void SendAddBuddy(const char *Name) { FakeSendAddBuddy(Name); }
+void SendRemoveBuddy(uint32 ID) { FakeSendRemoveBuddy(ID); }
+// sysinc.cpp is in sysinctest.exe only.
+bool IsClipboardEmpty() { return FakeIsClipboardEmpty(); }
+
+class TMenuSurface : public TSurfaceGL {
+public:
+	void FillRectangle(int Surface, TRect R, TRGBColor C)
+	{
+		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+	}
+};
+static TMenuSurface *Surface;
+static TSurface *__cdecl FakeGetSurface() { return Surface; }
+
+// The image's clock and formatting (its CRT reaches Windows).
+static __time32_t __cdecl ImageTime(__time32_t *Time)
+{
+	if (Time != NULL)
+		*Time = 1700000000;
+	return 1700000000;
+}
+static tm *__cdecl ImageLocaltime(const __time32_t *Time) { return _localtime32(Time); }
+static int __cdecl ImageSprintf(char *Buffer, const char *Format, ...)
+{
+	va_list Args;
+	va_start(Args, Format);
+	int Result = vsprintf(Buffer, Format, Args);
+	va_end(Args);
+	return Result;
+}
+static int __cdecl ImageSnprintf(char *Buffer, size_t Count, const char *Format, ...)
+{
+	va_list Args;
+	va_start(Args, Format);
+	int Result = _vsnprintf(Buffer, Count, Format, Args);
+	va_end(Args);
+	return Result;
+}
+
+// Patches that are undone at the end (later tests use these functions).
+struct TSaved {
+	uint8 *Code;
+	uint8 Bytes[5];
+};
+static std::vector<TSaved> SavedCode;
+
+static void Redirect(void *Function, void *Target)
+{
+	TSaved S;
+	S.Code = (uint8 *)Function;
+	DWORD Protection;
+	VirtualProtect(Function, 5, PAGE_EXECUTE_READWRITE, &Protection);
+	memcpy(S.Bytes, Function, 5);
+	PatchJump((uint32)(uintptr_t)Function, Target);
+	VirtualProtect(Function, 5, Protection, &Protection);
+	FlushInstructionCache(GetCurrentProcess(), Function, 5);
+	SavedCode.push_back(S);
+}
+
+static void RestoreAll()
+{
+	for (size_t i = SavedCode.size(); i-- > 0;) {
+		DWORD Protection;
+		VirtualProtect(SavedCode[i].Code, 5, PAGE_EXECUTE_READWRITE, &Protection);
+		memcpy(SavedCode[i].Code, SavedCode[i].Bytes, 5);
+		VirtualProtect(SavedCode[i].Code, 5, Protection, &Protection);
+		FlushInstructionCache(GetCurrentProcess(), SavedCode[i].Code, 5);
+	}
+	SavedCode.clear();
+}
+
+static void PatchCallees()
+{
+	struct { uint32 Image; void *Ours; void *Fake; } Table[] = {
+		{0x4e6e20, (void *)SetActionState, (void *)FakeSetActionState},
+		{0x4e6e60, (void *)GetMouseX, (void *)FakeGetMouseX},
+		{0x4e6e70, (void *)GetMouseY, (void *)FakeGetMouseY},
+		{0x4e7150, (void *)GetTradeObject, (void *)FakeGetTradeObject},
+		{0x4e7190, (void *)GetUseObject, (void *)FakeGetUseObject},
+		{0x4e71d0, (void *)GetTradeInfo, (void *)FakeGetTradeInfo},
+		{0x4e9020, (void *)AddMessage, (void *)FakeAddMessage},
+		{0x4ea5b0, (void *)CopyToClipboard, (void *)FakeCopyToClipboard},
+		{0x4e6dc0, (void *)CheckAnyRight, (void *)FakeCheckAnyRight},
+		{0x44b9c0, (void *)GetPlayerID, (void *)FakeGetPlayerID},
+		{0x44c6e0, (void *)GetCreature, (void *)FakeGetCreature},
+		{0x44b910, (void *)IsPlayer, (void *)FakeIsPlayer},
+		{0x44bb50, (void *)GetAttackID, (void *)FakeGetAttackID},
+		{0x44bb60, (void *)GetFollowID, (void *)FakeGetFollowID},
+		{0x44bb00, (void *)SetAttackID, (void *)FakeSetAttackID},
+		{0x44bb20, (void *)SetFollowID, (void *)FakeSetFollowID},
+		{0x44bbb0, (void *)IsBuddy, (void *)FakeIsBuddy},
+		{0x44bb80, (void *)GetBuddyPosition, (void *)FakeGetBuddyPosition},
+		{0x44feb0, (void *)GetBuddyListName, (void *)FakeGetBuddyListName},
+		{0x450020, (void *)GetBuddyListOnline, (void *)FakeGetBuddyListOnline},
+		{0x44d6f0, (void *)IsPlayerInParty, (void *)FakeIsPlayerInParty},
+		{0x44baf0, (void *)IsPlayerInFight, (void *)FakeIsPlayerInFight},
+		{0x44d720, (void *)GetPlayerPartyFlag, (void *)FakeGetPlayerPartyFlag},
+		{0x44f5e0, (void *)RemoveBuddy, (void *)FakeRemoveBuddy},
+		{0x44f810, (void *)SetBuddySortMethod, (void *)FakeSetBuddySortMethod},
+		{0x44fa00, (void *)HideOfflineBuddies, (void *)FakeHideOfflineBuddies},
+		{0x451400, (void *)SetPlayerDestination, (void *)FakeSetPlayerDestination},
+		{0x4db640, (void *)GetClassicControl, (void *)FakeGetClassicControl},
+		{0x4db540, (void *)GetBuddyHideOffline, (void *)FakeGetBuddyHideOffline},
+		{0x4db6e0, (void *)GetLevelBar, (void *)FakeGetLevelBar},
+		{0x4db6f0, (void *)GetMagLevelBar, (void *)FakeGetMagLevelBar},
+		{0x4dd940, (void *)GetSkillBar, (void *)FakeGetSkillBar},
+		{0x4db700, (void *)SetLevelBar, (void *)FakeSetLevelBar},
+		{0x4db710, (void *)SetMagLevelBar, (void *)FakeSetMagLevelBar},
+		{0x4ddaa0, (void *)SetSkillBar, (void *)FakeSetSkillBar},
+		{0x4db5f0, (void *)GetTimeStamps, (void *)FakeGetTimeStamps},
+		{0x502880, (void *)HasUnreadConsoleText, (void *)FakeHasUnreadConsoleText},
+		{0x500060, (void *)IsTalkIgnored, (void *)FakeIsTalkIgnored},
+		{0x501940, (void *)IgnoreName, (void *)FakeIgnoreName},
+		{0x502010, (void *)UnignoreName, (void *)FakeUnignoreName},
+		{0x5061f0, (void *)AddConsoleText, (void *)FakeAddConsoleText},
+		{0x5025c0, (void *)GetTextBuffer, (void *)FakeGetTextBuffer},
+		{0x505f10, (void *)AddTextBufferLine, (void *)FakeAddTextBufferLine},
+		{0x502340, (void *)ClearTextBuffer, (void *)FakeClearTextBuffer},
+		{0x4065e0, (void *)SendLook, (void *)FakeSendLook},
+		{0x4056f0, (void *)SendUseObject, (void *)FakeSendUseObject},
+		{0x405d10, NULL, (void *)FakeSendRotateObject},
+		{0x408080, (void *)SendAttack, (void *)FakeSendAttack},
+		{0x408230, NULL, (void *)FakeSendFollow},
+		{0x409680, NULL, (void *)FakeSendRequestOutfit},
+		{0x404db0, (void *)SendMoveObject, (void *)FakeSendMoveObject},
+		{0x409b00, NULL, (void *)FakeSendAddBuddy},
+		{0x408580, NULL, (void *)FakeSendInvite},
+		{0x408730, NULL, (void *)FakeSendExclude},
+		{0x407800, NULL, (void *)FakeSendOpenPrivate},
+		{0x4088e0, NULL, (void *)FakeSendInviteToParty},
+		{0x408a90, NULL, (void *)FakeSendJoinParty},
+		{0x408c40, NULL, (void *)FakeSendRevoke},
+		{0x408df0, NULL, (void *)FakeSendPass},
+		{0x408fa0, NULL, (void *)FakeSendLeaveParty},
+		{0x409d90, NULL, (void *)FakeSendRemoveBuddy},
+		{0x4079b0, NULL, (void *)FakeSendProcess},
+		{0x407b60, NULL, (void *)FakeSendClose},
+		{0x414700, (void *)SendWalk, (void *)FakeSendWalk},
+		{0x414a10, (void *)SendStop, (void *)FakeSendStop},
+		{0x4a6a40, (void *)GetContainerHasParent, (void *)FakeGetContainerHasParent},
+		{0x4a6cf0, (void *)GetFreeContainer, (void *)FakeGetFreeContainer},
+		{0x4d1c40, (void *)(bool (*)(int, int))GetObjectFlag, (void *)FakeGetObjectFlag},
+		{0x4a2a90, (void *)GetHelpArea, (void *)FakeGetHelpArea},
+		{0x4fcbe0, NULL, (void *)FakeIsClipboardEmpty},
+		{0x4b5410, (void *)DeleteAutomapMark, (void *)FakeDeleteAutomapMark},
+		{0x48b430, (void *)GetFontLineHeight, (void *)FakeGetFontLineHeight},
+		{0x491710, (void *)GetFontHeight, (void *)FakeGetFontHeight},
+		{0x494570, (void *)GetTextWidth, (void *)FakeGetTextWidth},
+		{0x493af0, (void *)PrintText, (void *)FakePrintText},
+		{0x497a00, (void *)DrawSkin, (void *)FakeDrawSkin},
+		{0x490c60, (void *)DrawPicturePart, (void *)FakeDrawPicturePart},
+		{0x4eaa90, (void *)GetSurface, (void *)FakeGetSurface},
+	};
+	// Ours is NULL for the functions this file defines (the linker may fold
+	// them with their fakes; a jump would then point at itself).
+	for (auto &T : Table) {
+		Redirect((void *)(uintptr_t)T.Image, T.Fake);
+		if (T.Ours != NULL)
+			Redirect(T.Ours, T.Fake);
+	}
+	Redirect((void *)(uintptr_t)0x465e60, (void *)ImageFormattedText);
+	Redirect((void *)(uintptr_t)0x452cb0, (void *)ImageSeparator);
+	Redirect((void *)(uintptr_t)0x419030, Member(&TTextWindow::FUN_00419030));
+	Redirect((void *)(uintptr_t)0x417590, Member(&TTextWindow::FUN_00417590));
+	Redirect((void *)(uintptr_t)0x419bd0, Member(&TTextWindow::FUN_00419bd0));
+	Redirect((void *)(uintptr_t)0x4199e0, Member(&TTextWindow::FUN_004199e0));
+	Redirect((void *)(uintptr_t)0x41f1c0, Member(&TConsoleWindow::FUN_0041f1c0));
+	Redirect((void *)(uintptr_t)0x41f470, Member(&TConsoleWindow::FUN_0041f470));
+	Redirect((void *)(uintptr_t)0x41f7f0, Member(&TConsoleWindow::FUN_0041f7f0));
+	Redirect((void *)(uintptr_t)0x420090, Member(&TConsoleWindow::FUN_00420090));
+	Redirect((void *)(uintptr_t)0x4234b0, Member(&TConsoleWindow::FUN_004234b0));
+	Redirect((void *)(uintptr_t)0x425070, Member(&TConsoleWindow::FUN_00425070));
+	Redirect((void *)(uintptr_t)0x5121ea, (void *)ImageTime);
+	Redirect((void *)(uintptr_t)0x513eb1, (void *)ImageLocaltime);
+	Redirect((void *)(uintptr_t)0x511d6b, (void *)ImageSprintf);
+	Redirect((void *)(uintptr_t)0x51233d, (void *)ImageSnprintf);
+}
+
+// --- The windows ---------------------------------------------------------------------------
+
+enum {
+	KIND_HELP, KIND_OBJECT, KIND_CREATURE, KIND_BUDDY, KIND_TEXT, KIND_REQUEST, KIND_CHANNEL, KIND_EDIT,
+	KIND_MARK, KIND_SKILL, KINDS
+};
+static const char *const KindNames[] = {"help", "object", "creature", "buddy", "text", "request", "channel",
+	"edit", "mark", "skill"};
+static const uint32 ImageVtables[] = {0x55f8b8, 0x55fb98, 0x55fc38, 0x55fd60, 0x55fe60, 0x55ff28, 0x560040,
+	0x560110, 0x5601e0, 0x55f5f0};
+static void *OurVtables[KINDS];
+static void *OurEntryVtable;
+
+typedef void *(__fastcall *HelpCtorFn)(void *, void *, const char *);
+typedef void *(__fastcall *ObjectCtorFn)(void *, void *, int, int, int, int);
+typedef void *(__fastcall *IDCtorFn)(void *, void *, uint32, int, int, int, int);
+typedef void *(__fastcall *LineCtorFn)(void *, void *, void *, int, int, int, int, int);
+typedef void *(__fastcall *PtrCtorFn)(void *, void *, void *, int, int, int, int);
+typedef void (__fastcall *PlaceFn)(void *, void *, TWindow *);
+typedef bool (__fastcall *FitsInFn)(void *, void *, int *, int *, int *, int *, TWindow *);
+typedef void (__fastcall *ShowFn)(void *, void *, int, int, int, int);
+typedef void (__fastcall *AddEntryFn)(void *, void *, int, const char *, const char *);
+typedef void (__fastcall *VoidFn)(void *, void *);
+typedef void *(__fastcall *BaseCtorFn)(void *, void *);
+
+struct TArguments {
+	int Kind;
+	const char *HelpText;
+	int x, y, ParentWidth, ParentHeight;
+	uint32 ID;
+	int LineNumber;
+	TMarkMenuData Data;
+};
+
+static TWindow *Window[2];
+static int Kind;
+
+static TWindow *Build(int s, TArguments &A)
+{
+	static const size_t Sizes[] = {sizeof(THelpBubble), sizeof(TObjectContextMenu), sizeof(TCreatureContextMenu),
+		sizeof(TBuddyContextMenu), sizeof(TTextContextMenu), sizeof(TRequestContextMenu),
+		sizeof(TChannelContextMenu), sizeof(TEditContextMenu), sizeof(TMarkContextMenu), sizeof(TSkillContextMenu)};
+	// Both sides get memory with the same contents: members the constructors
+	// leave alone (TChannelContextMenu::ShowServerMessages of the default
+	// channel) compare equal.
+	void *M = operator new(Sizes[A.Kind]);
+	memset(M, 0xa5, Sizes[A.Kind]);
+	TWindow *W = NULL;
+	if (s == OURS) {
+		switch (A.Kind) {
+		case KIND_HELP: W = new (M) THelpBubble(A.HelpText); break;
+		case KIND_OBJECT: W = new (M) TObjectContextMenu(A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+		case KIND_CREATURE: W = new (M) TCreatureContextMenu(A.ID, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+		case KIND_BUDDY: W = new (M) TBuddyContextMenu(A.ID, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+		case KIND_TEXT:
+			W = new (M) TTextContextMenu(TextWindow, A.LineNumber, A.x, A.y, A.ParentWidth, A.ParentHeight);
+			break;
+		case KIND_REQUEST:
+			W = new (M) TRequestContextMenu(Console, A.LineNumber, A.x, A.y, A.ParentWidth, A.ParentHeight);
+			break;
+		case KIND_CHANNEL: W = new (M) TChannelContextMenu(Console, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+		case KIND_EDIT: W = new (M) TEditContextMenu(Edit, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+		case KIND_MARK:
+			W = new (M) TMarkContextMenu(new TMarkMenuData(A.Data), A.x, A.y, A.ParentWidth, A.ParentHeight);
+			break;
+		case KIND_SKILL:
+			W = new (M) TSkillContextMenu(SkillsWindow[s], A.x, A.y, A.ParentWidth, A.ParentHeight);
+			break;
+		}
+		return W;
+	}
+
+	switch (A.Kind) {
+	case KIND_HELP: W = (TWindow *)At<HelpCtorFn>(0x441d60)(M, NULL, A.HelpText); break;
+	case KIND_OBJECT: W = (TWindow *)At<ObjectCtorFn>(0x443130)(M, NULL, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+	case KIND_CREATURE:
+		W = (TWindow *)At<IDCtorFn>(0x443960)(M, NULL, A.ID, A.x, A.y, A.ParentWidth, A.ParentHeight);
+		break;
+	case KIND_BUDDY:
+		W = (TWindow *)At<IDCtorFn>(0x443e20)(M, NULL, A.ID, A.x, A.y, A.ParentWidth, A.ParentHeight);
+		break;
+	case KIND_TEXT:
+		W = (TWindow *)At<LineCtorFn>(0x444160)(M, NULL, TextWindow, A.LineNumber, A.x, A.y, A.ParentWidth,
+			A.ParentHeight);
+		break;
+	case KIND_REQUEST:
+		W = (TWindow *)At<LineCtorFn>(0x444720)(M, NULL, Console, A.LineNumber, A.x, A.y, A.ParentWidth,
+			A.ParentHeight);
+		break;
+	case KIND_CHANNEL:
+		W = (TWindow *)At<PtrCtorFn>(0x444a70)(M, NULL, Console, A.x, A.y, A.ParentWidth, A.ParentHeight);
+		break;
+	case KIND_EDIT: W = (TWindow *)At<PtrCtorFn>(0x444eb0)(M, NULL, Edit, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+	case KIND_MARK:
+		W = (TWindow *)At<PtrCtorFn>(0x4451e0)(M, NULL, new TMarkMenuData(A.Data), A.x, A.y, A.ParentWidth,
+			A.ParentHeight);
+		break;
+	case KIND_SKILL:
+		W = (TWindow *)At<PtrCtorFn>(0x4454f0)(M, NULL, SkillsWindow[s], A.x, A.y, A.ParentWidth, A.ParentHeight);
+		break;
+	}
+	return W;
+}
+
+// Runs one call on both sides: F(s) with Side set. An error of our side is
+// reported and ends the test.
+template <class F> static void Both(F Call)
+{
+	Side = OURS;
+	try {
+		Call(OURS);
+	} catch (TMyException &E) {
+		printf("FAIL ContextMenus (%s): our side raised %s\n", KindNames[Kind], E.GetMessage().c_str());
+		exit(1);
+	}
+	Side = ORIGINAL;
+	Call(ORIGINAL);
+}
+
+// --- Dumps ---------------------------------------------------------------------------------
+
+static void DumpGeometry(std::string &Out, TComponent *C)
+{
+	char Buffer[256];
+	sprintf(Buffer, " %d,%d %dx%d", C->OffsetX, C->OffsetY, C->Width, C->Height);
+	Out += Buffer;
+	if (C->DrawingListLength > 0 && C->DrawingList != NULL) {
+		sprintf(Buffer, " DL%d", C->DrawingListLength);
+		Out += Buffer;
+		for (int i = 0; i < C->DrawingListLength; i++) {
+			TDrawing &D = C->DrawingList[i];
+			sprintf(Buffer, " %d/%d/%d/%d/%d/%d/%d", D.skin, D.x, D.y, D.width, D.height, D.srcx, D.srcy);
+			Out += Buffer;
+		}
+	}
+}
+
+static std::string Dump(int s)
+{
+	int SaveSide = Side;
+	Side = s;
+	TWindow *W = Window[s];
+	std::string Out;
+	char Buffer[512];
+	Out += KindNames[Kind];
+	DumpGeometry(Out, W);
+	Out += " capture " + std::string(W->Capture == NULL ? "0" : "?");
+	if (Kind == KIND_HELP) {
+		THelpBubble *H = (THelpBubble *)W;
+		Out += " text";
+		DumpGeometry(Out, H->Text);
+		if (H->Text->FirstChild != NULL)
+			DumpGeometry(Out, H->Text->FirstChild);
+	} else {
+		TContextMenu *M = (TContextMenu *)W;
+		sprintf(Buffer, " ew %d sep %d empty %d", M->EntryWidth, M->Separator ? 1 : 0, M->Empty ? 1 : 0);
+		Out += Buffer;
+		switch (Kind) {
+		case KIND_OBJECT: {
+			TObjectContextMenu *O = (TObjectContextMenu *)W;
+			sprintf(Buffer, " looked %d/%d/%d %d %d,%d,%d used %d/%d/%d %d %d,%d,%d cr %u", O->LookedObject.Type,
+				O->LookedObject.Data1, O->LookedObject.Data2, O->LookedObjectIndex, O->LookedObjectX, O->LookedObjectY,
+				O->LookedObjectZ, O->UsedObject.Type, O->UsedObject.Data1, O->UsedObject.Data2, O->UsedObjectIndex,
+				O->UsedObjectX, O->UsedObjectY, O->UsedObjectZ, O->CreatureID);
+			break;
+		}
+		case KIND_CREATURE: sprintf(Buffer, " id %u", ((TCreatureContextMenu *)W)->CreatureID); break;
+		case KIND_BUDDY: sprintf(Buffer, " id %u", ((TBuddyContextMenu *)W)->CharacterID); break;
+		case KIND_TEXT:
+			sprintf(Buffer, " tw %d line %d", ((TTextContextMenu *)W)->TextWindow == TextWindow ? 1 : 0,
+				((TTextContextMenu *)W)->LineNumber);
+			break;
+		case KIND_REQUEST:
+			sprintf(Buffer, " cw %d line %d", ((TRequestContextMenu *)W)->ConsoleWindow == Console ? 1 : 0,
+				((TRequestContextMenu *)W)->LineNumber);
+			break;
+		case KIND_CHANNEL:
+			sprintf(Buffer, " cw %d show %d", ((TChannelContextMenu *)W)->ConsoleWindow == Console ? 1 : 0,
+				((TChannelContextMenu *)W)->ShowServerMessages ? 1 : 0);
+			break;
+		case KIND_EDIT: sprintf(Buffer, " edit %d", ((TEditContextMenu *)W)->Edit == Edit ? 1 : 0); break;
+		case KIND_MARK: {
+			TMarkMenuData &D = ((TMarkContextMenu *)W)->Data;
+			sprintf(Buffer, " data %d,%d,%d %d,%d,%d,%s %p", D.Coordinate.x, D.Coordinate.y, D.Coordinate.z, D.Mark.x,
+				D.Mark.y, D.Mark.Type, D.Mark.Text, D.Window);
+			break;
+		}
+		case KIND_SKILL: {
+			TSkillContextMenu *K = (TSkillContextMenu *)W;
+			sprintf(Buffer, " skills %d back %d", K->SkillsWindow == SkillsWindow[s] ? 1 : 0,
+				SkillsWindow[s]->ContextMenu == (TSkillContextMenu *)W ? 1 : 0);
+			break;
+		}
+		default:
+			Buffer[0] = 0;
+		}
+		Out += Buffer;
+	}
+	Out += "\n";
+	for (TComponent *C = W->FirstChild; C != NULL; C = C->Next) {
+		bool IsEntry = s == OURS ? VtableOf(C) == OurEntryVtable : VtableOf(C) == (void *)(uintptr_t)0x55f6a8;
+		Out += IsEntry ? "  entry" : "  child";
+		DumpGeometry(Out, C);
+		if (IsEntry) {
+			TContextMenuEntry *E = (TContextMenuEntry *)C;
+			sprintf(Buffer, " \"%s\" \"%s\" %d %d", E->Text, E->Shortcut, E->Callback.Event,
+				E->Callback.Receiver == W ? 1 : 0);
+			Out += Buffer;
+		} else if (Kind != KIND_HELP) {
+			sprintf(Buffer, " sep %d", ((TSeparator *)C)->Horizontal ? 1 : 0);
+			Out += Buffer;
+		}
+		Out += C->Parent == W ? " p\n" : " ?\n";
+	}
+	Side = SaveSide;
+	return Out;
+}
+
+static void Compare(const char *What)
+{
+	Checks++;
+	if (Log[OURS] != Log[ORIGINAL]) {
+		Failures++;
+		if (Failures <= 20) {
+			printf("FAIL ContextMenus %s (%s): logs differ\n  ours:     %.1500s\n  original: %.1500s\n", What,
+				KindNames[Kind], Log[OURS].c_str(), Log[ORIGINAL].c_str());
+		}
+	}
+	if (Window[OURS] != NULL && Window[ORIGINAL] != NULL) {
+		std::string A = Dump(OURS), B = Dump(ORIGINAL);
+		Checks++;
+		if (A != B) {
+			Failures++;
+			if (Failures <= 20)
+				printf("FAIL ContextMenus %s (%s): windows differ\n--- ours\n%s--- original\n%s", What,
+					KindNames[Kind], A.c_str(), B.c_str());
+		}
+	}
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+}
+
+// --- Random properties -----------------------------------------------------------------------
+
+static void RandomSkinProperties()
+{
+	TSkinProperties &O = Global<TSkinProperties>(0x5ccfc8);
+	TSkinProperties &M = SkinProperties;
+	M.Data09C = O.Data09C = 1 + Random() % 40;
+	M.Data0A0 = O.Data0A0 = TRect((int)(Random() % 9) - 4, (int)(Random() % 9) - 4, (int)(Random() % 9) - 4,
+		(int)(Random() % 9) - 4);
+	M.Data0B0.FontNumber = O.Data0B0.FontNumber = 1 + Random() % 4;
+	M.Data0B0.Color = O.Data0B0.Color = TRGBColor(Random() % 256, Random() % 256, Random() % 256);
+	M.Data0C4 = O.Data0C4 = 1 + Random() % 10;
+	M.Data0C8 = O.Data0C8 = TRGBColor(Random() % 256, Random() % 256, Random() % 256);
+	M.Data0D4 = O.Data0D4 = Random() % 4;
+	M.Data150 = O.Data150 = 10 + Random() % 80;
+	M.Data154 = O.Data154 = 10 + Random() % 80;
+	M.Data158 = O.Data158 = 10 + Random() % 400;
+	M.Data15C = O.Data15C = 10 + Random() % 400;
+	// The text keeps a width and height above 0 in the smallest bubble.
+	M.Data160 = O.Data160 = TRect(Random() % 4, Random() % 4, -(int)(Random() % 4), -(int)(Random() % 4));
+	M.Data170 = O.Data170 = 1 + Random() % 6;
+	M.Data174 = O.Data174 = Random() % M.Data170;
+	M.Data178 = O.Data178 = Random() % 6;
+}
+
+static TArguments RandomArguments(int K)
+{
+	static const char *const HelpTexts[] = {"Help", "This is the {inventory}.", "", "A longer help text."};
+	TArguments A;
+	A.Kind = K;
+	A.HelpText = HelpTexts[Random() % 4];
+	A.ParentWidth = 200 + Random() % 800;
+	A.ParentHeight = 200 + Random() % 600;
+	A.x = (int)(Random() % (A.ParentWidth + 40)) - 20;
+	A.y = (int)(Random() % (A.ParentHeight + 40)) - 20;
+	uint32 IDs[] = {World.Creatures[0].CreatureID, World.Creatures[1].CreatureID, World.Creatures[2].CreatureID,
+		World.Creatures[4].CreatureID, 0x10000777u, World.BuddyIDs[1], World.BuddyIDs[2]};
+	A.ID = IDs[Random() % 7];
+	A.LineNumber = (int)(Random() % (NLINES + 2)) - 1;
+	A.Data.Coordinate.x = 32000 + Random() % 500;
+	A.Data.Coordinate.y = 32000 + Random() % 500;
+	A.Data.Coordinate.z = Random() % 16;
+	if (Random() % 2 == 0) {
+		A.Data.Mark.x = 32000 + Random() % 500;
+		A.Data.Mark.y = Random() % 4 == 0 ? 0 : 32000 + Random() % 500;
+	} else {
+		A.Data.Mark.x = Random() % 4 == 0 ? 32000 : 0;
+		A.Data.Mark.y = 0;
+	}
+	A.Data.Mark.Type = Random() % 20;
+	strcpy(A.Data.Mark.Text, Random() % 2 ? "Depot" : "");
+	A.Data.Window = (void *)(uintptr_t)(0x1000 + Random() % 0x1000);
+	TextChildWidth = 1 + Random() % 300;
+	TextChildHeight = 1 + Random() % 300;
+	return A;
+}
+
+static void RandomEdit()
+{
+	memset(Edit->Data24, 0, sizeof(Edit->Data24));
+	Edit->Data5C = Random() % 3 == 0 ? -1 : Random() % 20;
+	Edit->Data60 = Random() % 3 == 0 ? 0 : Random() % 20;
+	Edit->Data66 = Random() % 3 == 0;
+}
+
+// The events a menu kind handles without "unknown event" (the text and
+// request menus ignore unknown ones).
+static bool KnownEvent(int K, int Event)
+{
+	static const int Object[] = {10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10012, 10013, 10014,
+		10015, 10016, 10018, 10019, 10020, 10021, 10022, 10023, 10100, 10101, 10203, 0};
+	static const int Creature[] = {10004, 10005, 10006, 10007, 10015, 10016, 10018, 10019, 10021, 10022, 10023,
+		10100, 10101, 10203, 0};
+	static const int Buddy[] = {10016, 10023, 10204, 10300, 10301, 10302, 10303, 10304, 10305, 10306, 10307, 0};
+	static const int Channel[] = {10016, 10017, 10100, 10102, 10103, 10105, 0};
+	static const int Edit[] = {10200, 10201, 10202, 10203, 10206, 0};
+	static const int Mark[] = {10400, 10401, 10402, 10403, 0};
+	static const int Skill[] = {10500, 10501, 10502, 10503, 10504, 10505, 10506, 10507, 10508, 10509, 10510, 0};
+	const int *List = NULL;
+	switch (K) {
+	case KIND_TEXT: case KIND_REQUEST: return true;
+	case KIND_OBJECT: List = Object; break;
+	case KIND_CREATURE: List = Creature; break;
+	case KIND_BUDDY: List = Buddy; break;
+	case KIND_CHANNEL: List = Channel; break;
+	case KIND_EDIT: List = Edit; break;
+	case KIND_MARK: List = Mark; break;
+	case KIND_SKILL: List = Skill; break;
+	default: return false;
+	}
+	for (; *List != 0; List++) {
+		if (*List == Event)
+			return true;
+	}
+	return false;
+}
+
+static int RandomEvent()
+{
+	static const int Events[] = {0, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10010, 10011, 10012,
+		10013, 10014, 10015, 10016, 10017, 10018, 10019, 10020, 10021, 10022, 10023, 10100, 10101, 10102, 10103,
+		10105, 10106, 10107, 10200, 10201, 10202, 10203, 10204, 10205, 10206, 10300, 10301, 10302, 10303, 10304,
+		10305, 10306, 10307, 10400, 10401, 10402, 10403, 10500, 10501, 10502, 10503, 10504, 10505, 10506, 10507,
+		10508, 10509, 10510, 12345};
+	return Events[Random() % (sizeof(Events) / sizeof(Events[0]))];
+}
+
+// Events of the entries of our menu, and whether the object menu's
+// assertions hold for one.
+static std::vector<int> EntryEvents()
+{
+	std::vector<int> Events;
+	for (TComponent *C = Window[OURS]->FirstChild; C != NULL; C = C->Next) {
+		if (VtableOf(C) == OurEntryVtable)
+			Events.push_back(((TContextMenuEntry *)C)->Callback.Event);
+	}
+	return Events;
+}
+static bool SafeEvent(int Event)
+{
+	if (Kind == KIND_OBJECT) {
+		TObjectContextMenu *O = (TObjectContextMenu *)Window[OURS];
+		if (Event == 10010)
+			return O->LookedObjectX == 0xFFFF && O->LookedObject.Type != CREATURE;
+		if (Event == 10011)
+			return O->UsedObjectX == 0xFFFF && O->UsedObjectY >= 64;
+	}
+	return Kind != KIND_HELP && (Event != 0 || Kind == KIND_TEXT || Kind == KIND_REQUEST);
+}
+
+// A click on an entry may send an event the menu does not know (the empty
+// entry of a menu without entries); only the text and request menus have
+// one of those, and they ignore it.
+static bool ClickIsSafe(int x, int y)
+{
+	for (TComponent *C = Window[OURS]->FirstChild; C != NULL; C = C->Next) {
+		if (In(x - C->OffsetX, 0, C->Width - 1) && In(y - C->OffsetY, 0, C->Height - 1)) {
+			if (VtableOf(C) == OurEntryVtable)
+				return SafeEvent(((TContextMenuEntry *)C)->Callback.Event);
+			return true;
+		}
+	}
+	return true;
+}
+
+static int KindCount[KINDS];
+static int ActionCount[12];
+
+static void Action()
+{
+	int A = Random() % 12;
+	if (getenv("CM_TRACE") != NULL)
+		fprintf(stderr, "  action %d\n", A);
+	RandomFlags();
+	char What[64];
+	sprintf(What, "action %d", A);
+	TWindow *O = Window[OURS];
+	switch (A) {
+	case 0: case 1: {
+		int Surface = Random() % 3, x = Random() % 50, y = Random() % 50;
+		World.MouseX = x + (int)(Random() % (O->Width + 20)) - 10;
+		World.MouseY = y + (int)(Random() % (O->Height + 20)) - 10;
+		Both([&](int s) { Window[s]->Draw(Surface, x, y); });
+		break;
+	}
+	case 2: case 3: {
+		int x = (int)(Random() % (O->Width + 20)) - 10, y = (int)(Random() % (O->Height + 20)) - 10;
+		if (Kind != KIND_HELP && !ClickIsSafe(x, y))
+			return;
+		bool Results[2];
+		Both([&](int s) { Results[s] = Window[s]->LeftButtonUp(x, y, 0); });
+		CHECK(Results[OURS] == Results[ORIGINAL], "ContextMenus LeftButtonUp %d, original %d", Results[OURS],
+			Results[ORIGINAL]);
+		break;
+	}
+	case 4: {
+		bool Results[2];
+		int x = Random() % 100, y = Random() % 100;
+		Both([&](int s) { Results[s] = Window[s]->RightButtonUp(x, y, 0); });
+		CHECK(Results[OURS] == Results[ORIGINAL], "ContextMenus RightButtonUp %d, original %d", Results[OURS],
+			Results[ORIGINAL]);
+		break;
+	}
+	case 5: {
+		int Key = Random() % 2 ? 27 : Random() % 300;
+		Both([&](int s) { Window[s]->KeyPress(Key); });
+		break;
+	}
+	case 6: case 7: {
+		if (Kind == KIND_HELP)
+			return;
+		int Event;
+		std::vector<int> Events = EntryEvents();
+		if (Random() % 3 != 0 && !Events.empty())
+			Event = Events[Random() % Events.size()];
+		else
+			Event = RandomEvent();
+		if (!KnownEvent(Kind, Event) || !SafeEvent(Event))
+			return;
+		Both([&](int s) { Window[s]->HandleEvent(Event); });
+		break;
+	}
+	case 8: {
+		Both([&](int s) { Window[s]->Arrange(); });
+		break;
+	}
+	case 9: {
+		if (Kind == KIND_HELP) {
+			int w = Random() % 500, h = Random() % 500;
+			Both([&](int s) { Window[s]->SetSize(w, h); });
+		} else {
+			// Another Show (positions change, the last entry shrinks again; both
+			// versions fail when it would get a negative height).
+			TComponent *Last = O->GetLastChild();
+			int Font = SkinProperties.Data0B0.FontNumber;
+			if (Last != NULL && Last->Height - ((10 + Font) - (8 + Font % 3)) <= 0)
+				return;
+			int x = (int)(Random() % 900) - 20, y = (int)(Random() % 700) - 20, pw = 200 + Random() % 800,
+				ph = 200 + Random() % 600;
+			Both([&](int s) {
+				if (s == OURS)
+					((TContextMenu *)Window[s])->Show(x, y, pw, ph);
+				else
+					At<ShowFn>(0x442de0)(Window[s], NULL, x, y, pw, ph);
+			});
+		}
+		break;
+	}
+	case 10: {
+		if (Kind == KIND_HELP) {
+			// Place in a window large enough for the fallback corners.
+			World.HelpX = Random() % 700;
+			World.HelpY = Random() % 500;
+			World.HelpWidth = Random() % 300;
+			World.HelpHeight = Random() % 300;
+			TWindow Parent;
+			Parent.Width = O->Width + SkinProperties.Data178 + Random() % 800;
+			Parent.Height = O->Height + SkinProperties.Data178 + Random() % 600;
+			Both([&](int s) {
+				if (s == OURS)
+					((THelpBubble *)Window[s])->Place(&Parent);
+				else
+					At<PlaceFn>(0x442110)(Window[s], NULL, &Parent);
+			});
+		} else {
+			// More entries and a separator.
+			// The new entry sends an event the menu knows (a click may follow).
+			std::vector<int> Events = EntryEvents();
+			int Event = Events.empty() ? 0 : Events[Random() % Events.size()], What2 = Random() % 3;
+			if (!KnownEvent(Kind, Event) || !SafeEvent(Event))
+				return;
+			bool Sep = Random() % 2 != 0;
+			const char *Text = Random() % 2 ? "Extra" : "A rather long entry text here";
+			const char *Shortcut = Random() % 2 ? NULL : "(Ctrl+X)";
+			Both([&](int s) {
+				TContextMenu *M = (TContextMenu *)Window[s];
+				M->Separator = Sep;
+				// A separator is never the last child in the game (Show would
+				// shrink it as the last entry).
+				if (What2 == 0) {
+					if (s == OURS)
+						M->AddSeparator();
+					else
+						At<VoidFn>(0x43f1d0)(M, NULL);
+				}
+				{
+					if (s == OURS)
+						M->AddEntry(Event, Text, Shortcut);
+					else
+						At<AddEntryFn>(0x442910)(M, NULL, Event, Text, Shortcut);
+				}
+			});
+		}
+		break;
+	}
+	case 11: {
+		if (Kind != KIND_HELP)
+			return;
+		int x = (int)(Random() % 60) - 5, y = (int)(Random() % 60) - 5, w = Random() % 300, h = Random() % 300;
+		// Often at the margin, where the tests change.
+		if (Random() % 2 == 0)
+			x = SkinProperties.Data178 + (int)(Random() % 3) - 1;
+		if (Random() % 2 == 0)
+			y = SkinProperties.Data178 + (int)(Random() % 3) - 1;
+		int Width = 50 + Random() % 500, Height = 50 + Random() % 500;
+		TWindow Parent;
+		Parent.Width = Width;
+		Parent.Height = Height;
+		int X[2] = {x, x}, Y[2] = {y, y};
+		bool Results[2];
+		Both([&](int s) {
+			int ww = w, hh = h;
+			if (s == OURS)
+				Results[s] = ((THelpBubble *)Window[s])->FitsIn(X[s], Y[s], ww, hh, &Parent);
+			else
+				Results[s] = At<FitsInFn>(0x43dca0)(Window[s], NULL, &X[s], &Y[s], &ww, &hh, &Parent);
+		});
+		CHECK(Results[OURS] == Results[ORIGINAL] && X[OURS] == X[ORIGINAL] && Y[OURS] == Y[ORIGINAL],
+			"ContextMenus FitsIn %d %d,%d, original %d %d,%d", Results[OURS], X[OURS], Y[OURS], Results[ORIGINAL],
+			X[ORIGINAL], Y[ORIGINAL]);
+		break;
+	}
+	}
+	ActionCount[A]++;
+	Compare(What);
+}
+
+void TestContextMenus()
+{
+	int Before = Checks, BeforeFailures = Failures;
+	PatchImage();
+	InitSkins();
+	Global<int>(0x71c450) = NumberOfSkins;
+	Global<TSkin *>(0x71c454) = Skins;
+	InitSkinProperties();
+	At<void (__cdecl *)()>(0x498160)();
+	Surface = new TMenuSurface;
+	PatchCallees();
+
+	Buffer = new TTestBuffer;
+	TextWindow = (TTextWindow *)calloc(1, sizeof(TTextWindow));
+	TextWindow->TextBuffer = Buffer;
+	ConsoleData.Data2C = TextWindow;
+	Console = (TConsoleWindow *)calloc(1, sizeof(TConsoleWindow));
+	Console->Data34 = &ConsoleData;
+	Edit = new TTestEdit;
+	for (int s = 0; s < 2; s++) {
+		SkillsWindow[s] = new TTestSkills;
+		SkillsWindow[s]->Data2C = 0;
+		SkillsWindow[s]->ContextMenu = NULL;
+	}
+
+	// Our vtables, from instances.
+	{
+		Side = OURS;
+		TTestSeparator *S = new TTestSeparator;
+		SeparatorVtable = VtableOf(S);
+		delete S;
+		TTestFormattedText *T = new TTestFormattedText;
+		TextVtable = VtableOf(T);
+		delete T;
+		RandomWorld();
+		TContextMenuEntry *E = new TContextMenuEntry("x", NULL, TCallback(NULL, 0));
+		OurEntryVtable = VtableOf(E);
+		delete E;
+		FreeWorld();
+		Log[OURS].clear();
+	}
+
+	for (int Round = 0; Round < 3000; Round++) {
+		RandomSkinProperties();
+		RandomWorld();
+		RandomEdit();
+		Kind = Random() % KINDS;
+		KindCount[Kind]++;
+		if (getenv("CM_TRACE") != NULL)
+			fprintf(stderr, "round %d kind %d\n", Round, Kind);
+		TArguments A = RandomArguments(Kind);
+		Both([&](int s) { Window[s] = Build(s, A); });
+		Compare("constructor");
+		int Actions = Random() % 8;
+		for (int i = 0; i < Actions; i++)
+			Action();
+		Both([&](int s) {
+			delete Window[s];
+			Window[s] = NULL;
+		});
+		CHECK(SkillsWindow[OURS]->ContextMenu == NULL && SkillsWindow[ORIGINAL]->ContextMenu == NULL,
+			"ContextMenus: the skill window keeps a deleted menu");
+		Compare("destructor");
+		FreeWorld();
+	}
+
+	RestoreAll();
+	delete Surface;
+	delete Buffer;
+	free(TextWindow);
+	free(Console);
+	delete Edit;
+	for (int s = 0; s < 2; s++)
+		delete SkillsWindow[s];
+	ExitSkins();
+	Global<TSkin *>(0x71c454) = NULL;
+	int Least = KindCount[0], LeastAction = ActionCount[0];
+	for (int i = 1; i < KINDS; i++)
+		Least = KindCount[i] < Least ? KindCount[i] : Least;
+	for (int i = 1; i < 12; i++)
+		LeastAction = ActionCount[i] < LeastAction ? ActionCount[i] : LeastAction;
+	printf("ContextMenus: %d checks, %d failures (each window at least %d times, each action at least %d times)\n",
+		Checks - Before, Failures - BeforeFailures, Least, LeastAction);
+}

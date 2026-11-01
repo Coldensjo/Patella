@@ -47,6 +47,7 @@ void TestGUI();
 void TestMap(const char *ExePath);     // maptest.cpp, also loads Tibia.dat
 void TestGraphics(const char *ExePath); // graphicstest.cpp, loads Tibia.spr, Tibia.pic and Tibia.dat
 void TestDialogWindow();                 // dialogwindowtest.cpp, after TestGUI (restores its patches)
+void TestContextMenus();                 // contextmenustest.cpp, after TestDialogWindow (restores its patches)
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
 
 // dialogwindowtest.cpp defines the shared fakes of the classes DialogWindow.cpp

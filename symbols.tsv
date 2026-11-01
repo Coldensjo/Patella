@@ -1490,10 +1490,10 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x43d59d	20	Catch@0043d59d	catch	ContentWindows.cpp	between		0x43d390	
 0x43d5b1	143	Catch@0043d5b1	catch	ContentWindows.cpp	assert	280	0x43d390	
 0x43d640	166	Catch@0043d640	catch	ContentWindows.cpp	assert	280	0x43d390	
-0x43d6f0	25	FUN_0043d6f0	game	ContentWindows.cpp|ContextMenus.cpp	gap			
-0x43d710	30	FUN_0043d710	game	ContentWindows.cpp|ContextMenus.cpp	gap			
-0x43d730	296	FUN_0043d730	game	ContentWindows.cpp|ContextMenus.cpp	gap			Width,Height
-0x43d858	20	Catch@0043d858	catch	ContentWindows.cpp|ContextMenus.cpp	gap		0x43d730	
+0x43d6f0	25	FUN_0043d6f0	game	ContextMenus.cpp	range			
+0x43d710	30	FUN_0043d710	game	ContextMenus.cpp	range			
+0x43d730	296	FUN_0043d730	game	ContextMenus.cpp	range			Width,Height
+0x43d858	20	Catch@0043d858	catch	ContextMenus.cpp	range		0x43d730	
 0x43d86c	147	Catch@0043d86c	catch	ContextMenus.cpp	assert	142	0x43d730	Width,Height
 0x43d8ff	164	Catch@0043d8ff	catch	ContextMenus.cpp	assert	142	0x43d730	
 0x43d9b0	739	FUN_0043d9b0	game	ContextMenus.cpp	between			

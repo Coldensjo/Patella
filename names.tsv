@@ -1432,3 +1432,47 @@ address	name	kind	confidence	note
 0x48aea0	TDialogWindow_Rearrange	game	medium	DialogWindow.cpp lines 271-297 (Work!=NULL, unknown strategy, Strategy), vtable +0xa0; jump table 0x48b338/0x48b354; name ours
 0x453be0	TResizer_ctor	game	low	DialogElements.cpp line 74 (_ToResize!=NULL): element (vtable 0x5612b0, 0x38 bytes) that resizes _ToResize; TSubWindow makes two; class name ours
 0x458b20	TSkinButton_SetSkins	game	low	DialogElements.cpp lines 1228-1229 (_ButtonUp, _ButtonDown <NumberOfSkins): the two skins of a button (+0x24, +0x28); TSubWindow swaps its minimize button skins; names ours
+0x43d6f0	TSkillContextMenu_dtor	game	high	ContextMenus.cpp: vtable 0x55f5f0; clears the skill window's pointer to the menu (+0x30); first function of the object, no frame
+0x43d710	TSkillContextMenu_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TSkillContextMenu (vtable 0x55f5f0 slot 0), calls 0x43d6f0
+0x43d730	THelpBubble_SetSize	game	high	ContextMenus.cpp line 142 (Width, Height), vtable 0x55f8b8 +0x34: rounds to Data174 mod Data170, limits to minimum and Data158/Data15C, lays out the text
+0x43d9b0	THelpBubble_Arrange	game	high	ContextMenus.cpp, vtable +0x48: frame of skins 52-60; no frame, no line
+0x43dca0	THelpBubble_FitsIn	game	medium	ContextMenus.cpp lines 289-293 (x>=0, y>=0): the bubble keeps the margin Data178 to the window edges at x, y; name ours
+0x43dfe0	TContextMenuEntry_ctor	game	medium	ContextMenus.cpp line 316: menu entry (vtable 0x55f6a8, 0x74 bytes): text, shortcut, callback; class name ours
+0x43e210	TContextMenuEntry_Draw	game	high	ContextMenus.cpp line 338 (Surface), vtable +0x44: highlight under the mouse, text and right-aligned shortcut
+0x43e4d0	TContextMenuEntry_LeftButtonUp	game	high	ContextMenus.cpp line 349, vtable +0x54: sends the callback
+0x43e660	TContextMenuEntry_SetLast	game	medium	ContextMenus.cpp line 361: the last entry loses the space below the font; name ours
+0x43e820	TContextMenu_ctor	game	medium	ContextMenus.cpp line 381: base of the menus (vtable 0x55f730, 0x34 bytes); nine drawing entries; class name Control.cpp's (ours)
+0x43e9f0	TContextMenu_HandleEvent	game	high	ContextMenus.h inline, vtable 0x55f730 +0x70: SetActionState(0); missed by Ghidra
+0x43ea00	TContextMenu_Arrange	game	high	ContextMenus.cpp, vtable +0x48: frame of skins 207-215; no frame, no line
+0x43ecf0	TContextMenu_LeftButtonUp	game	high	ContextMenus.cpp line 437 (x, y), vtable +0x54: TWindow::LeftButtonUp, then SetActionState(0)
+0x43eea0	TContextMenu_RightButtonUp	game	high	ContextMenus.cpp line 449, vtable +0x5c: SetActionState(0)
+0x43f030	TContextMenu_KeyPress	game	high	ContextMenus.cpp line 460 (Key), vtable +0x6c: Escape closes
+0x43f1d0	TContextMenu_AddSeparator	game	medium	ContextMenus.cpp line 542: a TSeparator (0x452cb0) of height Data0C4; name ours
+0x43f3a0	TObjectContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 712-780 (LookedObjectX==0xFFFF, unknown event, Event), vtable 0x55fb98 +0x70; jump table 0x43fd98/0x43fdfc
+0x43fed0	TCreatureContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 934-937 (unknown event, Event), vtable 0x55fc38 +0x70; jump table 0x440350/0x44038c
+0x440460	TBuddyContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 1040-1043 (unknown event, Event), vtable 0x55fd60 +0x70; jump table 0x4408d8
+0x4408f0	TTextContextMenu_HandleEvent	game	high	ContextMenus.cpp line 1173 (Event), vtable 0x55fe60 +0x70: "You are now ignoring player %s."
+0x440c60	TRequestContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 1221-1241 (TextBuffer!=NULL, Event), vtable 0x55ff28 +0x70: "%s's Report"
+0x440fe0	TChannelContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 1307-1312 (TextBuffer!=NULL, unknown event, Event), vtable 0x560040 +0x70
+0x441370	TEditContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 1363-1366 (Event), vtable 0x560110 +0x70: the edit line's HandleEvent 16-20; jump table 0x44163c
+0x441660	TMarkContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 1426-1429 (Event), vtable 0x5601e0 +0x70; jump table 0x4419ec
+0x441a00	TSkillContextMenu_HandleEvent	game	high	ContextMenus.cpp lines 1525-1530 (Event), vtable 0x55f5f0 +0x70: level, magic level and skill bars; jump table 0x441d34/0x441d48
+0x441d60	THelpBubble_ctor	game	high	ContextMenus.cpp lines 106-121 (HelpText!=NULL): vtable 0x55f8b8, 0x30 bytes, a TFormattedText in nine frame skins; class name Control.cpp's (ours)
+0x4420f0	THelpBubble_GetMinimumWidth	game	high	ContextMenus.h inline, vtable 0x55f8b8 +0x3c: SkinProperties.Data150; missed by Ghidra
+0x442100	THelpBubble_GetMinimumHeight	game	high	ContextMenus.h inline, vtable 0x55f8b8 +0x40: SkinProperties.Data154; missed by Ghidra
+0x442110	THelpBubble_Place	game	medium	ContextMenus.cpp lines 257-272 (newX>=0, newY>=0): eight places next to the help area, else a top corner; called by Control.cpp in help mode; name ours
+0x442910	TContextMenu_AddEntry	game	medium	ContextMenus.cpp lines 506-521 (Text!=NULL, strlen(Text)<50, Shortcut==NULL || strlen(Shortcut)<20, Event); name ours
+0x442de0	TContextMenu_Show	game	medium	ContextMenus.cpp lines 486-498 (LastEntry!=NULL, x, y): stacks the entries, fits and places the menu; name ours
+0x443130	TObjectContextMenu_ctor	game	medium	ContextMenus.cpp lines 560-670 (LookedObject!=0, unknown player party flag, x, y): vtable 0x55fb98, 0x70 bytes; class name Control.cpp's (ours)
+0x443960	TCreatureContextMenu_ctor	game	medium	ContextMenus.cpp lines 845-862 (unknown player party flag, CreatureID): vtable 0x55fc38, 0x38 bytes; the battle list; class name ours
+0x443e20	TBuddyContextMenu_ctor	game	medium	ContextMenus.cpp line 987 (_CharacterID): vtable 0x55fd60, 0x38 bytes; the VIP list; class name ours
+0x444160	TTextContextMenu_ctor	game	medium	ContextMenus.cpp lines 1056-1120 (_TextWindow!=NULL, GetCreature(GetPlayerID()), _LineNumber): vtable 0x55fe60, 0x3c bytes; class name ours
+0x444720	TRequestContextMenu_ctor	game	medium	ContextMenus.cpp lines 1181-1203 (_ConsoleWindow!=NULL, _LineNumber): vtable 0x55ff28, 0x3c bytes; "Process %s"; class name ours
+0x444a70	TChannelContextMenu_ctor	game	medium	ContextMenus.cpp lines 1248-1275 (_ConsoleWindow!=NULL, TextBuffer!=NULL, x, y): vtable 0x560040, 0x3c bytes; class name ours
+0x444eb0	TEditContextMenu_ctor	game	medium	ContextMenus.cpp lines 1324-1349 (_Edit!=NULL, x, y): vtable 0x560110, 0x38 bytes; class name ours
+0x4451e0	TMarkContextMenu_ctor	game	medium	ContextMenus.cpp lines 1379-1397 (_Data!=NULL, x, y): vtable 0x5601e0, 0xb4 bytes; deletes _Data; class name ours
+0x4454f0	TSkillContextMenu_ctor	game	medium	ContextMenus.cpp lines 1442-1465 (_SkillsWindow, x, y): vtable 0x55f5f0, 0x38 bytes; class name ours
+0x429590	TElement_derived_scalar_deleting_dtor	stl	medium	compiler-generated deleting destructor of a TElement subclass without members to destroy (calls ~TComponent); kept in ContentWindows.obj, shared by folding with TContextMenuEntry (vtable 0x55f6a8) and TSeparator (0x5610b0)
+0x465e60	TFormattedText_ctor	game	low	DialogElements.cpp line 508: text window with formatting tokens (vtable 0x560c40, 0x38 bytes), the help bubble's text; class name ours
+0x452cb0	TSeparator_ctor	game	low	DialogElements.cpp: line element (vtable 0x5610b0, 0x28 bytes, bool at +0x24); context menu separators; class name ours
+0x417500	TDrawing_ctor	game	high	GUI.h inline TDrawing(): out-of-line copy (kept in an earlier object) that THelpBubble's constructor passes to vector_constructor_iterator; missed by Ghidra
