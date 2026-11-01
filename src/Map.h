@@ -194,7 +194,7 @@ void UpdateAutomap(int rx, int ry);
 TRGBColor GetAutomapColor(int x, int y, int z);
 void GetAutomapMarks(int x, int y, int z, vector<TMark> *Marks, int *Count);
 void AddAutomapMark(TCoordinate &Coordinate, const char *Text, int Type);
-void DeleteAutomapMark(TCoordinate &Coordinate, int z);
+void DeleteAutomapMark(TMark &Deleted, int z);
 
 // Paths, initialisation.
 int FindPath(int StartX, int StartY, int StartZ, int DestX, int DestY, int DestZ, bool MustReach,

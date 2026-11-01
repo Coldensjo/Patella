@@ -59,7 +59,7 @@ typedef void (__cdecl *TextEffectFn)(int, int, int, int, const char *);
 typedef void (__cdecl *MissileFn)(int, int, int, int, int, int, int);
 typedef void (__cdecl *MarksFn)(int, int, int, vector<TMark> *, int *);
 typedef void (__cdecl *AddMarkFn)(TCoordinate *, const char *, int);
-typedef void (__cdecl *DeleteMarkFn)(TCoordinate *, int);
+typedef void (__cdecl *DeleteMarkFn)(TMark *, int);
 typedef int (__cdecl *PathFn)(int, int, int, int, int, int, bool, int *, int *, bool);
 typedef void (__cdecl *InitFn)(void (*)(int));
 typedef void *(__fastcall *Ctor2Fn)(void *This, void *, int, int);
@@ -484,7 +484,9 @@ static void TestAutomap()
 			if (Count == 0)
 				break;
 			TMark &Mark = M(Random() % Count);
-			TCoordinate Where = {Mark.x, Mark.y, 0};
+			TMark Where;
+			Where.x = Mark.x;
+			Where.y = Mark.y;
 			// Deleted marks are at 0,0, whose block has no file here.
 			if (Random() % 4 == 0 || (Mark.x == 0 && Mark.y == 0)) {
 				Where.x = bx * 256 + Random() % 256;

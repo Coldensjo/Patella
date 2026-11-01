@@ -310,8 +310,8 @@ void InitSkinProperties()
 	SkinProperties.Data15C = 447;
 	SkinProperties.Data160.x = 4;
 	SkinProperties.Data160.y = 4;
-	SkinProperties.Data168.x = -4;
-	SkinProperties.Data168.y = -4;
+	SkinProperties.Data160.Width = -4;
+	SkinProperties.Data160.Height = -4;
 	SkinProperties.Data170 = 4;
 	SkinProperties.Data174 = 3;
 	SkinProperties.Data178 = 3;

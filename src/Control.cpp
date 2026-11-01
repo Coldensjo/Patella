@@ -17,6 +17,7 @@
 // event and are deleted here.
 
 #include "Control.h"
+#include "ContextMenus.h"
 #include "Help.h"
 #include "Inventory.h"
 #include "Network.h"
@@ -88,7 +89,7 @@ void Resize(int Width, int Height)
 			ModalWindow->SetPosition(MainWindow->Width / 2 - ModalWindow->Width / 2,
 				MainWindow->Height / 2 - ModalWindow->Height / 2);
 		if (ModalWindow != NULL && GetActionState() == 9)
-			((TContextMenu *)ModalWindow)->FUN_00442110(MainWindow);
+			((THelpBubble *)ModalWindow)->Place(MainWindow);
 	}
 	TEND2(Width, Height)
 }
@@ -363,7 +364,7 @@ void MouseMove(int x, int y)
 				ModalWindow = new THelpBubble(GetCurrentHelpText());
 		}
 		if (ModalWindow != NULL)
-			((TContextMenu *)ModalWindow)->FUN_00442110(MainWindow);
+			((THelpBubble *)ModalWindow)->Place(MainWindow);
 		break;
 	}
 	LastMouseMove = GetActionNumber();
@@ -1080,15 +1081,15 @@ void ProcessEvents()
 				GetMouseY(), MainWindow->Width, MainWindow->Height);
 			break;
 		case 0x3a:
-			ModalWindow = new TEditContextMenu(Param1, GetMouseX(), GetMouseY(),
+			ModalWindow = new TEditContextMenu((TEditLine *)Param1, GetMouseX(), GetMouseY(),
 				MainWindow->Width, MainWindow->Height);
 			break;
 		case 0x3b:
-			ModalWindow = new TMarkContextMenu(Param1, GetMouseX(), GetMouseY(),
+			ModalWindow = new TMarkContextMenu((TMarkMenuData *)Param1, GetMouseX(), GetMouseY(),
 				MainWindow->Width, MainWindow->Height);
 			break;
 		case 0x3c:
-			ModalWindow = new TSkillContextMenu(Param1, GetMouseX(), GetMouseY(),
+			ModalWindow = new TSkillContextMenu((TSkillsWindowBody *)Param1, GetMouseX(), GetMouseY(),
 				MainWindow->Width, MainWindow->Height);
 			break;
 		case 0x3d:

@@ -1350,16 +1350,17 @@ void AddAutomapMark(TCoordinate &Coordinate, const char *Text, int Type)
 	TEND
 }
 
-// 0x4b5410, line 1578. Deletes the marks at a position by moving them to 0,0;
-// only x and y of Coordinate are read.
-void DeleteAutomapMark(TCoordinate &Coordinate, int z)
+// 0x4b5410, line 1578. Deletes the marks at the position of Deleted by moving
+// them to 0,0; only its x and y are read. Its caller, ContextMenus.cpp's mark
+// menu, passes the mark it was opened for.
+void DeleteAutomapMark(TMark &Deleted, int z)
 {
 	int i = 0;
 	TBEGIN
-	TAutomapBlock *Block = GetAutomapBlock(Coordinate.x / 256, Coordinate.y / 256, z);
+	TAutomapBlock *Block = GetAutomapBlock(Deleted.x / 256, Deleted.y / 256, z);
 	for (i = 0; i < Block->MarkCount; i++) {
 		TMark &Mark = Block->Marks(i);
-		if (Mark.x == Coordinate.x && Mark.y == Coordinate.y) {
+		if (Mark.x == Deleted.x && Mark.y == Deleted.y) {
 			Mark.x = 0;
 			Mark.y = 0;
 			Block->Changed = true;

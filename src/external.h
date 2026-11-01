@@ -49,10 +49,23 @@ struct TFullscreenMode; // Preferences.h
 // graphics.h, which has the graphics types TRect, TRGBColor and TFont.
 #include "GUI.h"
 
+// ConsoleWindow.cpp: the view of a channel's lines (class name ours; the
+// assertion "_TextWindow!=NULL" of ContextMenus.cpp names the parameter).
+// Base class and layout not known yet; TextBuffer is the channel shown.
+class TTextWindow {
+public:
+	TTalkLine *FUN_00419030(int LineNumber); // 0x419030, the line with that number or NULL
+	bool FUN_00417590();                     // 0x417590, some text is selected
+	const char *FUN_00419bd0();              // 0x419bd0, the selected text (NULL without one)
+	void FUN_004199e0();                     // 0x4199e0, selects all lines
+	uint8 Data00[0x24];
+	TTalkBuffer *TextBuffer;                 // +0x24
+};
+
 // ConsoleWindow.cpp. The arrays stand for the members not known yet.
 struct TConsoleData34 {
 	int Data00[11];
-	int Data2C; // +0x2c, passed to the console text context menu
+	TTextWindow *Data2C; // +0x2c, the text of the current channel
 };
 
 // The console (vtable 0x55e1a0, 0x6c bytes), MainWindow.cpp's Console.
@@ -65,6 +78,12 @@ public:
 	TTalkBuffer *FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
 		INT_PTR Param5);                                            // 0x425070, line 1965
 	void FUN_00425330(INT_PTR Param);                               // 0x425330, lines 2033-2044
+	// ContextMenus.cpp's channel and request menus.
+	bool FUN_0041f1c0();                    // 0x41f1c0, the current channel shows server messages
+	void FUN_0041f470(bool Show);           // 0x41f470, shows or hides them
+	TTalkBuffer *FUN_0041f7f0();            // 0x41f7f0, the current channel's text buffer
+	void FUN_00420090();                    // 0x420090, "Save Window"
+	void FUN_004234b0();                    // 0x4234b0, closes the current channel
 
 	int Data2C[2];          // +0x2c
 	TConsoleData34 *Data34; // +0x34
@@ -108,54 +127,9 @@ public:
 // MainWindow.cpp: the main game window, the modal window (MainWindow.h).
 #include "MainWindow.h"
 
-// ContextMenus.cpp: the context menus and the help bubble, all modal windows.
-class TContextMenu : public TWindow {
-public:
-	void FUN_00442110(TWindow *Parent); // 0x442110, lines 257-268 ("newX>=0")
-};
-class THelpBubble : public TContextMenu {         // size 0x30
-public:
-	THelpBubble(const char *HelpText);             // 0x441d60, line 106
-};
-class TObjectContextMenu : public TContextMenu {  // size 0x70; "Attack", "Follow"
-public:
-	TObjectContextMenu(int x, int y, int Width, int Height); // 0x443130, lines 560-643
-};
-class TCreatureContextMenu : public TContextMenu { // size 0x38; battle list
-public:
-	TCreatureContextMenu(INT_PTR CreatureID, int x, int y, int Width, int Height); // 0x443960, line 845
-};
-class TBuddyContextMenu : public TContextMenu {   // size 0x38; VIP list
-public:
-	TBuddyContextMenu(INT_PTR _CharacterID, int x, int y, int Width, int Height); // 0x443e20
-};
-class TTextContextMenu : public TContextMenu {    // size 0x3c; console text
-public:
-	TTextContextMenu(int Unknown, INT_PTR _LineNumber, int x, int y, int Width,
-		int Height);                                 // 0x444160, lines 1056-1057
-};
-class TRequestContextMenu : public TContextMenu { // size 0x3c; "Process %s", "Remove %s"
-public:
-	TRequestContextMenu(TConsoleWindow *_ConsoleWindow, INT_PTR _LineNumber, int x, int y,
-		int Width, int Height);                      // 0x444720, line 1181
-};
-class TChannelContextMenu : public TContextMenu { // size 0x3c; "Clear Window", "Save Window"
-public:
-	TChannelContextMenu(TConsoleWindow *_ConsoleWindow, int x, int y, int Width,
-		int Height);                                 // 0x444a70, lines 1248-1253
-};
-class TEditContextMenu : public TContextMenu {    // size 0x38; "Paste", "Select All"
-public:
-	TEditContextMenu(INT_PTR _Edit, int x, int y, int Width, int Height); // 0x444eb0, line 1324
-};
-class TMarkContextMenu : public TContextMenu {    // size 0xb4; "Set Mark", "Edit Mark"
-public:
-	TMarkContextMenu(INT_PTR _Data, int x, int y, int Width, int Height); // 0x4451e0, line 1379
-};
-class TSkillContextMenu : public TContextMenu {   // size 0x38; "Hide Level", "Show Club Fighting"
-public:
-	TSkillContextMenu(INT_PTR Data, int x, int y, int Width, int Height); // 0x4454f0, line 1442
-};
+// ContextMenus.cpp: the help bubble and the context menus are in
+// ContextMenus.h, which its users include themselves (it needs Map.h, which
+// includes this header).
 
 // Surface.cpp: curEngine, TSurface and the surface functions (Surface.h).
 #include "Surface.h"
@@ -242,6 +216,43 @@ class TObjectIcon : public TElement {
 public:
 	TObjectIcon(TObject Obj, const TRGBColor *Color, int Param); // 0x4526c0
 	uint8 Data24[0x50 - 0x24];
+};
+
+// ContentWindows.cpp: the body of the skill window (class name ours); it
+// opens TSkillContextMenu and points to it while the menu is open.
+class TSkillContextMenu;
+class TSkillsWindowBody : public TSubWindowBody {
+public:
+	int Data2C;                     // +0x2c
+	TSkillContextMenu *ContextMenu; // +0x30
+};
+
+// DialogElements.cpp: an edit line (class name ours, "_Edit" in
+// ContextMenus.cpp). HandleEvent takes 16 copy, 17 cut, 18 paste, 19 delete,
+// 20 select all. Base class and the rest of the layout not known yet.
+class TEditLine : public TElement {
+public:
+	uint8 Data24[0x5c - 0x24];
+	int Data5C;      // +0x5c, -1 without a selection
+	int Data60;      // +0x60, the selection's length (0 for none)
+	uint8 Data64[2];
+	bool Data66;     // +0x66, read only: no cut, paste or delete
+};
+
+// DialogElements.cpp: a text with formatting tokens (vtable 0x560c40, 0x38
+// bytes), the help bubble's text. Class name ours.
+class TFormattedText : public TWindow {
+public:
+	TFormattedText(const char *_Text);    // 0x465e60, line 508
+	uint8 Data2C[0x38 - 0x2c];
+};
+
+// DialogElements.cpp: a line between groups of entries (vtable 0x5610b0,
+// 0x28 bytes). Class name ours; the flag is true in ContextMenus.cpp.
+class TSeparator : public TElement {
+public:
+	TSeparator(bool Horizontal);          // 0x452cb0
+	bool Horizontal;                      // +0x24
 };
 
 // ContentWindows.cpp: the content windows of a TDialogWindow. The first ones

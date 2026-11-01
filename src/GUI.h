@@ -633,27 +633,26 @@ struct TSkinProperties {
 	TRGBColor FollowColor; // +0x078
 	TRGBColor HighlightedAttackColor; // +0x084
 	TRGBColor HighlightedFollowColor; // +0x090
-	int Data09C; // +0x09c
-	TRect Data0A0; // +0x0a0, the margins passed to FitToChildren by ContextMenus.cpp (0x442f4e)
-	TFont Data0B0; // +0x0b0
-	int Data0C4; // +0x0c4
-	TRGBColor Data0C8; // +0x0c8
-	int Data0D4; // +0x0d4
+	int Data09C; // +0x09c, the gap between a menu entry's text and its shortcut (ContextMenus.cpp)
+	TRect Data0A0; // +0x0a0, a context menu's margins around its entries (FitToChildren, ContextMenus.cpp)
+	TFont Data0B0; // +0x0b0, the font of the menu entries (number and colour; ContextMenus.cpp)
+	int Data0C4; // +0x0c4, the height of a menu separator
+	TRGBColor Data0C8; // +0x0c8, the background of the menu entry under the mouse
+	int Data0D4; // +0x0d4, the space around a menu entry's text
 	TSkinProperties0D8 Style0D8; // +0x0d8, 0x5c bytes
 	int Data134; // +0x134, the border of the start window's frame
 	int Data138; // +0x138, the height of MainWindow.cpp's splitter
 	int Data13C; // +0x13c
 	TGUIPoint Data140; // +0x140
 	TGUIPoint Data148; // +0x148
-	int Data150; // +0x150
+	int Data150; // +0x150, the help bubble's minimum width and height (ContextMenus.cpp)
 	int Data154; // +0x154
-	int Data158; // +0x158
+	int Data158; // +0x158, its maximum width and height
 	int Data15C; // +0x15c
-	TGUIPoint Data160; // +0x160
-	TGUIPoint Data168; // +0x168
-	int Data170; // +0x170
+	TRect Data160; // +0x160, the margins around its text (one 16-byte block passed by value)
+	int Data170; // +0x170, its sizes are Data174 modulo Data170
 	int Data174; // +0x174
-	int Data178; // +0x178
+	int Data178; // +0x178, its distance to the help area and the window edges
 	int Data17C; // +0x17c
 	int Data180; // +0x180
 	int Data184; // +0x184, the width of the side bar (MainWindow.cpp)
