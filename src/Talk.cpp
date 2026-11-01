@@ -838,8 +838,9 @@ void DeleteTextBuffer(TTalkBuffer *TextBuffer)
 	}
 	TEND
 }
-// 0x502880, line 1411
-bool HasUnreadConsoleText()
+// 0x502880, line 1411. The player owns a private channel (the selected one;
+// ConsoleWindow.cpp's "#I"/"#X" commands work only then).
+bool HasOwnPrivateChannel()
 {
 	int i;
 	TBEGIN

@@ -421,29 +421,27 @@ struct TSkinProperties9A0 {
 	TFont Data30; // +0x30
 };
 
-// GUIStyle+0x9e8 (0x5cd9b0); compiler-generated constructor 0x495b70.
+// GUIStyle+0x9e8 (0x5cd9b0); compiler-generated constructor 0x495b70 (it
+// zeroes +0x04-+0xa7, so the types are open; these are ConsoleWindow.cpp's).
+// The console: its minimum height, the areas of the tab bar, the edit line
+// and the text, the button positions, the text window's area in its TConsole,
+// the selection colour and the font of the channels other than the default.
 struct TSkinProperties9E8 {
-	int Data00; // +0x00
-	TGUIPoint Data04; // +0x04
-	TGUIPoint Data0C; // +0x0c
-	TRGBColor Data14; // +0x14
-	TGUIPoint Data20; // +0x20
-	TGUIPoint Data28; // +0x28
-	TGUIPoint Data30; // +0x30
-	TGUIPoint Data38; // +0x38
-	TGUIPoint Data40; // +0x40
-	TGUIPoint Data48; // +0x48
-	TGUIPoint Data50; // +0x50
-	TGUIPoint Data58; // +0x58
-	TGUIPoint Data60; // +0x60
-	TGUIPoint Data68; // +0x68
-	TGUIPoint Data70; // +0x70
-	TGUIPoint Data78; // +0x78
-	TGUIPoint Data80; // +0x80
-	TGUIPoint Data88; // +0x88
-	TGUIPoint Data90; // +0x90
-	TGUIPoint Data98; // +0x98
-	TGUIPoint DataA0; // +0xa0
+	int Data00; // +0x00, the console's minimum height
+	TRect Data04; // +0x04, the tab bar (SetChildArea)
+	TRect Data14; // +0x14, not used by ConsoleWindow.cpp
+	TRect Data24; // +0x24, the edit line
+	TRect Data34; // +0x34, not used by ConsoleWindow.cpp
+	TRect Data44; // +0x44, the current channel (TConsole)
+	TGUIPoint Data54; // +0x54, the button "Move channels to the right"
+	TGUIPoint Data5C; // +0x5c, "Move channels to the left"
+	TGUIPoint Data64; // +0x64, "Adjust volume"
+	TGUIPoint Data6C; // +0x6c, "Close this Channel"
+	TGUIPoint Data74; // +0x74, the server messages button
+	TGUIPoint Data7C; // +0x7c, the ignore button
+	TGUIPoint Data84; // +0x84, "Open new channel"
+	TRect Data8C; // +0x8c, the text window in its TConsole
+	TRGBColor Data9C; // +0x9c, the selection
 	TFont DataA8; // +0xa8
 };
 

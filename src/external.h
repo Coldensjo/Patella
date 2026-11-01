@@ -49,46 +49,9 @@ struct TFullscreenMode; // Preferences.h
 // graphics.h, which has the graphics types TRect, TRGBColor and TFont.
 #include "GUI.h"
 
-// ConsoleWindow.cpp: the view of a channel's lines (class name ours; the
-// assertion "_TextWindow!=NULL" of ContextMenus.cpp names the parameter).
-// Base class and layout not known yet; TextBuffer is the channel shown.
-class TTextWindow {
-public:
-	TTalkLine *FUN_00419030(int LineNumber); // 0x419030, the line with that number or NULL
-	bool FUN_00417590();                     // 0x417590, some text is selected
-	const char *FUN_00419bd0();              // 0x419bd0, the selected text (NULL without one)
-	void FUN_004199e0();                     // 0x4199e0, selects all lines
-	uint8 Data00[0x24];
-	TTalkBuffer *TextBuffer;                 // +0x24
-};
-
-// ConsoleWindow.cpp. The arrays stand for the members not known yet.
-struct TConsoleData34 {
-	int Data00[11];
-	TTextWindow *Data2C; // +0x2c, the text of the current channel
-};
-
-// The console (vtable 0x55e1a0, 0x6c bytes), MainWindow.cpp's Console.
-class TConsoleWindow : public TWindow {
-public:
-	TConsoleWindow();                                               // 0x422410
-	void FUN_0041e960(bool Active);                                 // 0x41e960, lines 1869-1871 ("Active?1:0")
-	void FUN_00422e70(TTalkBuffer *TextBuffer, const char *Title);  // 0x422e70, MainWindow.cpp opens "Default" with it
-	void FUN_00423060(TTalkBuffer *TextBuffer, const char *Title); // 0x423060, lines 1977-1988
-	TTalkBuffer *FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
-		INT_PTR Param5);                                            // 0x425070, line 1965
-	void FUN_00425330(INT_PTR Param);                               // 0x425330, lines 2033-2044
-	// ContextMenus.cpp's channel and request menus.
-	bool FUN_0041f1c0();                    // 0x41f1c0, the current channel shows server messages
-	void FUN_0041f470(bool Show);           // 0x41f470, shows or hides them
-	TTalkBuffer *FUN_0041f7f0();            // 0x41f7f0, the current channel's text buffer
-	void FUN_00420090();                    // 0x420090, "Save Window"
-	void FUN_004234b0();                    // 0x4234b0, closes the current channel
-
-	int Data2C[2];          // +0x2c
-	TConsoleData34 *Data34; // +0x34
-	int Data38[(0x6c - 0x38) / 4];
-};
+// ConsoleWindow.cpp: the console (ConsoleWindow.h). Its DialogElements.cpp
+// parts are below.
+#include "ConsoleWindow.h"
 
 // ContentWindows.cpp: the body of a TSubWindow (DialogWindow.h), the content
 // of a container, the skills, the battle list, the VIP list or the trade.
@@ -114,12 +77,76 @@ public:
 	uint8 Data24[0x38 - 0x24];
 };
 
-// DialogElements.cpp: a button drawn with two skins (pressed and released),
-// TSubWindow's minimize button. The class name is ours.
+// DialogElements.cpp: a button drawn with two skins (pressed and released)
+// that sends its callback (0x44 bytes, constructor 0x466860; vtable not
+// known yet), TSubWindow's minimize button and the console's buttons. The
+// class name is ours; the last parameter is 0 in ConsoleWindow.cpp.
 class TSkinButton : public TElement {
 public:
+	TSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip,
+		int Param);                                  // 0x466860
 	void SetSkins(int _ButtonUp, int _ButtonDown);   // 0x458b20, lines 1228-1229
+	int ButtonUp;    // +0x24
+	int ButtonDown;  // +0x28
+	uint8 Data2C[0x44 - 0x2c];
 };
+
+// DialogElements.cpp: a button with two states (vtable 0x561cd0, 0x50
+// bytes, constructor 0x4671e0), the console's server message button; the
+// tooltips belong to the two states. Class name ours.
+class TToggleButton : public TSkinButton {
+public:
+	TToggleButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip1,
+		const char *Tooltip2, int Param);            // 0x4671e0
+	bool State;      // +0x44
+	uint8 Data45[0x50 - 0x45];
+};
+
+// DialogElements.cpp: a button that steps through States states (vtable
+// 0x560e10, 0x58 bytes), the console's volume. Its constructor 0x4672d0 is a
+// varargs one (__cdecl, this pushed first): a skin pair and a callback per
+// state. Reset (0x452790) goes back to state 0 and its skins. Class name ours.
+class TMultiStateButton : public TSkinButton {
+public:
+	TMultiStateButton(int x, int y, const char *Tooltip, int States, ...); // 0x4672d0
+	void Reset();                                    // 0x452790
+	int State;       // +0x44
+	int States;      // +0x48
+	int *ButtonUps;  // +0x4c
+	int *ButtonDowns; // +0x50
+	uint8 Data54[0x58 - 0x54];
+};
+
+// DialogElements.cpp: a scroll bar (vtable 0x561f70, 0x38 bytes,
+// constructor 0x469a80 with its area and, in ConsoleWindow.cpp, four zeros
+// and true). Range (+0x2c) holds the position. Class and member names ours.
+class TScrollBarRange {
+public:
+	void SetRange(int Minimum, int Maximum, int Value, int Visible); // 0x460450
+	uint8 Data00[0x30];
+	int Value;       // +0x30
+};
+class TScrollBar : public TWindow {
+public:
+	TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, bool Param6); // 0x469a80
+	TScrollBarRange *Range; // +0x2c
+	uint8 Data30[0x38 - 0x30];
+};
+
+// ConsoleWindow.obj's copy of the text table (external.h of MainWindow.obj
+// and MapWindow.obj above and below; names ours).
+extern const char *TextCloseChannel;        // 0x5c044c, "Close this Channel (Ctrl+E)"
+extern const char *TextShowServerMessages;  // 0x5c0450, "Show server messages in this channel (Ctrl+M)"
+extern const char *TextHideServerMessages;  // 0x5c0454, "Hide server messages in this channel (Ctrl+M)"
+extern const char *TextIgnorePlayers;       // 0x5c0458, "Ignore and unignore other players (Ctrl+I)"
+extern const char *TextOpenNewChannel;      // 0x5c045c, "Open new channel (Ctrl+O)"
+extern const char *TextAdjustVolume;        // 0x5c0460, "Adjust volume"
+extern const char *TextMoveChannelsRight;   // 0x5c0464, "Move channels to the right"
+extern const char *TextMoveChannelsLeft;    // 0x5c0468, "Move channels to the left"
+extern const char *TextWaitForGamemaster;   // 0x5c05f8, "Please wait patiently for a gamemaster to reply."
+extern const char *TextRequestSubmitted;    // 0x5c05fc, "You have already submitted a request. ..."
+extern const char *TextHelpChannelWelcome;  // 0x5c0604, "Welcome to the help channel! ..."
+extern const char *TextReportRuleViolation; // 0x5c0664, "Report Rule Violation"
 
 // DialogWindow.cpp: TDialogWindow, TContentWindow and TSubWindow.
 #include "DialogWindow.h"
@@ -227,16 +254,30 @@ public:
 	TSkillContextMenu *ContextMenu; // +0x30
 };
 
-// DialogElements.cpp: an edit line (class name ours, "_Edit" in
-// ContextMenus.cpp). HandleEvent takes 16 copy, 17 cut, 18 paste, 19 delete,
-// 20 select all. Base class and the rest of the layout not known yet.
-class TEditLine : public TElement {
+// DialogElements.cpp: an edit line (vtable 0x560e98, 0x68 bytes, class name
+// ours, "_Edit" in ContextMenus.cpp), the console's Input. HandleEvent takes
+// 16 copy, 17 cut, 18 paste, 19 delete, 20 select all. The constructor takes
+// its area and the maximum length (255 in the console). Slot and member
+// names are ours.
+class TEditLine : public TWindow {
 public:
-	uint8 Data24[0x5c - 0x24];
+	TEditLine(TRect Area, int MaxLength, int Param); // 0x467b50
+	void SetActive(bool Active);     // 0x45bc80: +0x58; clears the selection when false
+	// DialogElements.h inline (out-of-line copy 0x417520 in ConsoleWindow.obj).
+	bool HasSelection() { return Data5C != -1 && Data60 != 0; }
+	virtual void SetText(const char *Text);        // +0xa0
+	virtual void Clear();                          // +0xa4
+	virtual void UnknownA8(); virtual void UnknownAC(); virtual void UnknownB0(); virtual void UnknownB4();
+	virtual void SetReadOnly(bool ReadOnly);       // +0xb8
+	virtual void UnknownBC();
+	virtual void SetFont(TFont Font);              // +0xc0
+	char *Text;      // +0x2c
+	uint8 Data30[0x5c - 0x30];
 	int Data5C;      // +0x5c, -1 without a selection
 	int Data60;      // +0x60, the selection's length (0 for none)
 	uint8 Data64[2];
 	bool Data66;     // +0x66, read only: no cut, paste or delete
+	uint8 Data67[0x68 - 0x67];
 };
 
 // DialogElements.cpp: a text with formatting tokens (vtable 0x560c40, 0x38

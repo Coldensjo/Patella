@@ -415,7 +415,7 @@ void TMainWindow::ChangeMode(bool InGame)
 		Splitter->Arrange();
 		Console->SetSize(MapWidth, ConsoleHeight);
 		Console->SetPosition(0, MapHeight + SkinProperties.Data138);
-		Console->FUN_00422e70(DefaultTextBuffer, "Default");
+		Console->OpenDefaultChannel(DefaultTextBuffer, "Default");
 		Console->Arrange();
 		SideBar->SetPosition(MapWidth, 0);
 		SideBar->SetSize(SkinProperties.Data184, SidePanel->GetMinimumHeight() + SideBar->GetMinimumHeight());
@@ -619,7 +619,7 @@ void TMainWindow::SetConsoleActive(bool Active)
 {
 	TBEGIN
 	if (Console != NULL)
-		Console->FUN_0041e960(Active);
+		Console->SetActive(Active);
 	TEND
 }
 

@@ -68,8 +68,9 @@ public:
 	virtual void Remove(int lineNumber);
 	virtual void Remove(TTalkLine *line);
 	virtual void Clear();
-	virtual bool IsDefault() { return this == DefaultTextBuffer; }
-	virtual bool AcceptMessages() { return IsDefault(); }
+	// isDefault: ConsoleWindow.cpp's assertion "getTextBuffer()->isDefault()==false".
+	virtual bool isDefault() { return this == DefaultTextBuffer; }
+	virtual bool AcceptMessages() { return isDefault(); }
 	virtual bool IsRuleViolation() { return false; }
 	virtual bool IsRuleViolationChannel() { return false; }
 	virtual bool IsPrivateChannel() { return false; }
@@ -83,6 +84,9 @@ public:
 	virtual int GetChannelID() { return -1; }
 	TTalkLine *GetLine(int lineNumber);
 	TTalkLine *GetNext();
+	// Inline (ConsoleWindow.cpp): the cursor moves to the first or the last line.
+	TTalkLine *GetFirst() { cursor = first; return cursor; }
+	TTalkLine *GetLast() { cursor = last; return cursor; }
 	int Write(FILE *F);
 	int ReceiveTalkMode, SendTalkMode;
 	bool Changed, Closed;
@@ -195,7 +199,7 @@ void UnignoreMode(int Mode);
 void UnignoreName(const char *Addressee);
 void ClearDefaultTextBuffer();
 void ClearTextBuffer(TTalkBuffer *TextBuffer);
-bool HasUnreadConsoleText();
+bool HasOwnPrivateChannel();
 void AddChannelNotice(const char *Addressee, const char *Text, int Mode, const char *Name, int Channel);
 void DeleteTextBuffer(TTalkBuffer *TextBuffer);
 TTalkBuffer *CreateTextBuffer(int ReceiveTalkMode, int SendTalkMode, const char *Name, int Channel);

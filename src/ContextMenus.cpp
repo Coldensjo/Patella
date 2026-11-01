@@ -465,7 +465,7 @@ TObjectContextMenu::TObjectContextMenu(int x, int y, int ParentWidth, int Parent
 				char Text[50];
 				sprintf(Text, "Message to %s", Creature->Name);
 				AddEntry(10100, Text, NULL);
-				if (HasUnreadConsoleText())
+				if (HasOwnPrivateChannel())
 					AddEntry(10016, "Invite to private chat", NULL);
 				if (!IsBuddy(Creature->Name))
 					AddEntry(10015, "Add to VIP list", NULL);
@@ -677,7 +677,7 @@ TCreatureContextMenu::TCreatureContextMenu(uint32 CreatureID, int x, int y, int 
 		char Text[50];
 		sprintf(Text, "Message to %s", Creature->Name);
 		AddEntry(10100, Text, NULL);
-		if (HasUnreadConsoleText())
+		if (HasOwnPrivateChannel())
 			AddEntry(10016, "Invite to private chat", NULL);
 		if (!IsBuddy(Creature->Name))
 			AddEntry(10015, "Add to VIP list", NULL);
@@ -844,7 +844,7 @@ TBuddyContextMenu::TBuddyContextMenu(uint32 _CharacterID, int x, int y, int Pare
 			sprintf(Text, "Message to %s", GetBuddyListName(Position));
 			AddEntry(10303, Text, NULL);
 		}
-		if (HasUnreadConsoleText())
+		if (HasOwnPrivateChannel())
 			AddEntry(10016, "Invite to private chat", NULL);
 		Separator = true;
 	}
@@ -942,7 +942,7 @@ TTextContextMenu::TTextContextMenu(TTextWindow *_TextWindow, int _LineNumber, in
 	TBEGIN
 	TextWindow = _TextWindow;
 	LineNumber = _LineNumber;
-	TTalkLine *Line = TextWindow->FUN_00419030(_LineNumber);
+	TTalkLine *Line = TextWindow->GetTalkLine(_LineNumber);
 	bool OtherSpeaker = false;
 	bool HasSpeaker = false;
 	if (Line != NULL) {
@@ -959,9 +959,9 @@ TTextContextMenu::TTextContextMenu(TTextWindow *_TextWindow, int _LineNumber, in
 			sprintf(Text, "Message to %s", Speaker);
 			AddEntry(10100, Text, NULL);
 			if (TextWindow->TextBuffer->GetSelected() && TextWindow->TextBuffer->IsPrivateChannel()) {
-				if (HasUnreadConsoleText())
+				if (HasOwnPrivateChannel())
 					AddEntry(10017, "Exclude from private chat", NULL);
-			} else if (HasUnreadConsoleText()) {
+			} else if (HasOwnPrivateChannel()) {
 				AddEntry(10016, "Invite to private chat", NULL);
 			}
 			if (!IsBuddy(Speaker))
@@ -971,7 +971,7 @@ TTextContextMenu::TTextContextMenu(TTextWindow *_TextWindow, int _LineNumber, in
 			Separator = true;
 		}
 	}
-	if (TextWindow->FUN_00417590())
+	if (TextWindow->HasSelection())
 		AddEntry(10203, "Copy", NULL);
 	if (HasSpeaker)
 		AddEntry(10204, "Copy Name", NULL);
@@ -993,7 +993,7 @@ TTextContextMenu::TTextContextMenu(TTextWindow *_TextWindow, int _LineNumber, in
 void TTextContextMenu::HandleEvent(int Event)
 {
 	TBEGIN
-	TTalkLine *Line = TextWindow->FUN_00419030(LineNumber);
+	TTalkLine *Line = TextWindow->GetTalkLine(LineNumber);
 	const char *Speaker = NULL;
 	if (Line != NULL)
 		Speaker = Line->Addressee;
@@ -1038,13 +1038,13 @@ void TTextContextMenu::HandleEvent(int Event)
 			CopyToClipboard(Line->GetText());
 		break;
 	case 10203: {
-		const char *Selection = TextWindow->FUN_00419bd0();
+		const char *Selection = TextWindow->GetSelectedText();
 		if (Selection != NULL)
 			CopyToClipboard(Selection);
 		break;
 	}
 	case 10206:
-		TextWindow->FUN_004199e0();
+		TextWindow->SelectAll();
 		break;
 	case 10023:
 		if (CheckAnyRight()) {
@@ -1070,7 +1070,7 @@ TRequestContextMenu::TRequestContextMenu(TConsoleWindow *_ConsoleWindow, int _Li
 	TBEGIN
 	ConsoleWindow = _ConsoleWindow;
 	LineNumber = _LineNumber;
-	TTalkLine *Line = ConsoleWindow->Data34->Data2C->FUN_00419030(_LineNumber);
+	TTalkLine *Line = ConsoleWindow->CurrentConsole->TextWindow->GetTalkLine(_LineNumber);
 	if (Line != NULL && Line->Addressee != NULL && strlen(Line->Addressee) != 0) {
 		char Text[50];
 		sprintf(Text, "Process %s", Line->Addressee);
@@ -1090,15 +1090,14 @@ TRequestContextMenu::TRequestContextMenu(TConsoleWindow *_ConsoleWindow, int _Li
 void TRequestContextMenu::HandleEvent(int Event)
 {
 	TBEGIN
-	TTalkLine *Line = ConsoleWindow->Data34->Data2C->FUN_00419030(LineNumber);
+	TTalkLine *Line = ConsoleWindow->CurrentConsole->TextWindow->GetTalkLine(LineNumber);
 	if (Line != NULL && Line->Addressee != NULL && strlen(Line->Addressee) != 0) {
 		const char *Name = Line->Addressee;
 		switch (Event) {
 		case 10106: {
 			char Title[220];
 			sprintf(Title, "%s's Report", Name);
-			ConsoleWindow->FUN_00425070(TALK_PLAYER_ANSWER, TALK_GAMEMASTER_ANSWER, (INT_PTR)Name, -1,
-				(INT_PTR)Title);
+			ConsoleWindow->OpenChannel(TALK_PLAYER_ANSWER, TALK_GAMEMASTER_ANSWER, Name, -1, Title);
 			TTalkBuffer *TextBuffer = GetTextBuffer(TALK_PLAYER_ANSWER, Name, -1);
 			TASSERT(TextBuffer!=NULL);
 			TextBuffer->Clear();
@@ -1137,16 +1136,16 @@ TChannelContextMenu::TChannelContextMenu(TConsoleWindow *_ConsoleWindow, int x, 
 	TASSERT(_ConsoleWindow!=NULL);
 	TBEGIN
 	ConsoleWindow = _ConsoleWindow;
-	TTalkBuffer *TextBuffer = ConsoleWindow->FUN_0041f7f0();
+	TTalkBuffer *TextBuffer = ConsoleWindow->GetTextBuffer();
 	TASSERT(TextBuffer!=NULL);
-	if (!TextBuffer->IsDefault()) {
+	if (!TextBuffer->isDefault()) {
 		if (TextBuffer->GetSelected() && TextBuffer->IsPrivateChannel()) {
 			AddEntry(10016, "Invite player", NULL);
 			AddEntry(10017, "Exclude player", NULL);
 			Separator = true;
 		}
 		AddEntry(10103, "Close", NULL);
-		bool Shown = ConsoleWindow->FUN_0041f1c0();
+		bool Shown = ConsoleWindow->GetServerMessages();
 		ShowServerMessages = !Shown;
 		AddEntry(10100, Shown ? "Hide server messages" : "Show server messages", NULL);
 		Separator = true;
@@ -1165,7 +1164,7 @@ void TChannelContextMenu::HandleEvent(int Event)
 	TBEGIN
 	switch (Event) {
 	case 10103:
-		ConsoleWindow->FUN_004234b0();
+		ConsoleWindow->CloseChannel();
 		break;
 	case 10016:
 		AddMessage(0x13, 0, 0);
@@ -1174,13 +1173,13 @@ void TChannelContextMenu::HandleEvent(int Event)
 		AddMessage(0x14, 0, 0);
 		break;
 	case 10100:
-		ConsoleWindow->FUN_0041f470(ShowServerMessages);
+		ConsoleWindow->SetServerMessages(ShowServerMessages);
 		break;
 	case 10102:
-		ConsoleWindow->FUN_00420090();
+		ConsoleWindow->SaveChannel();
 		break;
 	case 10105: {
-		TTalkBuffer *TextBuffer = ConsoleWindow->FUN_0041f7f0();
+		TTalkBuffer *TextBuffer = ConsoleWindow->GetTextBuffer();
 		TASSERT(TextBuffer!=NULL);
 		ClearTextBuffer(TextBuffer);
 		break;

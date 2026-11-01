@@ -848,7 +848,7 @@ void TimerEvent()
 // open a window open a centred dialog (action state 10), 0x34-0x3c open a
 // context menu at the mouse (state 11). Event 0x40 (logout) is posted again
 // while connected and ends the loop; 0x48 ends the program. Odd cases kept
-// from the binary: event 0x2f passes Param2 twice to FUN_00425070, and event
+// from the binary: event 0x2f passes Param2 twice to OpenChannel, and event
 // 0x32 deletes Param2 after using Param1.
 void ProcessEvents()
 {
@@ -1037,23 +1037,23 @@ void ProcessEvents()
 			SetHelpHandle(0);
 			break;
 		case 0x2f:
-			MainWindow->Console->FUN_00425070(4, 4, Param2, -1, Param2);
+			MainWindow->Console->OpenChannel(4, 4, (const char *)Param2, -1, (const char *)Param2);
 			delete[] (char *)Param2;
 			break;
 		case 0x30:
-			MainWindow->Console->FUN_00425070(5, 5, 0, Param1, Param2);
+			MainWindow->Console->OpenChannel(5, 5, NULL, Param1, (const char *)Param2);
 			delete[] (char *)Param2;
 			break;
 		case 0x31:
-			MainWindow->Console->FUN_00425070(5, 5, 0, Param1, Param2)->SetSelected(true);
+			MainWindow->Console->OpenChannel(5, 5, NULL, Param1, (const char *)Param2)->SetSelected(true);
 			delete[] (char *)Param2;
 			break;
 		case 0x32:
-			MainWindow->Console->FUN_00423060((TTalkBuffer *)Param1, TextRuleViolations);
+			MainWindow->Console->AddChannel((TTalkBuffer *)Param1, TextRuleViolations);
 			delete[] (char *)Param2;
 			break;
 		case 0x33:
-			MainWindow->Console->FUN_00425330(Param1);
+			MainWindow->Console->ReportRuleViolation((const char *)Param1);
 			delete[] (char *)Param1;
 			break;
 		case 0x34:
@@ -1069,7 +1069,7 @@ void ProcessEvents()
 				MainWindow->Width, MainWindow->Height);
 			break;
 		case 0x37:
-			ModalWindow = new TTextContextMenu(MainWindow->Console->Data34->Data2C, Param1,
+			ModalWindow = new TTextContextMenu(MainWindow->Console->CurrentConsole->TextWindow, Param1,
 				GetMouseX(), GetMouseY(), MainWindow->Width, MainWindow->Height);
 			break;
 		case 0x38:
