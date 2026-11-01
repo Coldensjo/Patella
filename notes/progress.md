@@ -13,14 +13,15 @@ Read this and `git log` first when resuming.
 6. Map.cpp and the gaps on both sides — **done** (Claude Opus 5.5 delegate, third attempt, reviewed, merged).
 7. MapWindow.cpp and the MapWindow/Network gap — **done** (issue #1, Claude Opus 5.5; the gap is Network.cpp).
 7a. MainWindow.cpp and the MainFrm/MainWindow gap — **done** (issue #2, Claude Opus 5.5).
+7b. DialogWindow.cpp and the Dialogs/DialogWindow gap — **done** (issue #3, Claude Opus 5.5).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-MainWindow.cpp done (issue #2, November 1, 2026). Next: the other window files smallest first
-(DialogWindow, ContextMenus, ConsoleWindow, ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
+DialogWindow.cpp done (issue #3, November 1, 2026). Next: the other window files smallest first
+(ContextMenus, ConsoleWindow, ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
 surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
 
 ## Delegates (running)
@@ -33,7 +34,7 @@ None.
 
 ## Last difftest
 
-12,368,882 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,394,089 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -77,14 +78,26 @@ None.
   (fixed). _heapchk() between the tests finds the first one that breaks the
   heap.
 - MainWindow.cpp: the windows it creates from DialogWindow.cpp, ContentWindows.cpp, ConsoleWindow.cpp
-  and DialogElements.cpp are sketches in external.h (TDialogWindow, TSubWindow/TSubWindowBody,
-  TConsoleWindow, TBorder, TTextButton, TLabel, TObjectIcon, TSideWindow3/4/5, the FUN_ creators);
-  replace them with the real classes and check MainWindow.cpp's calls (notes/decisions.md).
-  The name TContentWindow is Preferences.h's stored size; rename that struct if the window class
-  turns out to be TContentWindow.
+  and DialogElements.cpp are sketches in external.h (TSubWindowBody, TConsoleWindow, TBorder,
+  TTextButton, TLabel, TObjectIcon, TSideWindow3/4/5, the FUN_ creators; TDialogWindow and
+  TSubWindow are real since issue #3); replace them with the real classes and check
+  MainWindow.cpp's calls (notes/decisions.md).
 - mainwindowtest.cpp makes the not-reconstructed windows fakes for both sides: the image's
   constructors jump to fastcall wrappers that placement-new the fake, whose constructor then sets
   the vtable of a test subclass (extra overrides, same layout). Reuse it for the window files; when
   one of those files is reconstructed, its fakes in mainwindowtest.cpp must go (duplicate
   definitions). DIFFTEST_ONLY=MainWindow runs that test alone.
 - SkinProperties.Style0D8 is now five TGUIPoints (+0x10-+0x37) and a TRect at +0x38.
+- DialogWindow.cpp (issue #3): the content windows of the dialog columns are TContentWindow (base,
+  0x4854c0) and TSubWindow (with a body); ContentWindows.cpp's side-bar windows derive from
+  TContentWindow and its creators size their windows before Rearrange(16) (MakeRoom calls
+  Work->SetSize before Work is a child). Preferences.h's stored size is TContentWindowSize now.
+- The shared fakes of TSubWindowBody's members, TResizer and TSkinButton::SetSkins are in
+  dialogwindowtest.cpp, reporting through difftest.h's TDialogFakes hooks; when ContentWindows.cpp
+  or DialogElements.cpp is reconstructed, those definitions must go (duplicates) and the tests
+  that use them (dialogwindowtest.cpp, mainwindowtest.cpp) need the real classes or new fakes.
+  DIFFTEST_ONLY=DialogWindow runs the dialog window test alone; it restores every patch it makes.
+- tools/callcheck.py resolves `Class::method(` (with TWindow -> TComponent) and does not match
+  `x->Name(` to a free function; differences counted in older notes were made without that.
+- Python on Windows writes CRLF in text mode: pass newline='\n' when an edit script rewrites a file
+  (and write such scripts with the Write tool: the Bash tool expands backslash escapes in them).

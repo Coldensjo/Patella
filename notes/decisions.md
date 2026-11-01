@@ -1311,3 +1311,110 @@ Reconstructed by Claude Opus 5.5 (issue #2), November 1, 2026.
   runs after mapwindowtest.cpp and patches for good as well;
   DIFFTEST_ONLY=MainWindow runs it alone. playertest.cpp lost its
   InitMainWindow stub.
+
+## DialogWindow.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #3), November 1, 2026.
+
+- **Range and data** (high). The Dialogs/DialogWindow gap 0x4854b0-0x48582f
+  is DialogWindow.cpp: Dialogs.cpp's last catch block ends at 0x4854ad;
+  0x4854b0 (missed by Ghidra) is slot +0x3c of TDialogWindow's vtable
+  0x563f80, 0x485690 (also missed) slot +0x40 of TSubWindow's 0x563ed8; the
+  other gap functions are the constructors and destructors of the three
+  classes and 0x4857b0 (line 63). The object's only datum is the unused
+  TCallback 0x5cc428 (initialiser 0x559e20, after Dialogs.cpp's 0x5cc420 at
+  0x559e10; medium, written as a static NoCallback like MainWindow.cpp's).
+  The file ends at 0x48b37f (graphics.h's operator== follows).
+- **Three classes** (high for layouts and vtables, low-medium for names).
+  TDialogWindow (0x4c bytes, vtable 0x563f80, a new slot +0xa0 Rearrange):
+  Area (a TRect at +0x2c: the constructor stores the four ints twice, the
+  member constructor and the body), Dragged +0x3c, Busy +0x40, FreeHeight
+  +0x44, UpdateFreeHeight +0x48. TContentWindow (0x44 bytes, vtable
+  0x563e38): Identifier, BackgroundY, Background, Dragging, DragX, DragY,
+  DragBottom (+0x40, set and never read here). TSubWindow (0x70 bytes,
+  vtable 0x563ed8, new slots +0xa0 Minimize and +0xa4 Maximize): Body +0x44,
+  two TResizers, the up, close and minimize buttons, Icon, Title, IsMinimized
+  +0x64, Data68 (cleared, not used here), RestoreHeight +0x6c. The vtables
+  end where the next begins (0x563e38+0xa0, 0x563ed8+0xa8). Names: the base
+  class is TContentWindow because the binary's inline
+  `DialogWindow->hasContentWindow(TRADE_WINDOW)` looks up the column's
+  children (so 0x486400 is GetContentWindow), and SetContentWindowSize
+  stores their sizes ("ContentWindow" in Tibia.cfg); Preferences.h's stored
+  size struct, ours, became TContentWindowSize. The derived class keeps the
+  name TSubWindow of MainWindow.cpp's sketch (getBody, Body). Member and
+  function names are ours except IsMinimized, Body, _Body, _Identifier,
+  Search, Work, DeltaHeight, Strategy and the catch-block parameters. The
+  side-bar windows of ContentWindows.cpp (external.h TSideWindow3/4/5)
+  derive from TContentWindow (their constructors call 0x4854c0).
+- **No inline header code** (medium). The six functions without frames or
+  lines at the start of the object (GetMinimumWidth, TContentWindow's
+  constructor, ~TSubWindow, GetFrameHeight, TSubWindow::GetMinimumHeight,
+  TDialogWindow's constructor) are written in DialogWindow.cpp in the
+  binary's order. GetFrameHeight (0x485670) and TContentWindow's constructor
+  are called by ContentWindows.obj, earlier in the link order: a header
+  copy would have been kept from there, so they are not header code. The
+  same is assumed for the others. TSubWindow's constructor inlines the base
+  constructor (auto-inlining, as in Utils.cpp).
+- **Source order** (medium). Line order. The binary puts Arrange (169),
+  Shrink (377-394), Grow (505) and Rearrange (271-297) at the end of the
+  object: each calls a function defined further down (GetFreeHeight 524,
+  the strategy helpers), the pattern noted for Creatures.cpp.
+- **Exception tables** (high), checked with ehinfo.py: every function with a
+  try block has states 0-0 except Draw of TContentWindow 0-10 (two
+  assertions), DragChild, Shrink and TSubWindow::Arrange 0-5 (one each),
+  Rearrange 0-15 (two assertions and the TERROR), TSubWindow's constructor
+  1-8 (after the base class; an assertion and two new-expressions), Minimize
+  and Maximize 5-5 (assertion before TBEGIN). The constructors of
+  TDialogWindow and the destructor have frames without try blocks (the base
+  class unwinding). TDialogWindow::SetSize's and TContentWindow::ReleaseCapture's
+  catch blocks name no parameter (TEND). Jump table checked: Rearrange's
+  0x48b338 with the byte table 0x48b354 (Strategy-1, 0-31): 1, 2, 4, 8, 16,
+  32, everything else the default ("unknown strategy").
+- **Odd behaviour kept**: the free-space background is nine skins with two
+  odd sizes (the bottom left skin 28 is as wide as skin 26, the right edge
+  31 as wide as skin 135); TSubWindow's right edge starts at the top edge's
+  height; FitChildren clears Busy itself; Shrink tests a second
+  GetFreeHeight that cannot be positive; Rearrange 4 lays the children out
+  twice; Minimize calls the body's +0xa0 before the body NULL check;
+  HideUpButton compares IsChild with true; MakeRoom calls Work->SetSize
+  before Work is a child (the creators size their windows first); a
+  minimized window shorter or taller than its frame makes Shrink fail its
+  assertion or loop for ever (the game's Style194.Data4C is the frame height).
+- **External sketches** (low). TSubWindowBody (ContentWindows.cpp) gained
+  the comments of +0xa0/+0xa4 and the container body's 0x42e4e0 (FUN_ name
+  kept: it shows or hides the window's up button); new: TResizer
+  (DialogElements.cpp 0x453be0, vtable 0x5612b0, 0x38 bytes, "_ToResize"),
+  TSkinButton::SetSkins (0x458b20, "_ButtonUp", "_ButtonDown"); both have
+  low-confidence names.tsv rows so that callcheck resolves them.
+- **MainWindow.cpp** changed only in names and casts: GetContentWindow
+  returns a TContentWindow, cast to TSubWindow where the body is used
+  (OpenContainer, UpdateTrade) as the original must; the setters and
+  StoreOpenDialogs replace the FUN_ names, UnknownA0 is Rearrange.
+- **callcheck** (23 of 47 functions differ, all explained): constructors of
+  base classes, ~TWindow and new-expressions (TResizer) are not lexical
+  calls; the virtual calls (Rearrange, DeleteChild, GetPrevious, GetParent,
+  SetSize, Arrange, GetMinimumHeight, ReleaseCapture, SetChildArea,
+  SetChildPosition, FitToChild, HandleEvent, Minimize, Maximize,
+  AppendChild) are indirect in the binary; IsChild in the destructor is a
+  direct call the tool cannot resolve (two classes have that name); the
+  compiler merged Rearrange's PositionChildren calls (7 in the source, 4
+  call sites). tools/callcheck.py now resolves `Class::method(` calls
+  (with TWindow -> TComponent for SetSize) and no longer matches a member
+  call `x->Name(` to a free function of that name (Control.cpp's MouseMove,
+  LeftButtonDown, ...); MainWindow.cpp and MapWindow.cpp went from 16 and 14
+  differences to 14 and 13 with it.
+- **Tests** (dialogwindowtest.cpp, about 24,500 checks over 12,000 random
+  operations in 8 rounds): two columns of the image's classes and two of
+  ours, one with sub-windows and one with plain content windows; bodies,
+  buttons, icons, titles and resizers are shared test objects (the image's
+  0x453be0, 0x458b20 and 0x42e4e0 jump to the same code), DrawSkin,
+  DrawPicturePart, FillRectangle, SetContentWindowSize and AddOpenDialog log
+  on both sides; the logs, results and full dumps of both trees are compared
+  after every operation; all patches are undone at the end. A mutation check
+  (five changes, one at a time) failed each run. mainwindowtest.cpp lost its
+  fakes of the three classes: the dialog windows are real on both sides
+  (the ContentWindows.cpp creators make the image's or our TSubWindow and
+  TContentWindow), the dumps show their members. The shared fakes live in
+  dialogwindowtest.cpp with hooks (difftest.h's TDialogFakes).
+  DIFFTEST_ONLY=DialogWindow runs the test alone. Not exercised: the error
+  paths.
