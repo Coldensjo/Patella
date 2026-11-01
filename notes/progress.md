@@ -14,7 +14,7 @@ Read this and `git log` first when resuming.
 7. MapWindow.cpp and the MapWindow/Network gap.
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
-10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp.
+10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp (delegates, merged).
 
 ## Current item
 
@@ -31,9 +31,6 @@ the non-GUI files: SurfaceGL.cpp, surfaceDX9.cpp, SurfaceDX.cpp, graphics.cpp.
 
 ## Delegates (running)
 
-- GUI.cpp + graphics/GUI gap: the first delegate stopped on a Claude API rate
-  limit; its partial work is WIP commit f6161d4 on t3/reconstruct-gui-cpp.
-  A second Claude Opus 5.5 delegate continues it (branch t3/gui-cpp-finish).
 - graphics.cpp + DialogWindow/graphics gap: same story; WIP f867cba on
   t3/reconstruct-graphics-cpp, continued on t3/graphics-cpp-finish.
 Both told: real names only, no shims, replace their external.h views and
@@ -46,7 +43,7 @@ merging.
 
 ## Last difftest
 
-6,421,347 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+11,245,343 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -64,3 +61,5 @@ merging.
   constructors of a file's static objects explicitly (maptest.cpp does it
   for Map.cpp's), and keep inputs away from paths that raise exceptions in
   the original (e.g. opening a missing file).
+- tools\difftestuild.cmd can fail once without a message (a difftest.exe
+  still locked from the previous run); kill difftest.exe and run it again.

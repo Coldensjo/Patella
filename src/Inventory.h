@@ -64,3 +64,4 @@ TObject GetOwnOfferObject(int Position);
 TObject GetCounterOfferObject(int Position);
 void InitInventory();
 void ResetInventory();
+void ExitInventory(); // empty, folded into 0x496160

@@ -3418,44 +3418,44 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x495324	20	Catch@00495324	catch	graphics.cpp	between		0x495080	
 0x495338	139	Catch@00495338	catch	graphics.cpp	assert	1137	0x495080	Surface
 0x4953c3	174	Catch@004953c3	catch	graphics.cpp	assert	1137	0x495080	
-0x495480	99	FUN_00495480	game	graphics.cpp|GUI.cpp	gap			
-0x4954f0	146	FUN_004954f0	game	graphics.cpp|GUI.cpp	gap			
-0x495590	119	FUN_00495590	game	graphics.cpp|GUI.cpp	gap			
-0x495610	111	FUN_00495610	game	graphics.cpp|GUI.cpp	gap			
-0x495680	117	FUN_00495680	game	graphics.cpp|GUI.cpp	gap			
-0x495700	354	FUN_00495700	game	graphics.cpp|GUI.cpp	gap			
-0x495870	102	FUN_00495870	game	graphics.cpp|GUI.cpp	gap			
-0x4958e0	102	FUN_004958e0	game	graphics.cpp|GUI.cpp	gap			
-0x495950	137	FUN_00495950	game	graphics.cpp|GUI.cpp	gap			
-0x4959e0	113	FUN_004959e0	game	graphics.cpp|GUI.cpp	gap			
-0x495a60	131	FUN_00495a60	game	graphics.cpp|GUI.cpp	gap			
-0x495af0	113	FUN_00495af0	game	graphics.cpp|GUI.cpp	gap			
-0x495b70	228	FUN_00495b70	game	graphics.cpp|GUI.cpp	gap			
-0x495c60	186	FUN_00495c60	game	graphics.cpp|GUI.cpp	gap			
-0x495d20	293	FUN_00495d20	game	graphics.cpp|GUI.cpp	gap			
-0x495e50	132	FUN_00495e50	game	graphics.cpp|GUI.cpp	gap			
-0x495ee0	179	FUN_00495ee0	game	graphics.cpp|GUI.cpp	gap			
-0x495fa0	89	FUN_00495fa0	game	graphics.cpp|GUI.cpp	gap			
-0x496000	21	FUN_00496000	game	graphics.cpp|GUI.cpp	gap			
-0x496020	23	FUN_00496020	game	graphics.cpp|GUI.cpp	gap			
-0x496040	21	FUN_00496040	game	graphics.cpp|GUI.cpp	gap			
-0x496060	17	FUN_00496060	game	graphics.cpp|GUI.cpp	gap			
-0x496080	41	FUN_00496080	game	graphics.cpp|GUI.cpp	gap			
-0x4960b0	34	FUN_004960b0	game	graphics.cpp|GUI.cpp	gap			
-0x496100	35	FUN_00496100	game	graphics.cpp|GUI.cpp	gap			
-0x496130	18	FUN_00496130	game	graphics.cpp|GUI.cpp	gap			
-0x496150	11	FUN_00496150	game	graphics.cpp|GUI.cpp	gap			
-0x496160	1	FUN_00496160	game	graphics.cpp|GUI.cpp	gap			
-0x496180	318	FUN_00496180	game	graphics.cpp|GUI.cpp	gap			
-0x4962c0	221	FUN_004962c0	game	graphics.cpp|GUI.cpp	gap			
-0x4963a0	134	FUN_004963a0	game	graphics.cpp|GUI.cpp	gap			
-0x496430	111	FUN_00496430	game	graphics.cpp|GUI.cpp	gap			
-0x4964a0	124	FUN_004964a0	game	graphics.cpp|GUI.cpp	gap			
-0x496520	47	FUN_00496520	game	graphics.cpp|GUI.cpp	gap			
-0x496550	30	FUN_00496550	game	graphics.cpp|GUI.cpp	gap			
-0x496570	652	FUN_00496570	game	graphics.cpp|GUI.cpp	gap			
-0x496800	3045	FUN_00496800	game	graphics.cpp|GUI.cpp	gap			
-0x4973f0	764	FUN_004973f0	game	Container.h	header	355,356		
+0x495480	99	FUN_00495480	game	GUI.cpp	range			
+0x4954f0	146	FUN_004954f0	game	GUI.cpp	range			
+0x495590	119	FUN_00495590	game	GUI.cpp	range			
+0x495610	111	FUN_00495610	game	GUI.cpp	range			
+0x495680	117	FUN_00495680	game	GUI.cpp	range			
+0x495700	354	FUN_00495700	game	GUI.cpp	range			
+0x495870	102	FUN_00495870	game	GUI.cpp	range			
+0x4958e0	102	FUN_004958e0	game	GUI.cpp	range			
+0x495950	137	FUN_00495950	game	GUI.cpp	range			
+0x4959e0	113	FUN_004959e0	game	GUI.cpp	range			
+0x495a60	131	FUN_00495a60	game	GUI.cpp	range			
+0x495af0	113	FUN_00495af0	game	GUI.cpp	range			
+0x495b70	228	FUN_00495b70	game	GUI.cpp	range			
+0x495c60	186	FUN_00495c60	game	GUI.cpp	range			
+0x495d20	293	FUN_00495d20	game	GUI.cpp	range			
+0x495e50	132	FUN_00495e50	game	GUI.cpp	range			
+0x495ee0	179	FUN_00495ee0	game	GUI.cpp	range			
+0x495fa0	89	FUN_00495fa0	game	GUI.cpp	range			
+0x496000	21	FUN_00496000	game	GUI.cpp	range			
+0x496020	23	FUN_00496020	game	GUI.cpp	range			
+0x496040	21	FUN_00496040	game	GUI.cpp	range			
+0x496060	17	FUN_00496060	game	GUI.cpp	range			
+0x496080	41	FUN_00496080	game	GUI.cpp	range			
+0x4960b0	34	FUN_004960b0	game	GUI.cpp	range			
+0x496100	35	FUN_00496100	game	GUI.cpp	range			
+0x496130	18	FUN_00496130	game	GUI.cpp	range			
+0x496150	11	FUN_00496150	game	GUI.cpp	range			
+0x496160	1	FUN_00496160	game	GUI.cpp	range			
+0x496180	318	FUN_00496180	game	GUI.cpp	range			
+0x4962c0	221	FUN_004962c0	game	GUI.cpp	range			
+0x4963a0	134	FUN_004963a0	game	GUI.cpp	range			
+0x496430	111	FUN_00496430	game	GUI.cpp	range			
+0x4964a0	124	FUN_004964a0	game	GUI.cpp	range			
+0x496520	47	FUN_00496520	game	GUI.cpp	range			
+0x496550	30	FUN_00496550	game	GUI.cpp	range			
+0x496570	652	FUN_00496570	game	Container.h	range			
+0x496800	3045	FUN_00496800	game	GUI.cpp	range			
+0x4973f0	764	FUN_004973f0	game	Container.h	range	355,356		
 0x497a00	1540	FUN_00497a00	game	GUI.cpp	assert	42,43,44,45,46,47,48		
 0x497ff2	29	Catch@00497ff2	catch	GUI.cpp	between		0x497a00	
 0x49800f	133	Catch@0049800f	catch	GUI.cpp	assert	86	0x497a00	

@@ -12,9 +12,9 @@
 // the end.
 //
 // Also in this object: the out-of-line copies of TRGBColor's operator== and
-// operator!= (0x48b380, 0x48b3b0; inline members of TRGBColor, which is
-// still declared in external.h) and TVideoCacheItem's constructor (0x48b3f0,
-// below), which the binary emits before the first function.
+// operator!= (0x48b380, 0x48b3b0; inline members of TRGBColor in
+// graphics.h) and TVideoCacheItem's constructor (0x48b3f0, below), which the
+// binary emits before the first function.
 //
 // Names: see graphics.h and notes/decisions.md ("graphics.cpp").
 
@@ -22,6 +22,7 @@
 #include "Objects.h"
 #include "Script.h"
 #include "Status.h"
+#include "Surface.h"
 #include "Utils.h"
 
 // Assertions whose expression text carries a bug number (as in Map.cpp).
@@ -896,9 +897,7 @@ void DrawOutfit(int Surface, int x, int y, int Size, int OutfitNumber, int *Colo
 		}
 		return;
 	}
-	TRGBColor OutfitColors[4];
-	for (int i = 0; i < 4; i++)
-		OutfitColors[i] = TRGBColor(0, 0, 0);
+	TRGBColor OutfitColors[4]; // zeroed by the constructor (the binary's array loop)
 	int R, G, B;
 	GetOutfitColor(Colors[0], &R, &G, &B);
 	OutfitColors[0] = TRGBColor(R, G, B);

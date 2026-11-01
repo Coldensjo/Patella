@@ -21,7 +21,8 @@
 #pragma once
 
 #include "common.h"
-#include "external.h" // TRGBColor, TRect, TFont, TObject
+
+struct TObject; // external.h, passed to DrawObject
 
 #define PATH_MAX 1024
 #define HASH_TABLE_SIZE 100
@@ -33,6 +34,59 @@ enum {
 	RIGHT_ALIGN = 2,
 };
 
+// --- Graphics types -----------------------------------------------------------
+// The types of the drawing interface, used by every window file (GUI.h
+// includes this header). Default construction zeroes them, as the binary's
+// compiler-generated constructors do (SkinProperties' constructor 0x496800,
+// the new TSprite[] and new TPicture[] loops, DrawOutfit's colours).
+
+struct TRect {     // passed by value (16 bytes)
+	constexpr TRect() : x(0), y(0), Width(0), Height(0) {}
+	constexpr TRect(int x, int y, int Width, int Height) : x(x), y(y), Width(Width), Height(Height) {}
+	int x, y, Width, Height;
+};
+
+struct TRGBColor { // passed by value (12 bytes)
+	constexpr TRGBColor() : R(0), G(0), B(0) {}
+	constexpr TRGBColor(int R, int G, int B) : R(R), G(G), B(B) {}
+	// 0x425950 (out-of-line copy between ConsoleWindow.cpp and
+	// ContentWindows.cpp; inlined in Map.cpp's SetAmbientLight): a colour of
+	// the 6x6x6 palette, Color = R*36 + G*6 + B with steps of 51.
+	TRGBColor(int Color)
+	{
+		R = Color / 36 * 51;
+		B = Color % 6 * 51;
+		G = Color / 6 % 6 * 51;
+	}
+	// 0x48b380 and 0x48b3b0: out-of-line copies at the start of graphics.obj,
+	// the first object that calls them (SurfaceGL.cpp calls 0x48b380 too).
+	// operator!= negates the inlined operator==, as the binary's does.
+	bool operator==(TRGBColor Other) const
+	{
+		return R == Other.R && G == Other.G && B == Other.B;
+	}
+	bool operator!=(TRGBColor Other) const
+	{
+		return !(*this == Other);
+	}
+	int R, G, B;
+};
+
+// The colour TFont's default constructor reads from memory. Every object
+// that constructs a TFont has its own copy (GUI.obj 0x5c1954, DialogElements
+// 0x5c1230, an earlier object 0x5c066c), so it is a constant defined in a
+// header (internal linkage). The name is ours.
+const TRGBColor DefaultFontColor(224, 224, 224);
+
+// A text format: font, colour and alignment ("Format.Alignment" in
+// PrintFormattedText's assertion).
+struct TFont {     // passed by value (20 bytes)
+	TFont() : FontNumber(4), Color(DefaultFontColor), Alignment(LEFT_ALIGN) {}
+	int FontNumber;
+	TRGBColor Color;
+	int Alignment;     // LEFT_ALIGN, CENTER_ALIGN, RIGHT_ALIGN
+};
+
 // Kinds of cache items. Pictures and font characters are both PICTURE_ITEM.
 enum {
 	EMPTY_ITEM = 0,
@@ -42,14 +96,12 @@ enum {
 
 // A sprite of Tibia.spr (0x10 bytes). Offset 0 is an empty sprite.
 struct TSprite {
-	TSprite() : ColorKey(0, 0, 0) {}
 	int Offset;          // +0x00, in Tibia.spr
 	TRGBColor ColorKey;  // +0x04, the transparent colour, from the sprite's first three bytes
 };
 
 // A picture of Tibia.pic (0x18 bytes); "Picture" in the assertions.
 struct TPicture {
-	TPicture() : ColorKey(0, 0, 0) {}
 	int TilesX;          // +0x00
 	int TilesY;          // +0x04
 	int *Offsets;        // +0x08, TilesX*TilesY offsets in Tibia.pic, row by row

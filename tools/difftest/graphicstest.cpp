@@ -301,7 +301,10 @@ static TRect RandomRect()
 
 static TFont RandomFont()
 {
-	TFont Font = {Range(1, 4), RandomColor(), Range(0, 2)};
+	TFont Font;
+	Font.FontNumber = Range(1, 4);
+	Font.Color = RandomColor();
+	Font.Alignment = Range(0, 2);
 	return Font;
 }
 

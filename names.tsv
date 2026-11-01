@@ -861,7 +861,7 @@ address	name	kind	confidence	note
 0x4fce50	ResizeClipboardBuffer	game	medium	sysinc.cpp line 63 (help)
 0x4fcff0	GetClipboardText	game	medium	sysinc.cpp line 104; 0x4fd02c is its interior, not a function
 0x4fd02c	GetClipboardText_interior	game	high	interior block of 0x4fcff0 (Ghidra split), not a separate function
-0x4a29e0	GUI_scalar_deleting_dtor	stl	medium	compiler-generated deleting destructor of a GUI.cpp class (calls 0x4a2590), kept in GUI.obj
+0x4a29e0	TWindow_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TWindow (vtable 0x564528 slot 0; calls ~TWindow 0x4a2590)
 0x4a2a00	SetHelpPosition	game	medium	Help.cpp: position of the help bubble's window
 0x4a2a20	MoveHelpPosition	game	medium	Help.cpp
 0x4a2a50	SetHelpSize	game	medium	Help.cpp
@@ -1050,6 +1050,117 @@ address	name	kind	confidence	note
 0x452320	TCreature_SetPosition	game	medium	Creatures.cpp line 108, TEND1(CreatureID)
 0x452eb0	vector_TDialogText_at	game	low	Container.h vector<T>::operator() for a 0x18-byte element (char* + 20-byte font/colour), instantiated in DialogElements.cpp; element type name ours
 0x453600	vector_TDialogText_ctor	game	low	Container.h vector<T>::vector(min, max, block), lines 369-370, same 0x18-byte element, DialogElements.cpp; element type name ours
+0x495480	TSkinProperties0D8_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x4954f0	TSkinProperties194_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495590	TSkinProperties3E0_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours (used at +0x3e0 and +0x428)
+0x495610	TStatusWindowProperties_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495680	TSkinProperties688_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495700	TSkinProperties6FC_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495870	TBuddylistWindowProperties_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x4958e0	TButtonsProperties_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495950	TSkinProperties8C4_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x4959e0	TCheckBoxProperties_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495a60	TSkinProperties944_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495af0	TSkinProperties9A0_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495b70	TSkinProperties9E8_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495c60	TSkinPropertiesAA4_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495d20	TSkinPropertiesD3C_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495e50	TSkinPropertiesE68_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495ee0	TSkinProperties1114_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x495fa0	TSkinProperties1394_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x496000	TTimer_GetTime	game	medium	GUI.cpp: Remaining/100, tenths of a second
+0x496020	TTimer_IsExpired	game	medium	GUI.cpp: !(Active && Remaining)
+0x496040	TComponent_dtor	game	medium	GUI.cpp: ~TComponent, deletes DrawingList (vtable 0x5644a0)
+0x496060	TComponent_SetPosition	game	medium	GUI.cpp: vtable +0x38; sets OffsetX/OffsetY
+0x496080	TWindow_ctor	game	medium	GUI.cpp: TWindow() (vtable 0x564528), TComponent() inlined
+0x4960b0	TWindow_IsChild	game	medium	GUI.cpp: vtable +0x1c
+0x4960e0	TWindow_GetLastChild	game	medium	GUI.cpp: vtable +0x24 (missed by Ghidra)
+0x496100	TElement_ctor	game	medium	GUI.cpp: TElement() (vtable 0x5645c8), TComponent() inlined
+0x496130	TCallback_ctor	game	medium	GUI.cpp: TCallback(Receiver, Event); identical code to any two-member constructor (may be folded)
+0x496150	InitHotkeys	game	low	GUI.cpp: clears NumberOfHotkeys (0x5ccf98); called last by InitControl
+0x496160	ExitHotkeys	game	low	GUI.cpp: empty; the one folded copy of many empty functions (ExitCommunication, ExitHelp, ExitCreatures, ExitInventory, TComponent::Arrange/PositionChanged, TElement::StopDragging, TSurface::Unknown64)
+0x496180	TSkinProperties288_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x4962c0	TSkinPropertiesB08_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x4963a0	TSkinPropertiesF8C_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x496430	TSkinProperties1084_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x4964a0	TSkinProperties1274_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
+0x496520	TComponent_scalar_deleting_dtor	stl	high	GUI.cpp: compiler-generated, ~TComponent inlined
+0x496550	TElement_scalar_deleting_dtor	stl	high	GUI.cpp: compiler-generated, calls ~TComponent 0x496040
+0x496570	vector_THotkey_at	game	low	Container.h vector<T>::operator() for THotkey (12 bytes; the element constructor zeroes the callback), GUI.cpp
+0x496800	TSkinProperties_ctor	stl	high	GUI.cpp: compiler-generated default constructor of SkinProperties (0x5ccfc8), static initialiser 0x559e50
+0x4973f0	vector_TTimerPtr_ctor	game	low	Container.h vector<T>::vector(min, max, block, init), lines 355-356, for GUI.cpp's Timers (0x5ccfa4, initialiser 0x559e30)
+0x4976f0	vector_THotkey_ctor	game	low	Container.h vector<T>::vector(min, max, block), lines 369-370, for GUI.cpp's Hotkeys (0x5ce4f0, initialiser 0x559e60); missed by Ghidra
+0x497a00	DrawSkin	game	low	GUI.cpp lines 42-86: tiles a skin; srcx/srcy cut the first column/row
+0x498160	InitSkinProperties	game	low	GUI.cpp: fills SkinProperties (1341 constant stores); called by InitControl after InitSkins
+0x49af20	AddTimer	game	medium	GUI.cpp line 851
+0x49b0d0	RemoveTimer	game	medium	GUI.cpp line 868, TEND1(i)
+0x49b290	TTimer_ctor	game	medium	GUI.cpp line 905: TTimer(Time, Callback), vtable 0x5646e8
+0x49b450	TComponent_InsertChild	game	medium	GUI.cpp line 993: TERROR("not possible")
+0x49b570	TComponent_AppendChild	game	medium	GUI.cpp line 1001: TERROR("not possible") (missed by Ghidra)
+0x49b690	TComponent_RemoveChild	game	medium	GUI.cpp line 1009: TERROR("not possible") (missed by Ghidra)
+0x49b7b0	TComponent_DeleteChild	game	medium	GUI.cpp line 1017: TERROR("not possible") (missed by Ghidra)
+0x49b8d0	TComponent_InsertChildAfter	game	medium	GUI.cpp line 1025: TERROR("not possible") (missed by Ghidra)
+0x49b9f0	TComponent_SwapChildren	game	medium	GUI.cpp line 1041: TERROR("not possible") (missed by Ghidra)
+0x49bb10	TComponent_IsChild	game	medium	GUI.cpp line 1049: TERROR("not possible") (missed by Ghidra)
+0x49bc30	TComponent_GetPrevious	game	medium	GUI.cpp lines 1057-1066 (its catch blocks 0x49bd8f... were attributed to 0x49b450)
+0x49bee0	TComponent_SetSize	game	medium	GUI.cpp lines 1092-1093 (_Width, _Height)
+0x49c190	TWindow_InsertChild	game	medium	GUI.cpp lines 1193-1194
+0x49c430	TWindow_AppendChild	game	medium	GUI.cpp lines 1206-1207
+0x49c6f0	TWindow_DeleteChild	game	medium	GUI.cpp line 1231
+0x49c890	TWindow_RemoveChild	game	medium	GUI.cpp lines 1239-1260
+0x49cd00	TWindow_InsertChildAfter	game	medium	GUI.cpp lines 1269-1287
+0x49d200	TWindow_SwapChildren	game	medium	GUI.cpp lines 1295-1347
+0x49da60	TWindow_SetPosition	game	medium	GUI.cpp line 1389
+0x49dc20	TWindow_Arrange	game	low	GUI.cpp line 1424
+0x49ddc0	TWindow_MouseMove	game	medium	GUI.cpp line 1448
+0x49dff0	TWindow_LeftButtonDown	game	medium	GUI.cpp line 1472
+0x49e230	TWindow_LeftButtonUp	game	medium	GUI.cpp line 1496
+0x49e470	TWindow_LeftButtonDoubleClick	game	medium	GUI.cpp line 1520
+0x49e6b0	TWindow_RightButtonUp	game	medium	GUI.cpp line 1544
+0x49e8f0	TWindow_MouseWheel	game	medium	GUI.cpp line 1568
+0x49eb30	TWindow_MouseHover	game	medium	GUI.cpp line 1588
+0x49ed10	TWindow_HelpMouseMove	game	medium	GUI.cpp line 1611
+0x49ef10	TWindow_SetCapture	game	medium	GUI.cpp lines 1633-1638
+0x49f1a0	TWindow_ReleaseCapture	game	medium	GUI.cpp lines 1648-1653
+0x49f430	TWindow_StopDragging	game	medium	GUI.cpp line 1668
+0x49f5d0	TWindow_SetChildArea	game	low	GUI.cpp lines 1679-1690
+0x49fa40	TWindow_SetChildPosition	game	low	GUI.cpp lines 1700-1708
+0x49fe70	TWindow_FitToChild	game	low	GUI.cpp lines 1724-1738
+0x4a0300	TWindow_FitToChildren	game	low	GUI.cpp lines 1772-1794
+0x4a0920	TWindow_ClipChildren	game	low	GUI.cpp line 1860
+0x49de27	TWindow_MouseMove_block	game	high	not a function: the child loop of TWindow::MouseMove, which Ghidra split off (no prologue)
+0x49e060	TWindow_LeftButtonDown_block	game	high	not a function: the child loop of TWindow::LeftButtonDown, which Ghidra split off (no prologue)
+0x49e2a0	TWindow_LeftButtonUp_block	game	high	not a function: the child loop of TWindow::LeftButtonUp, which Ghidra split off (no prologue)
+0x49e4e0	TWindow_LeftButtonDoubleClick_block	game	high	not a function: the child loop of TWindow::LeftButtonDoubleClick, which Ghidra split off (no prologue)
+0x49e720	TWindow_RightButtonUp_block	game	high	not a function: the child loop of TWindow::RightButtonUp, which Ghidra split off (no prologue)
+0x49e960	TWindow_MouseWheel_block	game	high	not a function: the child loop of TWindow::MouseWheel, which Ghidra split off (no prologue)
+0x49eb64	TWindow_MouseHover_block	game	high	not a function: the child loop of TWindow::MouseHover, which Ghidra split off (no prologue)
+0x4a0bc0	TElement_SetCapture	game	medium	GUI.cpp line 1893: GetParent()->SetCapture(this), the argument unused
+0x4a0d60	TElement_ReleaseCapture	game	medium	GUI.cpp line 1905
+0x4a0f00	TCallback_Send	game	medium	GUI.cpp line 1931: Receiver->HandleEvent(Event)
+0x4a10a0	AddHotkey	game	medium	GUI.cpp line 1965
+0x4a12a0	RemoveHotkey	game	medium	GUI.cpp line 1983, TEND2(Key, i)
+0x4a1480	CheckHotkey	game	medium	GUI.cpp line 2004: sends the callback of the key (flag 0x200 dropped, a-z as A-Z)
+0x4a1690	DrawSkinClipped	game	low	GUI.cpp lines 99-160: DrawSkin with a clipping rectangle (0x4910e0)
+0x4a1dc0	TTimer_dtor	game	medium	GUI.cpp: scalar deleting destructor with ~TTimer inlined (RemoveTimer, Active=false)
+0x4a1df0	TTimer_Update	game	medium	GUI.cpp line 947 (elapsed)
+0x4a1fb0	TComponent_Draw	game	medium	GUI.cpp lines 1118-1163: draws DrawingList
+0x4a2590	TWindow_dtor	game	medium	GUI.cpp: ~TWindow deletes the children (deleting destructor 0x4a29e0)
+0x4a2600	TWindow_Draw	game	medium	GUI.cpp line 1408
+0x4a27c0	UpdateTimers	game	medium	GUI.cpp line 887; static LastTime 0x5ce518 (guard 0x5ce51c)
+0x417680	TComponent_GetNext	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x28
+0x417690	TComponent_GetParent	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x30
+0x4176a0	TWindow_GetFirstChild	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x20
+0x4176b0	TWindow_GetCapture	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x84
+0x4176c0	TWindow_Fit	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x90: FitToChildren(0,0,0,0,Notify), the zeros as one 16-byte block
+0x417a20	TComponent_GetMinimumWidth	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x3c and +0x40 (GetMinimumHeight), return 0, folded
+0x417a30	TElement_MouseHover	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x64, empty (ret 8)
+0x417a40	TElement_HelpMouseMove	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x68: SetHelpHandle(0), false
+0x417de0	TComponent_GetFirstChild	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x20, GUI.h line 681 "not possible"
+0x417f00	TComponent_GetLastChild	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x24, GUI.h line 682 "not possible" (missed by Ghidra)
+0x41acb0	TElement_LeftButtonDoubleClick	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x58: tail call of LeftButtonDown
+0x4259f0	TElement_MouseMove	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x4c, true
+0x425a00	TElement_LeftButtonDown	game	medium	GUI.h inline, copy kept in an earlier object: vtable +0x50, +0x54, +0x5c, +0x60 (LeftButtonUp, RightButtonUp, MouseWheel), true, folded
 0x4b0880	TPathNode_ctor	game	medium	Map.h inline constructor of FindPath's node (Cost and Estimate -1, links NULL); passed to the eh vector constructor iterator by matrix<TPathNode>'s constructor 0x4b1100; not found by Ghidra
 0x4b08a0	SetMapPosition	game	medium	Map.cpp (MainWindow/Map gap): stores the world position of the map's centre (0x5d16f0/ec/e8, Map data); name ours
 0x4b08c0	GetMapPosition	game	medium	Map.cpp (gap): returns the map centre; name ours
@@ -1154,8 +1265,8 @@ address	name	kind	confidence	note
 0x425950	TRGBColor_ctor_palette	game	medium	inline TRGBColor(int Color) of a header (6x6x6 palette, steps of 51), out-of-line copy between ConsoleWindow.cpp and ContentWindows.cpp; inlined in SetAmbientLight; returns this
 0x426170	vector_TMark_ctor	game	high	Container.h vector<TMark>::vector(min, max, block); copy kept from an object before Map.obj; used by TAutomapBlock's constructor
 0x425b20	vector_TMark_at	game	high	Container.h vector<TMark>::operator(); copy kept from an object before Map.obj; used by Map.cpp
-0x48b380	TRGBColor_operator_eq	game	high	inline TRGBColor::operator==(TRGBColor) (graphics.h by inference; declared in external.h); out-of-line copy kept in graphics.obj, first called by FindVideoMaskedSprite (0x48e09e); SurfaceGL.cpp calls it too
-0x48b3b0	TRGBColor_operator_ne	game	high	inline TRGBColor::operator!=(TRGBColor), !(==) (graphics.h by inference); out-of-line copy kept in graphics.obj, called by GetVideoPicture (0x48f1df)
+0x48b380	TRGBColor_operator_eq	game	high	inline TRGBColor::operator==(TRGBColor) (graphics.h, by inference); out-of-line copy kept in graphics.obj, first called by FindVideoMaskedSprite (0x48e09e); SurfaceGL.cpp calls it too
+0x48b3b0	TRGBColor_operator_ne	game	high	inline TRGBColor::operator!=(TRGBColor), !(==) (graphics.h, by inference); out-of-line copy kept in graphics.obj, called by GetVideoPicture (0x48f1df)
 0x48b3f0	TVideoCacheItem_ctor	game	medium	graphics.cpp: clears the colours at +0x18..+0x47; passed to the eh vector constructor iterator by InitVideoCache (missed by Ghidra); class name ours
 0x48b430	GetFontLineHeight	game	low	graphics.cpp gap: Fonts[n-1]+0x718, out-of-range numbers (not 0) give font 3; GUI callers use it for every text line after the first
 0x48b460	ClearMemoryCache	game	medium	graphics.cpp gap: every memory cache item EMPTY_ITEM, hash table -1
