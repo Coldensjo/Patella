@@ -101,4 +101,8 @@ file-based code can be compared on real files. `vlongtest.cpp` and
 | Talk.cpp | Reconstructed by ChatGPT gpt-6.1-sol: talkboxes, status messages, ignore/filter lists, console routing and polymorphic text buffers; includes the leading Talk gap, Talk.h COMDATs and the Container.h filter-vector instance. All EH tables and three jump tables checked. All non-error entry points differentially tested; 36 callcheck lexical differences explained in notes/Talk.md. |
 
 Last differential run: 2,470,456 checks against the original code and 3,201 against exact
+| Objects.cpp | Reconstructed (first version by Claude Opus 5.5): the Tibia.dat tables of objects, outfits, effects and missiles, their loader and accessors. The Objects/Player gap after it is Player.obj (file-ranges.tsv; its STL/MFC code has names.tsv rows of kind stl). EH tables checked for every function; the loader's and GetMissileSpriteNumber's jump tables checked. Every function differentially tested on the real Tibia.dat and random .dat files (objectstest.cpp; malloc/free and fopen/fread/fclose redirected), except the assertion-failure paths. |
+| Container.h | Partial: `vector<T>` constructors and `operator()`, from the Status.cpp and Preferences.cpp instantiations, and `array<T>` (constructor, `operator()`) from Objects.cpp; tested through them. |
+
+Last differential run: 1,594,670 checks against the original code and 3,201 against exact
 arithmetic, no differences.

@@ -6,6 +6,7 @@
 
 #include "Communication.h"
 #include "Network.h"
+#include "Objects.h"
 #include "Utils.h"
 #include "TRSA.h"
 #include "Preferences.h"
@@ -92,7 +93,7 @@ void SendLogin(uint32 AccountID, const char *Password)
 	BeginCommand(1);
 	SendWord(2);
 	SendWord(772);
-	SendQuad(DAT_00719d9c);
+	SendQuad(DatSignature);
 	SendQuad(DAT_005ccb64);
 	SendQuad(DAT_005cc758);
 	SendBytes(Data, 128);
@@ -274,7 +275,7 @@ void SendTurnWest()
 void SendMoveObject(int x, int y, int z, int ObjectType, int Position, int DestinationX, int DestinationY, int DestinationZ, int Count)
 {
 	TBEGIN
-	if (FUN_004d1c40(ObjectType, 13)) {
+	if (GetObjectFlag(ObjectType, 13)) {
 		FUN_004ff500("You cannot move this object.", false);
 		return;
 	}
@@ -911,7 +912,7 @@ void ReceivePatchBlock()
 	uint32 Signature;
 	switch (PatchFileNumber) {
 	case 0: Name = "Tibia.exe"; ReloadEvent = 0x48; Signature = 0; break;
-	case 1: Name = "Tibia.dat"; ReloadEvent = 0x41; CompleteEvent = 0x45; Signature = DAT_00719d9c; break;
+	case 1: Name = "Tibia.dat"; ReloadEvent = 0x41; CompleteEvent = 0x45; Signature = DatSignature; break;
 	case 2: Name = "Tibia.spr"; ReloadEvent = 0x42; CompleteEvent = 0x46; Signature = DAT_005ccb64; break;
 	case 3: Name = "Tibia.pic"; ReloadEvent = 0x43; CompleteEvent = 0x47; Signature = DAT_005cc758; break;
 	case 4: Name = "Patch.exe"; ReloadEvent = 0x44; Signature = 0; break;
@@ -1182,11 +1183,11 @@ void ReadField(int rx, int ry, int rz)
 				FUN_004b8ec0(rx, ry, rz, TCommunicationObject{0x63, CreatureID, 0});
 			} else {
 				int Data = 0;
-				if (FUN_004d1c40(Type, 5))
+				if (GetObjectFlag(Type, 5))
 					Data = GetByte();
-				if (FUN_004d1c40(Type, 11))
+				if (GetObjectFlag(Type, 11))
 					Data = GetByte();
-				if (FUN_004d1c40(Type, 10))
+				if (GetObjectFlag(Type, 10))
 					Data = GetByte();
 				FUN_004b8ec0(rx, ry, rz, TCommunicationObject{Type, (uint32)Data, 0});
 			}
@@ -1349,11 +1350,11 @@ void ReceiveAddObject()
 		Object.Extra = 0;
 	} else {
 		int Data = 0;
-		if (FUN_004d1c40(Type, 5))
+		if (GetObjectFlag(Type, 5))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 11))
+		if (GetObjectFlag(Type, 11))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 10))
+		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
 		Object.Type = Type;
 		Object.Data = Data;
@@ -1378,18 +1379,18 @@ void ReceiveChangeObject()
 	FUN_004b0960(&rx, &ry, &rz);
 	int Position = GetByte();
 	TCommunicationObject OldObject = FUN_004b6580(rx, ry, rz, Position);
-	if (OldObject.Type == DAT_00719da0) {
+	if (OldObject.Type == NoObject.Type) {
 		TASSERT2(FieldRefreshRequested(rx,ry,rz), rx, ry);
 		int Type = GetWord();
 		if (Type == 0x61 || Type == 0x62 || Type == 0x63) {
 			ReadCreature(Type, rx, ry, rz);
 			return;
 		}
-		if (FUN_004d1c40(Type, 5))
+		if (GetObjectFlag(Type, 5))
 			GetByte();
-		if (FUN_004d1c40(Type, 11))
+		if (GetObjectFlag(Type, 11))
 			GetByte();
-		if (FUN_004d1c40(Type, 10))
+		if (GetObjectFlag(Type, 10))
 			GetByte();
 	} else {
 		if (OldObject.Type == 0x63) {
@@ -1405,11 +1406,11 @@ void ReceiveChangeObject()
 			Object.Extra = 0;
 		} else {
 			int Data = 0;
-			if (FUN_004d1c40(Type, 5))
+			if (GetObjectFlag(Type, 5))
 				Data = GetByte();
-			if (FUN_004d1c40(Type, 11))
+			if (GetObjectFlag(Type, 11))
 				Data = GetByte();
-			if (FUN_004d1c40(Type, 10))
+			if (GetObjectFlag(Type, 10))
 				Data = GetByte();
 			Object.Type = Type;
 			Object.Data = Data;
@@ -1435,7 +1436,7 @@ void ReceiveDeleteObject()
 	int Position = GetByte();
 	FUN_004b0960(&rx, &ry, &rz);
 	TCommunicationObject Object = FUN_004b6580(rx, ry, rz, Position);
-	if (Object.Type == DAT_00719da0) {
+	if (Object.Type == NoObject.Type) {
 		TASSERT2(FieldRefreshRequested(rx,ry,rz), rx, ry);
 	} else {
 		if (Object.Type == 0x63) {
@@ -1480,7 +1481,7 @@ void ReceiveMoveCreature()
 	TCommunicationObject Object = FUN_004b6580(sx, sy, sz, Position);
 	std::string Error;
 	TCommunicationCreature *Creature = NULL;
-	if (Object.Type == DAT_00719da0 || Object.Type != 0x63) {
+	if (Object.Type == NoObject.Type || Object.Type != 0x63) {
 		if (FieldRefreshRequested(sx, sy, sz)) {
 			FUN_004b0910(&zx, &zy, &zz);
 			SendRefreshField(zx, zy, zz);
@@ -1488,7 +1489,7 @@ void ReceiveMoveCreature()
 		}
 		std::stringstream Text;
 		Text << "MoveCreature has been received for a coordinate where there is no creature anymore [bug0000017]";
-		if (Object.Type != DAT_00719da0) {
+		if (Object.Type != NoObject.Type) {
 			if (Object.Type == 0x61)
 				Text << " (UNKNOWNCREATURE, ";
 			else if (Object.Type == 0x62)
@@ -1518,8 +1519,8 @@ void ReceiveMoveCreature()
 					Creature->FUN_0044bc70(0, 0, 0);
 			} else {
 				TCommunicationObject Bank = FUN_004b6140(zx, zy, zz);
-				if (FUN_004d1c40(Bank.Type, 0))
-					Creature->FUN_0044bc70(dx, dy, FUN_004d1f30(Bank.Type));
+				if (GetObjectFlag(Bank.Type, 0))
+					Creature->FUN_0044bc70(dx, dy, GetObjectWaypoints(Bank.Type));
 				else
 					Error = "MoveCreature has been received for a coordinate where there is no bank as first object [bug0000484]";
 			}
@@ -1547,7 +1548,7 @@ void ReceiveMoveCreature()
 			Text << std::endl << " Start Cylinder (2): ";
 			for (int i = 0; i < 10; i++) {
 				Current = FUN_004b6580(sx, sy, sz, i);
-				if (Current.Type == DAT_00719da0)
+				if (Current.Type == NoObject.Type)
 					Text << "(-)";
 				else
 					Text << " (" << Current.Type << "," << (int)Current.Data << ")";
@@ -1561,7 +1562,7 @@ void ReceiveMoveCreature()
 			Text << std::endl << " Destination Cylinder (2): ";
 			for (int i = 0; i < 10; i++) {
 				Current = FUN_004b6580(zx, zy, zz, i);
-				if (Current.Type == DAT_00719da0)
+				if (Current.Type == NoObject.Type)
 					Text << "(-)";
 				else
 					Text << " (" << Current.Type << "," << (int)Current.Data << ")";
@@ -1608,11 +1609,11 @@ void ReceiveOpenContainer(int &Container)
 	for (int i = 0; i < Count; i++) {
 		int Type = GetWord();
 		int Data = 0;
-		if (FUN_004d1c40(Type, 5))
+		if (GetObjectFlag(Type, 5))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 11))
+		if (GetObjectFlag(Type, 11))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 10))
+		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
 		FUN_004a5380(Container, TCommunicationObject{Type, (uint32)Data, 0});
 	}
@@ -1638,11 +1639,11 @@ void ReceiveContainerAddObject()
 	Container = GetByte();
 	Type = GetWord();
 	int Data = 0;
-	if (FUN_004d1c40(Type, 5))
+	if (GetObjectFlag(Type, 5))
 		Data = GetByte();
-	if (FUN_004d1c40(Type, 11))
+	if (GetObjectFlag(Type, 11))
 		Data = GetByte();
-	if (FUN_004d1c40(Type, 10))
+	if (GetObjectFlag(Type, 10))
 		Data = GetByte();
 	if (FUN_004a5220(Container))
 		FUN_004a7f00(Container, TCommunicationObject{Type, (uint32)Data, 0});
@@ -1659,11 +1660,11 @@ void ReceiveContainerChangeObject()
 	int Position = GetByte();
 	Type = GetWord();
 	int Data = 0;
-	if (FUN_004d1c40(Type, 5))
+	if (GetObjectFlag(Type, 5))
 		Data = GetByte();
-	if (FUN_004d1c40(Type, 11))
+	if (GetObjectFlag(Type, 11))
 		Data = GetByte();
-	if (FUN_004d1c40(Type, 10))
+	if (GetObjectFlag(Type, 10))
 		Data = GetByte();
 	if (FUN_004a5220(Container))
 		FUN_004a5630(Container, Position, TCommunicationObject{Type, (uint32)Data, 0});
@@ -1694,11 +1695,11 @@ void ReceiveInventoryObject()
 	Position = GetByte();
 	Type = GetWord();
 	int Data = 0;
-	if (FUN_004d1c40(Type, 5))
+	if (GetObjectFlag(Type, 5))
 		Data = GetByte();
-	if (FUN_004d1c40(Type, 11))
+	if (GetObjectFlag(Type, 11))
 		Data = GetByte();
-	if (FUN_004d1c40(Type, 10))
+	if (GetObjectFlag(Type, 10))
 		Data = GetByte();
 	FUN_004a4550(Position, TCommunicationObject{Type, (uint32)Data, 0});
 	TEND2(Position, Type)
@@ -1725,11 +1726,11 @@ void ReceiveOwnTrade()
 	for (int i = 0; i < Count; i++) {
 		int Type = GetWord();
 		int Data = 0;
-		if (FUN_004d1c40(Type, 5))
+		if (GetObjectFlag(Type, 5))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 11))
+		if (GetObjectFlag(Type, 11))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 10))
+		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
 		FUN_004a7460(TCommunicationObject{Type, (uint32)Data, 0});
 	}
@@ -1747,11 +1748,11 @@ void ReceiveCounterTrade()
 	for (int i = 0; i < Count; i++) {
 		int Type = GetWord();
 		int Data = 0;
-		if (FUN_004d1c40(Type, 5))
+		if (GetObjectFlag(Type, 5))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 11))
+		if (GetObjectFlag(Type, 11))
 			Data = GetByte();
-		if (FUN_004d1c40(Type, 10))
+		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
 		if (Open)
 			FUN_004a75e0(TCommunicationObject{Type, (uint32)Data, 0});

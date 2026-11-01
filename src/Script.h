@@ -160,7 +160,7 @@ public:
 	void seek(int Offset);
 	bool eof();
 	uint8 readByte();
-	int readWord();
+	uint16 readWord();
 	int readQuad();
 	char *readString();
 	void readBytes(uint8 *Buffer, int Count);

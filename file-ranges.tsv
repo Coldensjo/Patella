@@ -19,3 +19,4 @@ start	end	file	evidence
 0x507260	0x50727f	Talk.h	inline rule-violation write-enabled setter/getter, vtable 0x573bc8
 0x5079f0	0x5079ff	Talk.h	inline private-channel predicate calls virtual channel-ID getter and compares >=8
 0x508261	0x50826f	Talk.cpp	only INT3 alignment after final Talk catch handler; 0x508270 is std::string::find_last_of instantiated by already-reconstructed TMyException.cpp, names.tsv kind stl; no extra game function
+0x4d7cd0	0x4d913f	Player.cpp	gap after Objects.cpp: starts with the message map (0x4d7cd0) of the application class, whose vtable 0x56de08 has Player.cpp overrides (0x4d94c0, 0x4da3e0, 0x4dae60); the rest is its constructor (static initialiser 0x55a030, object 0x719dc0 among Player data 0x719db0-0x719e6c), FatalError (called only by Player.cpp), and MFC/STL COMDATs (fstream, getline, codecvt) used only by Player.cpp; 0x4d9110 is TMyException.h code kept in Player.obj

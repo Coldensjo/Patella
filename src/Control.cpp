@@ -19,6 +19,7 @@
 
 #include "Control.h"
 #include "Network.h"
+#include "Objects.h"
 #include "Communication.h"
 #include "Preferences.h"
 #include "Skins.h"
@@ -1073,7 +1074,7 @@ void ProcessEvents()
 			InstallPatch("Patch.exe");
 			break;
 		case 0x45:
-			FUN_004d7b40();
+			ReloadObjects();
 			break;
 		case 0x46:
 			FUN_00492490();
@@ -1130,7 +1131,7 @@ void InitControl(bool Gamemaster)
 	TBEGIN
 	try {
 		FUN_004fcd00();
-		FUN_004d77f0();
+		InitObjects();
 		FUN_004bf620(FUN_0044c8c0);
 		FUN_004a7d70();
 		FUN_00452190();
@@ -1175,7 +1176,7 @@ void ExitControl()
 	FUN_00496160();
 	FUN_00496160();
 	FUN_004b5760();
-	FUN_004d79b0();
+	ExitObjects();
 	FUN_004fcd30();
 	TEND
 }

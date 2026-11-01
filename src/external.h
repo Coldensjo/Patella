@@ -150,8 +150,6 @@ void FUN_004bd560(int dx, int dy); // 0x4bd560, Map.cpp
 void FUN_004bdb70(int dz); // 0x4bdb70, Map.cpp
 void FUN_004bdd70(int rx, int ry, int rz); // 0x4bdd70, Map.cpp
 void FUN_004beb90(int rx, int ry); // 0x4beb90, Map.cpp
-bool FUN_004d1c40(int ObjectType, int Flag); // 0x4d1c40, Objects.cpp
-int FUN_004d1f30(int ObjectType); // 0x4d1f30, Objects.cpp
 void FUN_004fd4c0(); // 0x4fd4c0, sysinc.cpp|Talk.cpp
 void FUN_004fd540(); // 0x4fd540, sysinc.cpp|Talk.cpp
 void FUN_004fd590(); // 0x4fd590, sysinc.cpp|Talk.cpp
@@ -167,8 +165,6 @@ TCommunicationChannel *FUN_00507bc0(int Type, bool Open, const char *Name, int C
 bool FieldRefreshRequested(int rx, int ry, int rz); // 0x4be750, Map.cpp
 extern uint32 DAT_005cc758; // 0x5cc758, graphics.cpp; Tibia.pic signature
 extern uint32 DAT_005ccb64; // 0x5ccb64, graphics.cpp; Tibia.spr signature
-extern uint32 DAT_00719d9c; // 0x719d9c, Objects.cpp; Tibia.dat signature
-extern int DAT_00719da0; // 0x719da0, Map.cpp/Inventory.cpp shared empty-object type; owner uncertain
 extern const char *PTR_s_Your_request_has_been_closed__005c0348; // 0x5c0348, Talk.cpp
 extern const char *PTR_s_The_channel_has_been_closed__You_005c034c; // 0x5c034c, Talk.cpp
 
@@ -538,9 +534,6 @@ void FUN_004bccb0();                   // 0x4bccb0
 void FUN_004bf620(void (*Callback)(int CreatureID)); // 0x4bf620
 
 // Objects.cpp
-void FUN_004d77f0();                   // 0x4d77f0
-void FUN_004d79b0();                   // 0x4d79b0
-void FUN_004d7b40();                   // 0x4d7b40
 
 // Preferences.cpp
 

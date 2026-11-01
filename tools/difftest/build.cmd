@@ -1,6 +1,6 @@
 @echo off
 rem Builds and runs the base-layer tests:
-rem   difftest.exe   reconstructed functions against the original machine code (difftest.cpp, statustest.cpp, preferencestest.cpp, scripttest.cpp)
+rem   difftest.exe   reconstructed functions against the original machine code (difftest.cpp, statustest.cpp, preferencestest.cpp, scripttest.cpp, objectstest.cpp)
 rem   vlongtest.exe  vlong and TRSA against exact integer arithmetic (vlongcheck.py)
 setlocal
 set VCVARS=C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat
@@ -15,6 +15,10 @@ cl %FLAGS% /EHa /Fe"%OUT%\difftest.exe" "%~dp0difftest.cpp" "%~dp0statustest.cpp
 	"%ROOT%\src\Utils.cpp" "%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" ^
 	"%ROOT%\src\Skins.cpp" "%ROOT%\src\Status.cpp" "%ROOT%\src\Preferences.cpp" ^
 	"%ROOT%\src\Script.cpp" "%ROOT%\src\Talk.cpp" ^
+cl %FLAGS% /EHa /Fe"%OUT%\difftest.exe" "%~dp0difftest.cpp" "%~dp0statustest.cpp" "%~dp0preferencestest.cpp" "%~dp0scripttest.cpp" "%~dp0objectstest.cpp" ^
+	"%ROOT%\src\Utils.cpp" "%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" ^
+	"%ROOT%\src\Skins.cpp" "%ROOT%\src\Status.cpp" "%ROOT%\src\Preferences.cpp" ^
+	"%ROOT%\src\Script.cpp" "%ROOT%\src\Objects.cpp" ^
 	/link /BASE:0x20000000 /DYNAMICBASE:NO /FIXED >"%OUT%\cl.txt" || (type "%OUT%\cl.txt" & exit /b 1)
 "%OUT%\difftest.exe" "%ROOT%\Tibia.exe" || exit /b 1
 

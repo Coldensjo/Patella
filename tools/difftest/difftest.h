@@ -35,3 +35,4 @@ void TestStatus();
 void TestPreferences();
 void TestScript();
 void TestTalk();
+void TestObjects(const char *ExePath); // objectstest.cpp, loads Tibia.dat next to Tibia.exe
