@@ -861,3 +861,21 @@ address	name	kind	confidence	note
 0x4fce50	ResizeClipboardBuffer	game	medium	sysinc.cpp line 63 (help)
 0x4fcff0	GetClipboardText	game	medium	sysinc.cpp line 104; 0x4fd02c is its interior, not a function
 0x4fd02c	GetClipboardText_interior	game	high	interior block of 0x4fcff0 (Ghidra split), not a separate function
+0x4a29e0	GUI_scalar_deleting_dtor	stl	medium	compiler-generated deleting destructor of a GUI.cpp class (calls 0x4a2590), kept in GUI.obj
+0x4a2a00	SetHelpPosition	game	medium	Help.cpp: position of the help bubble's window
+0x4a2a20	MoveHelpPosition	game	medium	Help.cpp
+0x4a2a50	SetHelpSize	game	medium	Help.cpp
+0x4a2a70	SetHelpHandle	game	medium	Help.cpp: handle of the thing under the magnifying glass; marks a change
+0x4a2a90	GetHelpArea	game	medium	Help.cpp
+0x4a2ac0	GetHelpHandle	game	medium	Help.cpp
+0x4a2ad0	GetHelpHandleChanged	game	medium	Help.cpp: returns and clears the change flag
+0x4a2ae0	InitHelp	game	medium	Help.cpp
+0x4a2b00	GetEventHelp	game	medium	Help.cpp: the first queued event help, 0 if none
+0x4a2b20	PopEventHelp	game	medium	Help.cpp
+0x4a2e70	GetHelpText	game	high	Help.cpp line 354 (Handle): help bubble texts
+0x4a32e0	AddEventHelp	game	high	Help.cpp line 369: In(Number,1,EVENTHELPS); queues a hint not known yet
+0x4a3460	CheckEventHelpName	game	medium	Help.cpp line 381 (Name): hints for the Rookgaard NPCs
+0x4a3690	CheckEventHelpPosition	game	medium	Help.cpp: hints for places (crossroad, underground, mainland, depots)
+0x4a3b60	GetEventHelpTitle	game	high	Help.cpp lines 571-602
+0x4a3fd0	GetEventHelpText	game	high	Help.cpp lines 610-691
+0x4a4440	GetCurrentHelpText	game	medium	Help.cpp: GetHelpText(HelpHandle)

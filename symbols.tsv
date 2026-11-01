@@ -3621,28 +3621,28 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4a2879	20	Catch@004a2879	catch	GUI.cpp	between		0x4a27c0	
 0x4a288d	145	Catch@004a288d	catch	GUI.cpp	assert	887	0x4a27c0	
 0x4a291e	162	Catch@004a291e	catch	GUI.cpp	assert	887	0x4a27c0	
-0x4a29e0	30	FUN_004a29e0	game	GUI.cpp|Help.cpp	gap			
-0x4a2a00	20	FUN_004a2a00	game	GUI.cpp|Help.cpp	gap			
-0x4a2a20	35	FUN_004a2a20	game	GUI.cpp|Help.cpp	gap			
-0x4a2a50	20	FUN_004a2a50	game	GUI.cpp|Help.cpp	gap			
-0x4a2a70	25	FUN_004a2a70	game	GUI.cpp|Help.cpp	gap			
-0x4a2a90	48	FUN_004a2a90	game	GUI.cpp|Help.cpp	gap			
-0x4a2ac0	6	FUN_004a2ac0	game	GUI.cpp|Help.cpp	gap			
-0x4a2ad0	13	FUN_004a2ad0	game	GUI.cpp|Help.cpp	gap			
-0x4a2ae0	23	FUN_004a2ae0	game	GUI.cpp|Help.cpp	gap			
-0x4a2b00	27	FUN_004a2b00	game	GUI.cpp|Help.cpp	gap			
-0x4a2b20	105	FUN_004a2b20	game	GUI.cpp|Help.cpp	gap			
+0x4a29e0	30	FUN_004a29e0	game	Help.cpp	range			
+0x4a2a00	20	FUN_004a2a00	game	Help.cpp	range			
+0x4a2a20	35	FUN_004a2a20	game	Help.cpp	range			
+0x4a2a50	20	FUN_004a2a50	game	Help.cpp	range			
+0x4a2a70	25	FUN_004a2a70	game	Help.cpp	range			
+0x4a2a90	48	FUN_004a2a90	game	Help.cpp	range			
+0x4a2ac0	6	FUN_004a2ac0	game	Help.cpp	range			
+0x4a2ad0	13	FUN_004a2ad0	game	Help.cpp	range			
+0x4a2ae0	23	FUN_004a2ae0	game	Help.cpp	range			
+0x4a2b00	27	FUN_004a2b00	game	Help.cpp	range			
+0x4a2b20	105	FUN_004a2b20	game	Help.cpp	range			
 0x4a2e70	898	FUN_004a2e70	game	Help.cpp	assert	354		
 0x4a32e0	381	FUN_004a32e0	game	Help.cpp	assert	369		
 0x4a3460	556	FUN_004a3460	game	Help.cpp	assert	381		
 0x4a3690	1226	FUN_004a3690	game	Help.cpp	between			
 0x4a3b60	1066	FUN_004a3b60	game	Help.cpp	assert	571,602		
 0x4a3fd0	1066	FUN_004a3fd0	game	Help.cpp	assert	610,691		
-0x4a4440	15	FUN_004a4440	game	Help.cpp|Inventory.cpp	gap			
-0x4a4460	188	FUN_004a4460	game	Help.cpp|Inventory.cpp	gap			
-0x4a4520	13	FUN_004a4520	game	Help.cpp|Inventory.cpp	gap			
-0x4a4530	6	FUN_004a4530	game	Help.cpp|Inventory.cpp	gap			
-0x4a4540	6	FUN_004a4540	game	Help.cpp|Inventory.cpp	gap			
+0x4a4440	15	FUN_004a4440	game	Help.cpp	range			
+0x4a4460	188	FUN_004a4460	game	Inventory.cpp	range			
+0x4a4520	13	FUN_004a4520	game	Inventory.cpp	range			
+0x4a4530	6	FUN_004a4530	game	Inventory.cpp	range			
+0x4a4540	6	FUN_004a4540	game	Inventory.cpp	range			
 0x4a4550	371	FUN_004a4550	game	Inventory.cpp	assert	55		
 0x4a46d0	106	FUN_004a46d0	game	Inventory.cpp	between			Position
 0x4a473a	20	Catch@004a473a	catch	Inventory.cpp	between		0x4a46d0	

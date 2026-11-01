@@ -422,3 +422,27 @@ callcheck differences, caller integration and differential coverage.
   because difftest.exe gives Status.cpp recorders for GetMilliseconds,
   RemoveFile and SetClipboardText. The rest needs the clipboard or the
   original's CRT (srand).
+
+## Help.cpp and the gaps on both sides
+
+- **0x4a2a00-0x4a2b88 is Help.cpp** (high): the functions use only Help.cpp's
+  data: 0x5ce520-0x5ce538 next to the EventHelps vector 0x5ce53c (static
+  initialiser 0x559e80, right after GUI.cpp's at 0x559e60; GUI.cpp's data ends
+  at 0x5ce51c) and the asserted AddEventHelp uses the same count. 0x4a29e0 is
+  a compiler-generated deleting destructor of a GUI.cpp class (stl row).
+- **The gap after Help.cpp**: 0x4a4440 (GetCurrentHelpText) is Help.cpp's;
+  0x4a4460-0x4a4546 use Inventory.cpp's data and are recorded as
+  Inventory.cpp, not reconstructed yet.
+- **Names** (medium/low): the help-area and handle functions, GetEventHelp,
+  PopEventHelp, AddEventHelp (the "hints" are Preferences' KnownHints),
+  CheckEventHelpName, CheckEventHelpPosition, GetEventHelpTitle/Text,
+  GetCurrentHelpText, the data names. EVENTHELPS = 14 from the assertions.
+- **CheckEventHelpPosition** is written as independent tests with the
+  binary's hex bounds; the binary merged tests with a common x and returns
+  early where no later test can match. Verified on every bound and its
+  neighbours on floors 4-9 (difftest).
+- **GetHelpText** is one switch; the binary splits it into >1000, ==1000 and
+  the 10-23 table. Texts were copied from the decompiled strings and are
+  compared byte for byte.
+- **The vector<int> destructor** (atexit 0x55a2b0 frees entry) is not in
+  Container.h yet; behaviour at process exit only.

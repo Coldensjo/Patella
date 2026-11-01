@@ -17,6 +17,7 @@
 // event and are deleted here.
 
 #include "Control.h"
+#include "Help.h"
 #include "Network.h"
 #include "Objects.h"
 #include "Communication.h"
@@ -348,14 +349,14 @@ void MouseMove(int x, int y)
 		ModalWindow->MouseMove(x - ModalWindow->X, y - ModalWindow->Y);
 		break;
 	case 9:
-		FUN_004a2a00(0, 0);
-		FUN_004a2a50(0, 0);
+		SetHelpPosition(0, 0);
+		SetHelpSize(0, 0);
 		MainWindow->HelpMouseMove(x, y);
-		if (FUN_004a2ad0()) {
+		if (GetHelpHandleChanged()) {
 			delete ModalWindow;
 			ModalWindow = NULL;
-			if (FUN_004a2ac0() != 0)
-				ModalWindow = new THelpBubble(FUN_004a4440());
+			if (GetHelpHandle() != 0)
+				ModalWindow = new THelpBubble(GetCurrentHelpText());
 		}
 		if (ModalWindow != NULL)
 			((TContextMenu *)ModalWindow)->FUN_00442110(MainWindow);
@@ -680,7 +681,7 @@ void ReceivePackets()
 				SetConnectionState(8);
 				EnterGame();
 				ReceiveGameLogin();
-				FUN_004a32e0(1);
+				AddEventHelp(1);
 				SendFightModes();
 				AddMessage(0x2b, 0, 0);
 				break;
@@ -1027,7 +1028,7 @@ void ProcessEvents()
 			break;
 		case 0x2e:
 			SetActionState(9);
-			FUN_004a2a70(0);
+			SetHelpHandle(0);
 			break;
 		case 0x2f:
 			MainWindow->Console->FUN_00425070(4, 4, Param2, -1, Param2);
@@ -1183,7 +1184,7 @@ void InitControl(bool Gamemaster)
 		FUN_004a7d70();
 		FUN_00452190();
 		InitStatus(Gamemaster, LinkCopyWarning);
-		FUN_004a2ae0();
+		InitHelp();
 		InitPreferences();
 		InitTalk();
 		FUN_00494af0(0xa00000);

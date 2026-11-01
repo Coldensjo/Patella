@@ -94,7 +94,6 @@ void FUN_004516e0(); // 0x4516e0, Creatures.cpp
 bool FUN_004518b0(int Direction); // 0x4518b0, Creatures.cpp
 void FUN_00451db0(TCommunicationCreature *Creature); // 0x451db0, Creatures.cpp
 void FUN_00452320(int x, int y, int z); // 0x452320, Creatures.cpp
-void FUN_004a3690(int x, int y, int z); // 0x4a3690, Help.cpp
 void FUN_004a4520(); // 0x4a4520, Help.cpp|Inventory.cpp
 void FUN_004a4550(int Position, TCommunicationObject Object); // 0x4a4550, Inventory.cpp
 void FUN_004a46d0(int Position); // 0x4a46d0, Inventory.cpp
@@ -417,16 +416,8 @@ void FUN_00496160();                   // 0x496160, an empty function; ExitContr
 void FUN_00498160();                   // 0x498160, initialises GUIStyle among others
 bool FUN_004a1480(int Key);            // 0x4a1480
 void FUN_004a27c0();                   // 0x4a27c0
-void FUN_004a2a00(int Param1, int Param2); // 0x4a2a00
-void FUN_004a2a50(int Param1, int Param2); // 0x4a2a50
-void FUN_004a2a70(int Value);          // 0x4a2a70, sets 0x5ce528 and a changed flag
-int FUN_004a2ac0();                    // 0x4a2ac0, returns 0x5ce528
-bool FUN_004a2ad0();                   // 0x4a2ad0, returns and clears the changed flag
-void FUN_004a2ae0();                   // 0x4a2ae0
 
 // Help.cpp
-void FUN_004a32e0(int Value);          // 0x4a32e0, line 369
-const char *FUN_004a4440();            // 0x4a4440, after Help.cpp; the current help text
 
 // Inventory.cpp
 void FUN_004a7d20();                   // 0x4a7d20

@@ -380,6 +380,7 @@ int main(int argc, char **argv)
 	TestScript();
 	TestPreferencesFile();
 	TestPlayer();
+	TestHelp();
 	TestTalk();
 	TestObjects(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 #endif

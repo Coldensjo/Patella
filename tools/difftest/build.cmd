@@ -13,10 +13,10 @@ if not exist "%OUT%" mkdir "%OUT%"
 set BASEFLAGS=/nologo /std:c++17 /MT /O2 /W3 /DTIBIA_MFC_SHIM /D_WIN32_WINNT=0x0601 /I"%ROOT%\src"
 set FLAGS=%BASEFLAGS% /Fo"%OUT%\\"
 
-cl %FLAGS% /EHa /Fe"%OUT%\difftest.exe" "%~dp0difftest.cpp" "%~dp0statustest.cpp" "%~dp0preferencestest.cpp" "%~dp0scripttest.cpp" "%~dp0talktest.cpp" "%~dp0objectstest.cpp" "%~dp0playertest.cpp" ^
+cl %FLAGS% /EHa /Fe"%OUT%\difftest.exe" "%~dp0difftest.cpp" "%~dp0statustest.cpp" "%~dp0preferencestest.cpp" "%~dp0scripttest.cpp" "%~dp0talktest.cpp" "%~dp0objectstest.cpp" "%~dp0playertest.cpp" "%~dp0helptest.cpp" ^
 	"%ROOT%\src\Utils.cpp" "%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" ^
 	"%ROOT%\src\Skins.cpp" "%ROOT%\src\Status.cpp" "%ROOT%\src\Preferences.cpp" ^
-	"%ROOT%\src\Script.cpp" "%ROOT%\src\Talk.cpp" "%ROOT%\src\Objects.cpp" "%ROOT%\src\Player.cpp" "%ROOT%\src\Surface.cpp" ^
+	"%ROOT%\src\Script.cpp" "%ROOT%\src\Talk.cpp" "%ROOT%\src\Objects.cpp" "%ROOT%\src\Player.cpp" "%ROOT%\src\Surface.cpp" "%ROOT%\src\Help.cpp" ^
 	/link /BASE:0x20000000 /DYNAMICBASE:NO /FIXED >"%OUT%\cl.txt" || (type "%OUT%\cl.txt" & exit /b 1)
 "%OUT%\difftest.exe" "%ROOT%\Tibia.exe" || exit /b 1
 

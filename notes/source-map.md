@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 408 | 63253 |
+| range | 424 | 63833 |
 | header | 21 | 14301 |
-| gap | 301 | 54018 |
+| gap | 285 | 53438 |
 
 ## Source files
 
@@ -40,8 +40,8 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | DialogWindow.cpp | 39 | 119 | 22972 | `0x485843` | `0x48b287` | 63-1127 |
 | graphics.cpp | 53 | 106 | 40314 | `0x48b550` | `0x4953c3` | 130-1539 |
 | GUI.cpp | 51 | 114 | 42555 | `0x497a00` | `0x4a291e` | 42-2004 |
-| Help.cpp | 6 | 0 | 5193 | `0x4a2e70` | `0x4a3fd0` | 354-691 |
-| Inventory.cpp | 27 | 12 | 15281 | `0x4a4550` | `0x4a7f00` | 55-400 |
+| Help.cpp | 18 | 0 | 5560 | `0x4a29e0` | `0x4a4440` | 354-691 |
+| Inventory.cpp | 31 | 12 | 15494 | `0x4a4460` | `0x4a7f00` | 55-400 |
 | MainFrm.cpp | 33 | 89 | 14518 | `0x4a8647` | `0x4abf66` | 112-871 |
 | MainWindow.cpp | 27 | 74 | 17242 | `0x4ac20e` | `0x4b07c6` | 85-828 |
 | Map.cpp | 74 | 151 | 55685 | `0x4b1440` | `0x4bf7ba` | 169-1842 |
@@ -83,8 +83,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | Dialogs.cpp / DialogWindow.cpp | 7 | 811 | `0x4854c0`-`0x485843` |
 | DialogWindow.cpp / graphics.cpp | 5 | 360 | `0x48b380`-`0x48b547` |
 | graphics.cpp / GUI.cpp | 37 | 7655 | `0x495480`-`0x4973e5` |
-| GUI.cpp / Help.cpp | 11 | 352 | `0x4a29e0`-`0x4a2b89` |
-| Help.cpp / Inventory.cpp | 5 | 228 | `0x4a4440`-`0x4a4546` |
 | Inventory.cpp / MainFrm.cpp | 5 | 987 | `0x4a8210`-`0x4a8647` |
 | MainFrm.cpp / MainWindow.cpp | 6 | 496 | `0x4ac010`-`0x4ac20e` |
 | MainWindow.cpp / Map.cpp | 10 | 581 | `0x4b08a0`-`0x4b0b2b` |

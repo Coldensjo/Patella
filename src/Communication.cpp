@@ -5,6 +5,7 @@
 // numbers; see notes/Communication.md for the details of this file.
 
 #include "Communication.h"
+#include "Help.h"
 #include "Network.h"
 #include "Objects.h"
 #include "Utils.h"
@@ -1259,7 +1260,7 @@ void ReceiveMap()
 	ReadMap(0, 0, 17, 13);
 	SetTalkChanged();
 	FUN_004516e0();
-	FUN_004a3690(PlayerX, PlayerY, PlayerZ);
+	CheckEventHelpPosition(PlayerX, PlayerY, PlayerZ);
 	TEND2(PlayerX, PlayerY)
 }
 
@@ -1274,7 +1275,7 @@ void ReceiveMapNorth()
 	int y;
 	int z;
 	FUN_004b08c0(&x, &y, &z);
-	FUN_004a3690(x, y, z);
+	CheckEventHelpPosition(x, y, z);
 	TEND
 }
 
@@ -1289,7 +1290,7 @@ void ReceiveMapEast()
 	int y;
 	int z;
 	FUN_004b08c0(&x, &y, &z);
-	FUN_004a3690(x, y, z);
+	CheckEventHelpPosition(x, y, z);
 	TEND
 }
 
@@ -1304,7 +1305,7 @@ void ReceiveMapSouth()
 	int y;
 	int z;
 	FUN_004b08c0(&x, &y, &z);
-	FUN_004a3690(x, y, z);
+	CheckEventHelpPosition(x, y, z);
 	TEND
 }
 
@@ -1319,7 +1320,7 @@ void ReceiveMapWest()
 	int y;
 	int z;
 	FUN_004b08c0(&x, &y, &z);
-	FUN_004a3690(x, y, z);
+	CheckEventHelpPosition(x, y, z);
 	TEND
 }
 
@@ -2350,7 +2351,7 @@ void ReceiveFloorUp()
 	}
 	SetTalkChanged();
 	FUN_004516e0();
-	FUN_004a3690(x, y, z);
+	CheckEventHelpPosition(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {
 		for (int ry = 0; ry < 14; ry++)
 			FUN_004beb90(rx, ry);
@@ -2385,7 +2386,7 @@ void ReceiveFloorDown()
 	}
 	SetTalkChanged();
 	FUN_004516e0();
-	FUN_004a3690(x, y, z);
+	CheckEventHelpPosition(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {
 		for (int ry = 0; ry < 14; ry++)
 			FUN_004beb90(rx, ry);
