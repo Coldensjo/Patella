@@ -756,3 +756,130 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   tested (the original would raise an exception), so deleted marks (at 0,0,
   block 0,0) are never looked up. FindPath reached every result except -4
   (no path).
+
+## GUI.cpp
+
+Reconstructed by Claude Opus 5.5 (two delegates: the first stopped on a Claude
+API rate limit, WIP f6161d4; the second checked all of it, corrected it and
+finished it), November 1, 2026.
+
+- **The graphics/GUI gap 0x495480-0x4979ff is GUI.cpp and Container.h**
+  (high); nothing in it goes to graphics.cpp. Evidence: GUI.cpp's static
+  initialisers are 0x559e30 (Timers 0x5ccfa4, vector<TTimer*>(0,0,2,NULL)
+  0x4973f0), 0x559e50 (SkinProperties 0x5ccfc8, constructor 0x496800) and
+  0x559e60 (Hotkeys 0x5ce4f0, vector<THotkey>(0,50,10) 0x4976f0, missed by
+  Ghidra); its data is 0x5ccf98-0x5ce51c (graphics.cpp's ends at 0x5ccf94,
+  Help.cpp's starts at 0x5ce520). The gap functions are the compiler-generated
+  constructors of the SkinProperties blocks (called only by 0x496800), the
+  TWindow/TElement constructors whose vtables 0x564528/0x5645c8 hold the
+  asserted GUI.cpp functions, ~TComponent and the deleting destructors of
+  vtables 0x5644a0/0x5645c8, the TTimer getters, TCallback's constructor,
+  InitHotkeys (clears 0x5ccf98) and the empty 0x496160. Container.h:
+  vector<THotkey>::operator() 0x496570 and the two vector constructors.
+  0x4a29e0 (in the Help.cpp range) is TWindow's deleting destructor
+  (vtable 0x564528 slot 0); its names.tsv row was renamed from
+  GUI_scalar_deleting_dtor.
+- **Classes and vtables** (high for the layouts, medium for the class
+  names). TComponent (vtable 0x5644a0, 0x24 bytes) is abstract: slots
+  +0x4c-+0x68 and +0x78-+0x80 are _purecall (0x512a0d) and pure here.
+  TElement (0x5645c8, no children, 0x24 bytes) and TWindow (0x564528, child
+  list FirstChild/Next and Capture, 0x2c bytes, six more slots +0x84-+0x9c)
+  derive from it; TTimer (0x5646e8, 0x14 bytes) has only its destructor
+  virtual. Every slot of the three vtables is declared at its offset and was
+  compared with the binary. The inline slots whose only copies are in
+  earlier objects (GetNext 0x417680, GetParent, TWindow::GetFirstChild,
+  GetCapture, Fit, GetMinimumWidth/Height 0x417a20, the TElement mouse
+  answers 0x4259f0/0x425a00/0x41acb0/0x417a30/0x417a40, and
+  TComponent::GetFirstChild/GetLastChild, which throw "not possible" at
+  GUI.h lines 681/682) are defined in GUI.h and have names.tsv rows.
+  TComponent's seven child functions throw "not possible" (lines 993-1049;
+  line 1033 has no function, the linker dropped it).
+- **FitToChildren and FitToChild take a TRect by value** (high for the
+  16-byte block, medium for the type): Fit (0x4176c0) and every caller
+  (0x441f4b, 0x442f58, 0x47fb59; FitToChild at 0x4882c0) build the margins
+  with sub esp,0x10 and four stores, which MSVC does for a struct argument,
+  not for four ints (the WIP had four ints; the stack layout is the same, so
+  the difftest could not tell). SetChildArea and SetChildPosition get plain
+  pushes at all their call sites. The only known 16-byte struct is TRect;
+  its x, y, Width, Height are the left, top, right, bottom margins. The
+  SkinProperties members passed this way (+0x0a0, Style194+0x50) became
+  TRects.
+- **Names from the binary**: SkinProperties and its member paths
+  (PlayerStates.NumberOfIcons, BuddylistWindow.Logo, Buttons.Texture,
+  CheckBox.Item, StatusWindow.HitpointsBar/ManaBar), DrawingList,
+  DrawingListLength, NumberOfSkins, Parent, FirstChild, Capture, Component,
+  getWidth/getHeight, the parameter and local names in the assertions and
+  catch blocks (_OffsetX, _Width, Child, Child1/2, Search, Search1/2,
+  Before1/2, LeastX/Y, skin, srcx, srcy, skinoffsetx/y, Surface, elapsed,
+  Key, i). OffsetX/OffsetY and Width/Height follow from _OffsetX and _Width.
+  Ours (medium where the behaviour is clear, low otherwise): TComponent,
+  TElement, TTimer, TCallback, THotkey, TDrawing, TGUIPoint, the
+  SkinProperties block types and their DataXXX members, DefaultFontColor and
+  every function name (SetChildArea, FitToChild, FitToChildren, ClipChildren,
+  PositionChanged, HandleEvent, Send, AddTimer, UpdateTimers, AddHotkey,
+  CheckHotkey, DrawSkinClipped, InitSkinProperties, ...). The old external.h
+  names GUIStyle and TGUIStyle are replaced by SkinProperties/TSkinProperties.
+  PlayerStates' block constructor was inlined, so its boundaries are unknown
+  and NumberOfIcons stays the direct member Data490 (low).
+- **Graphics types in GUI.h** (judgement): TRect, TRGBColor and TFont belong
+  to graphics.cpp's header, but GUI.h needs them complete, so they moved from
+  external.h into GUI.h until graphics.cpp is merged. Their default
+  constructors zero them (the SkinProperties constructors zero every such
+  member); TFont() is font 4 with colour 224,224,224, read from a copy that
+  every object constructing a TFont has (GUI 0x5c1954, DialogElements
+  0x5c1230, an earlier object 0x5c066c), so DefaultFontColor is a header
+  constant. Main's TRGBColor(int Color) palette constructor (Map.cpp) was
+  merged into GUI.h's TRGBColor.
+- **The empty function 0x496160** (low for the names): ExitControl calls it
+  five times; following InitControl's order backwards they are ExitHotkeys
+  (InitHotkeys is called last), ExitCommunication, ExitHelp, ExitCreatures
+  and ExitInventory, each an empty function in its own file;
+  TComponent::Arrange/PositionChanged and TElement::StopDragging fold into
+  the same copy. KeyPress and HandleEvent fold into 0x4eac00.
+- **Try blocks from the exception tables** (high): the assertions come before
+  TBEGIN where the try starts above state 0 (DrawSkin 35, DrawSkinClipped 15,
+  GetPrevious 5, RemoveChild 10, InsertChildAfter 10, SwapChildren 25,
+  SetCapture/ReleaseCapture 5, SetChildArea/SetChildPosition/FitToChild 15);
+  SetSize, InsertChild and AppendChild have assertions and no try; the seven
+  "not possible" functions share one 5-state table without try;
+  InitSkinProperties has 11 states and no try block (TBEGIN/TEND around a
+  body that cannot throw, as in Creatures.cpp); UpdateTimers' extra state
+  is its static LastTime. No function has a switch (no jump tables).
+- **Odd behaviour kept** (high): SwapChildren of two children that are not
+  neighbours removes them and inserts each after its own predecessor, so
+  nothing changes; AppendChild does not clear Next when the list was empty;
+  RemoveChild of the capturing child stops its drag and releases the capture
+  through the child (with NULL); TWindow::StopDragging does not release the
+  capture of the parents; TElement::SetCapture ignores its argument;
+  MouseHover and HelpMouseMove ignore the capture, MouseHover goes only to
+  the first child under the point; TTimer::Update sends the callback on every
+  update, not only at the end; a timer of time 0 is never registered;
+  CheckHotkey drops flag 0x200 and folds lower-case letters; RemoveHotkey
+  moves the last entry into the gap; ClipChildren compares the right and
+  bottom edges with the old position; FitToChildren does nothing without
+  children and takes all margins as absolute values.
+- **Error texts**: DrawSkinClipped's "some assertions failed (surface: ...)"
+  and TComponent::Draw's "dialog origin outside main window (surface: ...)"
+  are built with a stringstream as in the binary; the stream pieces were
+  compared with the binary's strings (" x: ", " y: ", " i: ", "/", ")").
+- **callcheck** (23 of 63 functions differ, all explained): virtual calls
+  are lexical names in our source but indirect calls in the decompile
+  (RemoveChild, InsertChild, InsertChildAfter, StopDragging, DeleteChild,
+  GetParent; Child->MouseMove etc. also resolve to Control.cpp's free
+  functions of the same names, GetMinimumWidth/Height to a MapWindow row);
+  Timers(i) and Hotkeys(i) are Container.h operator() calls (0x452ac0,
+  0x496570); IsExpired is inlined in UpdateTimers; the qualified calls
+  TComponent::SetSize and TComponent::Draw are not resolved by the script;
+  the stringstream constructor 0x403a10; Ghidra split the six mouse
+  functions' child loops (rows *_block, not functions).
+- **Difftest** (guitest.cpp, 4,823,996 checks): SkinProperties' constructor
+  on 0xcc-filled memory and InitSkinProperties, byte for byte; DrawSkin,
+  DrawSkinClipped and TComponent::Draw against recorders of the two
+  graphics.cpp picture functions; two mirrored window trees (original
+  objects made by the image's constructors, ours) under 30 kinds of random
+  operations (each run at least 230 times), comparing trees, captures,
+  return values, call logs of probe children and the help state; timers and
+  hotkeys with probe receivers. Assertion failures are not exercised.
+- **Left for graphics.cpp**: the two picture functions keep their FUN_ names
+  (FUN_00490c60, FUN_004910e0); FUN_004910e0's declaration was added to
+  external.h in its own block so the graphics.cpp lines stay untouched.
