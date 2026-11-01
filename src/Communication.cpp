@@ -1,4 +1,4 @@
-// Communication.cpp: reconstructed from Tibia.exe 7.72 (0x404350-0x417270).
+// Communication.cpp: reconstructed from Tibia.exe 7.72 (0x401000, 0x404350-0x417270).
 // The client-to-server packets (Send*) and the handlers of the server's
 // packets (Receive*), which ReceivePackets in Control.cpp dispatches.
 // Functions are in original source order from the assertion and catch line
@@ -17,7 +17,7 @@
 #include <cstddef>
 
 static int SkipFields;        // 0x5c4340
-static uint8 *PatchData;      // 0x5c4344; also zeroed by 0x401000 in the leading gap
+static uint8 *PatchData;      // 0x5c4344, cleared by InitCommunication
 static bool PatchWholeFile;  // 0x5c4348
 static int PatchDataCount;    // 0x5c434c
 static int PatchDataSize;     // 0x5c4350
@@ -46,6 +46,15 @@ static_assert(offsetof(TTalkLine, Addressee) == 0x14, "statement addressee");
 //   0x4133e0 string::append(ptr, count), 0x4134f0 string::append(string, pos, count),
 //   0x4135e0 num_put::do_put(long double),
 //   0x4044f0 TMyException copy constructor, 0x404570 its scalar deleting destructor.
+// The same holds for 0x401010-0x404341 before the file's other functions
+// (string, stringstream and locale code; names.tsv rows std_<address>).
+
+// 0x401000, the first function of the image (no line evidence). Called by
+// InitControl.
+void InitCommunication()
+{
+	PatchData = NULL;
+}
 
 // 0x413780, lines 41-96
 void SendLogin(uint32 AccountID, const char *Password)

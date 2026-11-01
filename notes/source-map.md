@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 272 | 46243 |
+| range | 362 | 56552 |
 | header | 21 | 14301 |
-| gap | 437 | 71028 |
+| gap | 347 | 60719 |
 
 ## Source files
 
@@ -29,7 +29,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 
 | File | Functions | Catch | Bytes | First | Last | Assert lines |
 |---|---:|---:|---:|---|---|---|
-| Communication.cpp | 142 | 395 | 76753 | `0x404350` | `0x417416` | 41-2811 |
+| Communication.cpp | 224 | 403 | 87062 | `0x401000` | `0x417416` | 41-2811 |
 | ConsoleWindow.cpp | 76 | 212 | 52806 | `0x41864d` | `0x42586c` | 84-2335 |
 | ContentWindows.cpp | 144 | 405 | 93309 | `0x426480` | `0x43d640` | 106-3389 |
 | ContextMenus.cpp | 35 | 98 | 31822 | `0x43d86c` | `0x44585c` | 106-1530 |
@@ -73,7 +73,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 | Between | Functions | Bytes | Range |
 |---|---:|---:|---|
-| ? / Communication.cpp | 90 | 10309 | `0x401000`-`0x404342` |
 | Communication.cpp / ConsoleWindow.cpp | 12 | 1388 | `0x4174d0`-`0x41864d` |
 | ConsoleWindow.cpp / ContentWindows.cpp | 10 | 1078 | `0x425920`-`0x425e6e` |
 | ContentWindows.cpp / ContextMenus.cpp | 4 | 371 | `0x43d6f0`-`0x43d86c` |

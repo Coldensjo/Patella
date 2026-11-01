@@ -352,3 +352,16 @@ callcheck differences, caller integration and differential coverage.
   (and with 0,0 after switching to DirectX 9 fullscreen).
 - Not differentially tested: OutputControlErrorInformations writes through
   the original's iostream code, and Resize needs the window objects.
+
+## start/Communication gap (0x401000-0x40434f)
+
+- **0x401000 is Communication.cpp's InitCommunication** (high for the file,
+  low for the name): it clears PatchData (0x5c4344), which only
+  Communication.cpp uses, and InitControl calls it among the other Init
+  functions. It is the first function of the image, before the STL code.
+- **0x401010-0x404341 is STL** (high): string, stringstream, streambuf,
+  locale, ctype, codecvt and num_put code with no game data or game calls
+  (checked by scanning every function for game globals, game callees and
+  strings); Communication.obj, the first object in link order, is the first
+  to instantiate it. Rows of kind stl with generic names std_<address>
+  (low): naming each template member was not needed for the reconstruction.

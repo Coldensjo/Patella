@@ -381,7 +381,6 @@ extern const char *TextNeverGiveAccount;     // 0x5c0d00
 extern const char *TextRuleViolations;       // 0x5c0d78
 
 // Communication.cpp
-void FUN_00401000();                   // 0x401000, before Communication.cpp; clears 0x5c4344
 
 // Creatures.cpp
 void FUN_0044c860();                   // 0x44c860

@@ -759,3 +759,78 @@ address	name	kind	confidence	note
 0x445900	OutputControlErrorInformations	game	medium	between ContextMenus.cpp and Control.cpp; name from Player.cpp's catch text
 0x4a8360	CMainFrame_OutputErrorInformations	game	medium	MainFrm.cpp; name from Player.cpp's catch text
 0x4459b0	Resize	game	medium	Control.cpp line 93 (Width, Height): client area resized (MainFrm.cpp)
+0x401010	std_401010	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401070	std_401070	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4010a0	std_4010a0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4010e0	std_4010e0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401120	std_401120	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401130	std_401130	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401170	std_401170	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x401190	std_401190	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4011a0	std_4011a0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x4011b0	std_4011b0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4011c0	std_4011c0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4011e0	std_4011e0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401220	std_401220	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401280	std_401280	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: allocates
+0x401320	std_401320	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: locale info, ctype
+0x401420	std_401420	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ctype, ctype tolower
+0x401470	std_401470	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ctype, ctype toupper
+0x401520	std_401520	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: allocates
+0x401590	std_401590	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4015b0	std_4015b0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4015f0	std_4015f0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401660	std_401660	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: streambuf
+0x401680	std_401680	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: streambuf
+0x4018a0	std_4018a0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4018c0	std_4018c0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: use_facet (throws bad_cast)
+0x4019d0	std_4019d0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401d20	std_401d20	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: allocates
+0x401f50	std_401f50	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401f70	std_401f70	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x402020	std_402020	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: locale info, codecvt/num_get
+0x4020a0	std_4020a0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x402100	std_402100	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x402160	std_402160	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4021f0	std_4021f0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: string grow/move
+0x402270	std_402270	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: allocates
+0x40230c	std_40230c	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4023b0	std_4023b0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4023d0	std_4023d0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x402460	std_402460	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4024d0	std_4024d0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: allocates
+0x402540	std_402540	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x402570	std_402570	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4025e0	std_4025e0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4027eb	std_4027eb	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x402840	std_402840	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x402a2a	std_402a2a	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x402af0	std_402af0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: use_facet (throws bad_cast)
+0x402c00	std_402c00	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x402cca	std_402cca	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x40301a	std_40301a	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x403070	std_403070	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x40318a	std_40318a	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x4031e0	std_4031e0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: ios_base
+0x4032c0	std_4032c0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4034f0	std_4034f0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403550	std_403550	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4035c0	std_4035c0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x4035e0	std_4035e0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403600	std_403600	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: use_facet (throws bad_cast)
+0x403710	std_403710	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: locale info, allocates
+0x4037e0	std_4037e0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403800	std_403800	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403850	std_403850	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403880	std_403880	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: codecvt/num_get, numpunct
+0x403960	std_403960	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: allocates
+0x4039a0	std_4039a0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403aa0	std_403aa0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403c00	std_403c00	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: num_put format
+0x403c60	std_403c60	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x403cf0	std_403cf0	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: string grow/move
+0x403f80	std_403f80	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: string find
+0x404050	std_404050	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x404070	std_404070	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: num_put format
+0x404320	std_404320	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
+0x401000	InitCommunication	game	medium	Communication.cpp: clears PatchData (0x5c4344); called by InitControl

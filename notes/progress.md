@@ -18,9 +18,8 @@ Read this and `git log` first when resuming.
 
 ## Current item
 
-4: small gaps. ContextMenus/Control (0x445900 OutputControlErrorInformations,
-0x4459b0 with catch line 93 of Control.cpp), start/Communication
-(0x401000-0x40434f), Status/SurfaceDX (0x4eaa80-0x4ed19f).
+4: small gaps. ContextMenus/Control and start/Communication are done;
+Status/SurfaceDX (0x4eaa80-0x4ed19f) is next.
 
 ## Delegates (running)
 

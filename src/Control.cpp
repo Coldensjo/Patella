@@ -1190,7 +1190,7 @@ void InitControl(bool Gamemaster)
 		InitSkins();
 		FUN_00498160();
 		InitNetwork(ConnectionEstablished, ReceivePackets, ConnectionClosed);
-		FUN_00401000();
+		InitCommunication();
 		FUN_00496150();
 	} catch (PROGRAM_ERROR Error) {
 		try {

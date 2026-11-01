@@ -1,94 +1,94 @@
 address	size	name	kind	file	how	assert_lines	parent	params
-0x401000	11	FUN_00401000	game	?|Communication.cpp	gap			
-0x401010	88	FUN_00401010	game	?|Communication.cpp	gap			
-0x401070	39	FUN_00401070	game	?|Communication.cpp	gap			
-0x4010a0	58	FUN_004010a0	game	?|Communication.cpp	gap			
-0x4010e0	24	FUN_004010e0	game	?|Communication.cpp	gap			
-0x401120	7	FUN_00401120	game	?|Communication.cpp	gap			
-0x401130	62	FUN_00401130	game	?|Communication.cpp	gap			
-0x401170	30	FUN_00401170	game	?|Communication.cpp	gap			
-0x401190	15	FUN_00401190	game	?|Communication.cpp	gap			
-0x4011a0	11	FUN_004011a0	game	?|Communication.cpp	gap			
-0x4011b0	15	FUN_004011b0	game	?|Communication.cpp	gap			
-0x4011c0	30	FUN_004011c0	game	?|Communication.cpp	gap			
-0x4011e0	55	FUN_004011e0	game	?|Communication.cpp	gap			
-0x401220	95	FUN_00401220	game	?|Communication.cpp	gap			
-0x401280	104	FUN_00401280	game	?|Communication.cpp	gap			
-0x401320	210	FUN_00401320	game	?|Communication.cpp	gap			
-0x401420	46	FUN_00401420	game	?|Communication.cpp	gap			
-0x401470	46	FUN_00401470	game	?|Communication.cpp	gap			
-0x401520	101	FUN_00401520	game	?|Communication.cpp	gap			
-0x401590	30	FUN_00401590	game	?|Communication.cpp	gap			
-0x4015b0	58	FUN_004015b0	game	?|Communication.cpp	gap			
-0x4015f0	108	FUN_004015f0	game	?|Communication.cpp	gap			
-0x401660	29	std::basic_streambuf<char,std::char_traits<char>_>::uflow	game	?|Communication.cpp	gap			
-0x401680	16	std::basic_streambuf<char,std::char_traits<char>_>::_Gninc	game	?|Communication.cpp	gap			
-0x4018a0	30	FUN_004018a0	game	?|Communication.cpp	gap			
-0x4018c0	270	FUN_004018c0	game	?|Communication.cpp	gap			
-0x4019d0	22	FUN_004019d0	game	?|Communication.cpp	gap			
-0x401d20	502	FUN_00401d20	game	?|Communication.cpp	gap			
-0x401f50	30	FUN_00401f50	game	?|Communication.cpp	gap			
-0x401f70	163	FUN_00401f70	game	?|Communication.cpp	gap			
-0x402020	115	FUN_00402020	game	?|Communication.cpp	gap			
-0x4020a0	81	FUN_004020a0	game	?|Communication.cpp	gap			
-0x402100	83	FUN_00402100	game	?|Communication.cpp	gap			
-0x402160	132	FUN_00402160	game	?|Communication.cpp	gap			
-0x4021f0	117	FUN_004021f0	game	?|Communication.cpp	gap			
-0x402270	115	FUN_00402270	game	?|Communication.cpp	gap			
-0x4022e3	32	Catch@004022e3	catch	?|Communication.cpp	gap		0x402270	
-0x40230c	111	FUN_0040230c	game	?|Communication.cpp	gap			
-0x40237b	48	Catch@0040237b	catch	?|Communication.cpp	gap		0x40230c	
-0x4023b0	18	FUN_004023b0	game	?|Communication.cpp	gap			
-0x4023d0	142	FUN_004023d0	game	?|Communication.cpp	gap			
-0x402460	98	FUN_00402460	game	?|Communication.cpp	gap			
-0x4024d0	97	FUN_004024d0	game	?|Communication.cpp	gap			
-0x402540	38	FUN_00402540	game	?|Communication.cpp	gap			
-0x402570	112	FUN_00402570	game	?|Communication.cpp	gap			
-0x4025e0	19	FUN_004025e0	game	?|Communication.cpp	gap			
-0x402630	399	FUN_00402630	game	?|Communication.cpp	gap			
-0x4027bf	41	Catch@004027bf	catch	?|Communication.cpp	gap		0x402630	
-0x4027eb	78	FUN_004027eb	game	?|Communication.cpp	gap			
-0x402840	446	FUN_00402840	game	?|Communication.cpp	gap			
-0x4029fe	41	Catch@004029fe	catch	?|Communication.cpp	gap		0x402840	
-0x402a2a	194	FUN_00402a2a	game	?|Communication.cpp	gap			
-0x402af0	270	FUN_00402af0	game	?|Communication.cpp	gap			
-0x402c00	155	FUN_00402c00	game	?|Communication.cpp	gap			
-0x402c9b	41	Catch@00402c9b	catch	?|Communication.cpp	gap		0x402c00	
-0x402cca	77	FUN_00402cca	game	?|Communication.cpp	gap			
-0x402d20	227	FUN_00402d20	game	?|Communication.cpp	gap			
-0x402e10	234	FUN_00402e10	game	?|Communication.cpp	gap			
-0x402f00	238	FUN_00402f00	game	?|Communication.cpp	gap			
-0x402fee	41	Catch@00402fee	catch	?|Communication.cpp	gap		0x402f00	
-0x40301a	80	FUN_0040301a	game	?|Communication.cpp	gap			
-0x403070	238	FUN_00403070	game	?|Communication.cpp	gap			
-0x40315e	41	Catch@0040315e	catch	?|Communication.cpp	gap		0x403070	
-0x40318a	80	FUN_0040318a	game	?|Communication.cpp	gap			
-0x4031e0	209	FUN_004031e0	game	?|Communication.cpp	gap			
-0x4032c0	552	FUN_004032c0	game	?|Communication.cpp	gap			
-0x4034f0	84	FUN_004034f0	game	?|Communication.cpp	gap			
-0x403550	110	FUN_00403550	game	?|Communication.cpp	gap			
-0x4035c0	27	FUN_004035c0	game	?|Communication.cpp	gap			
-0x4035e0	27	FUN_004035e0	game	?|Communication.cpp	gap			
-0x403600	272	FUN_00403600	game	?|Communication.cpp	gap			
-0x403710	174	FUN_00403710	game	?|Communication.cpp	gap			
-0x4037e0	30	FUN_004037e0	game	?|Communication.cpp	gap			
-0x403800	70	FUN_00403800	game	?|Communication.cpp	gap			
-0x403850	35	FUN_00403850	game	?|Communication.cpp	gap			
-0x403880	198	FUN_00403880	game	?|Communication.cpp	gap			
-0x403946	17	Catch@00403946	catch	?|Communication.cpp	gap		0x403880	
-0x403960	54	FUN_00403960	game	?|Communication.cpp	gap			
-0x4039a0	37	FUN_004039a0	game	?|Communication.cpp	gap			
-0x4039d0	57	FUN_004039d0	game	?|Communication.cpp	gap			
-0x403a10	143	FUN_00403a10	game	?|Communication.cpp	gap			
-0x403aa0	350	FUN_00403aa0	game	?|Communication.cpp	gap			
-0x403c00	96	FUN_00403c00	game	?|Communication.cpp	gap			
-0x403c60	132	FUN_00403c60	game	?|Communication.cpp	gap			
-0x403cf0	645	FUN_00403cf0	game	?|Communication.cpp	gap			
-0x403f80	203	FUN_00403f80	game	?|Communication.cpp	gap			
-0x404050	27	FUN_00404050	game	?|Communication.cpp	gap			
-0x404070	96	FUN_00404070	game	?|Communication.cpp	gap			
-0x4042f0	46	FUN_004042f0	game	?|Communication.cpp	gap			
-0x404320	34	FUN_00404320	game	?|Communication.cpp	gap			
+0x401000	11	FUN_00401000	game	Communication.cpp	range			
+0x401010	88	FUN_00401010	game	Communication.cpp	range			
+0x401070	39	FUN_00401070	game	Communication.cpp	range			
+0x4010a0	58	FUN_004010a0	game	Communication.cpp	range			
+0x4010e0	24	FUN_004010e0	game	Communication.cpp	range			
+0x401120	7	FUN_00401120	game	Communication.cpp	range			
+0x401130	62	FUN_00401130	game	Communication.cpp	range			
+0x401170	30	FUN_00401170	game	Communication.cpp	range			
+0x401190	15	FUN_00401190	game	Communication.cpp	range			
+0x4011a0	11	FUN_004011a0	game	Communication.cpp	range			
+0x4011b0	15	FUN_004011b0	game	Communication.cpp	range			
+0x4011c0	30	FUN_004011c0	game	Communication.cpp	range			
+0x4011e0	55	FUN_004011e0	game	Communication.cpp	range			
+0x401220	95	FUN_00401220	game	Communication.cpp	range			
+0x401280	104	FUN_00401280	game	Communication.cpp	range			
+0x401320	210	FUN_00401320	game	Communication.cpp	range			
+0x401420	46	FUN_00401420	game	Communication.cpp	range			
+0x401470	46	FUN_00401470	game	Communication.cpp	range			
+0x401520	101	FUN_00401520	game	Communication.cpp	range			
+0x401590	30	FUN_00401590	game	Communication.cpp	range			
+0x4015b0	58	FUN_004015b0	game	Communication.cpp	range			
+0x4015f0	108	FUN_004015f0	game	Communication.cpp	range			
+0x401660	29	std::basic_streambuf<char,std::char_traits<char>_>::uflow	game	Communication.cpp	range			
+0x401680	16	std::basic_streambuf<char,std::char_traits<char>_>::_Gninc	game	Communication.cpp	range			
+0x4018a0	30	FUN_004018a0	game	Communication.cpp	range			
+0x4018c0	270	FUN_004018c0	game	Communication.cpp	range			
+0x4019d0	22	FUN_004019d0	game	Communication.cpp	range			
+0x401d20	502	FUN_00401d20	game	Communication.cpp	range			
+0x401f50	30	FUN_00401f50	game	Communication.cpp	range			
+0x401f70	163	FUN_00401f70	game	Communication.cpp	range			
+0x402020	115	FUN_00402020	game	Communication.cpp	range			
+0x4020a0	81	FUN_004020a0	game	Communication.cpp	range			
+0x402100	83	FUN_00402100	game	Communication.cpp	range			
+0x402160	132	FUN_00402160	game	Communication.cpp	range			
+0x4021f0	117	FUN_004021f0	game	Communication.cpp	range			
+0x402270	115	FUN_00402270	game	Communication.cpp	range			
+0x4022e3	32	Catch@004022e3	catch	Communication.cpp	range		0x402270	
+0x40230c	111	FUN_0040230c	game	Communication.cpp	range			
+0x40237b	48	Catch@0040237b	catch	Communication.cpp	range		0x40230c	
+0x4023b0	18	FUN_004023b0	game	Communication.cpp	range			
+0x4023d0	142	FUN_004023d0	game	Communication.cpp	range			
+0x402460	98	FUN_00402460	game	Communication.cpp	range			
+0x4024d0	97	FUN_004024d0	game	Communication.cpp	range			
+0x402540	38	FUN_00402540	game	Communication.cpp	range			
+0x402570	112	FUN_00402570	game	Communication.cpp	range			
+0x4025e0	19	FUN_004025e0	game	Communication.cpp	range			
+0x402630	399	FUN_00402630	game	Communication.cpp	range			
+0x4027bf	41	Catch@004027bf	catch	Communication.cpp	range		0x402630	
+0x4027eb	78	FUN_004027eb	game	Communication.cpp	range			
+0x402840	446	FUN_00402840	game	Communication.cpp	range			
+0x4029fe	41	Catch@004029fe	catch	Communication.cpp	range		0x402840	
+0x402a2a	194	FUN_00402a2a	game	Communication.cpp	range			
+0x402af0	270	FUN_00402af0	game	Communication.cpp	range			
+0x402c00	155	FUN_00402c00	game	Communication.cpp	range			
+0x402c9b	41	Catch@00402c9b	catch	Communication.cpp	range		0x402c00	
+0x402cca	77	FUN_00402cca	game	Communication.cpp	range			
+0x402d20	227	FUN_00402d20	game	Communication.cpp	range			
+0x402e10	234	FUN_00402e10	game	Communication.cpp	range			
+0x402f00	238	FUN_00402f00	game	Communication.cpp	range			
+0x402fee	41	Catch@00402fee	catch	Communication.cpp	range		0x402f00	
+0x40301a	80	FUN_0040301a	game	Communication.cpp	range			
+0x403070	238	FUN_00403070	game	Communication.cpp	range			
+0x40315e	41	Catch@0040315e	catch	Communication.cpp	range		0x403070	
+0x40318a	80	FUN_0040318a	game	Communication.cpp	range			
+0x4031e0	209	FUN_004031e0	game	Communication.cpp	range			
+0x4032c0	552	FUN_004032c0	game	Communication.cpp	range			
+0x4034f0	84	FUN_004034f0	game	Communication.cpp	range			
+0x403550	110	FUN_00403550	game	Communication.cpp	range			
+0x4035c0	27	FUN_004035c0	game	Communication.cpp	range			
+0x4035e0	27	FUN_004035e0	game	Communication.cpp	range			
+0x403600	272	FUN_00403600	game	Communication.cpp	range			
+0x403710	174	FUN_00403710	game	Communication.cpp	range			
+0x4037e0	30	FUN_004037e0	game	Communication.cpp	range			
+0x403800	70	FUN_00403800	game	Communication.cpp	range			
+0x403850	35	FUN_00403850	game	Communication.cpp	range			
+0x403880	198	FUN_00403880	game	Communication.cpp	range			
+0x403946	17	Catch@00403946	catch	Communication.cpp	range		0x403880	
+0x403960	54	FUN_00403960	game	Communication.cpp	range			
+0x4039a0	37	FUN_004039a0	game	Communication.cpp	range			
+0x4039d0	57	FUN_004039d0	game	Communication.cpp	range			
+0x403a10	143	FUN_00403a10	game	Communication.cpp	range			
+0x403aa0	350	FUN_00403aa0	game	Communication.cpp	range			
+0x403c00	96	FUN_00403c00	game	Communication.cpp	range			
+0x403c60	132	FUN_00403c60	game	Communication.cpp	range			
+0x403cf0	645	FUN_00403cf0	game	Communication.cpp	range			
+0x403f80	203	FUN_00403f80	game	Communication.cpp	range			
+0x404050	27	FUN_00404050	game	Communication.cpp	range			
+0x404070	96	FUN_00404070	game	Communication.cpp	range			
+0x4042f0	46	FUN_004042f0	game	Communication.cpp	range			
+0x404320	34	FUN_00404320	game	Communication.cpp	range			
 0x404350	80	FUN_00404350	game	Communication.cpp	range			
 0x4043a0	20	Catch@004043a0	catch	Communication.cpp	range		0x404350	
 0x4043b4	143	Catch@004043b4	catch	Communication.cpp	assert	178	0x404350	
