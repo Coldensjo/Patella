@@ -11,3 +11,8 @@ unins000.*
 # REA output: empty stderr logs and the regenerable Ghidra snapshot
 rea-out/*.err
 rea-out/*.snapshot
+
+# Raw Ghidra pseudocode (179 MB); regenerate with rea decompile-all (see notes/source-map.md)
+decomp/raw/
+decomp/*.json
+decomp/*.err
