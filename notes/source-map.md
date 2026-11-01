@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 264 | 39315 |
-| header | 21 | 14301 |
-| gap | 445 | 77956 |
+| range | 348 | 45141 |
+| header | 19 | 12721 |
+| gap | 363 | 73710 |
 
 ## Source files
 
@@ -34,8 +34,9 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | ContentWindows.cpp | 144 | 405 | 93309 | `0x426480` | `0x43d640` | 106-3389 |
 | ContextMenus.cpp | 35 | 98 | 31822 | `0x43d86c` | `0x44585c` | 106-1530 |
 | Control.cpp | 25 | 93 | 22349 | `0x445aec` | `0x44b699` | 93-1661 |
-| Creatures.cpp | 48 | 86 | 25820 | `0x44bde1` | `0x45243e` | 108-1414 |
-| DialogElements.cpp | 162 | 383 | 95506 | `0x45399a` | `0x46b6d7` | 42-4301 |
+| Creatures.cpp | 96 | 87 | 27135 | `0x44b740` | `0x45243e` | 108-1414 |
+| DialogElements.cpp | 190 | 384 | 97128 | `0x4524e0` | `0x46b6d7` | 42-4301 |
+| Container.h | 7 | 0 | 3653 | `0x452ac0` | `0x4fd6e0` | 355-370 |
 | Dialogs.cpp | 139 | 408 | 101452 | `0x46c3e0` | `0x48540d` | 48-4084 |
 | DialogWindow.cpp | 39 | 119 | 22972 | `0x485843` | `0x48b287` | 63-1127 |
 | graphics.cpp | 53 | 106 | 40314 | `0x48b550` | `0x4953c3` | 130-1539 |
@@ -60,7 +61,6 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | sysinc.cpp | 4 | 0 | 1510 | `0x4fce50` | `0x4fd1b0` | 63-143 |
 | Talk.cpp | 90 | 192 | 42314 | `0x4fd440` | `0x5081b5` | 81-1952 |
 | Talk.h | 3 | 0 | 90 | `0x4fd5a0` | `0x507060` |  |
-| Container.h | 1 | 0 | 764 | `0x4fd6e0` | `0x4fd6e0` | 355-356 |
 | TMyException.cpp | 6 | 0 | 1753 | `0x508270` | `0x5086a0` |  |
 | TRSA.cpp | 6 | 3 | 722 | `0x508970` | `0x508c25` |  |
 | TXTEA.cpp | 6 | 0 | 716 | `0x508c70` | `0x508f80` |  |
@@ -78,8 +78,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | ConsoleWindow.cpp / ContentWindows.cpp | 10 | 1078 | `0x425920`-`0x425e6e` |
 | ContentWindows.cpp / ContextMenus.cpp | 4 | 371 | `0x43d6f0`-`0x43d86c` |
 | ContextMenus.cpp / Control.cpp | 3 | 491 | `0x445900`-`0x445aec` |
-| Control.cpp / Creatures.cpp | 49 | 1315 | `0x44b740`-`0x44bde1` |
-| Creatures.cpp / DialogElements.cpp | 33 | 2931 | `0x4524e0`-`0x45399a` |
 | DialogElements.cpp / Dialogs.cpp | 30 | 2206 | `0x46b790`-`0x46c0ce` |
 | Dialogs.cpp / DialogWindow.cpp | 7 | 811 | `0x4854c0`-`0x485843` |
 | DialogWindow.cpp / graphics.cpp | 5 | 360 | `0x48b380`-`0x48b547` |
@@ -101,7 +99,7 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 | Header | Functions |
 |---|---:|
-| Container.h | 16 |
+| Container.h | 14 |
 | GUI.h | 1 |
 | ConsoleWindow.h | 1 |
 | Utils.h | 1 |

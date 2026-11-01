@@ -31,71 +31,14 @@ int regexec(regexp *prog, char *string);        // 0x50f360, 1 on a match
 
 // --- added for Communication.cpp ---
 
-// Temporary binary-layout views, to be moved into Creatures.cpp/Map.cpp headers.
+// Temporary binary-layout view, to be moved into the Map.cpp header. The
+// creature view is now TCreature (Creatures.h).
 struct TCommunicationObject {
 	int Type;
 	uint32 Data;
 	uint32 Extra;
 };
 
-struct TCommunicationCreature {
-	uint32 CreatureID;                 // +0x00
-	char Name[32];                     // +0x04
-	int RealX;                         // +0x24
-	int RealY;                         // +0x28
-	int RealZ;                         // +0x2c
-	int DeltaX;                        // +0x30
-	int DeltaY;                        // +0x34
-	uint8 Unknown38[24];
-	int Direction;                     // +0x50
-	uint8 Unknown54[12];
-	int OutfitType;                    // +0x60
-	int Colors[4];                     // +0x64
-	int LightStrength;                 // +0x74
-	int LightColor;                    // +0x78
-	uint8 Unknown7c[8];
-	int Health;                        // +0x84
-	int Speed;                         // +0x88
-	bool Visible;                      // +0x8c
-	uint8 Unknown8d[3];
-	int Skull;                         // +0x90
-	int Shield;                        // +0x94
-
-	void FUN_0044b820(int Skull, bool Delay);           // 0x44b820, Creatures.cpp (leading gap)
-	void FUN_0044bc70(int dx, int dy, int GroundSpeed); // 0x44bc70, Creatures.cpp (leading gap)
-	void FUN_0044bf20(int Mark);                        // 0x44bf20, Creatures.cpp
-};
-
-int FUN_0044b870(); // 0x44b870, Control.cpp|Creatures.cpp
-void FUN_0044b880(int *x, int *y, int *z); // 0x44b880, Control.cpp|Creatures.cpp
-void FUN_0044b8c0(); // 0x44b8c0, Control.cpp|Creatures.cpp
-void FUN_0044b8e0(); // 0x44b8e0, Control.cpp|Creatures.cpp
-void FUN_0044b900(int Beat); // 0x44b900, Control.cpp|Creatures.cpp
-bool FUN_0044b910(uint32 CreatureID); // 0x44b910, Control.cpp|Creatures.cpp
-void FUN_0044b920(uint32 CreatureID); // 0x44b920, Control.cpp|Creatures.cpp
-void FUN_0044b930(int Health, int MaxHealth); // 0x44b930, Control.cpp|Creatures.cpp
-void FUN_0044b950(int Level, int Percent); // 0x44b950, Control.cpp|Creatures.cpp
-void FUN_0044b970(int Mana, int MaxMana); // 0x44b970, Control.cpp|Creatures.cpp
-void FUN_0044b990(int Soul); // 0x44b990, Control.cpp|Creatures.cpp
-void FUN_0044b9a0(int Capacity); // 0x44b9a0, Control.cpp|Creatures.cpp
-void FUN_0044b9b0(int Icons); // 0x44b9b0, Control.cpp|Creatures.cpp
-uint32 FUN_0044b9c0(); // 0x44b9c0, Control.cpp|Creatures.cpp
-void FUN_0044bb00(uint32 CreatureID); // 0x44bb00, Control.cpp|Creatures.cpp
-void FUN_0044bb20(uint32 CreatureID); // 0x44bb20, Control.cpp|Creatures.cpp
-uint32 FUN_0044bb50(); // 0x44bb50, Control.cpp|Creatures.cpp
-uint32 FUN_0044bb60(); // 0x44bb60, Control.cpp|Creatures.cpp
-int FUN_0044c3c0(int Step); // 0x44c3c0, Creatures.cpp
-TCommunicationCreature *FUN_0044c530(uint32 RemoveID, uint32 CreatureID); // 0x44c530, Creatures.cpp
-TCommunicationCreature *FUN_0044c6e0(uint32 CreatureID); // 0x44c6e0, Creatures.cpp
-void FUN_0044ca60(int Skull); // 0x44ca60, Creatures.cpp
-void FUN_0044cc00(uint32 Experience, int Level, int Percent); // 0x44cc00, Creatures.cpp
-void FUN_0044cf10(int Skill, int Level, int Percent); // 0x44cf10, Creatures.cpp
-void FUN_0044eab0(uint32 CharacterID, const char *Name, bool Online); // 0x44eab0, Creatures.cpp
-void FUN_0044f000(uint32 CharacterID, bool Online); // 0x44f000, Creatures.cpp
-void FUN_004516e0(); // 0x4516e0, Creatures.cpp
-bool FUN_004518b0(int Direction); // 0x4518b0, Creatures.cpp
-void FUN_00451db0(TCommunicationCreature *Creature); // 0x451db0, Creatures.cpp
-void FUN_00452320(int x, int y, int z); // 0x452320, Creatures.cpp
 void FUN_004a3690(int x, int y, int z); // 0x4a3690, Help.cpp
 void FUN_004a4520(); // 0x4a4520, Help.cpp|Inventory.cpp
 void FUN_004a4550(int Position, TCommunicationObject Object); // 0x4a4550, Inventory.cpp
@@ -135,6 +78,14 @@ void FUN_004bdd70(int rx, int ry, int rz); // 0x4bdd70, Map.cpp
 void FUN_004beb90(int rx, int ry); // 0x4beb90, Map.cpp
 
 bool FieldRefreshRequested(int rx, int ry, int rz); // 0x4be750, Map.cpp
+
+// --- added for Creatures.cpp ---
+void FUN_004a3460(const char *Name);   // 0x4a3460, Help.cpp; hint for a monster next to the player
+bool FUN_004be130(int x, int y, int z, bool Param4); // 0x4be130, Map.cpp; screen coordinates, the field can be entered
+int FUN_004bdf30(int x, int y, int z); // 0x4bdf30, Map.cpp; screen coordinates, height of the field
+int FUN_004bee00(int x, int y, int z, int DestX, int DestY, int DestZ, bool Exact, int *Steps,
+	int *Directions, bool Diagonal);   // 0x4bee00, Map.cpp; path finder, at most 10 steps; 1 or 2 found, -1..-4 errors
+
 extern uint32 DAT_005cc758; // 0x5cc758, graphics.cpp; Tibia.pic signature
 extern uint32 DAT_005ccb64; // 0x5ccb64, graphics.cpp; Tibia.spr signature
 
@@ -382,13 +333,6 @@ extern const char *TextRuleViolations;       // 0x5c0d78
 
 // Communication.cpp
 void FUN_00401000();                   // 0x401000, before Communication.cpp; clears 0x5c4344
-
-// Creatures.cpp
-void FUN_0044c860();                   // 0x44c860
-void FUN_0044c8c0(int CreatureID);     // 0x44c8c0, a callback for FUN_004bf620
-void FUN_004509e0();                   // 0x4509e0
-bool FUN_00451ab0();                   // 0x451ab0
-void FUN_00452190();                   // 0x452190
 
 // Dialogs.cpp: each creates a dialog and returns it as the new modal window.
 TWindow *FUN_0047f8a0(const char *Title, const char *Text);             // 0x47f8a0, message box

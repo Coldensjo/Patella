@@ -21,6 +21,7 @@
 #include "Network.h"
 #include "Objects.h"
 #include "Communication.h"
+#include "Creatures.h"
 #include "Preferences.h"
 #include "Skins.h"
 #include "Script.h"
@@ -258,7 +259,7 @@ void EnterGame()
 	}
 	FUN_004bccb0();
 	FUN_004a7d20();
-	FUN_004509e0();
+	ResetCreatures();
 	ResetTalk();
 	ShowPermanentIgnoreWarning();
 	FUN_004b09e0(-1, 0);
@@ -786,7 +787,7 @@ void TimerEvent()
 	}
 	CheckConnectionTimeout();
 	FUN_004a27c0();
-	FUN_0044c860();
+	UpdateSkulls();
 	TEND
 }
 
@@ -1101,7 +1102,7 @@ void ProcessEvents()
 		}
 	}
 Done:
-	if (GetConnectionState() == 8 && FUN_00451ab0())
+	if (GetConnectionState() == 8 && MoveCreatures())
 		SendWalk();
 	Redraw(false);
 	TEND1(Type)
@@ -1133,9 +1134,9 @@ void InitControl(bool Gamemaster)
 	try {
 		FUN_004fcd00();
 		InitObjects();
-		FUN_004bf620(FUN_0044c8c0);
+		FUN_004bf620(HideCreature);
 		FUN_004a7d70();
-		FUN_00452190();
+		InitCreatures();
 		InitStatus(Gamemaster, LinkCopyWarning);
 		FUN_004a2ae0();
 		FUN_004ddc00();

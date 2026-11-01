@@ -17,7 +17,15 @@
 //                           operator() folded with vector<int> at 0x452ac0
 // Preferences.cpp also uses vector<int>, whose code the linker kept from an
 // earlier object: constructors 0x453300 (with init) and 0x4a2b90,
-// operator() 0x452ac0.
+// operator() 0x452ac0. 0x453300 and 0x452ac0 sit at the start of
+// DialogElements.obj (the first user), next to its other instance:
+//   vector<TDialogText>     constructor 0x453600, operator() 0x452eb0
+//                           (a 0x18-byte DialogElements.cpp element with the
+//                           constructor 0x452c70; type name ours)
+// The class also has a destructor, not reconstructed yet: its instances
+// 0x452c50 (vector<int>, entry at +0x1c) and 0x452c60 (vector<TDialogText>,
+// entry at +0x30) free entry, and the static initialisers register atexit
+// handlers (0x55a320 and following) that do the same inline.
 
 #pragma once
 
