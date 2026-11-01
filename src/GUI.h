@@ -78,8 +78,8 @@ public:
 	virtual TComponent *GetParent() { return Parent; }               // +0x30, 0x417690
 	virtual void SetSize(int _Width, int _Height);                   // +0x34, 0x49bee0, lines 1092-1093
 	virtual void SetPosition(int _OffsetX, int _OffsetY);            // +0x38, 0x496060
-	virtual int GetMinimumWidth() { return 0; }                      // +0x3c, 0x417a20
-	virtual int GetMinimumHeight() { return 0; }                     // +0x40, 0x417a20
+	virtual int getMinimumWidth() { return 0; }                      // +0x3c, 0x417a20
+	virtual int getMinimumHeight() { return 0; }                     // +0x40, 0x417a20
 	virtual void Draw(int Surface, int x, int y);                    // +0x44, 0x4a1fb0, lines 1118-1163
 	virtual void Arrange() {}                                        // +0x48, empty (0x496160); rebuilds the drawing list in subclasses
 	virtual bool MouseMove(int x, int y) = 0;                        // +0x4c
@@ -374,8 +374,7 @@ struct TSkinProperties8C4 {
 // GUIStyle+0x900 (0x5cd8c8); compiler-generated constructor 0x4959e0.
 struct TCheckBoxProperties {
 	TGUIPoint Item; // +0x00
-	TGUIPoint Data08; // +0x08
-	TGUIPoint Data10; // +0x10
+	TRect Data08; // +0x08, the text's area (DialogElements.cpp's TCheckBox)
 	TFont Data18; // +0x18
 	TFont Data2C; // +0x2c
 };

@@ -18,6 +18,7 @@
 #include "MapWindow.h"
 #include "Communication.h"
 #include "Creatures.h"
+#include "DialogElements.h"
 #include "Help.h"
 #include "Inventory.h"
 #include "Map.h"
@@ -1624,18 +1625,18 @@ void TMapFrame::SetSize(int Width, int Height)
 }
 
 // 0x4c1ea0, line 1595
-int TMapFrame::GetMinimumWidth()
+int TMapFrame::getMinimumWidth()
 {
 	TBEGIN
-	return MapWindow->GetMinimumWidth() + SkinProperties.Data13C * 2;
+	return MapWindow->getMinimumWidth() + SkinProperties.Data13C * 2;
 	TEND
 }
 
 // 0x4c2040, line 1606
-int TMapFrame::GetMinimumHeight()
+int TMapFrame::getMinimumHeight()
 {
 	TBEGIN
-	return MapWindow->GetMinimumHeight() + SkinProperties.Data13C * 2;
+	return MapWindow->getMinimumHeight() + SkinProperties.Data13C * 2;
 	TEND
 }
 

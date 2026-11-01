@@ -32,7 +32,8 @@
 #include "Creatures.h"  // SetHighlightID
 #include "DialogWindow.h"
 #include "Map.h"      // TMark
-#include "external.h" // TObject, the DialogElements.cpp classes
+#include "DialogElements.h"
+#include "external.h" // TObject
 
 class TMainWindow;       // MainWindow.h
 class TSkillContextMenu; // ContextMenus.h
@@ -233,7 +234,7 @@ public:
 	~TContainerWindowBody();                           // +0x00, 0x42cc70, line 1628 (deleting 0x438700)
 	void Draw(int Surface, int x, int y);              // +0x44, 0x42ce10, lines 1644-1666
 	void SetSize(int Width, int Height);               // +0x34, 0x42d420, lines 1675-1683
-	int GetMinimumHeight();                            // +0x40, 0x42d6f0, line 1693
+	int getMinimumHeight();                            // +0x40, 0x42d6f0, line 1693
 	int GetMaximumHeight();                            // +0xb0, 0x42d890, line 1712
 	void Arrange();                                    // +0x48, 0x42da20, line 1744
 	bool LeftButtonDown(int x, int y, int Flags);      // +0x50, 0x438720, line 1764
@@ -279,7 +280,7 @@ public:
 	bool RightButtonUp(int x, int y, int Flags);       // +0x5c, 0x42eb70, line 2144
 	void SetSize(int Width, int Height);               // +0x34, 0x42ed10, lines 2153-2160
 	void Arrange();                                    // +0x48, 0x42efd0, line 2173
-	int GetMinimumHeight();                            // +0x40, 0x42f190, line 2183
+	int getMinimumHeight();                            // +0x40, 0x42f190, line 2183
 	int GetInitialHeight();                            // +0xac, 0x42f330, line 2196
 	int GetMaximumHeight();                            // +0xb0, 0x42f500, line 2206
 	int GetContentHeight();                            // +0xb4, 0x439ef0, line 2225
@@ -306,7 +307,7 @@ public:
 	void MouseHover(int x, int y);                     // +0x64, 0x43b510, line 2593
 	bool MouseWheel(int x, int y, int Code);           // +0x60, 0x430280, line 2606
 	bool HelpMouseMove(int x, int y);                  // +0x68, 0x430450, lines 2616-2621
-	int GetMinimumHeight();                            // +0x40, 0x4306f0, line 2631
+	int getMinimumHeight();                            // +0x40, 0x4306f0, line 2631
 	int GetInitialHeight();                            // +0xac, 0x430890, line 2644
 	int GetContentHeight();                            // +0xb4, 0x430a50, line 2654
 	int GetOpponentAt(int x, int y);                   // 0x430be0, line 2668
@@ -324,7 +325,7 @@ public:
 	// The destructor is the implicit one (deleting destructor 0x4adc40, folded).
 	void Draw(int Surface, int x, int y);              // +0x44, 0x430fd0, lines 2698-2730
 	void SetSize(int Width, int Height);               // +0x34, 0x4317b0, line 2745
-	int GetMinimumHeight();                            // +0x40, 0x4319b0, line 2755
+	int getMinimumHeight();                            // +0x40, 0x4319b0, line 2755
 	int GetContentHeight();                            // 0x431b40, line 2769
 	void Arrange();                                    // +0x48, 0x431d10, line 2782
 	bool LeftButtonUp(int x, int y, int Flags);        // +0x54, 0x43b710, line 2801
@@ -384,7 +385,7 @@ public:
 	int GetContentHeight();                            // +0xb4, 0x434000
 	void SetSize(int Width, int Height);               // +0x34, 0x434010, line 3066
 	bool HelpMouseMove(int x, int y);                  // +0x68, 0x4342b0, lines 3076-3081
-	int GetMinimumHeight();                            // +0x40, 0x434550, line 3092
+	int getMinimumHeight();                            // +0x40, 0x434550, line 3092
 	int GetInitialHeight();                            // +0xac, 0x4346f0, line 3102
 	int GetMaximumHeight();                            // +0xb0, 0x434880, line 3112
 	void HandleEvent(int Event);                       // +0x70, 0x434a20, line 3130
@@ -413,7 +414,7 @@ public:
 	void MouseHover(int x, int y);                     // +0x64, 0x43c2e0, line 3312
 	bool HelpMouseMove(int x, int y);                  // +0x68, 0x435760, lines 3322-3327
 	void Arrange();                                    // +0x48, 0x435a00, line 3340
-	int GetMinimumHeight();                            // +0x40, 0x435bb0, line 3350
+	int getMinimumHeight();                            // +0x40, 0x435bb0, line 3350
 	int GetInitialHeight();                            // +0xac, 0x435d50, line 3363
 	int GetContentHeight();                            // +0xb4, 0x435f20, line 3374
 	int GetBuddyAt(int x, int y);                      // 0x4360c0, line 3389

@@ -37,7 +37,7 @@ public:
 	virtual void FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, TRect Clip) = 0; // +0x10, ContentWindows.cpp's bars
 	virtual void FillRectangle(int Surface, TRect Rect, TRGBColor Color) = 0; // +0x14
 	virtual void DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBColor Color) = 0; // +0x18, ContentWindows.cpp's separator line
-	virtual void Unknown1C() = 0;
+	virtual void DrawVerticalLine(int Surface, int x, int y, int Height, TRGBColor Color) = 0; // +0x1c, DialogElements.cpp's edit line cursor
 	virtual void DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color,
 		TRect Clip) = 0;                                              // +0x20
 	virtual void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color) = 0; // +0x24

@@ -22,6 +22,7 @@
 #include "ContentWindows.h"
 #include "Communication.h"
 #include "Creatures.h"
+#include "DialogElements.h"
 #include "Help.h"
 #include "Inventory.h"
 #include "Map.h"
@@ -74,7 +75,7 @@ void THelpBubble::SetSize(int Width, int Height)
 		Width += SkinProperties.Data174 - Width % SkinProperties.Data170;
 	if (Height % SkinProperties.Data170 != SkinProperties.Data174)
 		Height += SkinProperties.Data174 - Height % SkinProperties.Data170;
-	int MinWidth = GetMinimumWidth();
+	int MinWidth = getMinimumWidth();
 	int MaxHeight = SkinProperties.Data15C;
 	if (MaxWidth < MinWidth) {
 		if (Width < MaxWidth)
@@ -87,7 +88,7 @@ void THelpBubble::SetSize(int Width, int Height)
 		if (Width > MaxWidth)
 			Width = MaxWidth;
 	}
-	int MinHeight = GetMinimumHeight();
+	int MinHeight = getMinimumHeight();
 	if (MaxHeight < MinHeight) {
 		if (Height < MaxHeight)
 			Height = MaxHeight;
@@ -1199,15 +1200,15 @@ TEditContextMenu::TEditContextMenu(TEditLine *_Edit, int x, int y, int ParentWid
 	TASSERT(_Edit!=NULL);
 	TBEGIN
 	Edit = _Edit;
-	if (_Edit->Data5C != -1 && _Edit->Data60 != 0) {
-		if (!_Edit->Data66)
+	if (_Edit->SelectionStart != -1 && _Edit->SelectionLength != 0) {
+		if (!_Edit->ReadOnly)
 			AddEntry(10201, "Cut", NULL);
 		AddEntry(10203, "Copy", NULL);
 	}
-	if (!IsClipboardEmpty() && !Edit->Data66)
+	if (!IsClipboardEmpty() && !Edit->ReadOnly)
 		AddEntry(10200, "Paste", NULL);
 	Separator = true;
-	if (Edit->Data5C != -1 && Edit->Data60 != 0 && !Edit->Data66) {
+	if (Edit->SelectionStart != -1 && Edit->SelectionLength != 0 && !Edit->ReadOnly) {
 		AddEntry(10202, "Delete", NULL);
 		Separator = true;
 	}

@@ -53,92 +53,8 @@ struct TFullscreenMode; // Preferences.h
 // parts are below.
 #include "ConsoleWindow.h"
 
-// DialogElements.cpp: the two resizers of a TSubWindow (vtable 0x5612b0,
-// 0x38 bytes); parameter name _ToResize from the assertion (line 74), the
-// other three are flags (+0x34-+0x36). The class name is ours.
-class TResizer : public TElement {
-public:
-	TResizer(TComponent *_ToResize, bool Param2, bool Param3, bool Param4); // 0x453be0, line 74
-	uint8 Data24[0x38 - 0x24];
-};
-
-// DialogElements.cpp: a button drawn with two skins (pressed and released)
-// that sends its callback (0x44 bytes, constructor 0x466860; vtable not
-// known yet), TSubWindow's minimize button and the console's buttons. The
-// class name is ours; the last parameter is 0 in ConsoleWindow.cpp and
-// ContentWindows.cpp. A button of a radio group ("RadioButtonGroup==NULL",
-// DialogElements.cpp line 1239) shows as pressed while it is the group's
-// selection.
-struct TRadioButtonGroup;
-class TSkinButton : public TElement {
-public:
-	TSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip,
-		int Param);                                  // 0x466860
-	void SetSkins(int _ButtonUp, int _ButtonDown);   // 0x458b20, lines 1228-1229
-	void SetRadioButtonGroup(TRadioButtonGroup *Group); // 0x458de0, line 1239
-	int ButtonUp;    // +0x24
-	int ButtonDown;  // +0x28
-	uint8 Data2C[0x38 - 0x2c];
-	TRadioButtonGroup *RadioButtonGroup; // +0x38
-	const char *Tooltip; // +0x3c
-	uint8 Data40[0x44 - 0x40];
-};
-
-// DialogElements.h: the buttons of a radio group (0x28 bytes; the type name
-// is ours). The constructor and the destructor are inline (ContentWindows.cpp's
-// TCombatControls; the out-of-line vector constructor is 0x425e70); Selected
-// is left uninitialised.
-struct TRadioButtonGroup {
-	TRadioButtonGroup() : Buttons(0, 0, 10, NULL) { Count = 0; }
-	TSkinButton *Selected;         // +0x00
-	vector<TSkinButton *> Buttons; // +0x04
-	int Count;                     // +0x24
-};
-
-// DialogElements.cpp: a button with two states (vtable 0x561cd0, 0x50
-// bytes, constructor 0x4671e0), the console's server message button; the
-// tooltips belong to the two states. Class name ours.
-class TToggleButton : public TSkinButton {
-public:
-	TToggleButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip1,
-		const char *Tooltip2, int Param);            // 0x4671e0
-	bool State;      // +0x44
-	uint8 Data45[0x50 - 0x45];
-};
-
-// DialogElements.cpp: a button that steps through States states (vtable
-// 0x560e10, 0x58 bytes), the console's volume. Its constructor 0x4672d0 is a
-// varargs one (__cdecl, this pushed first): a skin pair and a callback per
-// state. Reset (0x452790) goes back to state 0 and its skins. Class name ours.
-class TMultiStateButton : public TSkinButton {
-public:
-	TMultiStateButton(int x, int y, const char *Tooltip, int States, ...); // 0x4672d0
-	void Reset();                                    // 0x452790
-	int State;       // +0x44
-	int States;      // +0x48
-	int *ButtonUps;  // +0x4c
-	int *ButtonDowns; // +0x50
-	uint8 Data54[0x58 - 0x54];
-};
-
-// DialogElements.cpp: a scroll bar (vtable 0x561f70, 0x38 bytes,
-// constructor 0x469a80 with its area and, in ConsoleWindow.cpp, four zeros
-// and true). Range (+0x2c) holds the position. Class and member names ours.
-class TScrollBarRange {
-public:
-	void SetRange(int Minimum, int Maximum, int Value, int Visible); // 0x460450
-	void SetValue(int _Value);       // 0x460710, kept within the range
-	uint8 Data00[0x30];
-	int Value;       // +0x30
-};
-// The last parameter is the step of a click (1 in ConsoleWindow.cpp, 10 or a
-// part of a line or row in ContentWindows.cpp).
-class TScrollBar : public TWindow {
-public:
-	TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, int Step); // 0x469a80
-	TScrollBarRange *Range; // +0x2c
-	uint8 Data30[0x38 - 0x30];
-};
+// DialogElements.cpp: the dialog controls are in DialogElements.h, which its
+// users include directly (it includes this header for TObject).
 
 // ConsoleWindow.obj's copy of the text table (external.h of MainWindow.obj
 // and MapWindow.obj above and below; names ours).
@@ -175,7 +91,7 @@ public:
 	void SetPixel(int Surface, int x, int y, TRGBColor Color);
 	void FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, TRect Clip);
 	void FillRectangle(int Surface, TRect Rect, TRGBColor Color);
-	void DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBColor Color); void Unknown1C();
+	void DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBColor Color); void DrawVerticalLine(int Surface, int x, int y, int Height, TRGBColor Color);
 	void DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color, TRect Clip);
 	void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color);
 	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data);
@@ -223,102 +139,6 @@ extern const char *TextNoBugReportRight;     // 0x5c1ffc, "You are not authorise
 extern const char *TextAccountURL;           // 0x5c2048, "http://www.tibia.com/home/?subtopic=account"
 
 // Communication.cpp
-
-// DialogElements.cpp: a frame of nine skins around one window (vtable
-// 0x561358, 0x68 bytes); MainWindow.cpp's side bar and start window frame.
-class TBorder : public TWindow {
-public:
-	TBorder(TWindow *_Window, int Param);             // 0x4547f0, line 166
-	TBorder(TWindow *_Window, int Skin1, int Skin2, int Skin3, int Skin4, int Skin5, int Skin6,
-		int Skin7, int Skin8, int Skin9, int Border); // 0x454e30, line 217
-	void FUN_00455500();                              // 0x455500
-	uint8 Data2C[0x68 - 0x2c];
-};
-// DialogElements.cpp: a button with a text (vtable 0x561c40, 0x78 bytes).
-// The second constructor uses the skins 12 and 13 (ContentWindows.cpp).
-class TTextButton : public TElement {
-public:
-	TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
-		int Param);                                   // 0x466bc0, lines 1378-1379
-	TTextButton(int x, int y, const char *_Text, TCallback Callback, const char *Tooltip); // 0x466ed0, lines 1390-1391
-	uint8 Data24[0x78 - 0x24];
-};
-// DialogElements.cpp: a text button that shows whether its window is open
-// (vtable 0x561d58, 0x84 bytes; class name ours): ContentWindows.cpp's
-// TButtonsWindow sets State while it draws; the tooltips are those of
-// the two states.
-class TTextToggleButton : public TTextButton {
-public:
-	TTextToggleButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
-		const char *Tooltip1, const char *Tooltip2, bool _State); // 0x467230
-	bool State;               // +0x78
-	const char *Tooltip1;     // +0x7c
-	const char *Tooltip2;     // +0x80
-};
-// DialogElements.cpp: a text (vtable 0x560bb8, 0x4c bytes). The second
-// constructor takes an area; SetText (+0x84, 0x455e40) changes the text.
-class TLabel : public TElement {
-public:
-	TLabel(TFont Font, const char *_Text);            // 0x465b40, line 376
-	TLabel(int x, int y, int Width, int Height, TFont Font, const char *_Text, bool Param); // 0x465510, line 337
-	virtual void SetText(const char *_Text, bool Param); // +0x84, 0x455e40
-	uint8 Data24[0x4c - 0x24];
-};
-// DialogElements.cpp: one skin (vtable 0x5614f8, 0x28 bytes, sized to it;
-// class name ours), the icons of ContentWindows.cpp's sub-windows.
-class TSkinIcon : public TElement {
-public:
-	TSkinIcon(int Skin);                              // 0x457710, line 1002
-	int Skin;        // +0x24
-};
-// DialogElements.cpp: an object (vtable 0x560d88, 0x50 bytes).
-class TObjectIcon : public TElement {
-public:
-	TObjectIcon(TObject Obj, const TRGBColor *Color, int Param); // 0x4526c0
-	uint8 Data24[0x50 - 0x24];
-};
-
-// DialogElements.cpp: an edit line (vtable 0x560e98, 0x68 bytes, class name
-// ours, "_Edit" in ContextMenus.cpp), the console's Input. HandleEvent takes
-// 16 copy, 17 cut, 18 paste, 19 delete, 20 select all. The constructor takes
-// its area and the maximum length (255 in the console). Slot and member
-// names are ours.
-class TEditLine : public TWindow {
-public:
-	TEditLine(TRect Area, int MaxLength, int Param); // 0x467b50
-	void SetActive(bool Active);     // 0x45bc80: +0x58; clears the selection when false
-	// DialogElements.h inline (out-of-line copy 0x417520 in ConsoleWindow.obj).
-	bool HasSelection() { return Data5C != -1 && Data60 != 0; }
-	virtual void SetText(const char *Text);        // +0xa0
-	virtual void Clear();                          // +0xa4
-	virtual void UnknownA8(); virtual void UnknownAC(); virtual void UnknownB0(); virtual void UnknownB4();
-	virtual void SetReadOnly(bool ReadOnly);       // +0xb8
-	virtual void UnknownBC();
-	virtual void SetFont(TFont Font);              // +0xc0
-	char *Text;      // +0x2c
-	uint8 Data30[0x5c - 0x30];
-	int Data5C;      // +0x5c, -1 without a selection
-	int Data60;      // +0x60, the selection's length (0 for none)
-	uint8 Data64[2];
-	bool Data66;     // +0x66, read only: no cut, paste or delete
-	uint8 Data67[0x68 - 0x67];
-};
-
-// DialogElements.cpp: a text with formatting tokens (vtable 0x560c40, 0x38
-// bytes), the help bubble's text. Class name ours.
-class TFormattedText : public TWindow {
-public:
-	TFormattedText(const char *_Text);    // 0x465e60, line 508
-	uint8 Data2C[0x38 - 0x2c];
-};
-
-// DialogElements.cpp: a line between groups of entries (vtable 0x5610b0,
-// 0x28 bytes). Class name ours; the flag is true in ContextMenus.cpp.
-class TSeparator : public TElement {
-public:
-	TSeparator(bool Horizontal);          // 0x452cb0
-	bool Horizontal;                      // +0x24
-};
 
 // ContentWindows.obj's copy of the text table (0x5c0678-0x5c08c3; names
 // ours). ContentWindows.cpp itself is in ContentWindows.h, which its users
@@ -369,16 +189,6 @@ extern const char *TextAcceptOffer;           // 0x5c0740, "Accept offer"
 extern const char *TextPercentToGo;           // 0x5c0748, "You have %d percent to go"
 extern const char *TextWaitForCounterOffer;   // 0x5c0758, "Please wait for a\ncounteroffer"
 extern const char *TextWaitForPartner;        // 0x5c075c, "Please wait for \nyour partner to accept."
-
-// DialogElements.cpp: a button that blinks until it is pressed (vtable
-// 0x561b90, 0x5c bytes; base constructor 0x466860). MapWindow.cpp's hint
-// button. The base class and the member layout are not known yet.
-class TBlinkingButton : public TElement {
-public:
-	TBlinkingButton(int x, int y, int Skin1, int Skin2, int Skin3, int Skin4, TCallback Callback,
-		const char *Tooltip); // 0x466b20
-	uint8 Data24[0x5c - 0x24];
-};
 
 // Dialogs.cpp: each creates a dialog and returns it as the new modal window.
 TWindow *FUN_0047f8a0(const char *Title, const char *Text);             // 0x47f8a0, message box

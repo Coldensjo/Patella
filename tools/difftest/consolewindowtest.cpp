@@ -240,7 +240,7 @@ class TTestScrollBar : public TScrollBar {
 public:
 	TTestScrollBar() : TScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
 	~TTestScrollBar() { delete Range; }
-	int GetMinimumHeight() { return ScrollMinimumHeight; }
+	int getMinimumHeight() { return ScrollMinimumHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DScroll%d,%d,%d,%dx%d;", Surface, x, y, Width, Height); }
 	bool MouseWheel(int x, int y, int Direction)
 	{

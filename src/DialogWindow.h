@@ -62,7 +62,7 @@ public:
 	TSubWindow(int _Identifier, TSubWindowBody *_Body, bool _Resizable, bool _Background); // 0x487e80, lines 791-804
 	~TSubWindow();                                  // +0x00, 0x485500 (deleting 0x485790)
 	void SetSize(int Width, int Height);            // +0x34, 0x4881f0, line 861
-	int GetMinimumHeight();                         // +0x40, 0x485690
+	int getMinimumHeight();                         // +0x40, 0x485690
 	void Arrange();                                 // +0x48, 0x488510, lines 891-928
 	bool MouseMove(int x, int y);                   // +0x4c, 0x488c20, line 972
 	bool LeftButtonDown(int x, int y, int Flags);   // +0x50, 0x4889c0, line 950
@@ -104,8 +104,8 @@ public:
 	void DeleteChild(TComponent *Child);            // +0x10, 0x4860b0, line 205
 	void InsertChildAfter(TComponent *Previous, TComponent *Child); // +0x14, 0x486260, line 217
 	void SetSize(int Width, int Height);            // +0x34, 0x4857b0, line 63
-	int GetMinimumWidth();                          // +0x3c, 0x4854b0
-	int GetMinimumHeight();                         // +0x40, 0x485970, line 86
+	int getMinimumWidth();                          // +0x3c, 0x4854b0
+	int getMinimumHeight();                         // +0x40, 0x485970, line 86
 	void Draw(int Surface, int x, int y);           // +0x44, 0x485b10, line 109
 	void Arrange();                                 // +0x48, 0x48a490, line 169
 	// Strategy: 1 a child is dragged (Work, NULL when the drag ends), 2 a

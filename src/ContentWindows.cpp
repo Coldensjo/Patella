@@ -70,7 +70,7 @@ TContentWindow *CreateSmallInventoryWindow(TMainWindow *Receiver)
 	TCombatControls *Controls = new TCombatControls(Receiver, false);
 	Window->InsertChild(Controls);
 	Window->SetChildPosition(Controls, SkinProperties.Data550.x, SkinProperties.Data550.y);
-	TSkinButton *Maximise = new TSkinButton(0, 0, 140, 141, TCallback(Receiver, 24), TextMaximiseInventory, 0);
+	TSkinButton *Maximise = new TSkinButton(0, 0, 140, 141, TCallback(Receiver, 24), TextMaximiseInventory, false);
 	Window->InsertChild(Maximise);
 	Window->SetChildPosition(Maximise, SkinProperties.Data550.Width, SkinProperties.Data550.Height);
 	TCapacityLabel *Capacity = new TCapacityLabel;
@@ -98,10 +98,10 @@ TSubWindow *CreateContainerWindow(int Container)
 	TBEGIN
 	TContainerWindowBody *Body = new TContainerWindowBody(Container);
 	TSubWindow *Window = new TSubWindow(Container + 0x40, Body, true, false);
-	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, 0);
-	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, 0);
-	TSkinButton *UpButton = new TSkinButton(0, 0, 126, 127, TCallback(Body, 3), TextShowHigherContainer, 0);
-	TObjectIcon *Icon = new TObjectIcon(GetContainerObject(Container), &SkinProperties.Style194.Data80, 0);
+	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, false);
+	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, false);
+	TSkinButton *UpButton = new TSkinButton(0, 0, 126, 127, TCallback(Body, 3), TextShowHigherContainer, false);
+	TObjectIcon *Icon = new TObjectIcon(GetContainerObject(Container), &SkinProperties.Style194.Data80, false);
 	TLabel *Title = new TLabel(SkinProperties.Style194.Data38, GetContainerName(Container));
 	Window->SetSize(SkinProperties.Data184, TSubWindow::GetFrameHeight() + Body->GetInitialHeight());
 	Window->SetCloseButton(CloseButton);
@@ -120,8 +120,8 @@ TSubWindow *CreateSkillsWindow()
 	TBEGIN
 	TSkillsWindowBody *Body = new TSkillsWindowBody;
 	TSubWindow *Window = new TSubWindow(6, Body, true, false);
-	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, 0);
-	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, 0);
+	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, false);
+	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, false);
 	TLabel *Title = new TLabel(SkinProperties.Style194.Data38, "Skills");
 	TSkinIcon *Icon = new TSkinIcon(142);
 	Window->SetSize(SkinProperties.Data184, TSubWindow::GetFrameHeight() + Body->GetInitialHeight());
@@ -140,8 +140,8 @@ TSubWindow *CreateBattleWindow()
 	TBEGIN
 	TBattleWindowBody *Body = new TBattleWindowBody;
 	TSubWindow *Window = new TSubWindow(7, Body, true, false);
-	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, 0);
-	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, 0);
+	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, false);
+	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, false);
 	TLabel *Title = new TLabel(SkinProperties.Style194.Data38, "Battle");
 	TSkinIcon *Icon = new TSkinIcon(144);
 	Window->SetSize(SkinProperties.Data184, TSubWindow::GetFrameHeight() + Body->GetInitialHeight());
@@ -160,8 +160,8 @@ TSubWindow *CreateTradeWindow()
 	TBEGIN
 	TTradeWindowBody *Body = new TTradeWindowBody;
 	TSubWindow *Window = new TSubWindow(TRADE_WINDOW, Body, true, false);
-	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, 0);
-	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, 0);
+	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, false);
+	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, false);
 	TLabel *Title = new TLabel(SkinProperties.Style194.Data38, "Trade");
 	TSkinIcon *Icon = new TSkinIcon(145);
 	Window->SetSize(SkinProperties.Data184, TSubWindow::GetFrameHeight() + Body->GetInitialHeight());
@@ -182,8 +182,8 @@ TSubWindow *CreateBuddylistWindow()
 	TBEGIN
 	TBuddylistWindowBody *Body = new TBuddylistWindowBody;
 	TSubWindow *Window = new TSubWindow(9, Body, true, false);
-	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, 0);
-	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, 0);
+	TSkinButton *CloseButton = new TSkinButton(0, 0, 136, 137, TCallback(Window, 10), TextCloseWindow, false);
+	TSkinButton *MinimizeButton = new TSkinButton(0, 0, 138, 139, TCallback(Window, 9), TextMaximiseOrMinimise, false);
 	TLabel *Title = new TLabel(SkinProperties.Style194.Data38, "VIP");
 	TSkinIcon *Icon = new TSkinIcon(143);
 	Window->SetSize(SkinProperties.Data184, TSubWindow::GetFrameHeight() + Body->GetInitialHeight());
@@ -265,13 +265,13 @@ TAutomapWindow::TAutomapWindow()
 	CentreButton = new TTextButton(SkinProperties.Data264.x, SkinProperties.Data264.y, "Centre", TCallback(this, 106),
 		TextCentreAroundPlayer);
 	FloorUpButton = new TSkinButton(SkinProperties.Data254.x, SkinProperties.Data254.y, 70, 71, TCallback(this, 3),
-		TextShowHigherFloor, 0);
+		TextShowHigherFloor, false);
 	FloorDownButton = new TSkinButton(SkinProperties.Data254.Width, SkinProperties.Data254.Height, 72, 73,
-		TCallback(this, 4), TextShowLowerFloor, 0);
+		TCallback(this, 4), TextShowLowerFloor, false);
 	ZoomInButton = new TSkinButton(SkinProperties.Data244.x, SkinProperties.Data244.y, 66, 67, TCallback(this, 107),
-		TextZoomIn, 0);
+		TextZoomIn, false);
 	ZoomOutButton = new TSkinButton(SkinProperties.Data244.Width, SkinProperties.Data244.Height, 68, 69,
-		TCallback(this, 108), TextZoomOut, 0);
+		TCallback(this, 108), TextZoomOut, false);
 	CompassRose = new TCompassRose(65);
 	InsertChild(View);
 	InsertChild(CentreButton);
@@ -1022,7 +1022,7 @@ TInventoryView::TInventoryView(TMainWindow *Receiver)
 {
 	TBEGIN
 	SetSize(SkinProperties.Style288.Data00, SkinProperties.Style288.Data04);
-	TSkinButton *Minimise = new TSkinButton(0, 0, 138, 139, TCallback(Receiver, 23), TextMinimiseInventory, 0);
+	TSkinButton *Minimise = new TSkinButton(0, 0, 138, 139, TCallback(Receiver, 23), TextMinimiseInventory, false);
 	InsertChild(Minimise);
 	SetChildPosition(Minimise, SkinProperties.Style288.Data08.x, SkinProperties.Style288.Data08.y);
 	TCapacityLabel *Capacity = new TCapacityLabel;
@@ -1229,35 +1229,35 @@ TCombatControls::TCombatControls(TMainWindow *Receiver, bool Large)
 	ChaseModes = new TRadioButtonGroup;
 	SetSize(Layout.Width, Layout.Height);
 	TSkinButton *Offensive = new TSkinButton(Layout.Buttons[0].x, Layout.Buttons[0].y, 103, 104, TCallback(this, 100),
-		TextOffensiveFighting, 0);
+		TextOffensiveFighting, false);
 	Offensive->SetRadioButtonGroup(AttackModes);
 	InsertChild(Offensive);
 	TSkinButton *Balanced = new TSkinButton(Layout.Buttons[1].x, Layout.Buttons[1].y, 105, 106, TCallback(this, 101),
-		TextBalancedFighting, 0);
+		TextBalancedFighting, false);
 	Balanced->SetRadioButtonGroup(AttackModes);
 	InsertChild(Balanced);
 	TSkinButton *Defensive = new TSkinButton(Layout.Buttons[2].x, Layout.Buttons[2].y, 107, 108, TCallback(this, 102),
-		TextDefensiveFighting, 0);
+		TextDefensiveFighting, false);
 	Defensive->SetRadioButtonGroup(AttackModes);
 	InsertChild(Defensive);
 	StandButton = new TSkinButton(Layout.Buttons[3].x, Layout.Buttons[3].y, 109, 110, TCallback(this, 103),
-		TextStandWhileFighting, 0);
+		TextStandWhileFighting, false);
 	StandButton->SetRadioButtonGroup(ChaseModes);
 	InsertChild(StandButton);
 	ChaseButton = new TSkinButton(Layout.Buttons[4].x, Layout.Buttons[4].y, 111, 112, TCallback(this, 104),
-		TextChaseOpponent, 0);
+		TextChaseOpponent, false);
 	ChaseButton->SetRadioButtonGroup(ChaseModes);
 	InsertChild(ChaseButton);
 	SecureButton = new TToggleButton(Layout.Buttons[5].x, Layout.Buttons[5].y, 113, 114, TCallback(this, 105),
-		TextCannotAttackUnmarked, TextCanAttackAny, 0);
+		TextCannotAttackUnmarked, TextCanAttackAny, false);
 	InsertChild(SecureButton);
 	InsertChild(new TTextButton(Layout.Buttons[6].x, Layout.Buttons[6].y, "Stop", TCallback(Receiver, 32),
 		TextStopCurrentAction));
 	if (!IsLarge) {
 		InsertChild(new TSkinButton(Layout.Buttons[7].x, Layout.Buttons[7].y, 115, 116, TCallback(Receiver, 8),
-			TextOpenOptions, 0));
+			TextOpenOptions, false));
 		InsertChild(new TSkinButton(Layout.Buttons[8].x, Layout.Buttons[8].y, 117, 118, TCallback(Receiver, 701),
-			TextOpenHelpMenu, 0));
+			TextOpenHelpMenu, false));
 	} else {
 		InsertChild(new TTextButton(Layout.Buttons[7].x, Layout.Buttons[7].y, "Options", TCallback(Receiver, 8),
 			TextOpenOptions));
@@ -1527,10 +1527,10 @@ void TContainerWindowBody::SetSize(int Width, int Height)
 }
 
 // 0x42d6f0, line 1693
-int TContainerWindowBody::GetMinimumHeight()
+int TContainerWindowBody::getMinimumHeight()
 {
 	TBEGIN
-	return (std::max)(ScrollBar->GetMinimumHeight(), SkinProperties.Data650);
+	return (std::max)(ScrollBar->getMinimumHeight(), SkinProperties.Data650);
 	TEND
 }
 
@@ -1555,7 +1555,7 @@ void TContainerWindowBody::Arrange()
 	ScrollBar->Range->SetRange(0, ContentHeight - Height, ScrollBar->Range->Value, Height);
 	TSubWindow *Window = (TSubWindow *)GetParent();
 	if (Window != NULL) {
-		TObjectIcon *Icon = new TObjectIcon(GetContainerObject(Container), &SkinProperties.Style194.Data80, 0);
+		TObjectIcon *Icon = new TObjectIcon(GetContainerObject(Container), &SkinProperties.Style194.Data80, false);
 		TLabel *Title = new TLabel(SkinProperties.Style194.Data38, GetContainerName(Container));
 		Window->SetIcon(Icon);
 		Window->SetTitle(Title);
@@ -1953,10 +1953,10 @@ void TSkillsWindowBody::Arrange()
 }
 
 // 0x42f190, line 2183. At least one line.
-int TSkillsWindowBody::GetMinimumHeight()
+int TSkillsWindowBody::getMinimumHeight()
 {
 	TBEGIN
-	return (std::max)(ScrollBar->GetMinimumHeight(), GetFontLineHeight(SkinProperties.Data654.FontNumber));
+	return (std::max)(ScrollBar->getMinimumHeight(), GetFontLineHeight(SkinProperties.Data654.FontNumber));
 	TEND
 }
 
@@ -1968,8 +1968,8 @@ int TSkillsWindowBody::GetInitialHeight()
 	int Height = GetContentWindowSize(6);
 	if (Height == 0)
 		Height = GetMaximumHeight();
-	if (Height < GetMinimumHeight())
-		return GetMinimumHeight();
+	if (Height < getMinimumHeight())
+		return getMinimumHeight();
 	return Height;
 	TEND
 }
@@ -2387,10 +2387,10 @@ bool TBattleWindowBody::HelpMouseMove(int x, int y)
 }
 
 // 0x4306f0, line 2631. At least one row.
-int TBattleWindowBody::GetMinimumHeight()
+int TBattleWindowBody::getMinimumHeight()
 {
 	TBEGIN
-	return (std::max)(ScrollBar->GetMinimumHeight(), SkinProperties.Style688.Data00);
+	return (std::max)(ScrollBar->getMinimumHeight(), SkinProperties.Style688.Data00);
 	TEND
 }
 
@@ -2401,8 +2401,8 @@ int TBattleWindowBody::GetInitialHeight()
 	int Height = GetContentWindowSize(7);
 	if (Height == 0)
 		Height = GetContentHeight();
-	if (Height < GetMinimumHeight())
-		Height = GetMinimumHeight();
+	if (Height < getMinimumHeight())
+		Height = getMinimumHeight();
 	return Height;
 	TEND
 }
@@ -2506,10 +2506,10 @@ void TTradeOffers::SetSize(int Width, int Height)
 }
 
 // 0x4319b0, line 2755
-int TTradeOffers::GetMinimumHeight()
+int TTradeOffers::getMinimumHeight()
 {
 	TBEGIN
-	return ScrollBar->GetMinimumHeight();
+	return ScrollBar->getMinimumHeight();
 	TEND
 }
 
@@ -2523,7 +2523,7 @@ int TTradeOffers::GetContentHeight()
 	int Count = (std::max)(OwnCount, CounterCount);
 	int Result = SkinProperties.Style6FC.Data9C * (Count / SkinProperties.Style6FC.DataA4
 		+ (Count % SkinProperties.Style6FC.DataA4 > 0)) + 1 + SkinProperties.Style6FC.Data68.x;
-	return (std::max)(GetMinimumHeight(), Result);
+	return (std::max)(getMinimumHeight(), Result);
 	TEND
 }
 
@@ -2800,7 +2800,7 @@ TTradeWindowBody::~TTradeWindowBody()
 // 0x434000 (no frame)
 int TTradeWindowBody::GetContentHeight()
 {
-	return GetMinimumHeight();
+	return getMinimumHeight();
 }
 
 // 0x434010, line 3066. The height is limited to the range between the
@@ -2808,7 +2808,7 @@ int TTradeWindowBody::GetContentHeight()
 void TTradeWindowBody::SetSize(int Width, int Height)
 {
 	TBEGIN
-	Limit(&Height, (std::min)(GetMaximumHeight(), GetMinimumHeight()), (std::max)(GetMaximumHeight(), GetMinimumHeight()));
+	Limit(&Height, (std::min)(GetMaximumHeight(), getMinimumHeight()), (std::max)(GetMaximumHeight(), getMinimumHeight()));
 	TWindow::SetSize(Width, Height);
 	SetChildArea(Buttons, SkinProperties.Style6FC.DataB8.x, SkinProperties.Style6FC.DataB8.y,
 		SkinProperties.Style6FC.DataC0.x, SkinProperties.Style6FC.DataC0.y);
@@ -2834,10 +2834,10 @@ bool TTradeWindowBody::HelpMouseMove(int x, int y)
 }
 
 // 0x434550, line 3092
-int TTradeWindowBody::GetMinimumHeight()
+int TTradeWindowBody::getMinimumHeight()
 {
 	TBEGIN
-	return (std::max)(Offers->GetMinimumHeight(), SkinProperties.Style6FC.Data00);
+	return (std::max)(Offers->getMinimumHeight(), SkinProperties.Style6FC.Data00);
 	TEND
 }
 
@@ -3042,10 +3042,10 @@ void TBuddylistWindowBody::Arrange()
 }
 
 // 0x435bb0, line 3350. At least one row.
-int TBuddylistWindowBody::GetMinimumHeight()
+int TBuddylistWindowBody::getMinimumHeight()
 {
 	TBEGIN
-	return (std::max)(ScrollBar->GetMinimumHeight(), SkinProperties.BuddylistWindow.Data04);
+	return (std::max)(ScrollBar->getMinimumHeight(), SkinProperties.BuddylistWindow.Data04);
 	TEND
 }
 
@@ -3056,8 +3056,8 @@ int TBuddylistWindowBody::GetInitialHeight()
 	int Height = GetContentWindowSize(9);
 	if (Height == 0)
 		Height = GetContentHeight();
-	if (Height < GetMinimumHeight())
-		return GetMinimumHeight();
+	if (Height < getMinimumHeight())
+		return getMinimumHeight();
 	return Height;
 	TEND
 }

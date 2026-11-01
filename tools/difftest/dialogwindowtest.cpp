@@ -147,7 +147,7 @@ public:
 	void Maximize() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A4"); }
 	int GetInitialHeight() { return MinHeight; }
 	int GetContentHeight() { return MinHeight; }
-	int GetMinimumHeight() { return MinHeight; }
+	int getMinimumHeight() { return MinHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DBody%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 	bool LeftButtonDown(int x, int y, int Flags)
 	{
@@ -867,8 +867,8 @@ static void Operation()
 				Frame[s] = At<int (__cdecl *)()>(0x485670)();
 			}
 			Ids[s] = W == NULL ? -1 : Info[s][W].Serial;
-			MinH[s] = D->GetMinimumHeight();
-			MinW[s] = D->GetMinimumWidth();
+			MinH[s] = D->getMinimumHeight();
+			MinW[s] = D->getMinimumWidth();
 		});
 		CHECK(Ids[OURS] == Ids[ORIGINAL] && Free[OURS] == Free[ORIGINAL] && MinH[OURS] == MinH[ORIGINAL]
 			&& MinW[OURS] == MinW[ORIGINAL] && Frame[OURS] == Frame[ORIGINAL],
@@ -878,8 +878,8 @@ static void Operation()
 			int Index = 0;
 			for (TComponent *C = Column[OURS][0]->FirstChild; C != Child; C = C->Next)
 				Index++;
-			int A = Child->GetMinimumHeight(), B = Counterpart(ORIGINAL, 0, Index)->GetMinimumHeight();
-			CHECK(A == B, "TSubWindow::GetMinimumHeight %d, original %d", A, B);
+			int A = Child->getMinimumHeight(), B = Counterpart(ORIGINAL, 0, Index)->getMinimumHeight();
+			CHECK(A == B, "TSubWindow::getMinimumHeight %d, original %d", A, B);
 		}
 		break;
 	}

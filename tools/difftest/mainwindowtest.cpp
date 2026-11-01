@@ -157,7 +157,7 @@ static int ConsoleMinHeight, BodyMinHeight, BorderMinHeight, FrameMinHeight;
 class TFakeConsole : public TWindow {
 public:
 	TFakeConsole();
-	int GetMinimumHeight() { return ConsoleMinHeight; }
+	int getMinimumHeight() { return ConsoleMinHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DCons%d,%d,%d;", Surface, x, y); }
 	void Arrange() { Logf("ACons;"); }
 	void KeyPress(int Key) { Logf("KCons%d;", Key); }
@@ -167,7 +167,7 @@ static_assert(sizeof(TFakeConsole) == sizeof(TConsoleWindow), "the fake console 
 class TFakeBorder : public TBorder {
 public:
 	TFakeBorder(TWindow *Window) : TBorder(Window, 0) {}
-	int GetMinimumHeight() { return BorderMinHeight; }
+	int getMinimumHeight() { return BorderMinHeight; }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
 class TFakeButton : public TTextButton {
@@ -191,14 +191,14 @@ public:
 	}
 	int GetInitialHeight() { return BodyMinHeight; }
 	int GetContentHeight() { return BodyMinHeight; }
-	int GetMinimumHeight() { return BodyMinHeight; }
+	int getMinimumHeight() { return BodyMinHeight; }
 	void HandleEvent(int Event) { Logf("HBody%s,%d;", Name(this).c_str(), Event); }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
 // The map frame after construction (vtable only; TMapFrame's layout).
 class TFakeMapFrame : public TWindow {
 public:
-	int GetMinimumHeight() { return FrameMinHeight; }
+	int getMinimumHeight() { return FrameMinHeight; }
 	void SetSize(int Width, int Height) { Logf("SFrame%d,%d;", Width, Height); TWindow::SetSize(Width, Height - 3); }
 	void Draw(int Surface, int x, int y) { Logf("DFrame%d,%d,%d;", Surface, x, y); }
 	void Arrange() { Logf("AFrame;"); }

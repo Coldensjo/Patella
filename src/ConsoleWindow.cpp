@@ -25,6 +25,7 @@
 #include "ConsoleWindow.h"
 #include "Communication.h"
 #include "Creatures.h"
+#include "DialogElements.h"
 #include "Help.h"
 #include "Preferences.h"
 #include "Skins.h"
@@ -623,10 +624,10 @@ TConsole::TConsole()
 }
 
 // 0x41a4d0. No exception frame.
-int TConsole::GetMinimumHeight()
+int TConsole::getMinimumHeight()
 {
-	int ScrollBarHeight = ScrollBar->GetMinimumHeight();
-	int TextHeight = TextWindow->GetMinimumHeight();
+	int ScrollBarHeight = ScrollBar->getMinimumHeight();
+	int TextHeight = TextWindow->getMinimumHeight();
 	return TextHeight > ScrollBarHeight ? TextHeight : ScrollBarHeight;
 }
 
@@ -1234,7 +1235,7 @@ TConsoleWindow::TConsoleWindow()
 	DefaultTab = NULL;
 	HistoryPosition = -1;
 	History = new TTalkBuffer(0);
-	Input = new TEditLine(TRect(0, 0, 0, 0), 255, 0);
+	Input = new TEditLine(TRect(0, 0, 0, 0), 255, false);
 	InsertChild(Input);
 	TabBar = new TTabBar;
 	InsertChild(TabBar);
@@ -1243,16 +1244,16 @@ TConsoleWindow::TConsoleWindow()
 	VolumeButton = new TMultiStateButton(0, 0, TextAdjustVolume, 3, 197, 198, TCallback(this, 208), 201, 202,
 		TCallback(this, 207), 199, 200, TCallback(this, 206));
 	InsertChild(VolumeButton);
-	CloseButton = new TSkinButton(0, 0, 188, 189, TCallback(this, 202), TextCloseChannel, 0);
+	CloseButton = new TSkinButton(0, 0, 188, 189, TCallback(this, 202), TextCloseChannel, false);
 	ServerMessagesButton = new TToggleButton(0, 0, 190, 191, TCallback(this, 203), TextShowServerMessages,
-		TextHideServerMessages, 0);
-	IgnoreButton = new TSkinButton(0, 0, 192, 194, TCallback(this, 204), TextIgnorePlayers, 0);
+		TextHideServerMessages, false);
+	IgnoreButton = new TSkinButton(0, 0, 192, 194, TCallback(this, 204), TextIgnorePlayers, false);
 	InsertChild(IgnoreButton);
-	NewChannelButton = new TSkinButton(0, 0, 195, 196, TCallback(this, 205), TextOpenNewChannel, 0);
+	NewChannelButton = new TSkinButton(0, 0, 195, 196, TCallback(this, 205), TextOpenNewChannel, false);
 	InsertChild(NewChannelButton);
-	MoveRightButton = new TSkinButton(0, 0, 203, 204, TCallback(TabBar, 5), TextMoveChannelsRight, 0);
+	MoveRightButton = new TSkinButton(0, 0, 203, 204, TCallback(TabBar, 5), TextMoveChannelsRight, false);
 	InsertChild(MoveRightButton);
-	MoveLeftButton = new TSkinButton(0, 0, 205, 206, TCallback(TabBar, 6), TextMoveChannelsLeft, 0);
+	MoveLeftButton = new TSkinButton(0, 0, 205, 206, TCallback(TabBar, 6), TextMoveChannelsLeft, false);
 	InsertChild(MoveLeftButton);
 	AddHotkey(0x449, TCallback(this, 204));
 	AddHotkey(0x44f, TCallback(this, 205));
@@ -1340,7 +1341,7 @@ void TConsoleWindow::Draw(int Surface, int x, int y)
 		TASSERT(TextBuffer!=NULL);
 		CurrentConsole->Arrange();
 		SetActive(TextBuffer->CanWrite());
-		Input->SetReadOnly(!TextBuffer->CanWrite());
+		Input->SetDisabled(!TextBuffer->CanWrite());
 	}
 	IgnoreButton->SetSkins(IsTalkThrottled() ? 193 : 192, 194);
 	bool Changed = TabBar->Changed;
@@ -1383,7 +1384,7 @@ bool TConsoleWindow::LeftButtonDown(int x, int y, int Flags)
 	TextWindow->SelectionStartOffset = -1;
 	TextWindow->SelectionEndLine = -1;
 	TextWindow->SelectionEndOffset = -1;
-	Input->Data60 = 0;
+	Input->SelectionLength = 0;
 	return TWindow::LeftButtonDown(x, y, Flags);
 	TEND2(x, y)
 }
@@ -1426,7 +1427,7 @@ void TConsoleWindow::KeyPress(int Key)
 		TextWindow->SelectionStartOffset = -1;
 		TextWindow->SelectionEndLine = -1;
 		TextWindow->SelectionEndOffset = -1;
-		Input->Data60 = 0;
+		Input->SelectionLength = 0;
 		TComponent *Target = Input;
 		if (strlen(Input->Text) == 0)
 			Target = CurrentConsole->TextWindow;
@@ -1652,7 +1653,7 @@ void TConsoleWindow::UpdateButtons()
 		Font = SkinProperties.Style944.Data24;
 	}
 	Input->SetFont(Font);
-	Input->SetReadOnly(!TextBuffer->CanWrite());
+	Input->SetDisabled(!TextBuffer->CanWrite());
 	SetActive(TextBuffer->CanWrite());
 	TEND
 }

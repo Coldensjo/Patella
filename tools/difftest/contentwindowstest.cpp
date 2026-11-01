@@ -331,7 +331,7 @@ class TCWTestScrollBar : public TScrollBar {
 public:
 	TCWTestScrollBar() : TScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
 	~TCWTestScrollBar() {}
-	int GetMinimumHeight() { return ScrollMinimumHeight; }
+	int getMinimumHeight() { return ScrollMinimumHeight; }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d,%dx%d;", Name(this).c_str(), Surface, x, y, Width, Height); }
 	bool MouseWheel(int x, int y, int Code)
 	{
@@ -1840,7 +1840,7 @@ static void Queries()
 			TSkillsWindowBody *Body = (TSkillsWindowBody *)Find(s, "SkillsBody");
 			if (Heights) {
 				sprintf(Buffer, "%d,%d,%d,%d", Body->GetInitialHeight(), Body->GetMaximumHeight(),
-					Body->GetContentHeight(), Body->GetMinimumHeight());
+					Body->GetContentHeight(), Body->getMinimumHeight());
 				Results[s] = Buffer;
 				return;
 			}
@@ -1865,7 +1865,7 @@ static void Queries()
 			TSubWindowBody *Body = (TSubWindowBody *)Find(s, Kind);
 			if (Heights) {
 				sprintf(Buffer, "%d,%d,%d,%d", Body->GetInitialHeight(), Body->GetMaximumHeight(),
-					Body->GetContentHeight(), Body->GetMinimumHeight());
+					Body->GetContentHeight(), Body->getMinimumHeight());
 			} else if (Scenario == SC_BATTLE) {
 				sprintf(Buffer, "%d", s == OURS ? ((TBattleWindowBody *)Body)->GetOpponentAt(x, y)
 					: At<XYFn>(0x430be0)(Body, NULL, x, y));
@@ -1905,7 +1905,7 @@ static void Queries()
 					At<BoolArgFn>(0x433720)(Body->Buttons, NULL, Cancel);
 			} else if (What == 3) {
 				sprintf(Buffer, "%d,%d,%d,%d", Body->GetInitialHeight(), Body->GetMaximumHeight(),
-					Body->GetContentHeight(), Body->GetMinimumHeight());
+					Body->GetContentHeight(), Body->getMinimumHeight());
 				Results[s] = Buffer;
 			} else {
 				// The partner's offer (as event 21) or the accept (as event 1), when allowed.

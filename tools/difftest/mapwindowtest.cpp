@@ -1205,7 +1205,7 @@ static void TestOperations(int Rounds)
 		}
 		case 21: { // the minimum size
 			Side = OURS;
-			int A = Ours->GetMinimumWidth() * 1000 + Ours->GetMinimumHeight();
+			int A = Ours->getMinimumWidth() * 1000 + Ours->getMinimumHeight();
 			Side = ORIGINAL;
 			int B = At<IntFn>(0x4bf8d0)(Original, NULL) * 1000 + At<IntFn>(0x4bf8e0)(Original, NULL);
 			CHECK(A == B, "minimum size %d, original %d", A, B);
@@ -1258,7 +1258,7 @@ static void TestFrames(int Rounds)
 			int Width = 260 + Random() % 700, Height = 200 + Random() % 500;
 			Side = OURS;
 			Frame->SetSize(Width, Height);
-			int MinA = Frame->GetMinimumWidth() * 1000 + Frame->GetMinimumHeight();
+			int MinA = Frame->getMinimumWidth() * 1000 + Frame->getMinimumHeight();
 			Side = ORIGINAL;
 			At<Int2Fn>(0x4c1c40)(B, NULL, Width, Height);
 			int MinB = At<IntFn>(0x4c1ea0)(B, NULL) * 1000 + At<IntFn>(0x4c2040)(B, NULL);

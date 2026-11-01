@@ -800,8 +800,8 @@ void InitSkinProperties()
 	SkinProperties.CheckBox.Item.y = 5;
 	SkinProperties.CheckBox.Data08.x = 24;
 	SkinProperties.CheckBox.Data08.y = 4;
-	SkinProperties.CheckBox.Data10.x = -10;
-	SkinProperties.CheckBox.Data10.y = -6;
+	SkinProperties.CheckBox.Data08.Width = -10;
+	SkinProperties.CheckBox.Data08.Height = -6;
 	SkinProperties.CheckBox.Data18.FontNumber = 4;
 	SkinProperties.CheckBox.Data18.Color.R = 176;
 	SkinProperties.CheckBox.Data18.Color.G = 176;
@@ -2149,10 +2149,10 @@ void TWindow::FitToChild(TComponent *Child, TRect Area, bool Notify)
 	TBEGIN
 	int NewWidth = Child->Width + (Area.x > 0 ? Area.x : 0) + (Area.Width < 0 ? -Area.Width : 0);
 	int NewHeight = (Area.y > 0 ? Area.y : 0) + Child->Height + (Area.Height < 0 ? -Area.Height : 0);
-	int MinimumWidth = GetMinimumWidth();
+	int MinimumWidth = getMinimumWidth();
 	if (NewWidth < MinimumWidth)
 		NewWidth = MinimumWidth;
-	int MinimumHeight = GetMinimumHeight();
+	int MinimumHeight = getMinimumHeight();
 	if (NewHeight < MinimumHeight)
 		NewHeight = MinimumHeight;
 	if (Notify)
@@ -2196,10 +2196,10 @@ void TWindow::FitToChildren(TRect Margin, bool Notify)
 	Height = Height + abs(Margin.Height) + abs(Margin.y);
 	for (Child = FirstChild; Child != NULL; Child = Child->GetNext())
 		Child->SetPosition(Child->OffsetX + dx, Child->OffsetY + dy);
-	int MinimumWidth = GetMinimumWidth();
+	int MinimumWidth = getMinimumWidth();
 	if (Width < MinimumWidth)
 		Width = MinimumWidth;
-	int MinimumHeight = GetMinimumHeight();
+	int MinimumHeight = getMinimumHeight();
 	if (Height < MinimumHeight)
 		Height = MinimumHeight;
 	if (Notify)

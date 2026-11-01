@@ -82,7 +82,7 @@ int DAT_005c2564;
 void TSurfaceGL::SetPixel(int, int, int, TRGBColor) STUB
 void TSurfaceGL::FillRectangleClipped(int, TRect, TRGBColor, TRect) STUB
 void TSurfaceGL::DrawHorizontalLine(int, int, int, int, TRGBColor) STUB
-void TSurfaceGL::Unknown1C() STUB
+void TSurfaceGL::DrawVerticalLine(int, int, int, int, TRGBColor) STUB
 void TSurfaceGL::DrawFrame(int, TRect, int, TRGBColor) STUB
 void TSurfaceGL::Unknown38() STUB
 void TSurfaceGL::Unknown44() STUB

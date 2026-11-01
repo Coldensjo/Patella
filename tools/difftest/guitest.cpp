@@ -202,8 +202,8 @@ public:
 	~TProbe() { Logf(Side, "~%d;", Id); }
 	void SetSize(int w, int h) { Logf(Side, "%d.S%d,%d;", Id, w, h); TElement::SetSize(w, h); }
 	void SetPosition(int x, int y) { Logf(Side, "%d.P%d,%d;", Id, x, y); TElement::SetPosition(x, y); }
-	int GetMinimumWidth() { Logf(Side, "%d.mw;", Id); return MinimumWidth; }
-	int GetMinimumHeight() { Logf(Side, "%d.mh;", Id); return MinimumHeight; }
+	int getMinimumWidth() { Logf(Side, "%d.mw;", Id); return MinimumWidth; }
+	int getMinimumHeight() { Logf(Side, "%d.mh;", Id); return MinimumHeight; }
 	void Draw(int Surface, int x, int y) { Logf(Side, "%d.D%d,%d,%d;", Id, Surface, x, y); }
 	void Arrange() { Logf(Side, "%d.A;", Id); }
 	bool MouseMove(int x, int y) { Logf(Side, "%d.M%d,%d;", Id, x, y); return (Mask & 1) != 0; }
@@ -720,15 +720,15 @@ static void TreeOperation()
 		}
 		break;
 	}
-	default: { // GetMinimumWidth/Height, the element defaults
+	default: { // getMinimumWidth/Height, the element defaults
 		int c = RandomAlive();
 		int R[2][10];
 		SetHelpHandle(9);
 		At<void (__cdecl *)(int)>(0x4a2a70)(9);
 		for (int s = 0; s < 2; s++) {
 			TComponent *C = Nodes[c].Side[s];
-			R[s][0] = C->GetMinimumWidth();
-			R[s][1] = C->GetMinimumHeight();
+			R[s][0] = C->getMinimumWidth();
+			R[s][1] = C->getMinimumHeight();
 			if (Nodes[c].Kind == ELEMENT) {
 				R[s][2] = C->MouseMove(x, y);
 				R[s][3] = C->LeftButtonDown(x, y, f);

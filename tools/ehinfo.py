@@ -32,9 +32,14 @@ def funcinfo(function):
 	"""The prologue is PUSH -1; PUSH stub; the stub is MOV EAX, FuncInfo; JMP __CxxFrameHandler."""
 	code = DATA[function - BASE:function - BASE + 32]
 	i = code.find(b'\x6a\xff\x68')
-	if i < 0:
-		return None, None
-	stub = struct.unpack_from('<I', code, i + 3)[0]
+	if i >= 0:
+		stub = struct.unpack_from('<I', code, i + 3)[0]
+	else:
+		# PUSH -1; MOV EAX, FS:[0]; PUSH stub (DialogElements.cpp 0x45dfc0)
+		i = code.find(b'\x6a\xff\x64\xa1\x00\x00\x00\x00\x68')
+		if i < 0:
+			return None, None
+		stub = struct.unpack_from('<I', code, i + 9)[0]
 	stub_code = DATA[stub - BASE:stub - BASE + 16]
 	j = stub_code.find(b'\xb8')
 	return stub, struct.unpack_from('<I', stub_code, j + 1)[0] if j >= 0 else None

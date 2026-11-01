@@ -154,7 +154,7 @@ class TConsole : public TWindow {
 public:
 	TConsole();                                    // 0x41a280, line 695
 	// The destructor is the implicit one (deleting destructor 0x4adc40, folded).
-	int GetMinimumHeight();                        // +0x40, 0x41a4d0
+	int getMinimumHeight();                        // +0x40, 0x41a4d0
 	void Draw(int Surface, int x, int y);          // +0x44, 0x41a4f0, line 706
 	void Arrange();                                // +0x48, 0x421450, lines 753-794
 	bool MouseWheel(int x, int y, int Code);       // +0x60, 0x41a6a0, line 717
@@ -173,7 +173,7 @@ public:
 	TTab(const char *_Caption, TTalkBuffer *_TextBuffer, TCallback Callback); // 0x41a870, lines 806-831
 	~TTab();                                       // +0x00, 0x41acd0, lines 849-866 (deleting 0x421b10)
 	// Inline (0x417700, folded with TTabBar's): the tab height.
-	int GetMinimumHeight() { return SkinProperties.StyleAA4.Data04; } // +0x40
+	int getMinimumHeight() { return SkinProperties.StyleAA4.Data04; } // +0x40
 	void Draw(int Surface, int x, int y);          // +0x44, 0x41b890, lines 981-996
 	void Arrange();                                // +0x48, 0x41b6c0, line 974
 	bool MouseMove(int x, int y);                  // +0x4c, 0x41b190, line 898
@@ -227,7 +227,7 @@ public:
 	bool IsChild(TComponent *Child);               // +0x1c, 0x41c950, line 1191
 	void SetSize(int Width, int Height);           // +0x34, 0x41bf40, line 1055
 	// Inline (0x417700, folded with TTab's).
-	int GetMinimumHeight() { return SkinProperties.StyleAA4.Data04; } // +0x40
+	int getMinimumHeight() { return SkinProperties.StyleAA4.Data04; } // +0x40
 	void Draw(int Surface, int x, int y);          // +0x44, 0x41bd40, line 1043
 	void Arrange();                                // +0x48, 0x41c0f0, line 1068
 	bool HelpMouseMove(int x, int y);              // +0x68, 0x41cda0, lines 1215-1220
@@ -257,7 +257,7 @@ public:
 	~TConsoleWindow();                             // +0x00, 0x41dbe0, line 1543 (deleting 0x422aa0)
 	void SetSize(int Width, int Height);           // +0x34, 0x41de80, line 1571
 	// Inline (0x41de70).
-	int GetMinimumHeight() { return SkinProperties.Style9E8.Data00; } // +0x40
+	int getMinimumHeight() { return SkinProperties.Style9E8.Data00; } // +0x40
 	void Draw(int Surface, int x, int y);          // +0x44, 0x422ac0, lines 1583-1601
 	void Arrange();                                // +0x48, 0x41e1e0, line 1647
 	bool LeftButtonDown(int x, int y, int Flags);  // +0x50, 0x41e5e0, line 1659
