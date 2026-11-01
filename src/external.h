@@ -295,64 +295,31 @@ public:
 	TSkillContextMenu(INT_PTR Data, int x, int y, int Width, int Height); // 0x4454f0, line 1442
 };
 
-// Between Status.cpp and SurfaceDX.cpp: the graphics engine (0 DirectX 5,
-// 1 OpenGL, 2 DirectX 9) and its surface object (0x71d0cc).
-extern int curEngine;                 // 0x71d0c4, name from the catch strings
+// Surface.cpp: curEngine, TSurface and the surface functions (Surface.h).
+#include "Surface.h"
 
-class TSurface {
+// The engines' surface classes (SurfaceDX.cpp, surfaceDX9.cpp, SurfaceGL.cpp).
+class TSurfaceGL : public TSurface {       // 0x498 bytes
 public:
-	virtual ~TSurface();                                              // +0x00
-	virtual void Unknown04();
-	virtual void Unknown08();
-	virtual void Unknown0C();
-	virtual void Unknown10();
-	virtual void FillRectangle(int Surface, TRect Rect, TRGBColor Color); // +0x14
-	virtual void Unknown18();
-	virtual void Unknown1C();
-	virtual void Unknown20();
-	virtual void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color); // +0x24
-	virtual void Unknown28();
-	virtual void Unknown2C();
-	virtual void Unknown30();
-	virtual void Unknown34();
-	virtual void Unknown38();
-	virtual void Unknown3C();
-	virtual void Unknown40();
-	virtual void Unknown44();
-	virtual void Unknown48();
-	virtual void Unknown4C();
-	virtual void Unknown50();
-	virtual void Unknown54();
-	virtual void Unknown58();
-	virtual void Unknown5C();
-	virtual void Unknown60();
-	virtual void Unknown64();
-	virtual void Unknown68();
-	virtual void Unknown6C();
-	virtual void Unknown70();
-	virtual void Unknown74();
-	virtual void Unknown78();
-	virtual void Unknown7C();
-	virtual void Unknown80();
-	virtual void FinishFrame();                                       // +0x84
-	virtual bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force); // +0x88
-	virtual void Unknown8C();
-	virtual void Unknown90();
-	virtual void Unknown94();
-	virtual void Unknown98();
-	virtual bool Unknown9C(int Value);                                // +0x9c
-	virtual bool IsUnavailable();                                     // +0xa0
-	virtual void UnknownA4();
-	virtual void UnknownA8();
-	virtual void UnknownAC();
-	virtual double GetFPS();                                          // +0xb0
-	virtual void InitSurfaces();                                      // +0xb4
-	virtual void ExitSurfaces();                                      // +0xb8
-	virtual bool TestEngine();                                        // +0xbc
+	TSurfaceGL();                          // 0x4fb670
+	void Unknown0C(); void Unknown10(); void FillRectangle(int Surface, TRect Rect, TRGBColor Color);
+	void Unknown18(); void Unknown1C(); void Unknown20();
+	void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color);
+	void Unknown28(); void Unknown2C(); void Unknown30(); void Unknown34(); void Unknown38();
+	void Unknown3C(); void Unknown40(); void Unknown44(); void Unknown48(); void Unknown4C();
+	void Unknown54(int a, int b, int c, int d); void Unknown58(); void Unknown5C(); void Unknown60();
+	void Unknown68(); void Unknown6C(); void Unknown70(); void Unknown74(); void Unknown78();
+	void Unknown7C(); void FinishFrame();
+	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force);
+	void Unknown8C(); void Unknown90(); void Unknown94(); bool Unknown9C(int Value);
+	bool IsUnavailable(); void UnknownA4(); void UnknownA8(); void UnknownAC(); double GetFPS();
+	void InitSurfaces(); void ExitSurfaces();
+	uint8 DataGL[0x498 - 0x44];
 };
-
-TSurface *FUN_004eaa90();             // 0x4eaa90, creates the surface for curEngine if there is none
-void SurfaceExitInstance();           // 0x4eab60, deletes the surface
+TSurface *FUN_004eca00();               // 0x4eca00, SurfaceDX.cpp: creates the DirectX 5 surface
+TSurface *FUN_004f1430();               // 0x4f1430, surfaceDX9.cpp: creates the DirectX 9 surface
+bool FUN_004efd10();                    // 0x4efd10, between SurfaceDX.cpp and surfaceDX9.cpp: DirectX 9 is installed
+bool FUN_004f9710(HDC Context);         // 0x4f9710, between surfaceDX9.cpp and SurfaceGL.cpp: OpenGL works on the context
 
 // GUI.cpp: style data at 0x5ccfc8 (constructor 0x496800, filled in by 0x498160).
 struct TGUIPoint {
@@ -513,10 +480,9 @@ void FUN_004aa1d0();                    // 0x4aa1d0, MainFrm.cpp; called when th
 // graphics.cpp
 void FUN_0048da50();                    // 0x48da50, after the surfaces are created
 
-// Between Status.cpp and SurfaceDX.cpp.
-extern int DAT_005c2564;                // 0x5c2564, engine from the command line ("engine N"), -1 = none
-int FUN_004eaa80();                     // 0x4eaa80, the graphics engine in use (error.txt "Graphic Engine")
-void FUN_004eac20(HWND *Window);        // 0x4eac20, sets up the surface for the main window
+// Owner unknown (.data after Status.cpp's 0x5c2560): set by "engine N" on
+// the command line, read by SurfaceInitInstance; -1 = none.
+extern int DAT_005c2564;                // 0x5c2564
 
 // Between SurfaceGL.cpp and sysinc.cpp: texts for a PROGRAM_ERROR code.
 const char *FUN_004fcbf0(int Error);    // 0x4fcbf0, what failed ("Cannot find file ...")

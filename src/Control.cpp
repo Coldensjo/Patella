@@ -96,13 +96,13 @@ void CheckSurface(bool Force)
 	TFullscreenMode *Resolution = GetFullscreenMode();
 	bool Success;
 	try {
-		Success = FUN_004eaa90()->Init(&WindowHandle, GetViewMode(), Resolution, Force);
+		Success = GetSurface()->Init(&WindowHandle, GetViewMode(), Resolution, Force);
 	} catch (...) {
 		throw (PROGRAM_ERROR)12; // name of the value unknown
 	}
 	if (!Success)
 		ChangeEngine(0);
-	if (FUN_004eaa90()->Unknown9C(1))
+	if (GetSurface()->Unknown9C(1))
 		FUN_004922c0();
 	TEND1(Force?1:0)
 }
@@ -118,7 +118,7 @@ void ChangeEngine(int engine)
 	int oldEngine = curEngine;
 	curEngine = engine;
 	try {
-		FUN_004eaa90()->ExitSurfaces();
+		GetSurface()->ExitSurfaces();
 	} catch (TMyException &Exception) {
 		throw TMYEXCEPTION("ExitSurfaces failed", "oldEngine", oldEngine, "", 0, Exception);
 	} catch (...) {
@@ -133,7 +133,7 @@ void ChangeEngine(int engine)
 	}
 	bool Success;
 	try {
-		Success = FUN_004eaa90()->TestEngine();
+		Success = GetSurface()->TestEngine();
 	} catch (TMyException &Exception) {
 		throw TMYEXCEPTION("TestEngine failed", "curEngine", curEngine, "", 0, Exception);
 	} catch (...) {
@@ -151,7 +151,7 @@ void ChangeEngine(int engine)
 		}
 	}
 	try {
-		FUN_004eaa90()->InitSurfaces();
+		GetSurface()->InitSurfaces();
 	} catch (TMyException &Exception) {
 		throw TMYEXCEPTION("InitSurfaces failed", "", 0, "", 0, Exception);
 	} catch (...) {
@@ -171,7 +171,7 @@ void Redraw(bool Force)
 	TBEGIN
 	CheckSurface(Force);
 	TEND
-	if (FUN_004eaa90()->IsUnavailable()) {
+	if (GetSurface()->IsUnavailable()) {
 		Sleep(10);
 		return;
 	}
@@ -211,8 +211,8 @@ void Redraw(bool Force)
 				y = 1;
 		}
 		TRect Rect = {x, y, Width, Height};
-		FUN_004eaa90()->FillRectangle(1, Rect, GUIStyle.TooltipBackground);
-		FUN_004eaa90()->DrawFrame(1, Rect, 1, GUIStyle.TooltipFrame);
+		GetSurface()->FillRectangle(1, Rect, GUIStyle.TooltipBackground);
+		GetSurface()->DrawFrame(1, Rect, 1, GUIStyle.TooltipFrame);
 		FUN_00493f60(1, GUIStyle.TooltipBorder + x, GUIStyle.TooltipBorder + y, GUIStyle.TooltipFont,
 			Tooltip);
 	}
@@ -232,7 +232,7 @@ void Redraw(bool Force)
 			_snprintf(Engine, 4, "<?>");
 			break;
 		}
-		double FPS = FUN_004eaa90()->GetFPS();
+		double FPS = GetSurface()->GetFPS();
 		char Text[64];
 		_snprintf(Text, 20, "%s %.02f fps", Engine, FPS);
 		TRGBColor Color = {200, 200, 200};
@@ -273,7 +273,7 @@ void Redraw(bool Force)
 			FUN_00490c60(1, x, y, 4, Picture->x, Picture->y, Picture->width, Picture->height);
 		}
 	}
-	FUN_004eaa90()->FinishFrame();
+	GetSurface()->FinishFrame();
 	TEND1(Force?1:0)
 }
 
@@ -1202,7 +1202,7 @@ void InitControl(bool Gamemaster)
 	TEND
 }
 
-// 0x448e30, line 1661. Called from the main frame's destructor. FUN_004eaa90
+// 0x448e30, line 1661. Called from the main frame's destructor. GetSurface
 // creates a surface first if there is none, so one may be created only to be
 // deleted.
 void ExitControl()
@@ -1214,7 +1214,7 @@ void ExitControl()
 	ExitNetwork();
 	ExitSkins();
 	FUN_0048b4a0();
-	FUN_004eaa90()->ExitSurfaces();
+	GetSurface()->ExitSurfaces();
 	SurfaceExitInstance();
 	ExitPreferences();
 	ExitTalk();

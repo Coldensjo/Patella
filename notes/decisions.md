@@ -365,3 +365,34 @@ callcheck differences, caller integration and differential coverage.
   strings); Communication.obj, the first object in link order, is the first
   to instantiate it. Rows of kind stl with generic names std_<address>
   (low): naming each template member was not needed for the reconstruction.
+
+## Status/SurfaceDX gap: Surface.cpp (0x4eaa80-0x4eae6f) and SurfaceDX.cpp
+
+- **A file Surface.cpp** (name low, split high): 0x4eaa80-0x4eae6f has its
+  own data (0x71d0c0-0x71d0cc: the main window, curEngine, the available
+  engines, the surface object), defines TSurface (vtable 0x56ef78, mostly
+  _purecall slots) and creates the engine surfaces; "Surface" sorts between
+  Status and SurfaceDX in the link order. Status.cpp's data ends before
+  0x71d0c0 and SurfaceDX's starts at 0x71d0f0.
+- **0x4eae70-0x4ed19f is SurfaceDX.cpp** (high): TSurfaceDX's vtable
+  (0x56f038) follows TSurface's, its destructor 0x4eae90 sets it and calls
+  ~TSurface, and the DirectX 5 factory 0x4eca00 is what GetSurface calls for
+  engine 0. Recorded in file-ranges.tsv, not reconstructed yet.
+- **TSurface moved from external.h to Surface.h** with the binary's shape:
+  pure slots where the vtable has _purecall, empty default bodies for +0x04,
+  +0x08, +0x64, +0x80, +0x98, a forwarder at +0x50 (to +0x54), TestEngine
+  (+0xbc) storing the main window. Slot parameter lists are known only from
+  the default bodies' RET n (int placeholders). The data members are offsets
+  with placeholder names except Window (+0x08). TSurfaceGL is declared in
+  external.h (constructor 0x4fb670, 0x498 bytes) because GetSurface creates
+  it with new.
+- **Names** (low): GetCurrentEngine, GetSurface, GetAvailableEngines,
+  SurfaceInitInstance (after the binary's SurfaceExitInstance),
+  SurfaceWindow, AvailableEngines.
+- **The removed try block in SurfaceInitInstance**: the unwind map has two
+  states around ChoosePixelFormat/DescribePixelFormat without a try-block
+  entry; the compiler drops handlers that only guard C functions. The catch
+  body is unknown; it is written like the first one (PROGRAM_ERROR 12), low.
+- **0x5c2564** (the "engine N" value) stays DAT_005c2564 in external.h: it is
+  in .data after Status.cpp's 0x5c2560, written by Player.cpp and read here;
+  its owner is not clear.

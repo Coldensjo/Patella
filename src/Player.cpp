@@ -180,7 +180,7 @@ void CPlayerApp::HandleException(TMyException &Exception)
 			Out << "Windows Version: (exception)" << std::endl;
 		}
 		try {
-			Out << "Graphic Engine: " << FUN_004eaa80() << std::endl;
+			Out << "Graphic Engine: " << GetCurrentEngine() << std::endl;
 		} catch (...) {
 			Out << "Graphic Engine: (exception)" << std::endl;
 		}
@@ -311,8 +311,8 @@ BOOL CPlayerApp::InitInstance()
 				return FALSE;
 			}
 			try {
-				FUN_004eac20(&MainFrame->m_hWnd);
-				FUN_004eaa90()->InitSurfaces();
+				SurfaceInitInstance(&MainFrame->m_hWnd);
+				GetSurface()->InitSurfaces();
 				FUN_0048da50();
 			} catch (...) {
 				throw (PROGRAM_ERROR)12; // "Video surface allocation failed."

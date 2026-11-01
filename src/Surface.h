@@ -1,0 +1,92 @@
+// Surface.h: the graphics engine and the surface base class.
+//
+// The file name Surface.cpp is inferred: the code lies between Status.cpp and
+// SurfaceDX.cpp in the alphabetical link order and is the engine-independent
+// part of the surface classes (SurfaceDX.cpp, surfaceDX9.cpp, SurfaceGL.cpp
+// derive from TSurface). Names from the binary: curEngine,
+// SurfaceExitInstance, and the methods TestEngine, InitSurfaces and
+// ExitSurfaces (ChangeEngine's error messages); the rest are ours.
+
+#pragma once
+
+#include "common.h"
+struct TRect;
+struct TRGBColor;
+struct TFullscreenMode;
+
+// Engines: 0 DirectX 5 (SurfaceDX.cpp), 1 OpenGL (SurfaceGL.cpp), 2 DirectX 9
+// (surfaceDX9.cpp).
+extern int curEngine; // 0x71d0c4
+
+// The vtable is at 0x56ef78. Slots with _purecall in the binary are pure;
+// the others have the default bodies in Surface.cpp. Unknown slots keep
+// their offsets; their parameters are known only where a default body
+// shows them (by its RET n).
+class TSurface {
+public:
+	TSurface();
+	virtual ~TSurface();                                              // +0x00
+	virtual void Unknown04(int Value);                                // +0x04, empty
+	virtual void Unknown08(int Value);                                // +0x08, empty
+	virtual void Unknown0C() = 0;
+	virtual void Unknown10() = 0;
+	virtual void FillRectangle(int Surface, TRect Rect, TRGBColor Color) = 0; // +0x14
+	virtual void Unknown18() = 0;
+	virtual void Unknown1C() = 0;
+	virtual void Unknown20() = 0;
+	virtual void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color) = 0; // +0x24
+	virtual void Unknown28() = 0;
+	virtual void Unknown2C() = 0;
+	virtual void Unknown30() = 0;
+	virtual void Unknown34() = 0;
+	virtual void Unknown38() = 0;
+	virtual void Unknown3C() = 0;
+	virtual void Unknown40() = 0;
+	virtual void Unknown44() = 0;
+	virtual void Unknown48() = 0;
+	virtual void Unknown4C() = 0;
+	virtual void Unknown50(int a, int b, int c, int d);               // +0x50, calls +0x54
+	virtual void Unknown54(int a, int b, int c, int d) = 0;
+	virtual void Unknown58() = 0;
+	virtual void Unknown5C() = 0;
+	virtual void Unknown60() = 0;
+	virtual void Unknown64();                                         // +0x64, empty
+	virtual void Unknown68() = 0;
+	virtual void Unknown6C() = 0;
+	virtual void Unknown70() = 0;
+	virtual void Unknown74() = 0;
+	virtual void Unknown78() = 0;
+	virtual void Unknown7C() = 0;
+	virtual void Unknown80(int a, int b, int c, int d);               // +0x80, empty
+	virtual void FinishFrame() = 0;                                   // +0x84
+	virtual bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force) = 0; // +0x88
+	virtual void Unknown8C() = 0;
+	virtual void Unknown90() = 0;
+	virtual void Unknown94() = 0;
+	virtual void Unknown98(int a, int b, int c, int d, int e);        // +0x98, empty
+	virtual bool Unknown9C(int Value) = 0;                            // +0x9c
+	virtual bool IsUnavailable() = 0;                                 // +0xa0
+	virtual void UnknownA4() = 0;
+	virtual void UnknownA8() = 0;
+	virtual void UnknownAC() = 0;
+	virtual double GetFPS() = 0;                                      // +0xb0
+	virtual void InitSurfaces() = 0;                                  // +0xb4
+	virtual void ExitSurfaces() = 0;                                  // +0xb8
+	virtual bool TestEngine();                                        // +0xbc
+
+	int Data04;          // +0x04
+	HWND Window;         // +0x08, the main window (TestEngine, SurfaceInitInstance)
+	int Data0C[6];       // +0x0c
+	uint8 Data24[2];     // +0x24
+	bool Flag26;         // +0x26, cleared by the constructor
+	uint8 Data27[0x11];  // +0x27
+	int Data38;          // +0x38, cleared by the constructor
+	int Data3C;          // +0x3c, cleared by the constructor
+	int Data40;          // +0x40, cleared by the constructor
+};
+
+int GetCurrentEngine();
+TSurface *GetSurface();
+void SurfaceExitInstance();
+uint8 GetAvailableEngines();
+void SurfaceInitInstance(HWND *Window);

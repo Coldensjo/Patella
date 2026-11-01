@@ -834,3 +834,16 @@ address	name	kind	confidence	note
 0x404070	std_404070	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source: num_put format
 0x404320	std_404320	stl	low	VC7.1 <string>/<sstream>/<locale> code kept in Communication.obj; not part of the source
 0x401000	InitCommunication	game	medium	Communication.cpp: clears PatchData (0x5c4344); called by InitControl
+0x4eaa80	GetCurrentEngine	game	medium	Surface.cpp (name inferred): returns curEngine; error.txt "Graphic Engine"
+0x4eaa90	GetSurface	game	medium	Surface.cpp: creates the surface of curEngine on first use (OpenGL new TSurfaceGL, DX9 0x4f1430, DX5 0x4eca00)
+0x4eab60	SurfaceExitInstance	game	high	Surface.cpp: deletes the surface; name from ChangeEngine's error messages
+0x4eab80	TSurface_TestEngine	game	high	Surface.cpp: default TestEngine (vtable +0xbc) takes the main window, returns true
+0x4eab90	TSurface_ctor	game	high	Surface.cpp
+0x4eabb0	TSurface_Unknown50	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same four arguments (missed by Ghidra)
+0x4eabd0	TSurface_dtor	game	high	Surface.cpp
+0x4eabe0	GetAvailableEngines	game	low	Surface.cpp: bit 0 OpenGL, bit 1 DirectX 9
+0x4eabf0	TSurface_Unknown98	game	medium	Surface.cpp: vtable +0x98, empty (missed by Ghidra)
+0x4eac00	TSurface_Unknown04	game	medium	Surface.cpp: vtable +0x04 and +0x08, empty, folded (missed by Ghidra)
+0x4eac10	TSurface_Unknown80	game	medium	Surface.cpp: vtable +0x80, empty (missed by Ghidra)
+0x4eac20	SurfaceInitInstance	game	low	Surface.cpp: chooses the engine at start-up; name after SurfaceExitInstance
+0x4eae50	TSurface_scalar_deleting_dtor	stl	high	compiler-generated, kept in Surface.obj

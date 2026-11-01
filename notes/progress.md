@@ -7,8 +7,8 @@ Read this and `git log` first when resuming.
 1. Script.cpp — **done** (commit "Reconstruct Script.cpp").
 2. Preferences/Script gap (0x4ddc00-0x4df6ca) — **done**: loader/saver/ExitPreferences in Preferences.cpp, inline code in Script.h.
 3. Player.cpp, incl. the error.txt reader (0x4da140) — **done**.
-4. Small gaps: ContextMenus/Control (0x445900-0x445aeb), start/Communication
-   (0x401000-0x40434f), Status/SurfaceDX (0x4eaa80-0x4ed19f).
+4. Small gaps — **done**: ContextMenus/Control (Control.cpp), start/Communication
+   (InitCommunication + STL), Status/SurfaceDX (Surface.cpp + SurfaceDX.cpp range).
 5. Objects.cpp and the Objects/Player gap — **done** (Claude Opus 5.5 delegate, reviewed, merged). The gap is all Player.obj.
 6. Map.cpp and the gaps on both sides.
 7. MapWindow.cpp and the MapWindow/Network gap.
@@ -18,8 +18,9 @@ Read this and `git log` first when resuming.
 
 ## Current item
 
-4: small gaps. ContextMenus/Control and start/Communication are done;
-Status/SurfaceDX (0x4eaa80-0x4ed19f) is next.
+6: Map.cpp and the gaps on both sides (both delegate attempts failed on
+rate/usage limits; doing it myself). Then 7 MapWindow.cpp. Item 8
+(Creatures.cpp) is with a Claude delegate.
 
 ## Delegates (running)
 
@@ -38,7 +39,7 @@ merging.
 
 ## Last difftest
 
-2,870,595 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
+2,870,603 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
