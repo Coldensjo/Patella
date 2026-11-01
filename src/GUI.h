@@ -236,7 +236,8 @@ struct TGUIPoint {
 // start window's buttons (MainWindow.cpp): the size of their panel, its
 // position and the positions of "Enter Game", "Options", "Info", "Exit
 // Game" and "Access Account" in it (the constructor zeroes +0x08-+0x47,
-// which leaves the types open; MainWindow.cpp reads +0x08-+0x37 as points).
+// which leaves the types open; MainWindow.cpp reads +0x08-+0x37 as points,
+// +0x38-+0x47 is not used).
 struct TSkinProperties0D8 {
 	int Data00; // +0x00, panel width
 	int Data04; // +0x04, panel height
@@ -246,8 +247,7 @@ struct TSkinProperties0D8 {
 	TGUIPoint Data20; // +0x20, "Info"
 	TGUIPoint Data28; // +0x28, "Exit Game"
 	TGUIPoint Data30; // +0x30, "Access Account"
-	int Data38; // +0x38
-	TRGBColor Data3C; // +0x3c
+	TRect Data38; // +0x38, zeroed: a type with a constructor (a guess)
 	TFont Data48; // +0x48
 };
 

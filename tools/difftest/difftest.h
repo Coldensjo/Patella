@@ -47,3 +47,4 @@ void TestGUI();
 void TestMap(const char *ExePath);     // maptest.cpp, also loads Tibia.dat
 void TestGraphics(const char *ExePath); // graphicstest.cpp, loads Tibia.spr, Tibia.pic and Tibia.dat
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
+void TestMainWindow();                   // mainwindowtest.cpp, after TestMapWindow (patches for good as well)

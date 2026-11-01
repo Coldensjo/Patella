@@ -1,0 +1,1189 @@
+// Differential tests of MainWindow.cpp against the original code.
+//
+// The windows MainWindow.cpp creates from files that are not reconstructed
+// yet (the console, the dialog windows, the frames, buttons, labels and the
+// side-bar and sub-windows) are fakes of this file on both sides: the
+// image's constructors and members jump to the same code as ours, which
+// logs every call per side (Side) and builds the same objects. The other
+// callees (Preferences, Status, Talk, Creatures, Inventory, GUI hotkeys,
+// graphics, the surface, Communication and Network) are fakes as well, for
+// the image and for our code (PatchOwn). The map frame is real on both sides
+// while the window is built (the image's TMapFrame and ours); right after
+// that its vtable is replaced by a logging fake, so that drawing does not
+// reach the map. TWindow, TSplitter and TStartWindow are the image's and ours.
+//
+// Both main windows (InitMainWindow, 0x4b05b0) get the same random
+// operations: mode changes, sizes, drawing, keys, events, the console
+// splitter, containers, trade and content windows, the start window's
+// events, ExitMainWindow. After each one the logs and a dump of both window
+// trees (classes, positions, sizes, drawing lists, captures, the members of
+// TMainWindow, TSplitter and TStartWindow and the fakes' arguments) are
+// compared. Failing assertions are not exercised.
+
+#include "difftest.h"
+#include "../../src/MainWindow.h"
+#include "../../src/MapWindow.h"
+#include "../../src/Communication.h"
+#include "../../src/Control.h"
+#include "../../src/Creatures.h"
+#include "../../src/Inventory.h"
+#include "../../src/Network.h"
+#include "../../src/Preferences.h"
+#include "../../src/Skins.h"
+#include "../../src/Status.h"
+#include "../../src/Surface.h"
+#include "../../src/Talk.h"
+#include "../../src/external.h"
+#include <map>
+#include <new>
+#include <stdarg.h>
+#include <string>
+#include <vector>
+
+static_assert(sizeof(TMainWindow) == 0x4c, "TMainWindow is 0x4c bytes");
+static_assert(sizeof(TStartWindow) == 0x30, "TStartWindow is 0x30 bytes");
+static_assert(sizeof(TSplitter) == 0x30, "TSplitter is 0x30 bytes");
+static_assert(offsetof(TMainWindow, MapFrame) == 0x2c, "TMainWindow::MapFrame at +0x2c");
+static_assert(offsetof(TMainWindow, InGame) == 0x48, "TMainWindow::InGame at +0x48");
+static_assert(offsetof(TSplitter, DragY) == 0x2c, "TSplitter::DragY at +0x2c");
+static_assert(sizeof(TConsoleWindow) == 0x6c, "TConsoleWindow is 0x6c bytes");
+static_assert(offsetof(TConsoleWindow, Data34) == 0x34, "TConsoleWindow::Data34 at +0x34");
+static_assert(sizeof(TDialogWindow) == 0x4c, "TDialogWindow is 0x4c bytes");
+static_assert(offsetof(TSubWindow, Body) == 0x44, "TSubWindow::Body at +0x44");
+static_assert(sizeof(TBorder) == 0x68, "TBorder is 0x68 bytes");
+static_assert(sizeof(TTextButton) == 0x78, "TTextButton is 0x78 bytes");
+static_assert(sizeof(TLabel) == 0x4c, "TLabel is 0x4c bytes");
+static_assert(sizeof(TObjectIcon) == 0x50, "TObjectIcon is 0x50 bytes");
+static_assert(sizeof(TSideWindow3) == 0x80 && sizeof(TSideWindow4) == 0x4c && sizeof(TSideWindow5) == 0x58,
+	"side-bar window sizes");
+
+enum { OURS = 0, ORIGINAL = 1 };
+static int Side;
+static bool Quiet;
+static std::string Log[2];
+
+static void Logf(const char *Format, ...)
+{
+	if (Quiet)
+		return;
+	char Buffer[512];
+	va_list Args;
+	va_start(Args, Format);
+	vsnprintf(Buffer, sizeof(Buffer), Format, Args);
+	va_end(Args);
+	Log[Side] += Buffer;
+}
+
+static void PatchOwn(void *Function, void *Target)
+{
+	DWORD Protection;
+	VirtualProtect(Function, 5, PAGE_EXECUTE_READWRITE, &Protection);
+	PatchJump((uint32)(uintptr_t)Function, Target);
+	VirtualProtect(Function, 5, Protection, &Protection);
+	FlushInstructionCache(GetCurrentProcess(), Function, 5);
+}
+
+template <class T> static void *Member(T Function) { return *(void **)&Function; }
+static void *VtableOf(const void *Object) { return *(void **)Object; }
+static void SetVtable(void *Object, void *Vtable) { *(void **)Object = Vtable; }
+
+// MainWindow.obj's copy of the text table (external.h).
+const char *TextNoBugReportRight = "You are not authorised to send bug reports.";
+const char *TextAccountURL = "http://www.tibia.com/home/?subtopic=account";
+
+static TMainWindow *&OriginalMainWindow = Global<TMainWindow *>(0x5d16b0);
+static TWindow *&OriginalModalWindow = Global<TWindow *>(0x5d16ac);
+static TMainWindow *Main(int s) { return s == OURS ? MainWindow : OriginalMainWindow; }
+
+// --- Objects: names and serial numbers -----------------------------------------
+
+// What the fakes know about the objects they made, per side.
+struct TInfo {
+	std::string Kind;
+	int Serial;
+	int Identifier;     // sub-windows
+	std::string Detail; // constructor arguments
+};
+static std::map<const void *, TInfo> Info[2];
+static int Serials[2];
+static std::map<void *, std::string> VtableName[2];
+static std::map<std::string, bool> IsWindowKind;
+
+static void NameVtable(int s, void *Vtable, const char *Name, bool Window)
+{
+	VtableName[s][Vtable] = Name;
+	IsWindowKind[Name] = Window;
+}
+
+static TInfo &Register(const void *Object, const char *Kind, int Identifier = 0)
+{
+	TInfo &I = Info[Side][Object];
+	I.Kind = Kind;
+	I.Serial = Serials[Side]++;
+	I.Identifier = Identifier;
+	I.Detail.clear();
+	return I;
+}
+
+static std::string NameOf(int s, const void *Object)
+{
+	if (Object == NULL)
+		return "0";
+	if (Object == Main(s))
+		return "Main";
+	auto V = VtableName[s].find(VtableOf(Object));
+	std::string Name = V == VtableName[s].end() ? "?" : V->second;
+	auto I = Info[s].find(Object);
+	if (I != Info[s].end() && I->second.Kind == Name) {
+		char Buffer[32];
+		sprintf(Buffer, "#%d/%d", I->second.Serial, I->second.Identifier);
+		Name += Buffer;
+	}
+	return Name;
+}
+static std::string Name(const void *Object) { return NameOf(Side, Object); }
+
+// --- The fake classes ----------------------------------------------------------
+
+// The fakes' own overrides. Each fake constructor sets the vtable of its
+// test subclass at the end (same layout, more overrides).
+static int ConsoleMinHeight, DialogMinHeight, BorderMinHeight, FrameMinHeight;
+
+class TFakeConsole : public TConsoleWindow {
+public:
+	int GetMinimumHeight() { return ConsoleMinHeight; }
+	void Draw(int Surface, int x, int y) { Logf("DCons%d,%d,%d;", Surface, x, y); }
+	void Arrange() { Logf("ACons;"); }
+	void KeyPress(int Key) { Logf("KCons%d;", Key); }
+};
+class TFakeDialog : public TDialogWindow {
+public:
+	int GetMinimumHeight() { return DialogMinHeight + (FirstChild != NULL ? 7 : 0); }
+	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+};
+class TFakeBorder : public TBorder {
+public:
+	TFakeBorder(TWindow *Window) : TBorder(Window, 0) {}
+	int GetMinimumHeight() { return BorderMinHeight; }
+	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+};
+class TFakeButton : public TTextButton {
+public:
+	TFakeButton() : TTextButton(0, 0, "", 0, 0, TCallback(), 0) {}
+	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+};
+class TFakeBody : public TSubWindowBody {
+public:
+	void HandleEvent(int Event) { Logf("HBody%s,%d;", Name(this).c_str(), Event); }
+};
+// The map frame after construction (vtable only; TMapFrame's layout).
+class TFakeMapFrame : public TWindow {
+public:
+	int GetMinimumHeight() { return FrameMinHeight; }
+	void SetSize(int Width, int Height) { Logf("SFrame%d,%d;", Width, Height); TWindow::SetSize(Width, Height - 3); }
+	void Draw(int Surface, int x, int y) { Logf("DFrame%d,%d,%d;", Surface, x, y); }
+	void Arrange() { Logf("AFrame;"); }
+};
+
+static void *FakeConsoleVtable, *FakeDialogVtable, *FakeBorderVtable, *FakeButtonVtable, *FakeBodyVtable,
+	*FakeMapFrameVtable;
+
+TConsoleWindow::TConsoleWindow()
+{
+	Register(this, "Console");
+	Logf("NCons;");
+	memset(Data2C, 0, sizeof(Data2C));
+	Data34 = NULL;
+	if (FakeConsoleVtable != NULL)
+		SetVtable(this, FakeConsoleVtable);
+}
+void TConsoleWindow::FUN_0041e960(bool Active) { Logf("CActive%d;", Active ? 1 : 0); }
+void TConsoleWindow::FUN_00422e70(TTalkBuffer *TextBuffer, const char *Title)
+{
+	Logf("COpen%p,%s;", (void *)TextBuffer, Title);
+}
+
+TDialogWindow::TDialogWindow()
+{
+	Register(this, "Dialog");
+	Logf("NDlg%s;", Name(this).c_str());
+	if (FakeDialogVtable != NULL)
+		SetVtable(this, FakeDialogVtable);
+}
+TSubWindow *TDialogWindow::FUN_00486400(int Identifier)
+{
+	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->Next) {
+		auto I = Info[Side].find(Child);
+		if (I != Info[Side].end() && I->second.Identifier == Identifier)
+			return (TSubWindow *)Child;
+	}
+	return NULL;
+}
+// The open dialogs of the preferences, per side (ClearOpenDialogs,
+// GetOpenDialogs and this one).
+static std::vector<int> OpenDialogs[2];
+void TDialogWindow::FUN_004865b0()
+{
+	Logf("Save%s", Name(this).c_str());
+	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->Next) {
+		auto I = Info[Side].find(Child);
+		int Identifier = I != Info[Side].end() ? I->second.Identifier : -1;
+		Logf(",%d", Identifier);
+		OpenDialogs[Side].push_back(Identifier);
+	}
+	Logf(";");
+}
+void TDialogWindow::UnknownA0(int Value, TWindow *Window)
+{
+	Logf("A0%s,%d,%s;", Name(this).c_str(), Value, Name(Window).c_str());
+	if (Window != NULL)
+		AppendChild(Window);
+}
+
+void TSubWindowBody::UnknownA0() { Logf("BA0;"); }
+void TSubWindowBody::UnknownA4() { Logf("BA4;"); }
+static bool BodyAccepts;
+bool TSubWindowBody::UnknownA8() { Logf("BA8%s;", Name(this).c_str()); return BodyAccepts; }
+void TSubWindowBody::UnknownAC() { Logf("BAC;"); }
+void TSubWindowBody::UnknownB0() { Logf("BB0;"); }
+void TSubWindowBody::UnknownB4() { Logf("BB4;"); }
+void TSubWindowBody::UnknownB8() { Logf("BB8%s;", Name(this).c_str()); }
+void TSubWindow::FUN_004897d0() { Logf("Up1%s;", Name(this).c_str()); }
+void TSubWindow::FUN_00489970() { Logf("Up0%s;", Name(this).c_str()); }
+void TSubWindow::FUN_0048a0b0(TComponent *Element) { Logf("Icon%s,%s;", Name(this).c_str(), Name(Element).c_str()); }
+void TSubWindow::FUN_0048a2a0(TComponent *Element) { Logf("Title%s,%s;", Name(this).c_str(), Name(Element).c_str()); }
+
+// A sub-window with a body, as the ContentWindows.cpp creators return them.
+static TWindow *NewSubWindow(int Identifier)
+{
+	TSubWindow *Window = new TSubWindow;
+	Register(Window, "Sub", Identifier);
+	memset(Window->Data2C, 0, sizeof(Window->Data2C));
+	TSubWindowBody *Body = new TSubWindowBody;
+	SetVtable(Body, FakeBodyVtable);
+	Register(Body, "Body", Identifier);
+	Window->Body = Body;
+	Window->InsertChild(Body);
+	Window->SetSize(170, 40 + Identifier);
+	Logf("NSub%s;", NameOf(Side, Window).c_str());
+	return Window;
+}
+TWindow *FUN_004362b0(TMainWindow *Receiver) { Logf("NInv1%s;", Name(Receiver).c_str()); return NewSubWindow(1); }
+TWindow *FUN_00436510(TMainWindow *Receiver) { Logf("NInv2%s;", Name(Receiver).c_str()); return NewSubWindow(2); }
+TWindow *FUN_0043c520(int Container) { Logf("NCont%d;", Container); return NewSubWindow(0x40 + Container); }
+TWindow *FUN_0043c920() { return NewSubWindow(6); }
+TWindow *FUN_0043cc90() { return NewSubWindow(7); }
+TWindow *FUN_0043d000() { return NewSubWindow(8); }
+TWindow *FUN_0043d390() { return NewSubWindow(9); }
+TSideWindow3::TSideWindow3() { Register(this, "Side3", 3); Logf("N%s;", Name(this).c_str()); }
+TSideWindow4::TSideWindow4() { Register(this, "Side4", 4); Logf("N%s;", Name(this).c_str()); }
+TSideWindow5::TSideWindow5(TDialogWindow *_CheckObject, TMainWindow *Receiver)
+{
+	Register(this, "Side5", 5);
+	Logf("N%s,%s,%s;", Name(this).c_str(), Name(_CheckObject).c_str(), Name(Receiver).c_str());
+}
+
+TBorder::TBorder(TWindow *_Window, int Param)
+{
+	TInfo &I = Register(this, "Border");
+	char Buffer[128];
+	sprintf(Buffer, "%s,%d", Name(_Window).c_str(), Param);
+	I.Detail = Buffer;
+	Logf("NBorder%s;", Buffer);
+	InsertChild(_Window);
+	if (FakeBorderVtable != NULL)
+		SetVtable(this, FakeBorderVtable);
+}
+TBorder::TBorder(TWindow *_Window, int Skin1, int Skin2, int Skin3, int Skin4, int Skin5, int Skin6, int Skin7,
+	int Skin8, int Skin9, int Border)
+{
+	TInfo &I = Register(this, "Border");
+	char Buffer[160];
+	sprintf(Buffer, "%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", Name(_Window).c_str(), Skin1, Skin2, Skin3, Skin4, Skin5,
+		Skin6, Skin7, Skin8, Skin9, Border);
+	I.Detail = Buffer;
+	Logf("NBorder%s;", Buffer);
+	InsertChild(_Window);
+	if (FakeBorderVtable != NULL)
+		SetVtable(this, FakeBorderVtable);
+}
+void TBorder::FUN_00455500() { Logf("Fit%s;", Name(this).c_str()); }
+
+TTextButton::TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback, int Param)
+{
+	TInfo &I = Register(this, "Button");
+	char Buffer[160];
+	sprintf(Buffer, "%d,%d,%s,%d,%d,%s,%d,%d", x, y, _Text, Skin1, Skin2, Name(Callback.Receiver).c_str(),
+		Callback.Event, Param);
+	I.Detail = Buffer;
+	Logf("NButton%s;", Buffer);
+	SetSize(80, 20);
+	if (FakeButtonVtable != NULL)
+		SetVtable(this, FakeButtonVtable);
+}
+TLabel::TLabel(TFont Font, const char *_Text)
+{
+	TInfo &I = Register(this, "Label");
+	char Buffer[160];
+	sprintf(Buffer, "%d,%d,%d,%d,%d,%s", Font.FontNumber, Font.Color.R, Font.Color.G, Font.Color.B, Font.Alignment,
+		_Text);
+	I.Detail = Buffer;
+	Logf("NLabel%s;", Buffer);
+}
+TObjectIcon::TObjectIcon(TObject Obj, const TRGBColor *Color, int Param)
+{
+	TInfo &I = Register(this, "Icon");
+	char Buffer[160];
+	sprintf(Buffer, "%d,%d,%d,%d,%d,%d,%d", Obj.Type, Obj.Data1, Obj.Data2, Color->R, Color->G, Color->B, Param);
+	I.Detail = Buffer;
+	Logf("NIcon%s;", Buffer);
+}
+
+// The image's constructors build the same fakes.
+static void *__fastcall ImageConsole(void *This, void *) { return new (This) TConsoleWindow; }
+static void *__fastcall ImageDialog(void *This, void *) { return new (This) TDialogWindow; }
+static void *__fastcall ImageBorder1(void *This, void *, TWindow *W, int P) { return new (This) TBorder(W, P); }
+static void *__fastcall ImageBorder2(void *This, void *, TWindow *W, int S1, int S2, int S3, int S4, int S5, int S6,
+	int S7, int S8, int S9, int B)
+{
+	return new (This) TBorder(W, S1, S2, S3, S4, S5, S6, S7, S8, S9, B);
+}
+static void *__fastcall ImageButton(void *This, void *, int x, int y, const char *Text, int S1, int S2, TCallback C,
+	int P)
+{
+	return new (This) TTextButton(x, y, Text, S1, S2, C, P);
+}
+static void *__fastcall ImageLabel(void *This, void *, TFont Font, const char *Text) { return new (This) TLabel(Font, Text); }
+static void *__fastcall ImageIcon(void *This, void *, TObject Obj, const TRGBColor *Color, int P)
+{
+	return new (This) TObjectIcon(Obj, Color, P);
+}
+static void *__fastcall ImageSide3(void *This, void *) { return new (This) TSideWindow3; }
+static void *__fastcall ImageSide4(void *This, void *) { return new (This) TSideWindow4; }
+static void *__fastcall ImageSide5(void *This, void *, TDialogWindow *D, TMainWindow *M)
+{
+	return new (This) TSideWindow5(D, M);
+}
+
+// --- Fakes of the other callees -------------------------------------------------
+
+// Not part of the test build: defined here for our side.
+void SendTurnNorth() { Logf("TN;"); }
+void SendTurnEast() { Logf("TE;"); }
+void SendTurnSouth() { Logf("TS;"); }
+void SendTurnWest() { Logf("TW;"); }
+void SendCancel() { Logf("Cancel;"); }
+void SendLogout() { Logf("Logout;"); }
+void SendJoinChannel(int ChannelID) { Logf("Join%d;", ChannelID); }
+void ChangeEngine(int engine) { Logf("Engine%d;", engine); }
+static void __cdecl FakeSendWalk() { Logf("Walk;"); }
+static void __cdecl FakeSendStop() { Logf("Stop;"); }
+static void __cdecl FakeDisconnect(bool force) { Logf("Disc%d;", force ? 1 : 0); }
+
+static int ConnectionState[2], ActionState[2], ConsoleHeightPref, ViewMode;
+static bool Right, AnyRight;
+static TFullscreenMode Fullscreen[2];
+static int PlayerX = 1000, PlayerY = 1000, PlayerZ = 7, DestinationResult;
+
+static void __cdecl FakeClearOpenDialogs() { Logf("ClrDlg;"); OpenDialogs[Side].clear(); }
+static int __cdecl FakeGetOpenDialogs(int **List)
+{
+	int Count = (int)OpenDialogs[Side].size();
+	Logf("GetDlg%d;", Count);
+	*List = Count > 0 ? (int *)malloc(Count * sizeof(int)) : NULL;
+	for (int i = 0; i < Count; i++)
+		(*List)[i] = OpenDialogs[Side][i];
+	return Count;
+}
+static int __cdecl FakeGetConsoleHeight() { Logf("GetCH;"); return ConsoleHeightPref; }
+static TFullscreenMode *__cdecl FakeGetFullscreenMode() { Logf("GetFS;"); return &Fullscreen[Side]; }
+static void __cdecl FakeSetFullscreenMode(const TFullscreenMode *Mode)
+{
+	Logf("SetFS%d,%d,%d,%d;", Mode->Width, Mode->Height, Mode->Depth, Mode->Frequency);
+	Fullscreen[Side] = *Mode;
+}
+static int __cdecl FakeGetViewMode() { return ViewMode; }
+static void __cdecl FakeSetActionState(int State) { Logf("Act%d;", State); ActionState[Side] = State; }
+static int __cdecl FakeGetActionState() { return ActionState[Side]; }
+static int __cdecl FakeGetConnectionState() { return ConnectionState[Side]; }
+static void __cdecl FakeSetConnectionState(int State) { Logf("Conn%d;", State); ConnectionState[Side] = State; }
+static void __cdecl FakeAddMessage(int Type, INT_PTR Param1, INT_PTR Param2)
+{
+	if (Type == 6) {
+		INT_PTR *Data = (INT_PTR *)Param1;
+		Logf("Msg6,%s,%s,%s,%d,%d;", (const char *)Data[0], (const char *)Data[1], Name((void *)Data[2]).c_str(),
+			(int)Data[3], (int)Param2);
+		delete[] Data;
+		return;
+	}
+	Logf("Msg%d,%d,%d;", Type, (int)Param1, (int)Param2);
+}
+static bool __cdecl FakeCheckRight(int rightid, int Bit) { Logf("Right%d,%d;", rightid, Bit); return Right; }
+static bool __cdecl FakeCheckAnyRight() { Logf("AnyRight;"); return AnyRight; }
+static void __cdecl FakeSetMouseCursor(int Cursor) { Logf("Cursor%d;", Cursor); }
+static void __cdecl FakeSetWindowSize(int Width, int Height) { Logf("WinSize%d,%d;", Width, Height); }
+static void __cdecl FakeCopyTainted() { Logf("Clip;"); }
+static void __cdecl FakeSetStatusMessage(const char *Message, bool Permanent)
+{
+	Logf("Status%s,%d;", Message, Permanent ? 1 : 0);
+}
+static void __cdecl FakeSetTalkChanged() { Logf("TC;"); }
+static bool __cdecl FakeGetNoStretching() { return false; }
+static void __cdecl FakeGetPlayerPosition(int *x, int *y, int *z) { *x = PlayerX; *y = PlayerY; *z = PlayerZ; }
+static int __cdecl FakeSetPlayerDestination(int x, int y, int z, bool Exact, bool Diagonal)
+{
+	Logf("Dest%d,%d,%d,%d,%d;", x, y, z, Exact ? 1 : 0, Diagonal ? 1 : 0);
+	return DestinationResult;
+}
+static void __cdecl FakeClearPlayerSteps() { Logf("ClrSteps;"); }
+static void __cdecl FakeSetAttackID(uint32 CreatureID) { Logf("Attack%u;", CreatureID); }
+static char ContainerNames[16][16];
+static char *__cdecl FakeGetContainerName(int Container) { return ContainerNames[Container & 15]; }
+static TObject __cdecl FakeGetContainerObject(int Container)
+{
+	TObject Obj;
+	Obj.Type = 100 + Container;
+	Obj.Data1 = Container * 3;
+	Obj.Data2 = 0;
+	return Obj;
+}
+static bool __cdecl FakeGetContainerHasParent(int Container) { return Container % 3 == 1; }
+static void __cdecl FakeAddHotkey(int Key, TCallback Callback)
+{
+	Logf("AddKey%d,%s,%d;", Key, Name(Callback.Receiver).c_str(), Callback.Event);
+}
+static void __cdecl FakeRemoveHotkey(int Key) { Logf("RemKey%d;", Key); }
+static void __cdecl FakeDrawPicture(int Surface, int x, int y, int PictureNumber)
+{
+	Logf("Pic%d,%d,%d,%d;", Surface, x, y, PictureNumber);
+}
+static void __cdecl FakeDrawSkin(int Surface, int x, int y, int width, int height, int skin, int srcx, int srcy)
+{
+	Logf("Skin%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, width, height, skin, srcx, srcy);
+}
+static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNumber, int srcx, int srcy, int Width,
+	int Height)
+{
+	Logf("Part%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, srcx, srcy, Width, Height);
+}
+
+// The surface: StretchBlitRect is logged, the rest never called.
+class TMainSurface : public TSurfaceGL {
+public:
+	void StretchBlitRect(int ToSurface, TRect D, int FromSurface, TRect S)
+	{
+		Logf("Stretch%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", ToSurface, D.x, D.y, D.Width, D.Height, FromSurface, S.x, S.y,
+			S.Width, S.Height);
+	}
+};
+static TMainSurface *Surface;
+static TSurface *__cdecl FakeGetSurface() { return Surface; }
+
+// The frame callbacks of InitMainWindow.
+static void FakeExitProgram() { Logf("Exit;"); }
+static void FakeSetDisplayMode(int Mode) { Logf("Display%d;", Mode); }
+static void FakeOpenURL(const char *URL) { Logf("URL%s;", URL); }
+
+static void PatchCallees()
+{
+	struct { uint32 Image; void *Ours; void *Fake; } Table[] = {
+		{0x4db550, (void *)ClearOpenDialogs, (void *)FakeClearOpenDialogs},
+		{0x4dbd90, (void *)GetOpenDialogs, (void *)FakeGetOpenDialogs},
+		{0x4db4c0, (void *)(int (*)())GetConsoleHeight, (void *)FakeGetConsoleHeight},
+		{0x4db3b0, (void *)GetFullscreenMode, (void *)FakeGetFullscreenMode},
+		{0x4db2d0, (void *)SetFullscreenMode, (void *)FakeSetFullscreenMode},
+		{0x4db3a0, (void *)GetViewMode, (void *)FakeGetViewMode},
+		{0x4db400, (void *)GetNoStretching, (void *)FakeGetNoStretching},
+		{0x4e6e20, (void *)SetActionState, (void *)FakeSetActionState},
+		{0x4e6e30, (void *)GetActionState, (void *)FakeGetActionState},
+		{0x4e71f0, (void *)GetConnectionState, (void *)FakeGetConnectionState},
+		{0x4e71e0, (void *)SetConnectionState, (void *)FakeSetConnectionState},
+		{0x4e9020, (void *)AddMessage, (void *)FakeAddMessage},
+		{0x4e86e0, (void *)CheckRight, (void *)FakeCheckRight},
+		{0x4e6dc0, (void *)CheckAnyRight, (void *)FakeCheckAnyRight},
+		{0x4e6e80, (void *)SetMouseCursor, (void *)FakeSetMouseCursor},
+		{0x4e6f00, (void *)SetWindowSize, (void *)FakeSetWindowSize},
+		{0x4ea710, (void *)CopyTaintedClipboardText, (void *)FakeCopyTainted},
+		{0x4ff500, (void *)SetStatusMessage, (void *)FakeSetStatusMessage},
+		{0x4fd4c0, (void *)SetTalkChanged, (void *)FakeSetTalkChanged},
+		{0x44b880, (void *)GetPlayerPosition, (void *)FakeGetPlayerPosition},
+		{0x451400, (void *)SetPlayerDestination, (void *)FakeSetPlayerDestination},
+		{0x44b8c0, (void *)ClearPlayerSteps, (void *)FakeClearPlayerSteps},
+		{0x44bb00, (void *)SetAttackID, (void *)FakeSetAttackID},
+		{0x4a64e0, (void *)GetContainerName, (void *)FakeGetContainerName},
+		{0x4a5e80, (void *)GetContainerObject, (void *)FakeGetContainerObject},
+		{0x4a6a40, (void *)GetContainerHasParent, (void *)FakeGetContainerHasParent},
+		{0x4a10a0, (void *)AddHotkey, (void *)FakeAddHotkey},
+		{0x4a12a0, (void *)RemoveHotkey, (void *)FakeRemoveHotkey},
+		{0x490920, (void *)DrawPicture, (void *)FakeDrawPicture},
+		{0x490c60, (void *)DrawPicturePart, (void *)FakeDrawPicturePart},
+		{0x497a00, (void *)DrawSkin, (void *)FakeDrawSkin},
+		{0x4eaa90, (void *)GetSurface, (void *)FakeGetSurface},
+		{0x414700, (void *)SendWalk, (void *)FakeSendWalk},
+		{0x414a10, (void *)SendStop, (void *)FakeSendStop},
+		{0x4ce300, (void *)Disconnect, (void *)FakeDisconnect},
+	};
+	for (auto &T : Table) {
+		PatchJump(T.Image, T.Fake);
+		PatchOwn(T.Ours, T.Fake);
+	}
+	// Image functions whose counterparts on our side are the definitions above.
+	static const struct { uint32 Image; void *Ours; } Images[] = {
+		{0x404730, (void *)SendTurnNorth}, {0x4048d0, (void *)SendTurnEast}, {0x404a70, (void *)SendTurnSouth},
+		{0x404c10, (void *)SendTurnWest}, {0x409140, (void *)SendCancel}, {0x404350, (void *)SendLogout},
+		{0x4074a0, (void *)SendJoinChannel}, {0x445c20, (void *)ChangeEngine},
+		{0x422410, (void *)ImageConsole}, {0x41e960, Member(&TConsoleWindow::FUN_0041e960)},
+		{0x422e70, Member(&TConsoleWindow::FUN_00422e70)},
+		{0x4856c0, (void *)ImageDialog}, {0x486400, Member(&TDialogWindow::FUN_00486400)},
+		{0x4865b0, Member(&TDialogWindow::FUN_004865b0)},
+		{0x4897d0, Member(&TSubWindow::FUN_004897d0)}, {0x489970, Member(&TSubWindow::FUN_00489970)},
+		{0x48a0b0, Member(&TSubWindow::FUN_0048a0b0)}, {0x48a2a0, Member(&TSubWindow::FUN_0048a2a0)},
+		{0x4547f0, (void *)ImageBorder1}, {0x454e30, (void *)ImageBorder2},
+		{0x455500, Member(&TBorder::FUN_00455500)},
+		{0x466bc0, (void *)ImageButton}, {0x465b40, (void *)ImageLabel}, {0x4526c0, (void *)ImageIcon},
+		{0x4362b0, (void *)FUN_004362b0}, {0x436510, (void *)FUN_00436510}, {0x43c520, (void *)FUN_0043c520},
+		{0x43c920, (void *)FUN_0043c920}, {0x43cc90, (void *)FUN_0043cc90}, {0x43d000, (void *)FUN_0043d000},
+		{0x43d390, (void *)FUN_0043d390},
+		{0x4368c0, (void *)ImageSide3}, {0x438310, (void *)ImageSide4}, {0x426480, (void *)ImageSide5},
+	};
+	for (auto &I : Images)
+		PatchJump(I.Image, I.Ours);
+}
+
+// The vtables of the fakes, from instances made quietly.
+static void FindFakeVtables()
+{
+	Quiet = true;
+	TFakeConsole *Console = new TFakeConsole;
+	FakeConsoleVtable = VtableOf(Console);
+	TFakeDialog *Dialog = new TFakeDialog;
+	FakeDialogVtable = VtableOf(Dialog);
+	TFakeBorder *Border = new TFakeBorder(new TWindow);
+	FakeBorderVtable = VtableOf(Border);
+	TFakeButton *Button = new TFakeButton;
+	FakeButtonVtable = VtableOf(Button);
+	TFakeBody *Body = new TFakeBody;
+	FakeBodyVtable = VtableOf(Body);
+	TFakeMapFrame *Frame = new TFakeMapFrame;
+	FakeMapFrameVtable = VtableOf(Frame);
+	Quiet = false;
+	delete Console;
+	delete Dialog;
+	delete Border;
+	delete Button;
+	delete Body;
+	delete Frame;
+}
+
+// --- The two main windows ------------------------------------------------------
+
+typedef void (__fastcall *MemberVoid)(void *, void *);
+typedef void (__fastcall *MemberInt)(void *, void *, int);
+typedef int (__fastcall *MemberGet)(void *, void *);
+typedef void (__fastcall *MemberWalk)(void *, void *, int, int, int);
+typedef void (__cdecl *InitFn)(int, int, void (*)(), void (*)(int), void (*)(const char *));
+
+static void NameOurVtables()
+{
+	TMainWindow *M = MainWindow;
+	NameVtable(OURS, VtableOf(M), "Main", true);
+	if (M->StartWindow != NULL)
+		NameVtable(OURS, VtableOf(M->StartWindow), "Start", true);
+	if (M->Splitter != NULL)
+		NameVtable(OURS, VtableOf(M->Splitter), "Splitter", false);
+}
+
+// After a mode change the map frames get the logging vtable.
+static void SwapFrames()
+{
+	for (int s = 0; s < 2; s++) {
+		TMainWindow *M = Main(s);
+
+		if (M != NULL && M->InGame && M->MapFrame != NULL && VtableOf(M->MapFrame) != FakeMapFrameVtable) {
+			// The map view goes (its destructor removes its hotkeys on both
+			// sides): no mouse event or drawing reaches the map.
+			int Saved = Side;
+			Side = s;
+			TWindow *Frame = (TWindow *)M->MapFrame;
+			if (Frame->FirstChild != NULL)
+				Frame->DeleteChild(Frame->FirstChild);
+			SetVtable(M->MapFrame, FakeMapFrameVtable);
+			Side = Saved;
+		}
+	}
+}
+
+static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth)
+{
+	char Buffer[256];
+	std::string N = NameOf(s, C);
+	sprintf(Buffer, "%*s%s %d,%d %dx%d", Depth * 2, "", N.c_str(), C->OffsetX, C->OffsetY, C->Width, C->Height);
+	Out += Buffer;
+	auto I = Info[s].find(C);
+	if (I != Info[s].end() && !I->second.Detail.empty())
+		Out += " [" + I->second.Detail + "]";
+	if (C->DrawingListLength > 0 && C->DrawingList != NULL) {
+		sprintf(Buffer, " DL%d", C->DrawingListLength);
+		Out += Buffer;
+		for (int i = 0; i < C->DrawingListLength; i++) {
+			TDrawing &D = C->DrawingList[i];
+			sprintf(Buffer, " %d/%d/%d/%d/%d/%d/%d", D.skin, D.x, D.y, D.width, D.height, D.srcx, D.srcy);
+			Out += Buffer;
+		}
+	}
+	if (N == "Splitter") {
+		TSplitter *S = (TSplitter *)C;
+		sprintf(Buffer, " drag %d %d,%d", S->Dragging ? 1 : 0, S->DragX, S->DragY);
+		Out += Buffer;
+	}
+	if (N.compare(0, 5, "Start") == 0)
+		Out += " frame " + NameOf(s, ((TStartWindow *)C)->Frame);
+	Out += " parent " + NameOf(s, C->Parent) + "\n";
+	std::string Base = N.substr(0, N.find('#'));
+	auto W = IsWindowKind.find(Base);
+	bool Window = W != IsWindowKind.end() ? W->second : false;
+	if (Window) {
+		TWindow *Win = (TWindow *)C;
+		if (Win->Capture != NULL)
+			Out += std::string(Depth * 2 + 2, ' ') + "capture " + NameOf(s, Win->Capture) + "\n";
+		for (TComponent *Child = Win->FirstChild; Child != NULL; Child = Child->Next)
+			DumpComponent(s, Out, Child, Depth + 1);
+	}
+}
+
+static std::string Dump(int s)
+{
+	std::string Out;
+	TMainWindow *M = Main(s);
+	if (M == NULL)
+		return "no main window\n";
+	char Buffer[128];
+	sprintf(Buffer, "InGame %d\n", M->InGame ? 1 : 0);
+	Out += Buffer;
+	if (M->InGame) {
+		Out += "MapFrame " + NameOf(s, M->MapFrame) + " SideBar " + NameOf(s, M->SideBar) + " Dialog "
+			+ NameOf(s, M->DialogWindow) + " Side " + NameOf(s, M->SidePanel) + " Console " + NameOf(s, M->Console)
+			+ " Splitter " + NameOf(s, M->Splitter) + " Start " + NameOf(s, M->StartWindow) + "\n";
+	} else {
+		Out += "MapFrame " + NameOf(s, M->MapFrame) + " Dialog " + NameOf(s, M->DialogWindow) + " Side "
+			+ NameOf(s, M->SidePanel) + " Console " + NameOf(s, M->Console) + " Splitter " + NameOf(s, M->Splitter)
+			+ " Start " + NameOf(s, M->StartWindow) + "\n";
+	}
+	DumpComponent(s, Out, M, 0);
+	return Out;
+}
+
+static int Kind;
+
+static void Compare(const char *What)
+{
+	SwapFrames();
+	Checks++;
+	if (Log[OURS] != Log[ORIGINAL]) {
+		Failures++;
+		if (Failures <= 20) {
+			printf("FAIL MainWindow %s (kind %d): logs differ\n  ours:     %.600s\n  original: %.600s\n", What, Kind,
+				Log[OURS].c_str(), Log[ORIGINAL].c_str());
+		}
+	}
+	std::string A = Dump(OURS), B = Dump(ORIGINAL);
+	Checks++;
+	if (A != B) {
+		Failures++;
+		if (Failures <= 20)
+			printf("FAIL MainWindow %s (kind %d): windows differ\n--- ours\n%s--- original\n%s", What, Kind,
+				A.c_str(), B.c_str());
+	}
+	CHECK(ActionState[OURS] == ActionState[ORIGINAL] && ConnectionState[OURS] == ConnectionState[ORIGINAL]
+		&& OpenDialogs[OURS] == OpenDialogs[ORIGINAL]
+		&& memcmp(&Fullscreen[OURS], &Fullscreen[ORIGINAL], sizeof(TFullscreenMode)) == 0,
+		"MainWindow %s (kind %d): state differs", What, Kind);
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+}
+
+// Runs one call on both sides: F(s) with Side set.
+template <class F> static void Both(F Call)
+{
+	Side = OURS;
+	Call(OURS);
+	Side = ORIGINAL;
+	Call(ORIGINAL);
+}
+
+static TSubWindow *Find(int s, TDialogWindow *Dialog, int Identifier)
+{
+	int Saved = Side;
+	Side = s;
+	TSubWindow *W = Dialog->FUN_00486400(Identifier);
+	Side = Saved;
+	return W;
+}
+
+static void RandomSkinProperties()
+{
+	TSkinProperties &O = Global<TSkinProperties>(0x5ccfc8);
+	int Width = 150 + Random() % 60, Splitter = Skins[9].height + Random() % 6, Border = Random() % 12;
+	SkinProperties.Data184 = O.Data184 = Width;
+	SkinProperties.Data138 = O.Data138 = Splitter;
+	SkinProperties.Data134 = O.Data134 = Border;
+	SkinProperties.Style0D8.Data00 = O.Style0D8.Data00 = 60 + Random() % 60;
+	SkinProperties.Style0D8.Data04 = O.Style0D8.Data04 = 100 + Random() % 80;
+	int x = (int)(Random() % 120) - 60, y = (int)(Random() % 400) - 300;
+	SkinProperties.Style0D8.Data08.x = O.Style0D8.Data08.x = x;
+	SkinProperties.Style0D8.Data08.y = O.Style0D8.Data08.y = y;
+	TGUIPoint *Ours = &SkinProperties.Style0D8.Data10, *Theirs = &O.Style0D8.Data10;
+	for (int i = 0; i < 5; i++) {
+		Ours[i].x = Theirs[i].x = Random() % 20;
+		Ours[i].y = Theirs[i].y = Random() % 140;
+	}
+	SkinProperties.Style194.Data38.FontNumber = O.Style194.Data38.FontNumber = Random() % 5;
+	SkinProperties.Style194.Data38.Color = O.Style194.Data38.Color = TRGBColor(Random() % 256, Random() % 256, 7);
+	SkinProperties.Style194.Data80 = O.Style194.Data80 = TRGBColor(Random() % 256, 3, Random() % 256);
+}
+
+static void RandomWorld()
+{
+	ConsoleMinHeight = 30 + Random() % 60;
+	DialogMinHeight = 20 + Random() % 200;
+	BorderMinHeight = Random() % 30;
+	FrameMinHeight = 150 + Random() % 150;
+	ConsoleHeightPref = Random() % 3 == 0 ? (int)(Random() % 40) : 60 + (int)(Random() % 400);
+	ViewMode = Random() % 3;
+	Right = Random() % 2 != 0;
+	AnyRight = Random() % 2 != 0;
+	BodyAccepts = Random() % 3 != 0;
+	DestinationResult = Random() % 4;
+	PlayerX = 900 + Random() % 200;
+	PlayerY = 900 + Random() % 200;
+	PlayerZ = Random() % 16;
+	for (int i = 0; i < 16; i++)
+		RandomText(ContainerNames[i], 1 + Random() % 14);
+}
+
+static void RandomOpenDialogs()
+{
+	std::vector<int> List;
+	int Count = Random() % 8;
+	for (int i = 0; i < Count; i++)
+		List.push_back(1 + Random() % 9);
+	OpenDialogs[OURS] = OpenDialogs[ORIGINAL] = List;
+}
+
+static void RandomSize(int &Width, int &Height)
+{
+	Width = 480 + Random() % 800;
+	Height = 300 + Random() % 700;
+}
+
+static const int Keys[] = {0x10c, 0x10d, 0x10e, 0x10f, 0x110, 0x115, 0x116, 0x117, 0x118, 0x119, 0x50c, 0x50d,
+	0x50e, 0x50f, 0x510, 0x50b, 0x41, 0x1b, 0x10b, 0x11a};
+static const int AnyEvents[] = {2, 7, 8, 9, 0x1d, 0x20, 0x21, 0x1f8, 0x1f9, 0x1fa, 0x1fb, 0x1fc, 0x1fd, 0x2bd, 0x2be,
+	0x2bf, 0x2c0, 0x2c1, 0x2c2, 0x2c4, 799, 800, 801, 802, 803, 1, 3, 0x1f7, 0x1f5, 600};
+static const int GameEvents[] = {0xe, 0xf, 0x16};
+static const int StartEvents[] = {0x1f5, 0x1f6, 0x1f7, 7, 0x1fc, 0x1f8, 8, 0, 0x1fd};
+static int KindCount[24];
+
+static void Operation()
+{
+	TMainWindow *O = Main(OURS);
+	bool InGame = O->InGame;
+	Kind = Random() % 24;
+	KindCount[Kind]++;
+	if (getenv("MAINWINDOW_TRACE") != NULL) {
+		printf("kind %d ingame %d\n", Kind, InGame ? 1 : 0);
+		fflush(stdout);
+	}
+	char What[64];
+	sprintf(What, "operation %d", Kind);
+	switch (Kind) {
+	case 0: case 1: {
+		// The preferences may change between two games.
+		if (Random() % 2 == 0)
+			RandomOpenDialogs();
+		if (Random() % 3 == 0)
+			RandomWorld();
+		bool Game = Random() % 3 != 0;
+		Both([&](int s) {
+			if (s == OURS)
+				MainWindow->ChangeMode(Game);
+			else
+				At<MemberInt>(0x4af5e0)(OriginalMainWindow, NULL, Game);
+		});
+		// The new splitters' drag position is left uninitialised on both sides.
+		for (int s = 0; s < 2 && Game; s++)
+			Main(s)->Splitter->DragX = Main(s)->Splitter->DragY = 0;
+		break;
+	}
+	case 2: {
+		int Width, Height;
+		RandomSize(Width, Height);
+		Both([&](int s) { Main(s)->SetSize(Width, Height); });
+		break;
+	}
+	case 3: {
+		int Surface = Random() % 3, x = Random() % 40, y = Random() % 40;
+		Both([&](int s) { Main(s)->Draw(Surface, x, y); });
+		break;
+	}
+	case 4: {
+		int Key = Keys[Random() % (sizeof(Keys) / sizeof(Keys[0]))];
+		int State = Random() % 3 == 0 ? (int)(Random() % 10) : 8;
+		if (!InGame && State == 8)
+			State = Random() % 8;
+		ConnectionState[OURS] = ConnectionState[ORIGINAL] = State;
+		Both([&](int s) { Main(s)->KeyPress(Key); });
+		break;
+	}
+	case 5: case 6: {
+		int Event = AnyEvents[Random() % (sizeof(AnyEvents) / sizeof(AnyEvents[0]))];
+		ConnectionState[OURS] = ConnectionState[ORIGINAL] = Random() % 2 == 0 ? 8 : Random() % 9;
+		Fullscreen[OURS].Width = Fullscreen[ORIGINAL].Width = Random() % 4 == 0 ? 0 : 400 + Random() % 800;
+		Fullscreen[OURS].Height = Fullscreen[ORIGINAL].Height = 300 + Random() % 600;
+		Fullscreen[OURS].Depth = Fullscreen[ORIGINAL].Depth = 16;
+		Fullscreen[OURS].Frequency = Fullscreen[ORIGINAL].Frequency = 60 + Random() % 30;
+		TWindow *Modal = Random() % 3 == 0 ? (TWindow *)(uintptr_t)0x1000 : NULL;
+		ModalWindow = OriginalModalWindow = Modal;
+		Both([&](int s) { Main(s)->HandleEvent(Event); });
+		ModalWindow = OriginalModalWindow = NULL;
+		break;
+	}
+	case 7: {
+		if (!InGame)
+			return;
+		int Event = GameEvents[Random() % 3];
+		Both([&](int s) { Main(s)->HandleEvent(Event); });
+		break;
+	}
+	case 8: {
+		// The inventory windows swap (the assertion holds).
+		if (!InGame)
+			return;
+		int Event = Find(OURS, O->SidePanel, 1) != NULL ? 0x17 : 0x18;
+		Both([&](int s) { Main(s)->HandleEvent(Event); });
+		break;
+	}
+	case 9: {
+		if (!InGame)
+			return;
+		int Height = Random() % 500;
+		Both([&](int s) {
+			if (s == OURS)
+				MainWindow->ResizeConsole(Height);
+			else
+				At<MemberInt>(0x4ac610)(OriginalMainWindow, NULL, Height);
+		});
+		int A = MainWindow->GetConsoleWindowHeight();
+		int B = At<MemberGet>(0x4ac7c0)(OriginalMainWindow, NULL);
+		CHECK(A == B, "GetConsoleWindowHeight %d, original %d", A, B);
+		break;
+	}
+	case 10: {
+		int dx = (int)(Random() % 3) - 1, dy = (int)(Random() % 3) - 1;
+		bool Diagonal = Random() % 2 != 0;
+		DestinationResult = Random() % 4;
+		Both([&](int s) {
+			if (s == OURS)
+				MainWindow->Walk(dx, dy, Diagonal);
+			else
+				At<MemberWalk>(0x4ac7f0)(OriginalMainWindow, NULL, dx, dy, Diagonal);
+		});
+		break;
+	}
+	case 11: {
+		if (!InGame)
+			return;
+		int Container = Random() % 16;
+		BodyAccepts = Random() % 3 != 0;
+		Both([&](int s) {
+			if (s == OURS)
+				MainWindow->OpenContainer(Container);
+			else
+				At<MemberInt>(0x4ac9e0)(OriginalMainWindow, NULL, Container);
+		});
+		break;
+	}
+	case 12: {
+		int Container = Random() % 16;
+		Both([&](int s) {
+			if (s == OURS)
+				MainWindow->CloseContainer(Container);
+			else
+				At<MemberInt>(0x4acdb0)(OriginalMainWindow, NULL, Container);
+		});
+		break;
+	}
+	case 13: {
+		if (!InGame)
+			return;
+		bool Open = Find(OURS, O->DialogWindow, TRADE_WINDOW) != NULL;
+		int What2 = Random() % 3;
+		if (What2 == 0 && Open)
+			What2 = 1;
+		Both([&](int s) {
+			if (What2 == 0) {
+				if (s == OURS)
+					MainWindow->OpenTrade();
+				else
+					At<MemberVoid>(0x4afec0)(OriginalMainWindow, NULL);
+			} else if (What2 == 1) {
+				if (s == OURS)
+					MainWindow->UpdateTrade();
+				else
+					At<MemberVoid>(0x4acf60)(OriginalMainWindow, NULL);
+			} else {
+				if (s == OURS)
+					MainWindow->CloseTrade();
+				else
+					At<MemberVoid>(0x4b0230)(OriginalMainWindow, NULL);
+			}
+		});
+		break;
+	}
+	case 14: {
+		if (!InGame)
+			return;
+		static const int Identifiers[] = {6, 7, 8, 9};
+		int Identifier = Identifiers[Random() % 4];
+		bool Open = Random() % 2 != 0;
+		Both([&](int s) {
+			if (Open) {
+				if (s == OURS)
+					MainWindow->OpenContentWindow(Identifier);
+				else
+					At<MemberInt>(0x4ad1e0)(OriginalMainWindow, NULL, Identifier);
+			} else {
+				if (s == OURS)
+					MainWindow->CloseContentWindow(Identifier);
+				else
+					At<MemberInt>(0x4ad4a0)(OriginalMainWindow, NULL, Identifier);
+			}
+		});
+		break;
+	}
+	case 15: {
+		bool Active = Random() % 2 != 0;
+		Both([&](int s) {
+			if (s == OURS)
+				MainWindow->SetConsoleActive(Active);
+			else
+				At<MemberInt>(0x4ad650)(OriginalMainWindow, NULL, Active);
+		});
+		break;
+	}
+	case 16: case 17: case 18: {
+		// The splitter: press, move, release (directly or through the main window).
+		if (!InGame)
+			return;
+		int x = Random() % 400, y = (int)(Random() % 40) - 20;
+		int Action = Kind - 16;
+		// A second press would fail TWindow::SetCapture's assertion.
+		if (Action == 0 && O->Capture != NULL)
+			return;
+		Both([&](int s) {
+			TComponent *Splitter = Main(s)->Splitter;
+			if (Action == 0)
+				Splitter->LeftButtonDown(x, y, 0);
+			else if (Action == 1)
+				Splitter->MouseMove(x, y);
+			else
+				Splitter->LeftButtonUp(x, y, 0);
+		});
+		break;
+	}
+	case 19: {
+		// Mouse events through the main window (TWindow's routing to the children).
+		int x = Random() % 1200, y = Random() % 900, Which = Random() % 3;
+		if (Which == 0 && O->Capture != NULL)
+			return;
+		Both([&](int s) {
+			TMainWindow *M = Main(s);
+			if (Which == 0)
+				M->LeftButtonDown(x, y, 0);
+			else if (Which == 1)
+				M->MouseMove(x, y);
+			else
+				M->LeftButtonUp(x, y, 0);
+		});
+		break;
+	}
+	case 20: {
+		if (InGame)
+			return;
+		int Event = StartEvents[Random() % (sizeof(StartEvents) / sizeof(StartEvents[0]))];
+		ConnectionState[OURS] = ConnectionState[ORIGINAL] = Random() % 2 == 0 ? 0 : Random() % 9;
+		Both([&](int s) { Main(s)->StartWindow->HandleEvent(Event); });
+		break;
+	}
+	case 21: {
+		// The buttons' callbacks reach the start window.
+		if (InGame)
+			return;
+		static const int ButtonEvents[] = {0x1f5, 0x1f7, 0x1f6, 7, 0x1fc};
+		ConnectionState[OURS] = ConnectionState[ORIGINAL] = 0;
+		int Event = ButtonEvents[Random() % 5];
+		Both([&](int s) { Main(s)->StartWindow->HandleEvent(Event); });
+		break;
+	}
+	case 22: {
+		int Width, Height;
+		RandomSize(Width, Height);
+		RandomSkinProperties();
+		Both([&](int s) { Main(s)->SetSize(Width, Height); });
+		break;
+	}
+	case 23: {
+		// The main window is made again.
+		int Width, Height;
+		RandomSize(Width, Height);
+		bool WithModal = Random() % 2 != 0;
+		ActionState[OURS] = ActionState[ORIGINAL] = 0;
+		Both([&](int s) {
+			if (WithModal) {
+				TWindow *Modal = new TWindow;
+				if (s == OURS)
+					ModalWindow = Modal;
+				else
+					OriginalModalWindow = Modal;
+			}
+			if (s == OURS) {
+				ExitMainWindow();
+				CHECK(MainWindow == NULL && ModalWindow == NULL, "ExitMainWindow leaves a window");
+				InitMainWindow(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+			} else {
+				At<void (__cdecl *)()>(0x4ac090)();
+				CHECK(OriginalMainWindow == NULL && OriginalModalWindow == NULL, "0x4ac090 leaves a window");
+				At<InitFn>(0x4b05b0)(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+			}
+		});
+		NameOurVtables();
+		break;
+	}
+	}
+	Compare(What);
+}
+
+void TestMainWindow()
+{
+	int Before = Checks, BeforeFailures = Failures;
+	PatchImage();
+	InitSkins();
+	Global<int>(0x71c450) = NumberOfSkins;
+	Global<TSkin *>(0x71c454) = Skins;
+	InitSkinProperties();
+	At<void (__cdecl *)()>(0x498160)();
+	TTalkBuffer *SavedBuffer = DefaultTextBuffer;
+	TTalkBuffer *&OriginalBuffer = Global<TTalkBuffer *>(0x71ef68);
+	TTalkBuffer *SavedOriginalBuffer = OriginalBuffer;
+	DefaultTextBuffer = OriginalBuffer = (TTalkBuffer *)(uintptr_t)0x12340;
+	Surface = new TMainSurface;
+	FindFakeVtables();
+	PatchCallees();
+
+	// The image's classes, and ours that can be made directly.
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56c498, "Main", true);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56c5c0, "Start", true);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56c660, "Splitter", false);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x564528, "Window", true);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56d0b8, "RealFrame", true);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56cf38, "MapView", true);
+	{
+		TWindow W;
+		NameVtable(OURS, VtableOf(&W), "Window", true);
+	}
+	struct { void *Vtable; const char *Name; bool Window; } Fakes[] = {
+		{FakeConsoleVtable, "Console", true}, {FakeDialogVtable, "Dialog", true},
+		{FakeBodyVtable, "Body", true}, {FakeMapFrameVtable, "Frame", true},
+		{FakeBorderVtable, "Border", true}, {FakeButtonVtable, "Button", false},
+	};
+	for (auto &F : Fakes) {
+		NameVtable(OURS, F.Vtable, F.Name, F.Window);
+		NameVtable(ORIGINAL, F.Vtable, F.Name, F.Window);
+	}
+	Quiet = true;
+	{
+		// Vtables of the fakes that cannot be made without a constructor call.
+		TSubWindow *Sub = new TSubWindow;
+		TSideWindow3 *S3 = new TSideWindow3;
+		TSideWindow4 *S4 = new TSideWindow4;
+		TSideWindow5 *S5 = new TSideWindow5(NULL, NULL);
+		TFont Font;
+		TLabel *Label = new TLabel(Font, "");
+		TObject Obj;
+		TRGBColor Color;
+		TObjectIcon *Icon = new TObjectIcon(Obj, &Color, 0);
+		struct { void *Object; const char *Name; bool Window; } List[] = {
+			{Sub, "Sub", true}, {S3, "Side3", true}, {S4, "Side4", true}, {S5, "Side5", true},
+			{Label, "Label", false}, {Icon, "Icon", false},
+		};
+		for (auto &L : List) {
+			NameVtable(OURS, VtableOf(L.Object), L.Name, L.Window);
+			NameVtable(ORIGINAL, VtableOf(L.Object), L.Name, L.Window);
+		}
+		delete Sub;
+		delete S3;
+		delete S4;
+		delete S5;
+		delete Label;
+		delete Icon;
+		// Our TMainWindow, TStartWindow, TSplitter, TMapFrame and TMapWindow,
+		// from a main window made quietly.
+		RandomWorld();
+		Side = OURS;
+		TMainWindow *Tmp = new TMainWindow(800, 600);
+		NameVtable(OURS, VtableOf(Tmp), "Main", true);
+		NameVtable(OURS, VtableOf(Tmp->StartWindow), "Start", true);
+		Tmp->ChangeMode(true);
+		NameVtable(OURS, VtableOf(Tmp->Splitter), "Splitter", false);
+		NameVtable(OURS, VtableOf(Tmp->MapFrame), "RealFrame", true);
+		NameVtable(OURS, VtableOf(((TWindow *)Tmp->MapFrame)->FirstChild), "MapView", true);
+		delete Tmp;
+		OpenDialogs[OURS].clear();
+	}
+	Quiet = false;
+	Info[OURS].clear();
+	Info[ORIGINAL].clear();
+	Serials[OURS] = Serials[ORIGINAL] = 0;
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+
+	RandomWorld();
+	RandomSkinProperties();
+	ActionState[OURS] = ActionState[ORIGINAL] = 0;
+	ModalWindow = OriginalModalWindow = NULL;
+	int Width, Height;
+	RandomSize(Width, Height);
+	Both([&](int s) {
+		if (s == OURS)
+			InitMainWindow(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+		else
+			At<InitFn>(0x4b05b0)(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+	});
+	NameOurVtables();
+	Compare("InitMainWindow");
+	bool Trace = getenv("MAINWINDOW_TRACE") != NULL;
+	for (int i = 0; i < 6000; i++) {
+		if (Trace) {
+			printf("op %d\n", i);
+			fflush(stdout);
+		}
+		Operation();
+	}
+	Both([&](int s) {
+		if (s == OURS)
+			ExitMainWindow();
+		else
+			At<void (__cdecl *)()>(0x4ac090)();
+	});
+	Compare("ExitMainWindow");
+
+	DefaultTextBuffer = SavedBuffer;
+	OriginalBuffer = SavedOriginalBuffer;
+	ExitSkins();
+	Global<TSkin *>(0x71c454) = NULL;
+	int Least = KindCount[0];
+	for (int i = 1; i < 24; i++)
+		Least = KindCount[i] < Least ? KindCount[i] : Least;
+	printf("MainWindow: %d checks, %d failures (each of the 24 operations at least %d times)\n", Checks - Before,
+		Failures - BeforeFailures, Least);
+}
