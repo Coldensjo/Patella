@@ -7,14 +7,60 @@
 #include "difftest.h"
 #include "../../src/Player.h"
 #include "../../src/external.h"
+#include "../../src/MainFrm.h"
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "shell32.lib")
 
 // --- Link stubs for Player.cpp (MFC shim declarations and callees that are
 // not part of the test build). None of them is called by the tests.
 
 #define STUB { abort(); }
+// For MainFrm.cpp.
+CWinApp *AfxGetApp() STUB
+int CWnd::OnCreate(LPCREATESTRUCT) STUB
+BOOL CWnd::OnSetCursor(CWnd *, UINT, UINT) STUB
+void CWnd::OnClose() STUB
+void CWnd::OnDestroy() STUB
+void CWnd::OnSize(UINT, int, int) STUB
+CFrameWnd::CFrameWnd() { m_hWnd = NULL; }
+CFrameWnd::~CFrameWnd() {}
+BOOL CWnd::GetWindowPlacement(WINDOWPLACEMENT *) const STUB
+BOOL CWnd::SetWindowPlacement(const WINDOWPLACEMENT *) STUB
+BOOL CWnd::ModifyStyle(DWORD, DWORD, UINT) STUB
+BOOL CWnd::ModifyStyleEx(DWORD, DWORD, UINT) STUB
+BOOL CWnd::SetWindowPos(const CWnd *, int, int, int, int, UINT) STUB
+LRESULT CWnd::Default() STUB
+CWnd *PASCAL CWnd::FromHandle(HWND) STUB
+const CWnd CWnd::wndTopMost = CWnd();
+const CWnd CWnd::wndNoTopMost = CWnd();
+BOOL CWnd::DestroyWindow() STUB
+BOOL CWnd::PreCreateWindow(CREATESTRUCT &) STUB
+void CWnd::MoveWindow(int, int, int, int, BOOL) STUB
+TCommunicationCreature *FUN_0044c6e0(uint32) STUB
+uint32 FUN_0044b9c0() STUB
+void FUN_004b05b0(int, int, void (*)(), void (*)(int), void (*)(const char *)) STUB
+bool CloseRequest() STUB
+const char *GetResolvedIPAddress() STUB
+void ConnectToLoginServer() STUB
+void Disconnect(bool) STUB
+void ExitControl() STUB
+void GetErrorMessage(char *, int, int) STUB
+void InitControl(bool) STUB
+void InitWindow(HWND, void (*)(), void (*)(), void (*)(int), void (*)(const char *)) STUB
+void KeyPress(int) STUB
+void LeftButtonDoubleClick(int, int, int) STUB
+void LeftButtonDown(int, int, int) STUB
+void LeftButtonUp(int, int, int) STUB
+void MouseWheel(int, int, int) STUB
+void Resize(int, int) STUB
+void RightButtonDown(int, int, int) STUB
+void RightButtonUp(int, int, int) STUB
+void SetConnectionTimeout(int) STUB
+void SetServerError(int) STUB
+void SetServerIPAddress(const char *) STUB
+void TimerEvent() STUB
 BOOL CWnd::ShowWindow(int) STUB
 const RECT CFrameWnd::rectDefault = {0, 0, 0, 0};
 BOOL CFrameWnd::Create(LPCTSTR, LPCTSTR, DWORD, const RECT &, CWnd *, LPCTSTR, DWORD, CCreateContext *) STUB
@@ -27,11 +73,11 @@ BOOL AfxRegisterClass(WNDCLASS *) STUB
 HINSTANCE AfxGetInstanceHandle() STUB
 HINSTANCE AfxGetResourceHandle() STUB
 WNDPROC AfxGetAfxWndProc() STUB
-CMainFrame::CMainFrame(bool) STUB
-void CMainFrame::OutputErrorInformations(std::ostream &) STUB
-void FUN_004a88f0() STUB
-void FUN_004a8af0(int) STUB
-void FUN_004aa1d0() STUB
+
+
+
+
+
 void OutputControlErrorInformations(std::ostream &) STUB
 void FUN_0048da50() STUB
 int DAT_005c2564;
@@ -104,9 +150,32 @@ static void TestSurface()
 	CHECK(GetAvailableEngines() == 0 && At<uint8 (__cdecl *)()>(0x4eabe0)() == 0, "GetAvailableEngines");
 }
 
+// MainFrm.cpp's TranslateKey: every virtual key, both extended flags and
+// every modifier state (KeyFlags at +0x200 in the original frame).
+static void TestTranslateKey()
+{
+	alignas(8) static uint8 Ours[sizeof(CMainFrame)];
+	static uint8 Original[0x204];
+	CMainFrame *Frame = (CMainFrame *)Ours;
+	typedef int (__fastcall *KeyFn)(void *, void *, UINT, UINT, UINT);
+	for (int Flags = 0; Flags < 8; Flags++) {
+		int KeyFlags = ((Flags & 1) ? KEY_SHIFT : 0) | ((Flags & 2) ? KEY_CONTROL : 0) | ((Flags & 4) ? KEY_ALT : 0);
+		Frame->KeyFlags = KeyFlags;
+		*(int *)(Original + 0x200) = KeyFlags;
+		for (UINT nChar = 0; nChar < 0x120; nChar++) {
+			for (UINT nFlags = 0; nFlags < 0x400; nFlags += 0x80) {
+				int A = Frame->TranslateKey(nChar, 1, nFlags);
+				int B = At<KeyFn>(0x4a8210)(Original, NULL, nChar, 1, nFlags);
+				CHECK(A == B, "TranslateKey(%u, %u) with %x: %x, original %x", nChar, nFlags, KeyFlags, A, B);
+			}
+		}
+	}
+}
+
 void TestPlayer()
 {
 	TestSurface();
+	TestTranslateKey();
 	struct { uint32 Original; void (*Ours)(char *); const char *Expected; } Decoders[] = {
 		{0x4d9140, GetWindowTitle, "Tibia   "},
 		{0x4d92b0, GetWindowClassName, "TibiaClient"},

@@ -910,5 +910,45 @@ address	name	kind	confidence	note
 0x4a7d20	InitInventory	game	medium	Inventory.cpp
 0x4a7d70	ResetInventory	game	low	Inventory.cpp line 400, TBEGIN around InitInventory
 0x4a7f00	InsertContainerObject	game	medium	Inventory.cpp lines 139-140
-0x4a8210	CMainFrame_TranslateKey	game	low	MainFrm.cpp: virtual key and flags to the client key code
+0x4a8210	CMainFrame_TranslateKey	game	medium	MainFrm.cpp: virtual key and flags to the client key code
 0x4a8520	CMainFrame_ctor	game	medium	MainFrm.cpp (Gamemaster); Player.cpp creates the frame with it
+0x4a8200	CMainFrame_GetMessageMap	game	high	MainFrm.cpp: BEGIN_MESSAGE_MAP (table 0x56c030, 24 entries)
+0x4a8760	CMainFrame_dtor	game	high	MainFrm.cpp line 123
+0x4a88f0	ExitProgram	game	low	MainFrm.cpp: Closing = true, WM_CLOSE; Control.cpp's exit callback
+0x4a8940	CloseProgram	game	low	MainFrm.cpp line 149: like ExitProgram, sets the application's RunPatch
+0x4a8af0	SetDisplayMode	game	medium	MainFrm.cpp line 181 (ViewMode): fullscreen (2) or windowed (1)
+0x4a8d80	OpenURL	game	medium	MainFrm.cpp line 193: ShellExecute, leaves fullscreen first
+0x4a8f30	CMainFrame_PreCreateWindow	game	high	MainFrm.cpp line 244
+0x4a90e0	CMainFrame_OnHostResolved	game	medium	MainFrm.cpp line 335: ON_MESSAGE(WM_USER+1), WSAAsyncGetHostByName result
+0x4a9310	CMainFrame_OnActivateApp	game	high	MainFrm.cpp line 356
+0x4a94b0	CMainFrame_AddFrameSize	game	low	MainFrm.cpp: client size to window size
+0x4a9540	CMainFrame_OnSize	game	high	MainFrm.cpp line 414 (cx, cy)
+0x4a9790	CMainFrame_OnGetMinMaxInfo	game	high	MainFrm.cpp line 430
+0x4a9950	CMainFrame_OnNcHitTest	game	high	MainFrm.cpp line 441
+0x4a9b00	CMainFrame_OnTimer	game	high	MainFrm.cpp line 454 (nIDEvent)
+0x4a9c90	CMainFrame_OnClose	game	high	MainFrm.cpp line 466
+0x4a9e30	CMainFrame_DestroyWindow	game	medium	MainFrm.cpp line 481
+0x4a9fd0	CMainFrame_OnDestroy	game	high	MainFrm.cpp line 500
+0x4aa1d0	UpdateMouseCursor	game	medium	MainFrm.cpp line 523
+0x4aa3c0	CMainFrame_OnSetCursor	game	high	MainFrm.cpp line 550
+0x4aa5d0	CMainFrame_OnLButtonDown	game	high	MainFrm.cpp line 568 (point.x, point.y)
+0x4aa7b0	CMainFrame_OnLButtonUp	game	high	MainFrm.cpp line 588
+0x4aa990	CMainFrame_OnLButtonDblClk	game	high	MainFrm.cpp line 606
+0x4aab70	CMainFrame_OnRButtonDown	game	high	MainFrm.cpp line 624
+0x4aad50	CMainFrame_OnRButtonUp	game	high	MainFrm.cpp line 644
+0x4aaf30	CMainFrame_OnRButtonDblClk	game	high	MainFrm.cpp line 662
+0x4ab110	CMainFrame_OnCaptureChanged	game	high	MainFrm.cpp line 686
+0x4ab310	CMainFrame_OnMouseWheel	game	high	MainFrm.cpp line 704
+0x4ab510	CMainFrame_KeyDown	game	medium	MainFrm.cpp line 768 (nChar, nFlags)
+0x4ab730	CMainFrame_KeyUp	game	medium	MainFrm.cpp
+0x4ab7c0	CMainFrame_OnKeyDown	game	medium	MainFrm.cpp: also OnSysKeyDown (folded), jumps to KeyDown
+0x4ab7d0	CMainFrame_OnKeyUp	game	medium	MainFrm.cpp: also OnSysKeyUp (folded), jumps to KeyUp
+0x4ab7e0	CMainFrame_OnChar	game	high	MainFrm.cpp line 871 (nChar, nFlags)
+0x4ab9b0	CMainFrame_scalar_deleting_dtor	stl	high	compiler-generated
+0x4ab9d0	CMainFrame_SetDefaultWindowPosition	game	low	MainFrm.cpp line 375
+0x4abbc0	CMainFrame_OnCreate	game	high	MainFrm.cpp line 273
+0x4abe40	CMainFrame_OnDisplayChange	game	medium	MainFrm.cpp line 295, ON_MESSAGE(WM_DISPLAYCHANGE)
+0x4ac010	MainWindow_class_dtor	game	low	MainWindow.cpp: destructor of the window class with vtable 0x56c498 (clears the open dialogs)
+0x4ac090	FUN_004ac090	game	low	MainWindow.cpp: deletes MainWindow and ModalWindow
+0x4ac0d0	MainWindow_class_scalar_deleting_dtor	stl	medium	compiler-generated
+0x4ac0f0	MainWindow_class_Draw	game	low	MainWindow.cpp: draws five child windows (Surface)

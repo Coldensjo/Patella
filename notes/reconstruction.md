@@ -104,6 +104,7 @@ file-based code can be compared on real files. `vlongtest.cpp` and
 | sysinc.cpp | Reconstructed with the SurfaceGL/sysinc gap: the clock, file checks, PROGRAM_ERROR texts and the clipboard. The ATL code in its range is not part of the source. The error texts are differentially tested (in sysinctest.exe). |
 | Help.cpp | Reconstructed with the GUI/Help gap and 0x4a4440 from the Help/Inventory gap: the help bubble state and texts, and the event helps (hints) by NPC name and position. Every function differentially tested except the error paths. |
 | Inventory.cpp | Reconstructed with the Help/Inventory gap (0x4a4460-0x4a4546): body slots, open containers and trade offers. Every function differentially tested except the assertion paths. The Inventory/MainFrm gap is settled as MainFrm.cpp. |
+| MainFrm.cpp | Reconstructed: CMainFrame with its message map (decoded from the binary), windowed/fullscreen switching, mouse and key handling, the WSAAsyncGetHostByName reply. TranslateKey differentially tested; the rest needs MFC. The MainFrm/MainWindow gap is settled as MainWindow.cpp. |
 | Container.h | Partial: `vector<T>` constructors and `operator()`, from the Status.cpp and Preferences.cpp instantiations, the initialized `vector<TTalkFilter*>` instance from Talk.cpp, and `array<T>` (constructor, `operator()`) from Objects.cpp; tested through them. |
 
 Last differential run (November 1, 2026): 2,796,382 checks against the original code and 3,201 against exact

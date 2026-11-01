@@ -16,7 +16,7 @@ set FLAGS=%BASEFLAGS% /Fo"%OUT%\\"
 cl %FLAGS% /EHa /Fe"%OUT%\difftest.exe" "%~dp0difftest.cpp" "%~dp0statustest.cpp" "%~dp0preferencestest.cpp" "%~dp0scripttest.cpp" "%~dp0talktest.cpp" "%~dp0objectstest.cpp" "%~dp0playertest.cpp" "%~dp0helptest.cpp" "%~dp0inventorytest.cpp" ^
 	"%ROOT%\src\Utils.cpp" "%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" ^
 	"%ROOT%\src\Skins.cpp" "%ROOT%\src\Status.cpp" "%ROOT%\src\Preferences.cpp" ^
-	"%ROOT%\src\Script.cpp" "%ROOT%\src\Talk.cpp" "%ROOT%\src\Objects.cpp" "%ROOT%\src\Player.cpp" "%ROOT%\src\Surface.cpp" "%ROOT%\src\Help.cpp" "%ROOT%\src\Inventory.cpp" ^
+	"%ROOT%\src\Script.cpp" "%ROOT%\src\Talk.cpp" "%ROOT%\src\Objects.cpp" "%ROOT%\src\Player.cpp" "%ROOT%\src\Surface.cpp" "%ROOT%\src\Help.cpp" "%ROOT%\src\Inventory.cpp" "%ROOT%\src\MainFrm.cpp" ^
 	/link /BASE:0x20000000 /DYNAMICBASE:NO /FIXED >"%OUT%\cl.txt" || (type "%OUT%\cl.txt" & exit /b 1)
 "%OUT%\difftest.exe" "%ROOT%\Tibia.exe" || exit /b 1
 

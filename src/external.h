@@ -430,15 +430,12 @@ void FUN_004bf620(void (*Callback)(int CreatureID)); // 0x4bf620
 
 #include <ostream>
 
-// MainFrm.cpp: the frame window.
-class CMainFrame : public CFrameWnd {
-public:
-	CMainFrame(bool Gamemaster);                         // 0x4a8520
-	void OutputErrorInformations(std::ostream &Out);     // 0x4a8360, name from Player.cpp's catch text
-};
-void FUN_004a88f0();                    // 0x4a88f0, MainFrm.cpp; called before InitInstance gives up
-void FUN_004a8af0(int Value);           // 0x4a8af0, MainFrm.cpp; FatalError calls it with 1 outside view mode 1
-void FUN_004aa1d0();                    // 0x4aa1d0, MainFrm.cpp; called when the mouse cursor changes
+// MainFrm.cpp (MainFrm.h)
+#include "MainFrm.h"
+
+// MainWindow.cpp: creates the main game window with the frame's callbacks.
+void FUN_004b05b0(int Width, int Height, void (*ExitProgram)(), void (*SetDisplayMode)(int Mode),
+	void (*OpenURL)(const char *URL));  // 0x4b05b0
 
 // graphics.cpp
 void FUN_0048da50();                    // 0x48da50, after the surfaces are created

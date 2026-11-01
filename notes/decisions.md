@@ -468,3 +468,37 @@ callcheck differences, caller integration and differential coverage.
 - **Callers** now pass TObject (Type, Data1, Data2) where Communication.cpp
   built TCommunicationObject literals for Inventory functions; the layout
   is the same.
+
+## MainFrm.cpp and the MainFrm/MainWindow gap
+
+- **The message map** is decoded from the AFX_MSGMAP_ENTRY table at
+  0x56c030 (24 entries, in the binary's order). OnKeyDown/OnSysKeyDown and
+  OnKeyUp/OnSysKeyUp share one address each (identical tail calls to
+  KeyDown/KeyUp, folded). WM_DISPLAYCHANGE and WM_USER+1 are ON_MESSAGE
+  entries; WM_USER+1 is the WSAAsyncGetHostByName reply (OnHostResolved,
+  our name).
+- **Member layout** (offsets from the reads): +0xd0 the mouse cursor at
+  construction, +0xd4 a WINDOWPLACEMENT (0x5239d8/0x5239ef are
+  CWnd::Get/SetWindowPlacement; its rcNormalPosition is the +0xf0 rectangle
+  OnDestroy saves), +0x100 64 ints cleared and never used, +0x200 the held
+  modifiers (KeyFlags). Names ours.
+- **PacketHeader (0x5d1644) is MainFrm.cpp's** (medium): the constructor
+  clears it and OutputErrorInformations prints it; Network.cpp writes it.
+  The other data 0x5d1654-0x5d169c (the frame pointer, cursors, button
+  flags, the class name buffer, the wheel remainder) are MainFrm's too.
+- **Free functions** ExitProgram, CloseProgram, SetDisplayMode, OpenURL and
+  UpdateMouseCursor (names low; OpenURL and SetDisplayMode after
+  Control.cpp's callback parameter names) use the global MainFrame and are
+  passed as callbacks to InitWindow and the main window.
+- **Eliminated try blocks**: ExitProgram, AddFrameSize and KeyUp have the
+  unwind states of a TBEGIN/TEND but no try entry; written with TBEGIN/TEND.
+- **Control.cpp's RightButtonDown** now takes (x, y, Flags) like the other
+  button functions: MainFrm passes them; the reconstruction had declared it
+  without parameters.
+- **OnMouseWheel's catch** names point.x/point.y as in the binary.
+- **The gap after MainFrm.cpp (0x4ac010-0x4ac20d) is MainWindow.cpp**
+  (high): a window class destructor and Draw plus 0x4ac090, which deletes
+  MainWindow and ModalWindow.
+- **Tests**: TranslateKey is compared for all keys, flags and modifiers; the
+  rest needs MFC and the window system. MainFrm.cpp is linked into the
+  difftest against stubs.

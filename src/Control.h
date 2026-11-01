@@ -24,7 +24,7 @@ void MouseMove(int x, int y);
 void LeftButtonDown(int x, int y, int Flags);
 void LeftButtonUp(int x, int y, int Flags);
 void LeftButtonDoubleClick(int x, int y, int Flags);
-void RightButtonDown();
+void RightButtonDown(int x, int y, int Flags);
 void RightButtonUp(int x, int y, int Flags);
 void MouseWheel(int x, int y, int Direction);
 void KeyPress(int Key);

@@ -68,7 +68,7 @@ void CPlayerApp::FatalError(const char *Text, const char *Caption)
 	}
 	try {
 		if (GetViewMode() != 1)
-			FUN_004a8af0(1);
+			SetDisplayMode(1);
 	} catch (...) {
 	}
 	try {
@@ -322,12 +322,12 @@ BOOL CPlayerApp::InitInstance()
 				EnumWindows(CountTibiaWindows, 0);
 				if (NumberOfTibiaWindows == 0) {
 					MessageBoxA(NULL, "Application is corrupted! Please re-install Tibia.", "Tibia - Error", MB_ICONEXCLAMATION);
-					FUN_004a88f0();
+					ExitProgram();
 					return FALSE;
 				}
 				if (NumberOfTibiaWindows > 1) {
 					MessageBoxA(NULL, "A Tibia client is already running!", "Tibia - Error", MB_ICONEXCLAMATION);
-					FUN_004a88f0();
+					ExitProgram();
 					return FALSE;
 				}
 			}
@@ -417,7 +417,7 @@ BOOL CPlayerApp::OnIdle(LONG lCount)
 	}
 	int Cursor = GetMouseCursor();
 	if (Cursor != LastMouseCursor) {
-		FUN_004aa1d0();
+		UpdateMouseCursor();
 		LastMouseCursor = Cursor;
 	}
 	ProcessEvents();

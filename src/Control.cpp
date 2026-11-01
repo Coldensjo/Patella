@@ -473,8 +473,9 @@ void LeftButtonDoubleClick(int x, int y, int Flags)
 	TEND2(x, y)
 }
 
-// 0x4476c0, line 619. Only changes the action state; the windows are not told.
-void RightButtonDown()
+// 0x4476c0, line 619. Only changes the action state; the windows are not told
+// (the position and flags are not used).
+void RightButtonDown(int x, int y, int Flags)
 {
 	TBEGIN
 	switch (GetActionState()) {

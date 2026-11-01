@@ -30,3 +30,5 @@ start	end	file	evidence
 0x4a4440	0x4a444f	Help.cpp	GetCurrentHelpText: GetHelpText(HelpHandle) with Help.cpp's data
 0x4a4460	0x4a4546	Inventory.cpp	use only Inventory.cpp's data (0x5ced60-0x5cedd8, 0x5d0cb8, 0x5d1190); not reconstructed yet
 0x4a8210	0x4a8646	MainFrm.cpp	CMainFrame members: the key translation 0x4a8210 reads the frame (+0x200), OutputErrorInformations 0x4a8360 and the constructor 0x4a8520 (Player.cpp calls them on the main window); not reconstructed yet
+0x4a8200	0x4a820f	MainFrm.cpp	CMainFrame::GetMessageMap (missed by Ghidra), slot 10 of the frame vtable 0x56c2e8
+0x4ac010	0x4ac20d	MainWindow.cpp	destructor and members of the window class with vtable 0x56c498 and 0x4ac090, which deletes MainWindow.cpp's MainWindow (0x5d16b0) and ModalWindow (0x5d16ac); not reconstructed yet

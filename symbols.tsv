@@ -3809,12 +3809,12 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4abec9	20	Catch@004abec9	catch	MainFrm.cpp	between		0x4abe40	
 0x4abedd	137	Catch@004abedd	catch	MainFrm.cpp	assert	295	0x4abe40	
 0x4abf66	166	Catch@004abf66	catch	MainFrm.cpp	assert	295	0x4abe40	
-0x4ac010	117	FUN_004ac010	game	MainFrm.cpp|MainWindow.cpp	gap			
-0x4ac090	63	FUN_004ac090	game	MainFrm.cpp|MainWindow.cpp	gap			
-0x4ac0d0	30	FUN_004ac0d0	game	MainFrm.cpp|MainWindow.cpp	gap			
-0x4ac0f0	245	FUN_004ac0f0	game	MainFrm.cpp|MainWindow.cpp	gap			Surface
-0x4ac14e	21	Catch@004ac14e	catch	MainFrm.cpp|MainWindow.cpp	gap		0x4ac0f0	
-0x4ac1fa	20	Catch@004ac1fa	catch	MainFrm.cpp|MainWindow.cpp	gap		0x4ac0f0	
+0x4ac010	117	FUN_004ac010	game	MainWindow.cpp	range			
+0x4ac090	63	FUN_004ac090	game	MainWindow.cpp	range			
+0x4ac0d0	30	FUN_004ac0d0	game	MainWindow.cpp	range			
+0x4ac0f0	245	FUN_004ac0f0	game	MainWindow.cpp	range			Surface
+0x4ac14e	21	Catch@004ac14e	catch	MainWindow.cpp	range		0x4ac0f0	
+0x4ac1fa	20	Catch@004ac1fa	catch	MainWindow.cpp	range		0x4ac0f0	
 0x4ac20e	142	Catch@004ac20e	catch	MainWindow.cpp	assert	127	0x4ac0f0	Surface
 0x4ac29c	159	Catch@004ac29c	catch	MainWindow.cpp	assert	127	0x4ac0f0	
 0x4ac340	376	FUN_004ac340	game	MainWindow.cpp	between			Width,Height
