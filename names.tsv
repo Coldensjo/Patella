@@ -952,3 +952,101 @@ address	name	kind	confidence	note
 0x4ac090	FUN_004ac090	game	low	MainWindow.cpp: deletes MainWindow and ModalWindow
 0x4ac0d0	MainWindow_class_scalar_deleting_dtor	stl	medium	compiler-generated
 0x4ac0f0	MainWindow_class_Draw	game	low	MainWindow.cpp: draws five child windows (Surface)
+0x44b740	TCreature_GetHealthColor	game	medium	Creatures.cpp gap (no EH frame): colour of the health bar from Health (+0x84), returned by value
+0x44b800	TCreature_IsMarked	game	medium	Creatures.cpp gap: GetMilliseconds() <= MarkTime (+0x80)
+0x44b820	TCreature_SetSkull	game	medium	Creatures.cpp gap: Skull +0x90; with Delay a removed skull stays (SkullTime +0x98 = _time32)
+0x44b870	GetNumberOfPlayerSteps	game	high	Creatures.cpp gap: returns NumberOfPlayerSteps (name in the assertion of 0x44c3c0)
+0x44b880	GetPlayerPosition	game	medium	Creatures.cpp gap: FUN_004b08c0 plus the unconfirmed step
+0x44b8c0	ClearPlayerSteps	game	medium	Creatures.cpp gap: destination, steps, current step, new-destination flag cleared
+0x44b8e0	HideAllCreatures	game	medium	Creatures.cpp gap: Visible (+0x8c) false for all 150 slots
+0x44b900	SetBeat	game	medium	Creatures.cpp gap: Beat (Communication.cpp name of the login value)
+0x44b910	IsPlayer	game	medium	Creatures.cpp gap: CreatureID < 0x40000000
+0x44b920	SetPlayerID	game	high	Creatures.cpp gap; GetPlayerID is named in assertions
+0x44b930	SetPlayerHealth	game	medium	Creatures.cpp gap
+0x44b950	SetPlayerMagicLevel	game	medium	Creatures.cpp gap: level and progress
+0x44b970	SetPlayerMana	game	medium	Creatures.cpp gap
+0x44b990	SetPlayerSoul	game	medium	Creatures.cpp gap
+0x44b9a0	SetPlayerCapacity	game	medium	Creatures.cpp gap
+0x44b9b0	SetPlayerState	game	medium	Creatures.cpp gap: state icons (SkinProperties.PlayerStates in another file)
+0x44b9c0	GetPlayerID	game	high	Creatures.cpp gap; name from "GetCreature(GetPlayerID())" assertions
+0x44b9d0	GetPlayerHealth	game	medium	Creatures.cpp gap
+0x44b9e0	GetPlayerMaxHealth	game	medium	Creatures.cpp gap
+0x44b9f0	GetPlayerExperience	game	medium	Creatures.cpp gap
+0x44ba00	GetPlayerLevel	game	medium	Creatures.cpp gap
+0x44ba10	GetPlayerLevelProgress	game	medium	Creatures.cpp gap
+0x44ba20	GetPlayerMana	game	medium	Creatures.cpp gap
+0x44ba30	GetPlayerMaxMana	game	medium	Creatures.cpp gap
+0x44ba40	GetPlayerSoul	game	medium	Creatures.cpp gap
+0x44ba50	GetPlayerMagicLevel	game	medium	Creatures.cpp gap
+0x44ba60	GetPlayerMagicLevelProgress	game	medium	Creatures.cpp gap
+0x44ba70	GetPlayerCapacity	game	medium	Creatures.cpp gap
+0x44ba80	IsPlayerPoisoned	game	low	Creatures.cpp gap: state bit 0 (protocol icon order)
+0x44ba90	IsPlayerBurning	game	low	Creatures.cpp gap: state bit 1
+0x44baa0	IsPlayerElectrified	game	low	Creatures.cpp gap: state bit 2
+0x44bab0	IsPlayerDrunk	game	low	Creatures.cpp gap: state bit 3
+0x44bac0	IsPlayerManaShielded	game	low	Creatures.cpp gap: state bit 4
+0x44bad0	IsPlayerParalyzed	game	low	Creatures.cpp gap: state bit 5
+0x44bae0	IsPlayerHasted	game	low	Creatures.cpp gap: state bit 6
+0x44baf0	IsPlayerInFight	game	low	Creatures.cpp gap: state bit 7; ContextMenus.cpp offers "Leave Party" only without it
+0x44bb00	SetAttackID	game	medium	Creatures.cpp gap: sets the attack target, clears the follow target
+0x44bb20	SetFollowID	game	medium	Creatures.cpp gap: sets the follow target, clears the attack target
+0x44bb40	SetHighlightID	game	low	Creatures.cpp gap: battle list entry under the mouse (0x43a2c0), read by MapWindow.cpp
+0x44bb50	GetAttackID	game	medium	Creatures.cpp gap
+0x44bb60	GetFollowID	game	medium	Creatures.cpp gap
+0x44bb70	GetHighlightID	game	low	Creatures.cpp gap
+0x44bb80	GetBuddyPosition	game	medium	Creatures.cpp gap: VIP list position of CharacterID or -1; inlined into 0x44f000 and 0x44f5e0
+0x44bbb0	IsBuddy	game	medium	Creatures.cpp gap: _stricmp against the VIP names
+0x44bbf0	TCreature_GetDeltaX	game	medium	Creatures.cpp gap: DeltaX (+0x30) plus the unconfirmed player step
+0x44bc10	TCreature_GetDeltaY	game	medium	Creatures.cpp gap: DeltaY (+0x34) plus the unconfirmed player step
+0x44bc30	TCreature_GetDrawDirection	game	medium	Creatures.cpp gap: predicted step direction, MoveDirection while moving, else Direction
+0x44bc70	TCreature_StartMovement	game	medium	Creatures.cpp line 142 (catch 0x44bde1, TEND1(CreatureID) from *this)
+0x44bf20	TCreature_SetMark	game	medium	Creatures.cpp line 154
+0x44c0d0	TCreature_GetAnimationPhase	game	medium	Creatures.cpp lines 163-169, AvailablePhases from the assertion
+0x44c3c0	GetPlayerStep	game	high	Creatures.cpp line 259: In(Step,0,NumberOfPlayerSteps-1)
+0x44c530	AddCreature	game	medium	Creatures.cpp line 450 (NewCreatureID!=0); takes the slot of RemoveID, else slot 149
+0x44c6e0	GetCreature	game	high	Creatures.cpp line 476; name from "GetCreature(GetPlayerID())" assertions
+0x44c860	UpdateSkulls	game	low	Creatures.cpp (no line; try block dropped by the compiler): clears skulls kept by SetSkull after 4 s; called by Control.cpp
+0x44c8c0	HideCreature	game	medium	Creatures.cpp line 517; callback passed to FUN_004bf620 by InitControl
+0x44ca60	NotifySkull	game	low	Creatures.cpp line 604 (TEND1(Flag)): help hint 13 when Flag is set
+0x44cc00	SetPlayerExperience	game	medium	Creatures.cpp lines 634-644, "In(Progress,-1,100) [bug0000038]"; help hints 7, 8, 10, 14
+0x44cf10	SetPlayerSkill	game	medium	Creatures.cpp lines 687-693, SkillNumber and Value from the catch blocks
+0x44d1c0	GetPlayerSkillValue	game	medium	Creatures.cpp line 804
+0x44d320	GetPlayerSkillProgress	game	medium	Creatures.cpp line 813
+0x44d480	GetSkillName	game	medium	Creatures.cpp line 822: "Fist Fighting" ... "Fishing"
+0x44d6d0	HasPlayerSkull	game	low	Creatures.cpp (no line): the player creature has a skull
+0x44d6f0	IsPlayerInParty	game	low	Creatures.cpp (no line): party flag 1, 3 or 4
+0x44d720	GetPlayerPartyFlag	game	high	Creatures.cpp (no line); name from "GetPlayerPartyFlag()" in ContextMenus.cpp line 643
+0x44d740	IsOpponent	game	medium	Creatures.cpp lines 987-994; battle list membership ("Opponent!=NULL" in 0x451db0)
+0x44d9f0	GetNumberOfOpponents	game	medium	Creatures.cpp line 1029: updates the battle list links and counts
+0x44dc70	GetOpponent	game	medium	Creatures.cpp line 1037 (Number>=0)
+0x44de20	CompareBuddies	game	medium	Creatures.cpp lines 1069-1071: true if buddy i may stand before j
+0x44e260	SwapBuddies	game	medium	Creatures.cpp lines 1097-1099
+0x44e600	SortBuddies	game	medium	Creatures.cpp line 1116
+0x44e632	SortBuddies_loop	game	high	loop block of SortBuddies (0x44e600) split off by Ghidra; not a function
+0x44e7d0	SortBuddy	game	medium	Creatures.cpp lines 1124-1135: moves buddy i to its place
+0x44eab0	AddBuddy	game	medium	Creatures.cpp lines 1144-1170, VIP list entry from the server
+0x44f000	SetBuddyState	game	medium	Creatures.cpp line 1192: online/offline, "%s has logged in."
+0x44f230	EditBuddy	game	medium	Creatures.cpp lines 1200-1210 (CharacterID!=0, Description!=NULL)
+0x44f5e0	RemoveBuddy	game	medium	Creatures.cpp line 1227; message 0x1a with a copy of the name
+0x44f810	SetBuddySortMethod	game	medium	Creatures.cpp line 1247, Method from the catch blocks
+0x44fa00	HideOfflineBuddies	game	medium	Creatures.cpp line 1259
+0x44fba0	GetNumberOfBuddies	game	medium	Creatures.cpp line 1280: online count when offline buddies are hidden
+0x44fd40	GetBuddyListID	game	medium	Creatures.cpp line 1288, In(Position,0,NumberOfBuddies-1)
+0x44feb0	GetBuddyListName	game	medium	Creatures.cpp line 1297
+0x450020	GetBuddyListOnline	game	medium	Creatures.cpp line 1306
+0x450190	GetBuddyListNew	game	low	Creatures.cpp line 1316: online and logged in less than 10 actions ago
+0x450330	GetBuddyListIcon	game	medium	Creatures.cpp line 1325, "[bug0000289]"
+0x4504a0	GetBuddyListDescription	game	medium	Creatures.cpp lines 1334-1338; Preferences GetBuddyDescription
+0x450740	GetBuddyListNotify	game	medium	Creatures.cpp lines 1346-1350; Preferences GetBuddyNotify
+0x4509e0	ResetCreatures	game	medium	Creatures.cpp line 1414; called by InitCreatures and EnterGame
+0x450c80	DoPlayerStep	game	medium	Creatures.cpp lines 278-312: starts the current step before the server confirms it
+0x4510f0	FindPlayerPath	game	medium	Creatures.cpp line 347: path finder FUN_004bee00, "There is no way." etc.
+0x451400	SetPlayerDestination	game	medium	Creatures.cpp line 383: "Sorry, not possible."
+0x4516e0	StopPlayer	game	medium	Creatures.cpp line 413
+0x4518b0	CancelPlayerWalk	game	medium	Creatures.cpp line 435, TEND2(NewDirection, GetPlayerID())
+0x451ab0	MoveCreatures	game	medium	Creatures.cpp line 549: walk animations; true if a walk is to be sent
+0x451db0	CheckMonsterHint	game	low	Creatures.cpp lines 573-592: FUN_004a3460 for monsters next to the player ("Opponent!=NULL")
+0x452190	InitCreatures	game	medium	Creatures.cpp line 1366; called by InitControl
+0x452320	TCreature_SetPosition	game	medium	Creatures.cpp line 108, TEND1(CreatureID)
+0x452eb0	vector_TDialogText_at	game	low	Container.h vector<T>::operator() for a 0x18-byte element (char* + 20-byte font/colour), instantiated in DialogElements.cpp; element type name ours
+0x453600	vector_TDialogText_ctor	game	low	Container.h vector<T>::vector(min, max, block), lines 369-370, same 0x18-byte element, DialogElements.cpp; element type name ours

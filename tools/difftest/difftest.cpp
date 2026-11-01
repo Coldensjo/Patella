@@ -384,6 +384,7 @@ int main(int argc, char **argv)
 	TestInventory();
 	TestTalk();
 	TestObjects(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+	TestCreatures(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 #endif
 	printf("%d checks, %d failures\n", Checks, Failures);
 	return Failures == 0 ? 0 : 1;

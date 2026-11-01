@@ -38,8 +38,6 @@ const CWnd CWnd::wndNoTopMost = CWnd();
 BOOL CWnd::DestroyWindow() STUB
 BOOL CWnd::PreCreateWindow(CREATESTRUCT &) STUB
 void CWnd::MoveWindow(int, int, int, int, BOOL) STUB
-TCommunicationCreature *FUN_0044c6e0(uint32) STUB
-uint32 FUN_0044b9c0() STUB
 void FUN_004b05b0(int, int, void (*)(), void (*)(int), void (*)(const char *)) STUB
 bool CloseRequest() STUB
 const char *GetResolvedIPAddress() STUB

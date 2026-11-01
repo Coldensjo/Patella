@@ -12,7 +12,7 @@ Read this and `git log` first when resuming.
 5. Objects.cpp and the Objects/Player gap — **done** (Claude Opus 5.5 delegate, reviewed, merged). The gap is all Player.obj.
 6. Map.cpp and the gaps on both sides.
 7. MapWindow.cpp and the MapWindow/Network gap.
-8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps.
+8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp.
 
@@ -33,8 +33,6 @@ the non-GUI files: SurfaceGL.cpp, surfaceDX9.cpp, SurfaceDX.cpp, graphics.cpp.
 
 - Map.cpp (item 6): third attempt, Claude Opus 5.5 delegate (the first hit
   a Claude rate limit, the gpt-6.1-sol retry the ChatGPT usage limit).
-- Creatures.cpp + Control/Creatures and Creatures/DialogElements gaps
-  (item 8): Claude Opus 5.5, own worktree.
 Both told: real names only, no shims, replace their external.h views and
 rename the callers. Review each against decomp/clean and the binary before
 merging.
@@ -45,7 +43,7 @@ merging.
 
 ## Last difftest
 
-3,170,483 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+5,848,038 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 

@@ -511,3 +511,104 @@ callcheck differences, caller integration and differential coverage.
   in external.h. Reconstructing the base first avoids writing the derived
   classes against guessed layouts.
 
+## Creatures.cpp
+
+Reconstructed by Claude Opus 5.5, November 1, 2026.
+
+- **Leading gap 0x44b740-0x44bde0 is Creatures.cpp** (high). Every function
+  uses Creatures data (VIP list 0x5c4560-0x5c67d7, player data
+  0x5c67d8-0x5c68a8, creature table 0x5c68b0-0x5cc417) or a TCreature member
+  offset, and nothing of Control.cpp (its last global is 0x5c4554). No code
+  outside 0x44b740-0x4524df touches 0x5c4558-0x5cc417, so every global is
+  static. 0x44bc70 is the line-142 function; its PROGRAM_ERROR catch 0x44bdcd
+  was the last gap entry. Nothing in either gap goes to Control.cpp.
+- **Trailing gap 0x4524e0-0x45399a is DialogElements.obj** (high for the
+  object, low for the split between DialogElements.cpp and a header). Its
+  functions use vtables 0x560bb8-0x5611e0 and are called from DialogElements.cpp
+  (0x45af40-0x46b950) and later objects, never from Creatures.cpp; 0x453930
+  has DialogElements.cpp line-42 catch blocks. The no-EH functions at the
+  start of each object (as in Creatures.obj) suggest these are DialogElements.cpp's
+  own functions; they are left unnamed for that file's reconstruction, except
+  the Container.h instances: vector<int>::operator() 0x452ac0 and the
+  vector<int>(..., init) constructor 0x453300 (named before), the vector<int>
+  and vector<TDialogText> destructors 0x452c50/0x452c60, and
+  vector<TDialogText> 0x452eb0/0x453600 (0x18-byte element: a pointer, then
+  4 and the colour at 0x5c1230 and 0; element constructor 0x452c70, not found
+  by Ghidra). The element type name is ours (low). The template's destructor
+  (`delete[] entry`) is documented in Container.h but not added: adding it
+  changes the exit behaviour of Status/Preferences/Talk statics (correct per
+  the binary's atexit handlers, but outside this file); open question.
+- **Static initialisers** (low, not used as evidence): 0x559df0 constructs an
+  8-byte (0,0) object at 0x5c4558, just before Creatures data, and
+  0x559e00-0x559e20 three at 0x5cc418-0x5cc42f just after it (0x5cc420 is used
+  by Dialogs.cpp). The same constructor (0x496130) builds such objects in
+  several objects; which object owns 0x5c4558 is not settled.
+- **Source order** (medium for the rule, low for the gap functions' place).
+  The binary order is the line order except that a function calling a
+  function defined further down comes after the last of them: lines 278-592,
+  InitCreatures (1366, calls ResetCreatures at 1414) and SetPosition (108,
+  calls CheckMonsterHint at 573) follow ResetCreatures. The leaf functions
+  without exception frame (0x44b740-0x44bc6f) precede line 142, so they are
+  in the source before it; they keep the binary order, with SetPosition
+  (line 108) put before the three TCreature accessors that come last
+  (GetDeltaX, GetDeltaY, GetDrawDirection). IsPlayerInParty reads the
+  shield itself instead of calling GetPlayerPartyFlag, which comes after it.
+- **Names from the binary** (high): GetCreature, GetPlayerID,
+  GetPlayerPartyFlag (assertions in ContextMenus.cpp/ConsoleWindow.cpp),
+  CreatureID (the member catch blocks read `*this`), NumberOfPlayerSteps,
+  CurrentPlayerStep, NumberOfBuddies, BUDDIES, SKILLS, Opponent and the
+  parameter names. All other function, class (TCreature, TBuddyEntry),
+  member and global names are ours (medium where the behaviour is clear,
+  low for IsPlayer* state bits, HighlightID, UpdateSkulls, NotifySkull,
+  HasPlayerSkull, IsPlayerInParty, GetBuddyListNew, CheckMonsterHint and the
+  path flags Exact/Diagonal, whose meaning in the path finder is unclear).
+  TCreature keeps the old view's field names (RealX..., DeltaX, Colors...).
+  The VIP list accessors by position are GetBuddyList* because Preferences.h
+  already has GetBuddyIcon/GetBuddyDescription/GetBuddyNotify by character;
+  0x44bb80 is GetBuddyPosition because Preferences.h has FindBuddy(int) (an
+  overload named FindBuddy was silently chosen over it by EditBuddy; found
+  by the difftest). In names.tsv members are TCreature_Method.
+- **Help and map callees keep FUN_ names** (high): FUN_004a32e0 (hint
+  numbers 7, 8, 9, 10, 13, 14), FUN_004a3460 (monster name), and the Map.cpp
+  functions FUN_004b08c0, FUN_004b08f0, FUN_004b0960, FUN_004b6140,
+  FUN_004be130, FUN_004bdf30 and the path finder FUN_004bee00 (new
+  declarations in external.h under "added for Creatures.cpp"; the Map.cpp
+  agent may rename them).
+- **Dropped try blocks** (medium): AddCreature (16 EH states, no try block)
+  and UpdateSkulls (11 states, none) are written with TBEGIN/TEND: their
+  states match an assertion plus a TEND, and the compiler removes a try block
+  whose body cannot throw. Their catch lines and names are unknown; written
+  as plain TEND.
+- **"[bug0000038]" / "[bug0000289]"** in two assertion texts: written with a
+  local TASSERT1_BUG/TASSERT2_BUG macro in Creatures.cpp that appends the
+  bug number to the stringized expression (common.h unchanged).
+- **Odd behaviour kept** (high, from the instructions): AddCreature
+  overwrites slot 149 when no slot matches and keeps a reused slot's name,
+  position and battle list links; AddBuddy does not decrement the online
+  count when an online entry is updated as offline, so GetNumberOfBuddies
+  (online count with offline buddies hidden) can exceed the list length;
+  SetPlayerDestination adds the unconfirmed step twice in its second
+  comparison; HasPlayerSkull, IsPlayerInParty and GetPlayerPartyFlag do not
+  check for a missing player creature; SetPlayerSkill does not check
+  SkillNumber; SortBuddy moves an entry past equal ones; CheckMonsterHint
+  has no z check.
+- **Types** (medium): CreatureID and CharacterID are uint32 where the binary
+  compares unsigned (0x40000000); SkullTime is `__time32_t` and the clock
+  `_time32` (VC7.1's 32-bit time_t, as in Talk.cpp); GetHealthColor returns
+  TRGBColor by value (hidden pointer, `ret 4`). The IsPlayer* state bits are
+  declared bool (the binary returns `(State >> n) & 1` in EAX).
+- **Switches checked against the jump tables** (high): GetSkillName
+  (0x44d6a8, cases 0-6), DoPlayerStep (0x4510c8, step directions 1-8),
+  FindPlayerPath (0x4513f0, results -4..-1); CompareBuddies' sort-method
+  switch is a sub/dec chain.
+- **Call sites fixed** (high): Communication.cpp's ReadCreature called
+  0x452320 as a free function; it is TCreature::SetPosition on the creature
+  (`mov ecx,esi` at 0x40cb9a). The TCommunicationCreature view's offsets all
+  match TCreature (static_asserts now on TCreature); its comments were
+  right. Control.cpp passes HideCreature to FUN_004bf620.
+- **Difftest** (high): creaturestest.cpp compares every function of the
+  file on random operation sequences, with the creature table and VIP list
+  compared byte for byte, against fakes for the map, path finder and help
+  functions on both sides; assertion-failure paths are not exercised. A test
+  that indexes the VIP list must use the full length, see the online-count
+  behaviour above.

@@ -42,3 +42,4 @@ void TestInventory();
 void TestSysinc(); // sysinctest.cpp, in sysinctest.exe only
 void TestTalk();
 void TestObjects(const char *ExePath); // objectstest.cpp, loads Tibia.dat next to Tibia.exe
+void TestCreatures(const char *ExePath); // creaturestest.cpp, loads Tibia.dat next to Tibia.exe

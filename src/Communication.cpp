@@ -7,6 +7,7 @@
 #include "Communication.h"
 #include "Help.h"
 #include "Inventory.h"
+#include "Creatures.h"
 #include "Network.h"
 #include "Objects.h"
 #include "Utils.h"
@@ -31,9 +32,9 @@ static int LastCancelY;       // 0x5c4380
 static int LastCancelX;       // 0x5c4384
 
 static_assert(sizeof(TCommunicationObject) == 12, "object layout");
-static_assert(offsetof(TCommunicationCreature, Direction) == 0x50, "creature direction");
-static_assert(offsetof(TCommunicationCreature, OutfitType) == 0x60, "creature outfit");
-static_assert(offsetof(TCommunicationCreature, Skull) == 0x90, "creature skull");
+static_assert(offsetof(TCreature, Direction) == 0x50, "creature direction");
+static_assert(offsetof(TCreature, OutfitType) == 0x60, "creature outfit");
+static_assert(offsetof(TCreature, Skull) == 0x90, "creature skull");
 static_assert(offsetof(TTalkBuffer, first) == 0x10, "channel first statement");
 static_assert(offsetof(TTalkBuffer, cursor) == 0x18, "channel cursor");
 static_assert(offsetof(TTalkLine, Addressee) == 0x14, "statement addressee");
@@ -196,15 +197,15 @@ void PrepareMovement()
 {
 	TBEGIN
 	if (GetAutoChaseOff()) {
-		if (FUN_0044bb50() != 0) {
+		if (GetAttackID() != 0) {
 			if (GetChaseMode() != 0) {
 				SetChaseMode(0);
 				SendFightModes();
 			}
 		}
 	}
-	if (FUN_0044bb60() != 0) {
-		FUN_0044bb20(0);
+	if (GetFollowID() != 0) {
+		SetFollowID(0);
 		SendFollow(0);
 	}
 	TEND
@@ -216,10 +217,10 @@ void SendWalk()
 {
 	TBEGIN
 	PrepareMovement();
-	int Steps = FUN_0044b870();
+	int Steps = GetNumberOfPlayerSteps();
 	TASSERT1(Steps>0, Steps);
 	if (Steps == 1) {
-		switch (FUN_0044c3c0(0)) {
+		switch (GetPlayerStep(0)) {
 		case 1: BeginCommand(0x66); break;
 		case 2: BeginCommand(0x6a); break;
 		case 3: BeginCommand(0x65); break;
@@ -233,7 +234,7 @@ void SendWalk()
 		BeginCommand(0x64);
 		SendByte(Steps);
 		for (int i = 0; i < Steps; i++)
-			SendByte(FUN_0044c3c0(i));
+			SendByte(GetPlayerStep(i));
 	}
 	SendCommand(true);
 	TEND
@@ -294,7 +295,7 @@ void SendMoveObject(int x, int y, int z, int ObjectType, int Position, int Desti
 		return;
 	}
 	if (x != 0xffff)
-		FUN_0044b8c0();
+		ClearPlayerSteps();
 	BeginCommand(0x78);
 	SendWord(x);
 	SendWord(y);
@@ -313,7 +314,7 @@ void SendMoveObject(int x, int y, int z, int ObjectType, int Position, int Desti
 void SendRequestTrade(int x, int y, int z, int ObjectType, int Position, uint32 CreatureID)
 {
 	TBEGIN
-	FUN_0044b8c0();
+	ClearPlayerSteps();
 	BeginCommand(0x7d);
 	SendWord(x);
 	SendWord(y);
@@ -359,7 +360,7 @@ void SendUseObject(int x, int y, int z, int ObjectType, int Position, int Contai
 {
 	TBEGIN
 	if (x != 0xffff)
-		FUN_0044b8c0();
+		ClearPlayerSteps();
 	BeginCommand(0x82);
 	SendWord(x);
 	SendWord(y);
@@ -376,7 +377,7 @@ void SendUseObjectWith(int x1, int y1, int z1, int ObjectType1, int Position1, i
 {
 	TBEGIN
 	if (x1 != 0xffff || x2 != 0xffff)
-		FUN_0044b8c0();
+		ClearPlayerSteps();
 	BeginCommand(0x83);
 	SendWord(x1);
 	SendWord(y1);
@@ -396,7 +397,7 @@ void SendUseObjectWith(int x1, int y1, int z1, int ObjectType1, int Position1, i
 void SendUseObjectOnCreature(int x, int y, int z, int ObjectType, int Position, uint32 CreatureID)
 {
 	TBEGIN
-	FUN_0044b8c0();
+	ClearPlayerSteps();
 	BeginCommand(0x84);
 	SendWord(x);
 	SendWord(y);
@@ -606,7 +607,7 @@ void SendAttack(uint32 CreatureID)
 {
 	TBEGIN
 	if (CreatureID != 0)
-		FUN_0044b8c0();
+		ClearPlayerSteps();
 	BeginCommand(0xa1);
 	SendQuad(CreatureID);
 	SendCommand(true);
@@ -618,7 +619,7 @@ void SendFollow(uint32 CreatureID)
 {
 	TBEGIN
 	if (CreatureID != 0)
-		FUN_0044b8c0();
+		ClearPlayerSteps();
 	BeginCommand(0xa2);
 	SendQuad(CreatureID);
 	SendCommand(true);
@@ -1021,9 +1022,9 @@ void ReceiveGameLogin()
 	TBEGIN
 	ClearRights();
 	uint32 CreatureID = GetQuad();
-	FUN_0044b920(CreatureID);
+	SetPlayerID(CreatureID);
 	int Beat = GetWord();
-	FUN_0044b900(Beat);
+	SetBeat(Beat);
 	uint8 value = GetByte();
 	SetRight(40, value);
 	SetActionState(0);
@@ -1087,14 +1088,14 @@ uint32 ReadCreature(int Type, int x, int y, int z)
 {
 	uint32 CreatureID = 0;
 	TBEGIN
-	TCommunicationCreature *Creature;
+	TCreature *Creature;
 	if (Type == 0x61) {
 		uint32 RemoveID = GetQuad();
 		CreatureID = GetQuad();
-		Creature = FUN_0044c530(RemoveID, CreatureID);
+		Creature = AddCreature(RemoveID, CreatureID);
 		TASSERT1(Creature!=NULL, CreatureID);
 		GetString(Creature->Name, 30);
-		if (!FUN_0044b910(CreatureID))
+		if (!IsPlayer(CreatureID))
 			CapitalizeString(Creature->Name);
 		Creature->Health = GetByte();
 		Creature->Direction = GetByte();
@@ -1111,12 +1112,12 @@ uint32 ReadCreature(int Type, int x, int y, int z)
 		Creature->LightColor = GetByte();
 		Creature->Speed = GetWord();
 		int Skull = GetByte();
-		Creature->FUN_0044b820(Skull, false);
-		FUN_0044ca60(Creature->Skull);
+		Creature->SetSkull(Skull, false);
+		NotifySkull(Creature->Skull);
 		Creature->Shield = GetByte();
 	} else if (Type == 0x62) {
 		CreatureID = GetQuad();
-		Creature = FUN_0044c6e0(CreatureID);
+		Creature = GetCreature(CreatureID);
 		if (Creature == NULL) {
 			GetByte();
 			GetByte();
@@ -1150,15 +1151,15 @@ uint32 ReadCreature(int Type, int x, int y, int z)
 			Creature->LightColor = GetByte();
 			Creature->Speed = GetWord();
 			int Skull = GetByte();
-			Creature->FUN_0044b820(Skull, false);
-			FUN_0044ca60(Creature->Skull);
+			Creature->SetSkull(Skull, false);
+			NotifySkull(Creature->Skull);
 			Creature->Shield = GetByte();
 		}
 	} else {
 		if (Type != 0x63)
 			return 0;
 		CreatureID = GetQuad();
-		Creature = FUN_0044c6e0(CreatureID);
+		Creature = GetCreature(CreatureID);
 		if (Creature == NULL)
 			GetByte();
 		else
@@ -1166,7 +1167,7 @@ uint32 ReadCreature(int Type, int x, int y, int z)
 	}
 	if (Creature != NULL) {
 		FUN_004b0910(&x, &y, &z);
-		FUN_00452320(x, y, z);
+		Creature->SetPosition(x, y, z);
 		Creature->Visible = true;
 	}
 	return CreatureID;
@@ -1257,10 +1258,10 @@ void ReceiveMap()
 	int PlayerZ = GetByte();
 	FUN_004b08a0(PlayerX, PlayerY, PlayerZ);
 	FUN_004bccb0();
-	FUN_0044b8e0();
+	HideAllCreatures();
 	ReadMap(0, 0, 17, 13);
 	SetTalkChanged();
-	FUN_004516e0();
+	StopPlayer();
 	CheckEventHelpPosition(PlayerX, PlayerY, PlayerZ);
 	TEND2(PlayerX, PlayerY)
 }
@@ -1408,7 +1409,7 @@ void ReceiveChangeObject()
 			GetByte();
 	} else {
 		if (OldObject.Type == 0x63) {
-			TCommunicationCreature *Creature = FUN_0044c6e0(OldObject.Data);
+			TCreature *Creature = GetCreature(OldObject.Data);
 			if (Creature != NULL)
 				Creature->Visible = false;
 		}
@@ -1454,7 +1455,7 @@ void ReceiveDeleteObject()
 		TASSERT2(FieldRefreshRequested(rx,ry,rz), rx, ry);
 	} else {
 		if (Object.Type == 0x63) {
-			TCommunicationCreature *Creature = FUN_0044c6e0(Object.Data);
+			TCreature *Creature = GetCreature(Object.Data);
 			if (Creature != NULL)
 				Creature->Visible = false;
 		}
@@ -1494,7 +1495,7 @@ void ReceiveMoveCreature()
 	FUN_004b0960(&zx, &zy, &zz);
 	TCommunicationObject Object = FUN_004b6580(sx, sy, sz, Position);
 	std::string Error;
-	TCommunicationCreature *Creature = NULL;
+	TCreature *Creature = NULL;
 	if (Object.Type == NoObject.Type || Object.Type != 0x63) {
 		if (FieldRefreshRequested(sx, sy, sz)) {
 			FUN_004b0910(&zx, &zy, &zz);
@@ -1516,11 +1517,11 @@ void ReceiveMoveCreature()
 		}
 		Error = Text.str();
 	} else {
-		Creature = FUN_0044c6e0(Object.Data);
+		Creature = GetCreature(Object.Data);
 		if (Creature != NULL) {
 			if (Teleport) {
-				if (Creature->CreatureID == FUN_0044b9c0())
-					FUN_004516e0();
+				if (Creature->CreatureID == GetPlayerID())
+					StopPlayer();
 				if (dx > 0)
 					Creature->Direction = 1;
 				else if (dx < 0)
@@ -1529,19 +1530,19 @@ void ReceiveMoveCreature()
 					Creature->Direction = 0;
 				else if (dy > 0)
 					Creature->Direction = 2;
-				if (Creature->CreatureID != FUN_0044b9c0())
-					Creature->FUN_0044bc70(0, 0, 0);
+				if (Creature->CreatureID != GetPlayerID())
+					Creature->StartMovement(0, 0, 0);
 			} else {
 				TCommunicationObject Bank = FUN_004b6140(zx, zy, zz);
 				if (GetObjectFlag(Bank.Type, 0))
-					Creature->FUN_0044bc70(dx, dy, GetObjectWaypoints(Bank.Type));
+					Creature->StartMovement(dx, dy, GetObjectWaypoints(Bank.Type));
 				else
 					Error = "MoveCreature has been received for a coordinate where there is no bank as first object [bug0000484]";
 			}
 			Creature->RealX += dx;
 			Creature->RealY += dy;
 			Creature->RealZ += dz;
-			FUN_00451db0(Creature);
+			CheckMonsterHint(Creature);
 		}
 	}
 	if (!Error.empty()) {
@@ -1852,10 +1853,10 @@ void ReceiveCreatureMark()
 	uint32 CreatureID;
 	TBEGIN
 	CreatureID = GetQuad();
-	TCommunicationCreature *Creature = FUN_0044c6e0(CreatureID);
+	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL) {
 		int Value = GetByte();
-		Creature->FUN_0044bf20(Value);
+		Creature->SetMark(Value);
 		return;
 	}
 	GetByte();
@@ -1868,7 +1869,7 @@ void ReceiveCreatureHealth()
 	uint32 CreatureID;
 	TBEGIN
 	CreatureID = GetQuad();
-	TCommunicationCreature *Creature = FUN_0044c6e0(CreatureID);
+	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL) {
 		int Value = GetByte();
 		Creature->Health = Value;
@@ -1884,7 +1885,7 @@ void ReceiveCreatureLight()
 	uint32 CreatureID;
 	TBEGIN
 	CreatureID = GetQuad();
-	TCommunicationCreature *Creature = FUN_0044c6e0(CreatureID);
+	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL) {
 		Creature->LightStrength = GetByte();
 		Creature->LightColor = GetByte();
@@ -1901,7 +1902,7 @@ void ReceiveCreatureOutfit()
 	uint32 CreatureID;
 	TBEGIN
 	CreatureID = GetQuad();
-	TCommunicationCreature *Creature = FUN_0044c6e0(CreatureID);
+	TCreature *Creature = GetCreature(CreatureID);
 	int Type = GetWord();
 	if (Creature == NULL) {
 		if (Type != 0) {
@@ -1932,7 +1933,7 @@ void ReceiveCreatureSpeed()
 	uint32 CreatureID;
 	TBEGIN
 	CreatureID = GetQuad();
-	TCommunicationCreature *Creature = FUN_0044c6e0(CreatureID);
+	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL) {
 		int Value = GetWord();
 		Creature->Speed = Value;
@@ -1948,11 +1949,11 @@ void ReceiveCreatureSkull()
 	uint32 CreatureID;
 	TBEGIN
 	CreatureID = GetQuad();
-	TCommunicationCreature *Creature = FUN_0044c6e0(CreatureID);
+	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL) {
 		int Skull = GetByte();
-		Creature->FUN_0044b820(Skull, true);
-		FUN_0044ca60(Creature->Skull);
+		Creature->SetSkull(Skull, true);
+		NotifySkull(Creature->Skull);
 		return;
 	}
 	GetByte();
@@ -1965,7 +1966,7 @@ void ReceiveCreatureShield()
 	uint32 CreatureID;
 	TBEGIN
 	CreatureID = GetQuad();
-	TCommunicationCreature *Creature = FUN_0044c6e0(CreatureID);
+	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL) {
 		int Value = GetByte();
 		Creature->Shield = Value;
@@ -2019,12 +2020,12 @@ void ReceivePlayerStats()
 	int MagicLevel = GetByte();
 	int MagicLevelPercent = GetByte();
 	int Soul = GetByte();
-	FUN_0044b930(Health, MaxHealth);
-	FUN_0044b9a0(Capacity);
-	FUN_0044b970(Mana, MaxMana);
-	FUN_0044b990(Soul);
-	FUN_0044cc00(Experience, Level, LevelPercent);
-	FUN_0044b950(MagicLevel, MagicLevelPercent);
+	SetPlayerHealth(Health, MaxHealth);
+	SetPlayerCapacity(Capacity);
+	SetPlayerMana(Mana, MaxMana);
+	SetPlayerSoul(Soul);
+	SetPlayerExperience(Experience, Level, LevelPercent);
+	SetPlayerMagicLevel(MagicLevel, MagicLevelPercent);
 	TEND
 }
 
@@ -2036,7 +2037,7 @@ void ReceivePlayerSkills()
 	for (i = 0; i < 7; i++) {
 		int Level = GetByte();
 		int Percent = GetByte();
-		FUN_0044cf10(i, Level, Percent);
+		SetPlayerSkill(i, Level, Percent);
 	}
 	TEND1(i)
 }
@@ -2046,7 +2047,7 @@ void ReceivePlayerIcons()
 {
 	TBEGIN
 	int Icons = GetByte();
-	FUN_0044b9b0(Icons);
+	SetPlayerState(Icons);
 	TEND
 }
 
@@ -2054,7 +2055,7 @@ void ReceivePlayerIcons()
 void ReceiveCancelAttack()
 {
 	TBEGIN
-	FUN_0044bb00(0);
+	SetAttackID(0);
 	TEND
 }
 
@@ -2294,7 +2295,7 @@ void ReceiveCancelWalk()
 	int x;
 	int y;
 	int z;
-	FUN_0044b880(&x, &y, &z);
+	GetPlayerPosition(&x, &y, &z);
 	if (x == LastCancelX && y == LastCancelY && z == LastCancelZ)
 		CancelCount++;
 	else
@@ -2303,12 +2304,12 @@ void ReceiveCancelWalk()
 	LastCancelY = y;
 	LastCancelZ = z;
 	if (CancelCount > 15) {
-		FUN_0044b8c0();
-		FUN_0044bb00(0);
+		ClearPlayerSteps();
+		SetAttackID(0);
 		SendCancel();
 		CancelCount = 0;
 	}
-	if (FUN_004518b0(Direction))
+	if (CancelPlayerWalk(Direction))
 		SendWalk();
 	TEND
 }
@@ -2351,7 +2352,7 @@ void ReceiveFloorUp()
 		ReadFloor(4);
 	}
 	SetTalkChanged();
-	FUN_004516e0();
+	StopPlayer();
 	CheckEventHelpPosition(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {
 		for (int ry = 0; ry < 14; ry++)
@@ -2386,7 +2387,7 @@ void ReceiveFloorDown()
 			ReadFloor(0);
 	}
 	SetTalkChanged();
-	FUN_004516e0();
+	StopPlayer();
 	CheckEventHelpPosition(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {
 		for (int ry = 0; ry < 14; ry++)
@@ -2421,7 +2422,7 @@ void ReceiveBuddy()
 	char Name[44];
 	GetString(Name, 30);
 	int State = GetByte();
-	FUN_0044eab0(CharacterID, Name, State == 1);
+	AddBuddy(CharacterID, Name, State == 1);
 	char *Copy = _strdup(Name);
 	AddMessage(25, (INT_PTR)Copy, 0);
 	TEND1(CharacterID)
@@ -2433,7 +2434,7 @@ void ReceiveBuddyLogin()
 	uint32 CharacterID;
 	TBEGIN
 	CharacterID = GetQuad();
-	FUN_0044f000(CharacterID, true);
+	SetBuddyState(CharacterID, true);
 	TEND1(CharacterID)
 }
 
@@ -2443,6 +2444,6 @@ void ReceiveBuddyLogout()
 	uint32 CharacterID;
 	TBEGIN
 	CharacterID = GetQuad();
-	FUN_0044f000(CharacterID, false);
+	SetBuddyState(CharacterID, false);
 	TEND1(CharacterID)
 }

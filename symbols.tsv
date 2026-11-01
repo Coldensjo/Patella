@@ -1748,55 +1748,55 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x44b5f6	20	Catch@0044b5f6	catch	Control.cpp	between		0x44b510	
 0x44b60a	143	Catch@0044b60a	catch	Control.cpp	assert	1633	0x44b510	
 0x44b699	160	Catch@0044b699	catch	Control.cpp	assert	1633	0x44b510	
-0x44b740	188	FUN_0044b740	game	Control.cpp|Creatures.cpp	gap			
-0x44b800	25	FUN_0044b800	game	Control.cpp|Creatures.cpp	gap			
-0x44b820	68	FUN_0044b820	game	Control.cpp|Creatures.cpp	gap			
-0x44b870	6	FUN_0044b870	game	Control.cpp|Creatures.cpp	gap			
-0x44b880	52	FUN_0044b880	game	Control.cpp|Creatures.cpp	gap			
-0x44b8c0	23	FUN_0044b8c0	game	Control.cpp|Creatures.cpp	gap			
-0x44b8e0	23	FUN_0044b8e0	game	Control.cpp|Creatures.cpp	gap			
-0x44b900	10	FUN_0044b900	game	Control.cpp|Creatures.cpp	gap			
-0x44b910	13	FUN_0044b910	game	Control.cpp|Creatures.cpp	gap			
-0x44b920	10	FUN_0044b920	game	Control.cpp|Creatures.cpp	gap			
-0x44b930	20	FUN_0044b930	game	Control.cpp|Creatures.cpp	gap			
-0x44b950	20	FUN_0044b950	game	Control.cpp|Creatures.cpp	gap			
-0x44b970	20	FUN_0044b970	game	Control.cpp|Creatures.cpp	gap			
-0x44b990	10	FUN_0044b990	game	Control.cpp|Creatures.cpp	gap			
-0x44b9a0	10	FUN_0044b9a0	game	Control.cpp|Creatures.cpp	gap			
-0x44b9b0	10	FUN_0044b9b0	game	Control.cpp|Creatures.cpp	gap			
-0x44b9c0	6	FUN_0044b9c0	game	Control.cpp|Creatures.cpp	gap			
-0x44b9d0	6	FUN_0044b9d0	game	Control.cpp|Creatures.cpp	gap			
-0x44b9e0	6	FUN_0044b9e0	game	Control.cpp|Creatures.cpp	gap			
-0x44b9f0	6	FUN_0044b9f0	game	Control.cpp|Creatures.cpp	gap			
-0x44ba00	6	FUN_0044ba00	game	Control.cpp|Creatures.cpp	gap			
-0x44ba10	6	FUN_0044ba10	game	Control.cpp|Creatures.cpp	gap			
-0x44ba20	6	FUN_0044ba20	game	Control.cpp|Creatures.cpp	gap			
-0x44ba30	6	FUN_0044ba30	game	Control.cpp|Creatures.cpp	gap			
-0x44ba40	6	FUN_0044ba40	game	Control.cpp|Creatures.cpp	gap			
-0x44ba50	6	FUN_0044ba50	game	Control.cpp|Creatures.cpp	gap			
-0x44ba60	6	FUN_0044ba60	game	Control.cpp|Creatures.cpp	gap			
-0x44ba70	6	FUN_0044ba70	game	Control.cpp|Creatures.cpp	gap			
-0x44ba80	9	FUN_0044ba80	game	Control.cpp|Creatures.cpp	gap			
-0x44ba90	11	FUN_0044ba90	game	Control.cpp|Creatures.cpp	gap			
-0x44baa0	12	FUN_0044baa0	game	Control.cpp|Creatures.cpp	gap			
-0x44bab0	12	FUN_0044bab0	game	Control.cpp|Creatures.cpp	gap			
-0x44bac0	12	FUN_0044bac0	game	Control.cpp|Creatures.cpp	gap			
-0x44bad0	12	FUN_0044bad0	game	Control.cpp|Creatures.cpp	gap			
-0x44bae0	12	FUN_0044bae0	game	Control.cpp|Creatures.cpp	gap			
-0x44baf0	12	FUN_0044baf0	game	Control.cpp|Creatures.cpp	gap			
-0x44bb00	20	FUN_0044bb00	game	Control.cpp|Creatures.cpp	gap			
-0x44bb20	20	FUN_0044bb20	game	Control.cpp|Creatures.cpp	gap			
-0x44bb40	10	FUN_0044bb40	game	Control.cpp|Creatures.cpp	gap			
-0x44bb50	6	FUN_0044bb50	game	Control.cpp|Creatures.cpp	gap			
-0x44bb60	6	FUN_0044bb60	game	Control.cpp|Creatures.cpp	gap			
-0x44bb70	6	FUN_0044bb70	game	Control.cpp|Creatures.cpp	gap			
-0x44bb80	39	FUN_0044bb80	game	Control.cpp|Creatures.cpp	gap			
-0x44bbb0	62	FUN_0044bbb0	game	Control.cpp|Creatures.cpp	gap			
-0x44bbf0	28	FUN_0044bbf0	game	Control.cpp|Creatures.cpp	gap			
-0x44bc10	28	FUN_0044bc10	game	Control.cpp|Creatures.cpp	gap			
-0x44bc30	49	FUN_0044bc30	game	Control.cpp|Creatures.cpp	gap			
-0x44bc70	349	FUN_0044bc70	game	Control.cpp|Creatures.cpp	gap			CreatureID
-0x44bdcd	20	Catch@0044bdcd	catch	Control.cpp|Creatures.cpp	gap		0x44bc70	
+0x44b740	188	FUN_0044b740	game	Creatures.cpp	range			
+0x44b800	25	FUN_0044b800	game	Creatures.cpp	range			
+0x44b820	68	FUN_0044b820	game	Creatures.cpp	range			
+0x44b870	6	FUN_0044b870	game	Creatures.cpp	range			
+0x44b880	52	FUN_0044b880	game	Creatures.cpp	range			
+0x44b8c0	23	FUN_0044b8c0	game	Creatures.cpp	range			
+0x44b8e0	23	FUN_0044b8e0	game	Creatures.cpp	range			
+0x44b900	10	FUN_0044b900	game	Creatures.cpp	range			
+0x44b910	13	FUN_0044b910	game	Creatures.cpp	range			
+0x44b920	10	FUN_0044b920	game	Creatures.cpp	range			
+0x44b930	20	FUN_0044b930	game	Creatures.cpp	range			
+0x44b950	20	FUN_0044b950	game	Creatures.cpp	range			
+0x44b970	20	FUN_0044b970	game	Creatures.cpp	range			
+0x44b990	10	FUN_0044b990	game	Creatures.cpp	range			
+0x44b9a0	10	FUN_0044b9a0	game	Creatures.cpp	range			
+0x44b9b0	10	FUN_0044b9b0	game	Creatures.cpp	range			
+0x44b9c0	6	FUN_0044b9c0	game	Creatures.cpp	range			
+0x44b9d0	6	FUN_0044b9d0	game	Creatures.cpp	range			
+0x44b9e0	6	FUN_0044b9e0	game	Creatures.cpp	range			
+0x44b9f0	6	FUN_0044b9f0	game	Creatures.cpp	range			
+0x44ba00	6	FUN_0044ba00	game	Creatures.cpp	range			
+0x44ba10	6	FUN_0044ba10	game	Creatures.cpp	range			
+0x44ba20	6	FUN_0044ba20	game	Creatures.cpp	range			
+0x44ba30	6	FUN_0044ba30	game	Creatures.cpp	range			
+0x44ba40	6	FUN_0044ba40	game	Creatures.cpp	range			
+0x44ba50	6	FUN_0044ba50	game	Creatures.cpp	range			
+0x44ba60	6	FUN_0044ba60	game	Creatures.cpp	range			
+0x44ba70	6	FUN_0044ba70	game	Creatures.cpp	range			
+0x44ba80	9	FUN_0044ba80	game	Creatures.cpp	range			
+0x44ba90	11	FUN_0044ba90	game	Creatures.cpp	range			
+0x44baa0	12	FUN_0044baa0	game	Creatures.cpp	range			
+0x44bab0	12	FUN_0044bab0	game	Creatures.cpp	range			
+0x44bac0	12	FUN_0044bac0	game	Creatures.cpp	range			
+0x44bad0	12	FUN_0044bad0	game	Creatures.cpp	range			
+0x44bae0	12	FUN_0044bae0	game	Creatures.cpp	range			
+0x44baf0	12	FUN_0044baf0	game	Creatures.cpp	range			
+0x44bb00	20	FUN_0044bb00	game	Creatures.cpp	range			
+0x44bb20	20	FUN_0044bb20	game	Creatures.cpp	range			
+0x44bb40	10	FUN_0044bb40	game	Creatures.cpp	range			
+0x44bb50	6	FUN_0044bb50	game	Creatures.cpp	range			
+0x44bb60	6	FUN_0044bb60	game	Creatures.cpp	range			
+0x44bb70	6	FUN_0044bb70	game	Creatures.cpp	range			
+0x44bb80	39	FUN_0044bb80	game	Creatures.cpp	range			
+0x44bbb0	62	FUN_0044bbb0	game	Creatures.cpp	range			
+0x44bbf0	28	FUN_0044bbf0	game	Creatures.cpp	range			
+0x44bc10	28	FUN_0044bc10	game	Creatures.cpp	range			
+0x44bc30	49	FUN_0044bc30	game	Creatures.cpp	range			
+0x44bc70	349	FUN_0044bc70	game	Creatures.cpp	range			CreatureID
+0x44bdcd	20	Catch@0044bdcd	catch	Creatures.cpp	range		0x44bc70	
 0x44bde1	147	Catch@0044bde1	catch	Creatures.cpp	assert	142	0x44bc70	CreatureID
 0x44be74	164	Catch@0044be74	catch	Creatures.cpp	assert	142	0x44bc70	
 0x44bf20	89	FUN_0044bf20	game	Creatures.cpp	between			CreatureID
@@ -1931,41 +1931,41 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x45239a	20	Catch@0045239a	catch	Creatures.cpp	between		0x452320	
 0x4523ae	144	Catch@004523ae	catch	Creatures.cpp	assert	108	0x452320	CreatureID
 0x45243e	161	Catch@0045243e	catch	Creatures.cpp	assert	108	0x452320	
-0x4524e0	77	FUN_004524e0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452530	64	FUN_00452530	game	Creatures.cpp|DialogElements.cpp	gap			
-0x4525d0	65	FUN_004525d0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452630	49	FUN_00452630	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452670	29	FUN_00452670	game	Creatures.cpp|DialogElements.cpp	gap			
-0x4526b0	10	FUN_004526b0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x4526c0	101	FUN_004526c0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452730	10	FUN_00452730	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452740	47	FUN_00452740	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452790	45	FUN_00452790	game	Creatures.cpp|DialogElements.cpp	gap			
-0x4527e0	29	FUN_004527e0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452880	83	FUN_00452880	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452980	44	FUN_00452980	game	Creatures.cpp|DialogElements.cpp	gap			
-0x4529d0	19	FUN_004529d0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x4529f0	10	FUN_004529f0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452a00	142	FUN_00452a00	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452ac0	395	FUN_00452ac0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452c50	11	FUN_00452c50	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452c60	11	FUN_00452c60	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452cb0	157	FUN_00452cb0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452d50	30	FUN_00452d50	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452d70	30	FUN_00452d70	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452d90	30	FUN_00452d90	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452db0	30	FUN_00452db0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452dd0	30	FUN_00452dd0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452df0	30	FUN_00452df0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452e10	156	FUN_00452e10	game	Creatures.cpp|DialogElements.cpp	gap			
-0x452eb0	892	FUN_00452eb0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x453230	30	FUN_00453230	game	Creatures.cpp|DialogElements.cpp	gap			
-0x453250	139	FUN_00453250	game	Creatures.cpp|DialogElements.cpp	gap			
-0x4532e0	30	FUN_004532e0	game	Creatures.cpp|DialogElements.cpp	gap			
-0x453300	764	FUN_00453300	game	Container.h	header	355,356		
-0x453600	816	FUN_00453600	game	Container.h	header	369,370		
-0x453930	86	FUN_00453930	game	Creatures.cpp|DialogElements.cpp	gap			Width,Height
-0x453986	20	Catch@00453986	catch	Creatures.cpp|DialogElements.cpp	gap		0x453930	
+0x4524e0	77	FUN_004524e0	game	DialogElements.cpp	range			
+0x452530	64	FUN_00452530	game	DialogElements.cpp	range			
+0x4525d0	65	FUN_004525d0	game	DialogElements.cpp	range			
+0x452630	49	FUN_00452630	game	DialogElements.cpp	range			
+0x452670	29	FUN_00452670	game	DialogElements.cpp	range			
+0x4526b0	10	FUN_004526b0	game	DialogElements.cpp	range			
+0x4526c0	101	FUN_004526c0	game	DialogElements.cpp	range			
+0x452730	10	FUN_00452730	game	DialogElements.cpp	range			
+0x452740	47	FUN_00452740	game	DialogElements.cpp	range			
+0x452790	45	FUN_00452790	game	DialogElements.cpp	range			
+0x4527e0	29	FUN_004527e0	game	DialogElements.cpp	range			
+0x452880	83	FUN_00452880	game	DialogElements.cpp	range			
+0x452980	44	FUN_00452980	game	DialogElements.cpp	range			
+0x4529d0	19	FUN_004529d0	game	DialogElements.cpp	range			
+0x4529f0	10	FUN_004529f0	game	DialogElements.cpp	range			
+0x452a00	142	FUN_00452a00	game	DialogElements.cpp	range			
+0x452ac0	395	FUN_00452ac0	game	Container.h	range			
+0x452c50	11	FUN_00452c50	game	Container.h	range			
+0x452c60	11	FUN_00452c60	game	Container.h	range			
+0x452cb0	157	FUN_00452cb0	game	DialogElements.cpp	range			
+0x452d50	30	FUN_00452d50	game	DialogElements.cpp	range			
+0x452d70	30	FUN_00452d70	game	DialogElements.cpp	range			
+0x452d90	30	FUN_00452d90	game	DialogElements.cpp	range			
+0x452db0	30	FUN_00452db0	game	DialogElements.cpp	range			
+0x452dd0	30	FUN_00452dd0	game	DialogElements.cpp	range			
+0x452df0	30	FUN_00452df0	game	DialogElements.cpp	range			
+0x452e10	156	FUN_00452e10	game	DialogElements.cpp	range			
+0x452eb0	892	FUN_00452eb0	game	Container.h	range			
+0x453230	30	FUN_00453230	game	DialogElements.cpp	range			
+0x453250	139	FUN_00453250	game	DialogElements.cpp	range			
+0x4532e0	30	FUN_004532e0	game	DialogElements.cpp	range			
+0x453300	764	FUN_00453300	game	Container.h	range	355,356		
+0x453600	816	FUN_00453600	game	Container.h	range	369,370		
+0x453930	86	FUN_00453930	game	DialogElements.cpp	range			Width,Height
+0x453986	20	Catch@00453986	catch	DialogElements.cpp	range		0x453930	
 0x45399a	144	Catch@0045399a	catch	DialogElements.cpp	assert	42	0x453930	Width,Height
 0x453a2a	161	Catch@00453a2a	catch	DialogElements.cpp	assert	42	0x453930	
 0x453ad0	264	FUN_00453ad0	game	DialogElements.cpp	between			

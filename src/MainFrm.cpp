@@ -15,6 +15,7 @@
 
 #include "MainFrm.h"
 #include "Control.h"
+#include "Creatures.h"
 #include "Network.h"
 #include "Player.h"
 #include "Preferences.h"
@@ -126,9 +127,9 @@ void CMainFrame::OutputErrorInformations(std::ostream &Out)
 		}
 		Out << std::endl;
 	}
-	if (FUN_0044b9c0() != 0) {
+	if (GetPlayerID() != 0) {
 		try {
-			TCommunicationCreature *Player = FUN_0044c6e0(FUN_0044b9c0());
+			TCreature *Player = GetCreature(GetPlayerID());
 			if (Player != NULL)
 				Out << "Player Position: [" << Player->RealX << "," << Player->RealY << "," << Player->RealZ << "]"
 					<< std::endl;

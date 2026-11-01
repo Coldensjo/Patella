@@ -105,7 +105,8 @@ file-based code can be compared on real files. `vlongtest.cpp` and
 | Help.cpp | Reconstructed with the GUI/Help gap and 0x4a4440 from the Help/Inventory gap: the help bubble state and texts, and the event helps (hints) by NPC name and position. Every function differentially tested except the error paths. |
 | Inventory.cpp | Reconstructed with the Help/Inventory gap (0x4a4460-0x4a4546): body slots, open containers and trade offers. Every function differentially tested except the assertion paths. The Inventory/MainFrm gap is settled as MainFrm.cpp. |
 | MainFrm.cpp | Reconstructed: CMainFrame with its message map (decoded from the binary), windowed/fullscreen switching, mouse and key handling, the WSAAsyncGetHostByName reply. TranslateKey differentially tested; the rest needs MFC. The MainFrm/MainWindow gap is settled as MainWindow.cpp. |
+| Creatures.cpp | Reconstructed by Claude Opus 5.5 with the gap before it (0x44b740-0x44bde0): the creature table, the player's data and walk, the battle list and the VIP list; integrated into Communication.cpp and Control.cpp (TCreature replaces the TCommunicationCreature view). The gap after it is DialogElements.obj and Container.h instances (file-ranges.tsv). EH tables checked for every function; the GetSkillName, DoPlayerStep and FindPlayerPath jump tables checked. Every function differentially tested (creaturestest.cpp; map, path finder and help functions faked on both sides), except the assertion-failure paths. 12 callcheck differences, all inlined helpers (GetPlayerID, IsPlayer, GetBuddyPosition, GetPlayerPosition). |
 | Container.h | Partial: `vector<T>` constructors and `operator()`, from the Status.cpp and Preferences.cpp instantiations, the initialized `vector<TTalkFilter*>` instance from Talk.cpp, and `array<T>` (constructor, `operator()`) from Objects.cpp; tested through them. |
 
-Last differential run (November 1, 2026): 2,796,382 checks against the original code and 3,201 against exact
-arithmetic, no differences.
+Last differential run: 5,848,038 checks against the original code (difftest.exe), 67 in sysinctest.exe and
+3,201 against exact arithmetic, no differences.
