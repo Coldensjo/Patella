@@ -31,8 +31,11 @@ the non-GUI files: SurfaceGL.cpp, surfaceDX9.cpp, SurfaceDX.cpp, graphics.cpp.
 
 ## Delegates (running)
 
-- graphics.cpp + DialogWindow/graphics gap: Claude Opus 5.5, own worktree.
-- GUI.cpp + graphics/GUI gap: Claude Opus 5.5, own worktree.
+- GUI.cpp + graphics/GUI gap: the first delegate stopped on a Claude API rate
+  limit; its partial work is WIP commit f6161d4 on t3/reconstruct-gui-cpp.
+  A second Claude Opus 5.5 delegate continues it (branch t3/gui-cpp-finish).
+- graphics.cpp + DialogWindow/graphics gap: same story; WIP f867cba on
+  t3/reconstruct-graphics-cpp, continued on t3/graphics-cpp-finish.
 Both told: real names only, no shims, replace their external.h views and
 rename the callers. Review each against decomp/clean and the binary before
 merging.
