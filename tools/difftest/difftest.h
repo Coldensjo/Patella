@@ -46,5 +46,21 @@ void TestCreatures(const char *ExePath); // creaturestest.cpp, loads Tibia.dat n
 void TestGUI();
 void TestMap(const char *ExePath);     // maptest.cpp, also loads Tibia.dat
 void TestGraphics(const char *ExePath); // graphicstest.cpp, loads Tibia.spr, Tibia.pic and Tibia.dat
+void TestDialogWindow();                 // dialogwindowtest.cpp, after TestGUI (restores its patches)
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
+
+// dialogwindowtest.cpp defines the shared fakes of the classes DialogWindow.cpp
+// uses from files that are not reconstructed (TSubWindowBody's members,
+// TResizer, TSkinButton::SetSkins); each test that uses them sets these hooks.
+class TComponent;
+class TResizer;
+class TSkinButton;
+class TSubWindowBody;
+struct TDialogFakes {
+	void (*Body)(TSubWindowBody *Body, const char *Call);   // UnknownA0-B8 (A8 too) and FUN_0042e4e0 ("Up")
+	bool (*BodyAccepts)(TSubWindowBody *Body);              // UnknownA8's result
+	void (*NewResizer)(TResizer *Resizer, TComponent *ToResize, bool Param2, bool Param3, bool Param4);
+	void (*SetSkins)(TSkinButton *Button, int ButtonUp, int ButtonDown);
+};
+extern TDialogFakes DialogFakes;
 void TestMainWindow();                   // mainwindowtest.cpp, after TestMapWindow (patches for good as well)

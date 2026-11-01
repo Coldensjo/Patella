@@ -32,15 +32,32 @@ for n, a in names.items():
 		methods.setdefault(n.split('_', 1)[1], []).append(n)
 
 
+# Base classes for qualified calls whose class does not override the method
+# (TWindow::SetSize is TComponent_SetSize).
+BASES = {'TWindow': 'TComponent', 'TElement': 'TComponent'}
+QUALIFIED = re.compile(r'\b(T\w+)::$')
+
+
 def calls(body, cls=None):
 	c = Counter()
 	for m in CALL.finditer(body):
 		n = m.group(1)
 		if n in IGNORE:
 			continue
+		before = body[max(0, m.start() - 64):m.start()]
+		q = QUALIFIED.search(before)
+		if q:
+			# Class::method(...): that class's method, or its base class's.
+			k = q.group(1)
+			while k and k + '_' + n not in names:
+				k = BASES.get(k)
+			if k:
+				c[names[k + '_' + n]] += 1
+			continue
+		member = before.endswith('.') or before.endswith('->')
 		if n.startswith('FUN_00'):
 			c[int(n[6:], 16)] += 1
-		elif n in names:
+		elif n in names and not member:
 			c[names[n]] += 1
 		elif cls and cls + '_' + n in names and body[m.start() - 1:m.start()] not in '.>':
 			c[names[cls + '_' + n]] += 1

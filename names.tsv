@@ -1383,3 +1383,52 @@ address	name	kind	confidence	note
 0x443e10	TWindow_derived_dtor	stl	medium	implicit destructor of a TWindow subclass without members to destroy: jmp to ~TWindow 0x4a2590 (folded copy, used by TMapFrame and others)
 0x4174f0	TRGBColor_ctor_default	game	high	inline TRGBColor() (graphics.h), zeroes R, G, B; out-of-line copy for the vector constructor iterator (MapWindow.cpp DrawCreature)
 0x4175e0	vector_constructor_iterator	stl	high	compiler helper `vector constructor iterator'(array, size, count, constructor), no exception frame
+0x4854b0	TDialogWindow_GetMinimumWidth	game	high	DialogWindow.cpp: vtable 0x563f80 +0x3c, returns SkinProperties.Data184 (side bar width); missed by Ghidra
+0x4854c0	TContentWindow_ctor	game	medium	DialogWindow.cpp: base class of the column windows (vtable 0x563e38, 0x44 bytes); called by ContentWindows.cpp's side-bar windows, inlined into TSubWindow's constructor; class name from hasContentWindow
+0x485500	TSubWindow_dtor	game	medium	DialogWindow.cpp: vtable 0x563ed8; SetContentWindowSize for identifiers 6, 7, 9, deletes the parts that are not children; class name ours (MainWindow.cpp's sketch)
+0x485670	TSubWindow_GetFrameHeight	game	medium	DialogWindow.cpp: static, Skins[133].height + Skins[132].height; called by ContentWindows.cpp's creators; name ours
+0x485690	TSubWindow_GetMinimumHeight	game	high	DialogWindow.cpp: vtable 0x563ed8 +0x40, frame height plus the body's minimum unless minimized; missed by Ghidra
+0x4856c0	TDialogWindow_ctor	game	high	DialogWindow.cpp: vtable 0x563f80, 0x4c bytes, nine drawing entries; MainWindow.cpp makes two
+0x485790	TSubWindow_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TSubWindow (vtable 0x563ed8 slot 0), calls 0x485500
+0x4857b0	TDialogWindow_SetSize	game	high	DialogWindow.cpp line 63, vtable +0x34: Area size, children as wide as the column, Rearrange(8)
+0x485970	TDialogWindow_GetMinimumHeight	game	high	DialogWindow.cpp line 86, vtable +0x40: sum of the children's heights
+0x485b10	TDialogWindow_Draw	game	high	DialogWindow.cpp line 109 (Surface), vtable +0x44: the dragged child's place filled with SkinProperties.Data188, the child drawn last
+0x485d70	TDialogWindow_InsertChild	game	high	DialogWindow.cpp line 181, vtable +0x04
+0x485f10	TDialogWindow_AppendChild	game	high	DialogWindow.cpp line 193, vtable +0x08
+0x4860b0	TDialogWindow_DeleteChild	game	high	DialogWindow.cpp line 205, vtable +0x10: clears Dragged, Rearrange(32)
+0x486260	TDialogWindow_InsertChildAfter	game	high	DialogWindow.cpp line 217, vtable +0x14
+0x486400	TDialogWindow_GetContentWindow	game	medium	DialogWindow.cpp line 233 (Identifier): the child with the identifier or NULL; name from the inline hasContentWindow
+0x4865b0	TDialogWindow_StoreOpenDialogs	game	medium	DialogWindow.cpp line 247: AddOpenDialog for every child with an identifier below 0x40; name ours
+0x486760	TDialogWindow_PositionChildren	game	medium	DialogWindow.cpp line 317: children one below the other from Area.x/y, optionally not the dragged one; name ours
+0x486930	TDialogWindow_FitChildren	game	medium	DialogWindow.cpp line 353: strategy 8, shrinks or deletes the children that do not fit; clears Busy; name ours
+0x486b30	TDialogWindow_DragChild	game	medium	DialogWindow.cpp lines 419-429 (Search!=NULL): strategy 1, sets Dragged and swaps it with a half-overlapped neighbour; name ours
+0x486e20	TDialogWindow_MakeRoom	game	medium	DialogWindow.cpp line 477: strategy 16, shrinks or deletes the lowest children for Work; name ours
+0x487060	TDialogWindow_GetFreeHeight	game	medium	DialogWindow.cpp line 524: Area.Height minus the children's heights, stored in FreeHeight while UpdateFreeHeight; name ours
+0x487210	TContentWindow_Draw	game	high	DialogWindow.cpp lines 681-692 (x>=0, y>=0, Surface), vtable 0x563e38 +0x44: tiled skin 7 when Background, drawing list, children
+0x4875a0	TContentWindow_Arrange	game	high	DialogWindow.cpp line 703, vtable +0x48: TWindow::Arrange, BackgroundY = OffsetY % Skins[7].height
+0x487740	TContentWindow_ReleaseCapture	game	high	DialogWindow.cpp line 714, vtable +0x7c: ends the drag
+0x4878d0	TContentWindow_MouseMove	game	high	DialogWindow.cpp line 734 (x, y), vtable +0x4c: moves the dragged window inside the column, Rearrange(1, this)
+0x487ad0	TContentWindow_LeftButtonDown	game	high	DialogWindow.cpp line 751 (x, y), vtable +0x50: starts dragging when no child takes the press
+0x487ca0	TContentWindow_LeftButtonUp	game	high	DialogWindow.cpp line 768 (x, y), vtable +0x54: ends the drag, Rearrange(1, NULL)
+0x487e80	TSubWindow_ctor	game	high	DialogWindow.cpp lines 791-804 (_Identifier, _Body!=NULL): body as first child, two TResizers when resizable
+0x4881f0	TSubWindow_SetSize	game	high	DialogWindow.cpp line 861 (Width, Height), vtable +0x34: minimum height, body and resizer areas, Rearrange(4/32/2) and Rearrange(8)
+0x488510	TSubWindow_Arrange	game	high	DialogWindow.cpp lines 891-928 (Body!=NULL), vtable +0x48: container up button (0x42e4e0), the frame skins 128-135
+0x4889c0	TSubWindow_LeftButtonDown	game	high	DialogWindow.cpp line 950 (x, y), vtable +0x50: the resizers first
+0x488c20	TSubWindow_MouseMove	game	high	DialogWindow.cpp line 972 (x, y), vtable +0x4c: the resizers first
+0x488e80	TSubWindow_LeftButtonDoubleClick	game	high	DialogWindow.cpp line 986 (x, y), vtable +0x58: event 9 when no child takes it
+0x489030	TSubWindow_HandleEvent	game	high	DialogWindow.cpp line 1002 (Event), vtable +0x70: 10 closes, 9 minimizes or restores
+0x489220	TSubWindow_Minimize	game	medium	DialogWindow.cpp lines 1009-1020 (IsMinimized==false), vtable +0xa0; name ours
+0x489500	TSubWindow_Maximize	game	medium	DialogWindow.cpp lines 1027-1037 (IsMinimized==true), vtable +0xa4; name ours
+0x4897d0	TSubWindow_ShowUpButton	game	medium	DialogWindow.cpp line 1049: inserts the +0x50 button unless a child; name ours
+0x489970	TSubWindow_HideUpButton	game	medium	DialogWindow.cpp line 1061: removes the +0x50 button when a child; name ours
+0x489b10	TSubWindow_SetUpButton	game	medium	DialogWindow.cpp line 1075: +0x50 at Style194.Data20; name ours
+0x489cf0	TSubWindow_SetCloseButton	game	medium	DialogWindow.cpp line 1088: +0x54 at Style194.Data10; name ours
+0x489ed0	TSubWindow_SetMinimizeButton	game	medium	DialogWindow.cpp line 1101: +0x58 at Style194.Data18; name ours
+0x48a0b0	TSubWindow_SetIcon	game	medium	DialogWindow.cpp line 1114: +0x5c in Style194.Data00; MainWindow.cpp passes a TObjectIcon; name ours
+0x48a2a0	TSubWindow_SetTitle	game	medium	DialogWindow.cpp line 1127: +0x60 in Style194.Data28/Data30; MainWindow.cpp passes a TLabel; name ours
+0x48a490	TDialogWindow_Arrange	game	high	DialogWindow.cpp line 169, vtable +0x48: nine skins (26-33, 7) in the free space below the children
+0x48a990	TDialogWindow_Shrink	game	medium	DialogWindow.cpp lines 377-394 (DeltaHeight>0): strategy 2, the lowest children above their minimum give up the missing height; name ours
+0x48acb0	TDialogWindow_Grow	game	medium	DialogWindow.cpp line 505: strategy 4, the children below Work take the freed height; name ours
+0x48aea0	TDialogWindow_Rearrange	game	medium	DialogWindow.cpp lines 271-297 (Work!=NULL, unknown strategy, Strategy), vtable +0xa0; jump table 0x48b338/0x48b354; name ours
+0x453be0	TResizer_ctor	game	low	DialogElements.cpp line 74 (_ToResize!=NULL): element (vtable 0x5612b0, 0x38 bytes) that resizes _ToResize; TSubWindow makes two; class name ours
+0x458b20	TSkinButton_SetSkins	game	low	DialogElements.cpp lines 1228-1229 (_ButtonUp, _ButtonDown <NumberOfSkins): the two skins of a button (+0x24, +0x28); TSubWindow swaps its minimize button skins; names ours

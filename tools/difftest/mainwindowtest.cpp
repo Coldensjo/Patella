@@ -1,10 +1,13 @@
 // Differential tests of MainWindow.cpp against the original code.
 //
 // The windows MainWindow.cpp creates from files that are not reconstructed
-// yet (the console, the dialog windows, the frames, buttons, labels and the
-// side-bar and sub-windows) are fakes of this file on both sides: the
+// yet (the console, the frames, buttons, labels, the side-bar windows and
+// the content windows' bodies) are fakes of this file on both sides: the
 // image's constructors and members jump to the same code as ours, which
-// logs every call per side (Side) and builds the same objects. The other
+// logs every call per side (Side) and builds the same objects. The dialog
+// windows (DialogWindow.cpp) are real on both sides: the image's for the
+// image's main window, ours for ours; the ContentWindows.cpp creators make
+// the image's or our TSubWindow and TContentWindow around a shared fake body. The other
 // callees (Preferences, Status, Talk, Creatures, Inventory, GUI hotkeys,
 // graphics, the surface, Communication and Network) are fakes as well, for
 // the image and for our code (PatchOwn). The map frame is real on both sides
@@ -17,8 +20,8 @@
 // splitter, containers, trade and content windows, the start window's
 // events, ExitMainWindow. After each one the logs and a dump of both window
 // trees (classes, positions, sizes, drawing lists, captures, the members of
-// TMainWindow, TSplitter and TStartWindow and the fakes' arguments) are
-// compared. Failing assertions are not exercised.
+// TMainWindow, TSplitter, TStartWindow and the dialog windows and the fakes'
+// arguments) are compared. Failing assertions are not exercised.
 
 #include "difftest.h"
 #include "../../src/MainWindow.h"
@@ -48,8 +51,6 @@ static_assert(offsetof(TMainWindow, InGame) == 0x48, "TMainWindow::InGame at +0x
 static_assert(offsetof(TSplitter, DragY) == 0x2c, "TSplitter::DragY at +0x2c");
 static_assert(sizeof(TConsoleWindow) == 0x6c, "TConsoleWindow is 0x6c bytes");
 static_assert(offsetof(TConsoleWindow, Data34) == 0x34, "TConsoleWindow::Data34 at +0x34");
-static_assert(sizeof(TDialogWindow) == 0x4c, "TDialogWindow is 0x4c bytes");
-static_assert(offsetof(TSubWindow, Body) == 0x44, "TSubWindow::Body at +0x44");
 static_assert(sizeof(TBorder) == 0x68, "TBorder is 0x68 bytes");
 static_assert(sizeof(TTextButton) == 0x78, "TTextButton is 0x78 bytes");
 static_assert(sizeof(TLabel) == 0x4c, "TLabel is 0x4c bytes");
@@ -147,7 +148,7 @@ static std::string Name(const void *Object) { return NameOf(Side, Object); }
 
 // The fakes' own overrides. Each fake constructor sets the vtable of its
 // test subclass at the end (same layout, more overrides).
-static int ConsoleMinHeight, DialogMinHeight, BorderMinHeight, FrameMinHeight;
+static int ConsoleMinHeight, BodyMinHeight, BorderMinHeight, FrameMinHeight;
 
 class TFakeConsole : public TConsoleWindow {
 public:
@@ -155,11 +156,6 @@ public:
 	void Draw(int Surface, int x, int y) { Logf("DCons%d,%d,%d;", Surface, x, y); }
 	void Arrange() { Logf("ACons;"); }
 	void KeyPress(int Key) { Logf("KCons%d;", Key); }
-};
-class TFakeDialog : public TDialogWindow {
-public:
-	int GetMinimumHeight() { return DialogMinHeight + (FirstChild != NULL ? 7 : 0); }
-	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
 class TFakeBorder : public TBorder {
 public:
@@ -172,9 +168,12 @@ public:
 	TFakeButton() : TTextButton(0, 0, "", 0, 0, TCallback(), 0) {}
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
+// A body needs a height (TSubWindow fits it into its frame).
 class TFakeBody : public TSubWindowBody {
 public:
+	int GetMinimumHeight() { return BodyMinHeight; }
 	void HandleEvent(int Event) { Logf("HBody%s,%d;", Name(this).c_str(), Event); }
+	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
 // The map frame after construction (vtable only; TMapFrame's layout).
 class TFakeMapFrame : public TWindow {
@@ -185,8 +184,7 @@ public:
 	void Arrange() { Logf("AFrame;"); }
 };
 
-static void *FakeConsoleVtable, *FakeDialogVtable, *FakeBorderVtable, *FakeButtonVtable, *FakeBodyVtable,
-	*FakeMapFrameVtable;
+static void *FakeConsoleVtable, *FakeBorderVtable, *FakeButtonVtable, *FakeMapFrameVtable;
 
 TConsoleWindow::TConsoleWindow()
 {
@@ -203,68 +201,52 @@ void TConsoleWindow::FUN_00422e70(TTalkBuffer *TextBuffer, const char *Title)
 	Logf("COpen%p,%s;", (void *)TextBuffer, Title);
 }
 
-TDialogWindow::TDialogWindow()
-{
-	Register(this, "Dialog");
-	Logf("NDlg%s;", Name(this).c_str());
-	if (FakeDialogVtable != NULL)
-		SetVtable(this, FakeDialogVtable);
-}
-TSubWindow *TDialogWindow::FUN_00486400(int Identifier)
-{
-	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->Next) {
-		auto I = Info[Side].find(Child);
-		if (I != Info[Side].end() && I->second.Identifier == Identifier)
-			return (TSubWindow *)Child;
-	}
-	return NULL;
-}
 // The open dialogs of the preferences, per side (ClearOpenDialogs,
-// GetOpenDialogs and this one).
+// GetOpenDialogs and AddOpenDialog).
 static std::vector<int> OpenDialogs[2];
-void TDialogWindow::FUN_004865b0()
-{
-	Logf("Save%s", Name(this).c_str());
-	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->Next) {
-		auto I = Info[Side].find(Child);
-		int Identifier = I != Info[Side].end() ? I->second.Identifier : -1;
-		Logf(",%d", Identifier);
-		OpenDialogs[Side].push_back(Identifier);
-	}
-	Logf(";");
-}
-void TDialogWindow::UnknownA0(int Value, TWindow *Window)
-{
-	Logf("A0%s,%d,%s;", Name(this).c_str(), Value, Name(Window).c_str());
-	if (Window != NULL)
-		AppendChild(Window);
-}
-
-void TSubWindowBody::UnknownA0() { Logf("BA0;"); }
-void TSubWindowBody::UnknownA4() { Logf("BA4;"); }
 static bool BodyAccepts;
-bool TSubWindowBody::UnknownA8() { Logf("BA8%s;", Name(this).c_str()); return BodyAccepts; }
-void TSubWindowBody::UnknownAC() { Logf("BAC;"); }
-void TSubWindowBody::UnknownB0() { Logf("BB0;"); }
-void TSubWindowBody::UnknownB4() { Logf("BB4;"); }
-void TSubWindowBody::UnknownB8() { Logf("BB8%s;", Name(this).c_str()); }
-void TSubWindow::FUN_004897d0() { Logf("Up1%s;", Name(this).c_str()); }
-void TSubWindow::FUN_00489970() { Logf("Up0%s;", Name(this).c_str()); }
-void TSubWindow::FUN_0048a0b0(TComponent *Element) { Logf("Icon%s,%s;", Name(this).c_str(), Name(Element).c_str()); }
-void TSubWindow::FUN_0048a2a0(TComponent *Element) { Logf("Title%s,%s;", Name(this).c_str(), Name(Element).c_str()); }
 
-// A sub-window with a body, as the ContentWindows.cpp creators return them.
+// The shared fakes of dialogwindowtest.cpp report here.
+static void HookBody(TSubWindowBody *Body, const char *Call) { Logf("B%s%s;", Call, Name(Body).c_str()); }
+static bool HookBodyAccepts(TSubWindowBody *) { return BodyAccepts; }
+static void HookSetSkins(TSkinButton *Button, int ButtonUp, int ButtonDown)
+{
+	Logf("Skins%s,%d,%d;", Name(Button).c_str(), ButtonUp, ButtonDown);
+}
+
+typedef void *(__fastcall *ContentCtorFn)(void *, void *, int, bool);
+typedef void *(__fastcall *SubCtorFn)(void *, void *, int, TSubWindowBody *, bool, bool);
+typedef TContentWindow *(__fastcall *FindFn)(void *, void *, int);
+
+// A content window as the ContentWindows.cpp creators return them: the
+// image's or our class (per side), sized to the side bar. The inventory
+// windows are plain content windows, the others sub-windows with a body.
 static TWindow *NewSubWindow(int Identifier)
 {
-	TSubWindow *Window = new TSubWindow;
-	Register(Window, "Sub", Identifier);
-	memset(Window->Data2C, 0, sizeof(Window->Data2C));
-	TSubWindowBody *Body = new TSubWindowBody;
-	SetVtable(Body, FakeBodyVtable);
+	int Height = 40 + (Identifier & 31);
+	if (Identifier <= 2) {
+		TContentWindow *Window;
+		if (Side == OURS) {
+			Window = new TContentWindow(Identifier, true);
+		} else {
+			void *Memory = operator new(sizeof(TContentWindow));
+			Window = (TContentWindow *)At<ContentCtorFn>(0x4854c0)(Memory, NULL, Identifier, true);
+		}
+		Register(Window, "CW", Identifier);
+		Window->SetSize(SkinProperties.Data184, Height);
+		Logf("NCW%s;", NameOf(Side, Window).c_str());
+		return Window;
+	}
+	TFakeBody *Body = new TFakeBody;
 	Register(Body, "Body", Identifier);
-	Window->Body = Body;
-	Window->InsertChild(Body);
-	Window->SetSize(170, 40 + Identifier);
+	TSubWindow *Window;
+	void *Memory = operator new(sizeof(TSubWindow));
+	if (Side == OURS)
+		Window = new (Memory) TSubWindow(Identifier, Body, false, Identifier % 2 != 0);
+	else
+		Window = (TSubWindow *)At<SubCtorFn>(0x487e80)(Memory, NULL, Identifier, Body, false, Identifier % 2 != 0);
+	Register(Window, "Sub", Identifier);
+	Window->SetSize(SkinProperties.Data184, Height);
 	Logf("NSub%s;", NameOf(Side, Window).c_str());
 	return Window;
 }
@@ -275,9 +257,17 @@ TWindow *FUN_0043c920() { return NewSubWindow(6); }
 TWindow *FUN_0043cc90() { return NewSubWindow(7); }
 TWindow *FUN_0043d000() { return NewSubWindow(8); }
 TWindow *FUN_0043d390() { return NewSubWindow(9); }
-TSideWindow3::TSideWindow3() { Register(this, "Side3", 3); Logf("N%s;", Name(this).c_str()); }
-TSideWindow4::TSideWindow4() { Register(this, "Side4", 4); Logf("N%s;", Name(this).c_str()); }
-TSideWindow5::TSideWindow5(TDialogWindow *_CheckObject, TMainWindow *Receiver)
+TSideWindow3::TSideWindow3() : TContentWindow(3, false)
+{
+	Register(this, "Side3", 3);
+	Logf("N%s;", Name(this).c_str());
+}
+TSideWindow4::TSideWindow4() : TContentWindow(4, false)
+{
+	Register(this, "Side4", 4);
+	Logf("N%s;", Name(this).c_str());
+}
+TSideWindow5::TSideWindow5(TDialogWindow *_CheckObject, TMainWindow *Receiver) : TContentWindow(5, false)
 {
 	Register(this, "Side5", 5);
 	Logf("N%s,%s,%s;", Name(this).c_str(), Name(_CheckObject).c_str(), Name(Receiver).c_str());
@@ -341,7 +331,6 @@ TObjectIcon::TObjectIcon(TObject Obj, const TRGBColor *Color, int Param)
 
 // The image's constructors build the same fakes.
 static void *__fastcall ImageConsole(void *This, void *) { return new (This) TConsoleWindow; }
-static void *__fastcall ImageDialog(void *This, void *) { return new (This) TDialogWindow; }
 static void *__fastcall ImageBorder1(void *This, void *, TWindow *W, int P) { return new (This) TBorder(W, P); }
 static void *__fastcall ImageBorder2(void *This, void *, TWindow *W, int S1, int S2, int S3, int S4, int S5, int S6,
 	int S7, int S8, int S9, int B)
@@ -386,6 +375,12 @@ static TFullscreenMode Fullscreen[2];
 static int PlayerX = 1000, PlayerY = 1000, PlayerZ = 7, DestinationResult;
 
 static void __cdecl FakeClearOpenDialogs() { Logf("ClrDlg;"); OpenDialogs[Side].clear(); }
+static void __cdecl FakeAddOpenDialog(int Identifier)
+{
+	Logf("AddDlg%d;", Identifier);
+	OpenDialogs[Side].push_back(Identifier);
+}
+static void __cdecl FakeSetContentWindowSize(int ID, int Size) { Logf("CWSize%d,%d;", ID, Size); }
 static int __cdecl FakeGetOpenDialogs(int **List)
 {
 	int Count = (int)OpenDialogs[Side].size();
@@ -467,9 +462,14 @@ static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNu
 	Logf("Part%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, srcx, srcy, Width, Height);
 }
 
-// The surface: StretchBlitRect is logged, the rest never called.
+// The surface: StretchBlitRect and FillRectangle (a dragged content window's
+// place) are logged, the rest never called.
 class TMainSurface : public TSurfaceGL {
 public:
+	void FillRectangle(int Surface, TRect R, TRGBColor C)
+	{
+		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+	}
 	void StretchBlitRect(int ToSurface, TRect D, int FromSurface, TRect S)
 	{
 		Logf("Stretch%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", ToSurface, D.x, D.y, D.Width, D.Height, FromSurface, S.x, S.y,
@@ -489,6 +489,8 @@ static void PatchCallees()
 	struct { uint32 Image; void *Ours; void *Fake; } Table[] = {
 		{0x4db550, (void *)ClearOpenDialogs, (void *)FakeClearOpenDialogs},
 		{0x4dbd90, (void *)GetOpenDialogs, (void *)FakeGetOpenDialogs},
+		{0x4dc950, (void *)AddOpenDialog, (void *)FakeAddOpenDialog},
+		{0x4dbcd0, (void *)SetContentWindowSize, (void *)FakeSetContentWindowSize},
 		{0x4db4c0, (void *)(int (*)())GetConsoleHeight, (void *)FakeGetConsoleHeight},
 		{0x4db3b0, (void *)GetFullscreenMode, (void *)FakeGetFullscreenMode},
 		{0x4db2d0, (void *)SetFullscreenMode, (void *)FakeSetFullscreenMode},
@@ -534,10 +536,7 @@ static void PatchCallees()
 		{0x4074a0, (void *)SendJoinChannel}, {0x445c20, (void *)ChangeEngine},
 		{0x422410, (void *)ImageConsole}, {0x41e960, Member(&TConsoleWindow::FUN_0041e960)},
 		{0x422e70, Member(&TConsoleWindow::FUN_00422e70)},
-		{0x4856c0, (void *)ImageDialog}, {0x486400, Member(&TDialogWindow::FUN_00486400)},
-		{0x4865b0, Member(&TDialogWindow::FUN_004865b0)},
-		{0x4897d0, Member(&TSubWindow::FUN_004897d0)}, {0x489970, Member(&TSubWindow::FUN_00489970)},
-		{0x48a0b0, Member(&TSubWindow::FUN_0048a0b0)}, {0x48a2a0, Member(&TSubWindow::FUN_0048a2a0)},
+		{0x42e4e0, Member(&TSubWindowBody::FUN_0042e4e0)}, {0x458b20, Member(&TSkinButton::SetSkins)},
 		{0x4547f0, (void *)ImageBorder1}, {0x454e30, (void *)ImageBorder2},
 		{0x455500, Member(&TBorder::FUN_00455500)},
 		{0x466bc0, (void *)ImageButton}, {0x465b40, (void *)ImageLabel}, {0x4526c0, (void *)ImageIcon},
@@ -556,22 +555,16 @@ static void FindFakeVtables()
 	Quiet = true;
 	TFakeConsole *Console = new TFakeConsole;
 	FakeConsoleVtable = VtableOf(Console);
-	TFakeDialog *Dialog = new TFakeDialog;
-	FakeDialogVtable = VtableOf(Dialog);
 	TFakeBorder *Border = new TFakeBorder(new TWindow);
 	FakeBorderVtable = VtableOf(Border);
 	TFakeButton *Button = new TFakeButton;
 	FakeButtonVtable = VtableOf(Button);
-	TFakeBody *Body = new TFakeBody;
-	FakeBodyVtable = VtableOf(Body);
 	TFakeMapFrame *Frame = new TFakeMapFrame;
 	FakeMapFrameVtable = VtableOf(Frame);
 	Quiet = false;
 	delete Console;
-	delete Dialog;
 	delete Border;
 	delete Button;
-	delete Body;
 	delete Frame;
 }
 
@@ -619,8 +612,9 @@ static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth)
 	std::string N = NameOf(s, C);
 	sprintf(Buffer, "%*s%s %d,%d %dx%d", Depth * 2, "", N.c_str(), C->OffsetX, C->OffsetY, C->Width, C->Height);
 	Out += Buffer;
+	// An entry of a freed object at the same address is not this one's.
 	auto I = Info[s].find(C);
-	if (I != Info[s].end() && !I->second.Detail.empty())
+	if (I != Info[s].end() && !I->second.Detail.empty() && N.compare(0, I->second.Kind.size(), I->second.Kind) == 0)
 		Out += " [" + I->second.Detail + "]";
 	if (C->DrawingListLength > 0 && C->DrawingList != NULL) {
 		sprintf(Buffer, " DL%d", C->DrawingListLength);
@@ -638,6 +632,24 @@ static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth)
 	}
 	if (N.compare(0, 5, "Start") == 0)
 		Out += " frame " + NameOf(s, ((TStartWindow *)C)->Frame);
+	std::string Kind0 = N.substr(0, N.find('#'));
+	if (Kind0 == "CW" || Kind0 == "Sub" || Kind0.compare(0, 4, "Side") == 0) {
+		TContentWindow *W = (TContentWindow *)C;
+		sprintf(Buffer, " id %d bg %d,%d drag %d %d,%d,%d", W->Identifier, W->Background ? 1 : 0, W->BackgroundY,
+			W->Dragging ? 1 : 0, W->DragX, W->DragY, W->DragBottom);
+		Out += Buffer;
+	}
+	if (Kind0 == "Sub") {
+		TSubWindow *W = (TSubWindow *)C;
+		sprintf(Buffer, " min %d %d body ", W->IsMinimized ? 1 : 0, W->RestoreHeight);
+		Out += Buffer + NameOf(s, W->Body);
+	}
+	if (Kind0 == "Dialog") {
+		TDialogWindow *D = (TDialogWindow *)C;
+		sprintf(Buffer, " area %d,%d,%d,%d busy %d free %d,%d dragged ", D->Area.x, D->Area.y, D->Area.Width,
+			D->Area.Height, D->Busy ? 1 : 0, D->FreeHeight, D->UpdateFreeHeight ? 1 : 0);
+		Out += Buffer + NameOf(s, D->Dragged);
+	}
 	Out += " parent " + NameOf(s, C->Parent) + "\n";
 	std::string Base = N.substr(0, N.find('#'));
 	auto W = IsWindowKind.find(Base);
@@ -711,13 +723,11 @@ template <class F> static void Both(F Call)
 	Call(ORIGINAL);
 }
 
-static TSubWindow *Find(int s, TDialogWindow *Dialog, int Identifier)
+static TContentWindow *Find(int s, TDialogWindow *Dialog, int Identifier)
 {
-	int Saved = Side;
-	Side = s;
-	TSubWindow *W = Dialog->FUN_00486400(Identifier);
-	Side = Saved;
-	return W;
+	if (s == OURS)
+		return Dialog->GetContentWindow(Identifier);
+	return At<FindFn>(0x486400)(Dialog, NULL, Identifier);
 }
 
 static void RandomSkinProperties()
@@ -745,7 +755,7 @@ static void RandomSkinProperties()
 static void RandomWorld()
 {
 	ConsoleMinHeight = 30 + Random() % 60;
-	DialogMinHeight = 20 + Random() % 200;
+	BodyMinHeight = 1 + Random() % 40;
 	BorderMinHeight = Random() % 30;
 	FrameMinHeight = 150 + Random() % 150;
 	ConsoleHeightPref = Random() % 3 == 0 ? (int)(Random() % 40) : 60 + (int)(Random() % 400);
@@ -1079,6 +1089,9 @@ void TestMainWindow()
 	Surface = new TMainSurface;
 	FindFakeVtables();
 	PatchCallees();
+	DialogFakes.Body = HookBody;
+	DialogFakes.BodyAccepts = HookBodyAccepts;
+	DialogFakes.SetSkins = HookSetSkins;
 
 	// The image's classes, and ours that can be made directly.
 	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56c498, "Main", true);
@@ -1087,13 +1100,15 @@ void TestMainWindow()
 	NameVtable(ORIGINAL, (void *)(uintptr_t)0x564528, "Window", true);
 	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56d0b8, "RealFrame", true);
 	NameVtable(ORIGINAL, (void *)(uintptr_t)0x56cf38, "MapView", true);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x563f80, "Dialog", true);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x563ed8, "Sub", true);
+	NameVtable(ORIGINAL, (void *)(uintptr_t)0x563e38, "CW", true);
 	{
 		TWindow W;
 		NameVtable(OURS, VtableOf(&W), "Window", true);
 	}
 	struct { void *Vtable; const char *Name; bool Window; } Fakes[] = {
-		{FakeConsoleVtable, "Console", true}, {FakeDialogVtable, "Dialog", true},
-		{FakeBodyVtable, "Body", true}, {FakeMapFrameVtable, "Frame", true},
+		{FakeConsoleVtable, "Console", true}, {FakeMapFrameVtable, "Frame", true},
 		{FakeBorderVtable, "Border", true}, {FakeButtonVtable, "Button", false},
 	};
 	for (auto &F : Fakes) {
@@ -1103,7 +1118,10 @@ void TestMainWindow()
 	Quiet = true;
 	{
 		// Vtables of the fakes that cannot be made without a constructor call.
-		TSubWindow *Sub = new TSubWindow;
+		TFakeBody *Body = new TFakeBody;
+		TSubWindow *Sub = new TSubWindow(6, Body, false, false);
+		TContentWindow *Content = new TContentWindow(1, false);
+		TDialogWindow *Dialog = new TDialogWindow;
 		TSideWindow3 *S3 = new TSideWindow3;
 		TSideWindow4 *S4 = new TSideWindow4;
 		TSideWindow5 *S5 = new TSideWindow5(NULL, NULL);
@@ -1113,14 +1131,19 @@ void TestMainWindow()
 		TRGBColor Color;
 		TObjectIcon *Icon = new TObjectIcon(Obj, &Color, 0);
 		struct { void *Object; const char *Name; bool Window; } List[] = {
-			{Sub, "Sub", true}, {S3, "Side3", true}, {S4, "Side4", true}, {S5, "Side5", true},
+			{Body, "Body", true}, {S3, "Side3", true}, {S4, "Side4", true}, {S5, "Side5", true},
 			{Label, "Label", false}, {Icon, "Icon", false},
 		};
 		for (auto &L : List) {
 			NameVtable(OURS, VtableOf(L.Object), L.Name, L.Window);
 			NameVtable(ORIGINAL, VtableOf(L.Object), L.Name, L.Window);
 		}
+		NameVtable(OURS, VtableOf(Sub), "Sub", true);
+		NameVtable(OURS, VtableOf(Content), "CW", true);
+		NameVtable(OURS, VtableOf(Dialog), "Dialog", true);
 		delete Sub;
+		delete Content;
+		delete Dialog;
 		delete S3;
 		delete S4;
 		delete S5;

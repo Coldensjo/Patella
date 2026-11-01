@@ -1,0 +1,1058 @@
+// Differential tests of DialogWindow.cpp against the original code.
+//
+// Two columns are built twice, from the image's classes (constructors
+// 0x4856c0, 0x4854c0 and 0x487e80) and from ours: column 0 holds sub-windows
+// (TSubWindow, like MainWindow.cpp's DialogWindow), column 1 plain content
+// windows (TContentWindow, like its SidePanel). The parts from files that are
+// not reconstructed are the same objects of this file on both sides: the
+// bodies, the buttons, the icon and the title (test classes with logging and
+// deterministic answers), the resizers (TResizer's constructor, also behind
+// the image's 0x453be0) and TSkinButton::SetSkins (0x458b20). DrawSkin, the
+// surface's FillRectangle, SetContentWindowSize and AddOpenDialog are logging
+// fakes on both sides; TWindow and TComponent are the image's for the
+// original objects and ours for ours.
+//
+// Both sides get the same random operations: new windows (Rearrange 16 or
+// the child functions), deletions, sizes of the columns and the windows,
+// drawing, mouse presses, moves and releases through the columns (dragging),
+// double clicks, minimize and maximize, the close event, the five setters,
+// the "up" button, every Rearrange strategy, StoreOpenDialogs and the
+// queries. After each operation the logs, the results and a dump of both
+// trees (positions, sizes, drawing lists, captures and every member of the
+// three classes) are compared. Failing assertions are not exercised: the
+// operations keep to what the game does (windows wider than their title,
+// bodies at least one pixel high, no structural change while dragging).
+
+#include "difftest.h"
+#include "../../src/DialogWindow.h"
+#include "../../src/GUI.h"
+#include "../../src/Preferences.h"
+#include "../../src/Skins.h"
+#include "../../src/Surface.h"
+#include "../../src/graphics.h"
+#include "../../src/external.h"
+#include <map>
+#include <new>
+#include <stdarg.h>
+#include <string>
+#include <vector>
+
+static_assert(sizeof(TContentWindow) == 0x44, "TContentWindow is 0x44 bytes");
+static_assert(sizeof(TSubWindow) == 0x70, "TSubWindow is 0x70 bytes");
+static_assert(sizeof(TDialogWindow) == 0x4c, "TDialogWindow is 0x4c bytes");
+static_assert(offsetof(TContentWindow, Identifier) == 0x2c, "TContentWindow::Identifier at +0x2c");
+static_assert(offsetof(TContentWindow, Dragging) == 0x35, "TContentWindow::Dragging at +0x35");
+static_assert(offsetof(TContentWindow, DragBottom) == 0x40, "TContentWindow::DragBottom at +0x40");
+static_assert(offsetof(TSubWindow, Body) == 0x44, "TSubWindow::Body at +0x44");
+static_assert(offsetof(TSubWindow, IsMinimized) == 0x64, "TSubWindow::IsMinimized at +0x64");
+static_assert(offsetof(TSubWindow, RestoreHeight) == 0x6c, "TSubWindow::RestoreHeight at +0x6c");
+static_assert(offsetof(TDialogWindow, Area) == 0x2c, "TDialogWindow::Area at +0x2c");
+static_assert(offsetof(TDialogWindow, Dragged) == 0x3c, "TDialogWindow::Dragged at +0x3c");
+static_assert(offsetof(TDialogWindow, UpdateFreeHeight) == 0x48, "TDialogWindow::UpdateFreeHeight at +0x48");
+static_assert(sizeof(TResizer) == 0x38, "TResizer is 0x38 bytes");
+
+// --- Shared fakes (mainwindowtest.cpp uses them as well) ----------------------------
+
+TDialogFakes DialogFakes;
+
+void TSubWindowBody::UnknownA0() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A0"); }
+void TSubWindowBody::UnknownA4() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A4"); }
+bool TSubWindowBody::UnknownA8()
+{
+	if (DialogFakes.Body != NULL)
+		DialogFakes.Body(this, "A8");
+	return DialogFakes.BodyAccepts != NULL ? DialogFakes.BodyAccepts(this) : false;
+}
+void TSubWindowBody::UnknownAC() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "AC"); }
+void TSubWindowBody::UnknownB0() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "B0"); }
+void TSubWindowBody::UnknownB4() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "B4"); }
+void TSubWindowBody::UnknownB8() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "B8"); }
+void TSubWindowBody::FUN_0042e4e0() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "Up"); }
+
+TResizer::TResizer(TComponent *_ToResize, bool Param2, bool Param3, bool Param4)
+{
+	memset(Data24, 0, sizeof(Data24));
+	if (DialogFakes.NewResizer != NULL)
+		DialogFakes.NewResizer(this, _ToResize, Param2, Param3, Param4);
+}
+
+void TSkinButton::SetSkins(int _ButtonUp, int _ButtonDown)
+{
+	if (DialogFakes.SetSkins != NULL)
+		DialogFakes.SetSkins(this, _ButtonUp, _ButtonDown);
+}
+
+// --- Logs and names ----------------------------------------------------------------
+
+enum { OURS = 0, ORIGINAL = 1 };
+static int Side;
+static std::string Log[2];
+
+static void Logf(const char *Format, ...)
+{
+	char Buffer[512];
+	va_list Args;
+	va_start(Args, Format);
+	vsnprintf(Buffer, sizeof(Buffer), Format, Args);
+	va_end(Args);
+	Log[Side] += Buffer;
+}
+
+static void *VtableOf(const void *Object) { return *(void **)Object; }
+static void SetVtable(void *Object, void *Vtable) { *(void **)Object = Vtable; }
+template <class T> static void *Member(T Function) { return *(void **)&Function; }
+
+// Every object of the test has a kind and a serial number per side; both
+// sides make their objects in the same order, so the numbers match.
+struct TInfo {
+	std::string Kind;
+	int Serial;
+};
+static std::map<const void *, TInfo> Info[2];
+static int Serials[2];
+
+static void Register(const void *Object, const char *Kind)
+{
+	TInfo &I = Info[Side][Object];
+	I.Kind = Kind;
+	I.Serial = Serials[Side]++;
+}
+
+static std::string NameOf(int s, const void *Object)
+{
+	if (Object == NULL)
+		return "0";
+	auto I = Info[s].find(Object);
+	if (I == Info[s].end())
+		return "?";
+	char Buffer[64];
+	sprintf(Buffer, "%s#%d", I->second.Kind.c_str(), I->second.Serial);
+	return Buffer;
+}
+static std::string Name(const void *Object) { return NameOf(Side, Object); }
+
+// The classes by vtable, per side.
+enum { CLASS_OTHER, CLASS_COLUMN, CLASS_CONTENT, CLASS_SUB };
+static std::map<void *, int> ClassOf[2];
+static int Class(int s, const void *Object)
+{
+	auto C = ClassOf[s].find(VtableOf(Object));
+	return C == ClassOf[s].end() ? CLASS_OTHER : C->second;
+}
+
+// --- Test classes of the parts --------------------------------------------------------
+
+static int Answer(int a, int b, int c) { return (a * 7 + b * 3 + c) % 4 == 0; }
+
+class TTestBody : public TSubWindowBody {
+public:
+	int MinHeight;
+	int GetMinimumHeight() { return MinHeight; }
+	void Draw(int Surface, int x, int y) { Logf("DBody%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+	bool LeftButtonDown(int x, int y, int Flags)
+	{
+		Logf("PBody%s,%d,%d,%d;", Name(this).c_str(), x, y, Flags);
+		return Answer(x, y, MinHeight) != 0;
+	}
+	bool MouseMove(int x, int y)
+	{
+		Logf("MBody%s,%d,%d;", Name(this).c_str(), x, y);
+		return false;
+	}
+	bool LeftButtonDoubleClick(int x, int y, int Flags)
+	{
+		Logf("WBody%s,%d,%d;", Name(this).c_str(), x, y);
+		return Answer(y, x, 1) != 0;
+	}
+};
+
+class TTestElement : public TElement {
+public:
+	void Draw(int Surface, int x, int y) { Logf("DElem%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+	bool LeftButtonDown(int x, int y, int Flags)
+	{
+		Logf("PElem%s,%d,%d;", Name(this).c_str(), x, y);
+		return Answer(x, y, 2) != 0;
+	}
+	bool LeftButtonDoubleClick(int x, int y, int Flags)
+	{
+		Logf("WElem%s,%d,%d;", Name(this).c_str(), x, y);
+		return Answer(x, y, 3) != 0;
+	}
+};
+
+class TTestSkinButton : public TSkinButton {
+public:
+	void Draw(int Surface, int x, int y) { Logf("DSkin%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+	bool LeftButtonDown(int x, int y, int Flags)
+	{
+		Logf("PSkin%s,%d,%d;", Name(this).c_str(), x, y);
+		return Answer(x, y, 1) != 0;
+	}
+};
+
+static void *FakeResizerVtable;
+class TFakeResizer : public TResizer {
+public:
+	TFakeResizer() : TResizer(NULL, false, false, false) {}
+	void Draw(int Surface, int x, int y) { Logf("DRes%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+	bool LeftButtonDown(int x, int y, int Flags)
+	{
+		Logf("PRes%s,%d,%d;", Name(this).c_str(), x, y);
+		return Answer(x, y, Data24[0]) != 0;
+	}
+	bool MouseMove(int x, int y)
+	{
+		Logf("MRes%s,%d,%d;", Name(this).c_str(), x, y);
+		return Answer(y, x, Data24[0]) != 0;
+	}
+};
+
+static void HookBody(TSubWindowBody *Body, const char *Call) { Logf("Body%s,%s;", Call, Name(Body).c_str()); }
+static bool HookBodyAccepts(TSubWindowBody *) { return true; }
+static void HookNewResizer(TResizer *Resizer, TComponent *ToResize, bool Param2, bool Param3, bool Param4)
+{
+	Register(Resizer, "Res");
+	Logf("NRes%s,%s,%d,%d,%d;", Name(Resizer).c_str(), Name(ToResize).c_str(), Param2, Param3, Param4);
+	Resizer->Data24[0] = (uint8)(Param4 ? 1 : 0);
+	if (FakeResizerVtable != NULL)
+		SetVtable(Resizer, FakeResizerVtable);
+}
+static void HookSetSkins(TSkinButton *Button, int ButtonUp, int ButtonDown)
+{
+	Logf("Skins%s,%d,%d;", Name(Button).c_str(), ButtonUp, ButtonDown);
+}
+
+// The image's TResizer constructor builds the same fake.
+static void *__fastcall ImageResizer(void *This, void *, TComponent *ToResize, bool P2, bool P3, bool P4)
+{
+	return new (This) TResizer(ToResize, P2, P3, P4);
+}
+
+// --- Fakes of the other callees ---------------------------------------------------------
+
+static void __cdecl FakeDrawSkin(int Surface, int x, int y, int width, int height, int skin, int srcx, int srcy)
+{
+	Logf("Skin%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, width, height, skin, srcx, srcy);
+}
+static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNumber, int srcx, int srcy, int Width,
+	int Height)
+{
+	Logf("Part%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, srcx, srcy, Width, Height);
+}
+static void __cdecl FakeSetContentWindowSize(int ID, int Size) { Logf("CWSize%d,%d;", ID, Size); }
+static void __cdecl FakeAddOpenDialog(int Identifier) { Logf("Open%d;", Identifier); }
+
+class TDialogSurface : public TSurfaceGL {
+public:
+	void FillRectangle(int Surface, TRect R, TRGBColor C)
+	{
+		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+	}
+};
+static TDialogSurface *Surface;
+static TSurface *__cdecl FakeGetSurface() { return Surface; }
+
+// Patches that are undone at the end (later tests use these functions).
+struct TSaved {
+	uint8 *Code;
+	uint8 Bytes[5];
+};
+static std::vector<TSaved> SavedCode;
+
+static void Redirect(void *Function, void *Target)
+{
+	TSaved S;
+	S.Code = (uint8 *)Function;
+	DWORD Protection;
+	VirtualProtect(Function, 5, PAGE_EXECUTE_READWRITE, &Protection);
+	memcpy(S.Bytes, Function, 5);
+	PatchJump((uint32)(uintptr_t)Function, Target);
+	VirtualProtect(Function, 5, Protection, &Protection);
+	FlushInstructionCache(GetCurrentProcess(), Function, 5);
+	SavedCode.push_back(S);
+}
+
+static void RestoreAll()
+{
+	for (size_t i = SavedCode.size(); i-- > 0;) {
+		DWORD Protection;
+		VirtualProtect(SavedCode[i].Code, 5, PAGE_EXECUTE_READWRITE, &Protection);
+		memcpy(SavedCode[i].Code, SavedCode[i].Bytes, 5);
+		VirtualProtect(SavedCode[i].Code, 5, Protection, &Protection);
+		FlushInstructionCache(GetCurrentProcess(), SavedCode[i].Code, 5);
+	}
+	SavedCode.clear();
+}
+
+static void PatchCallees()
+{
+	struct { uint32 Image; void *Ours; void *Fake; } Table[] = {
+		{0x497a00, (void *)DrawSkin, (void *)FakeDrawSkin},
+		{0x490c60, (void *)DrawPicturePart, (void *)FakeDrawPicturePart},
+		{0x4eaa90, (void *)GetSurface, (void *)FakeGetSurface},
+		{0x4dbcd0, (void *)SetContentWindowSize, (void *)FakeSetContentWindowSize},
+		{0x4dc950, (void *)AddOpenDialog, (void *)FakeAddOpenDialog},
+	};
+	for (auto &T : Table) {
+		Redirect((void *)(uintptr_t)T.Image, T.Fake);
+		Redirect(T.Ours, T.Fake);
+	}
+	Redirect((void *)(uintptr_t)0x453be0, (void *)ImageResizer);
+	Redirect((void *)(uintptr_t)0x458b20, Member(&TSkinButton::SetSkins));
+	Redirect((void *)(uintptr_t)0x42e4e0, Member(&TSubWindowBody::FUN_0042e4e0));
+}
+
+// --- The objects ----------------------------------------------------------------------
+
+typedef void *(__fastcall *ColumnCtorFn)(void *, void *);
+typedef void *(__fastcall *ContentCtorFn)(void *, void *, int, bool);
+typedef void *(__fastcall *SubCtorFn)(void *, void *, int, TSubWindowBody *, bool, bool);
+typedef TContentWindow *(__fastcall *FindFn)(void *, void *, int);
+typedef int (__fastcall *GetFn)(void *, void *);
+typedef void (__fastcall *VoidFn)(void *, void *);
+typedef void (__fastcall *SetFn)(void *, void *, TComponent *);
+
+static TDialogWindow *Column[2][2]; // [side][column]
+
+static TDialogWindow *NewColumn(int s)
+{
+	TDialogWindow *C;
+	if (s == OURS) {
+		C = new TDialogWindow;
+	} else {
+		void *Memory = operator new(sizeof(TDialogWindow));
+		C = (TDialogWindow *)At<ColumnCtorFn>(0x4856c0)(Memory, NULL);
+	}
+	Register(C, "Col");
+	return C;
+}
+
+static TContentWindow *NewContent(int s, int Identifier, bool Background)
+{
+	TContentWindow *W;
+	if (s == OURS) {
+		W = new TContentWindow(Identifier, Background);
+	} else {
+		void *Memory = operator new(sizeof(TContentWindow));
+		W = (TContentWindow *)At<ContentCtorFn>(0x4854c0)(Memory, NULL, Identifier, Background);
+	}
+	Register(W, "CW");
+	return W;
+}
+
+static TTestBody *NewBody(int MinHeight)
+{
+	TTestBody *B = new TTestBody;
+	B->MinHeight = MinHeight;
+	Register(B, "Body");
+	return B;
+}
+
+static TSubWindow *NewSub(int s, int Identifier, TTestBody *Body, bool Resizable, bool Background)
+{
+	TSubWindow *W;
+	void *Memory = operator new(sizeof(TSubWindow));
+	Register(Memory, "Sub"); // before the constructor: the resizers name it
+	if (s == OURS)
+		W = new (Memory) TSubWindow(Identifier, Body, Resizable, Background);
+	else
+		W = (TSubWindow *)At<SubCtorFn>(0x487e80)(Memory, NULL, Identifier, Body, Resizable, Background);
+	return W;
+}
+
+// Runs one call on both sides: F(s) with Side set. An error of our side (an
+// assertion the original would fail as well, or one it would not) is
+// reported and ends the test.
+static int Kind;
+template <class F> static void Both(F Call)
+{
+	Side = OURS;
+	try {
+		Call(OURS);
+	} catch (TMyException &E) {
+		printf("FAIL DialogWindow (kind %d): our side raised %s\n", Kind, E.GetMessage().c_str());
+		exit(1);
+	}
+	Side = ORIGINAL;
+	Call(ORIGINAL);
+}
+
+// --- Dumps ------------------------------------------------------------------------------
+
+static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth, const char *Role);
+
+static void DumpPart(int s, std::string &Out, TSubWindow *W, TComponent *Part, int Depth, const char *Role)
+{
+	if (Part != NULL && Part->Parent != W)
+		DumpComponent(s, Out, Part, Depth, Role);
+}
+
+static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth, const char *Role)
+{
+	char Buffer[512];
+	sprintf(Buffer, "%*s%s%s c%d %d,%d %dx%d", Depth * 2, "", Role, NameOf(s, C).c_str(), Class(s, C), C->OffsetX,
+		C->OffsetY, C->Width, C->Height);
+	Out += Buffer;
+	if (C->DrawingListLength > 0 && C->DrawingList != NULL) {
+		sprintf(Buffer, " DL%d", C->DrawingListLength);
+		Out += Buffer;
+		for (int i = 0; i < C->DrawingListLength; i++) {
+			TDrawing &D = C->DrawingList[i];
+			sprintf(Buffer, " %d/%d/%d/%d/%d/%d/%d", D.skin, D.x, D.y, D.width, D.height, D.srcx, D.srcy);
+			Out += Buffer;
+		}
+	}
+	int K = Class(s, C);
+	if (K == CLASS_CONTENT || K == CLASS_SUB) {
+		TContentWindow *W = (TContentWindow *)C;
+		sprintf(Buffer, " id %d bg %d,%d drag %d %d,%d,%d", W->Identifier, W->Background ? 1 : 0, W->BackgroundY,
+			W->Dragging ? 1 : 0, W->DragX, W->DragY, W->DragBottom);
+		Out += Buffer;
+	}
+	if (K == CLASS_SUB) {
+		TSubWindow *W = (TSubWindow *)C;
+		sprintf(Buffer, " min %d %d,%d", W->IsMinimized ? 1 : 0, W->Data68, W->RestoreHeight);
+		Out += Buffer;
+		Out += " parts " + NameOf(s, W->Body) + "," + NameOf(s, W->Resizer1) + "," + NameOf(s, W->Resizer2) + ","
+			+ NameOf(s, W->UpButton) + "," + NameOf(s, W->CloseButton) + "," + NameOf(s, W->MinimizeButton) + ","
+			+ NameOf(s, W->Icon) + "," + NameOf(s, W->Title);
+	}
+	if (K == CLASS_COLUMN) {
+		TDialogWindow *D = (TDialogWindow *)C;
+		sprintf(Buffer, " area %d,%d,%d,%d busy %d free %d,%d", D->Area.x, D->Area.y, D->Area.Width, D->Area.Height,
+			D->Busy ? 1 : 0, D->FreeHeight, D->UpdateFreeHeight ? 1 : 0);
+		Out += Buffer;
+		Out += " dragged " + NameOf(s, D->Dragged);
+	}
+	Out += " parent " + NameOf(s, C->Parent) + "\n";
+	if (K == CLASS_COLUMN || K == CLASS_CONTENT || K == CLASS_SUB) {
+		TWindow *Win = (TWindow *)C;
+		if (Win->Capture != NULL)
+			Out += std::string(Depth * 2 + 2, ' ') + "capture " + NameOf(s, Win->Capture) + "\n";
+		for (TComponent *Child = Win->FirstChild; Child != NULL; Child = Child->Next)
+			DumpComponent(s, Out, Child, Depth + 1, "");
+	}
+	if (K == CLASS_SUB) {
+		// The parts that are not children at the moment.
+		TSubWindow *W = (TSubWindow *)C;
+		DumpPart(s, Out, W, W->Body, Depth + 1, "-body ");
+		DumpPart(s, Out, W, W->Resizer1, Depth + 1, "-res1 ");
+		DumpPart(s, Out, W, W->Resizer2, Depth + 1, "-res2 ");
+		DumpPart(s, Out, W, W->UpButton, Depth + 1, "-up ");
+	}
+}
+
+static std::string Dump(int s)
+{
+	std::string Out;
+	for (int c = 0; c < 2; c++)
+		DumpComponent(s, Out, Column[s][c], 0, "");
+	return Out;
+}
+
+static void Compare(const char *What)
+{
+	Checks++;
+	if (Log[OURS] != Log[ORIGINAL]) {
+		Failures++;
+		if (Failures <= 20) {
+			printf("FAIL DialogWindow %s (kind %d): logs differ\n  ours:     %.800s\n  original: %.800s\n", What, Kind,
+				Log[OURS].c_str(), Log[ORIGINAL].c_str());
+		}
+	}
+	std::string A = Dump(OURS), B = Dump(ORIGINAL);
+	Checks++;
+	if (A != B) {
+		Failures++;
+		if (Failures <= 20)
+			printf("FAIL DialogWindow %s (kind %d): windows differ\n--- ours\n%s--- original\n%s", What, Kind, A.c_str(),
+				B.c_str());
+	}
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+}
+
+// --- Choosing operands (from our side; the other side's object has the same position) ----
+
+static std::vector<TComponent *> ChildrenOf(TWindow *W)
+{
+	std::vector<TComponent *> List;
+	for (TComponent *Child = W->FirstChild; Child != NULL; Child = Child->Next)
+		List.push_back(Child);
+	return List;
+}
+
+// The window at the same place of the other side's column.
+static TComponent *Counterpart(int s, int c, int Index)
+{
+	std::vector<TComponent *> List = ChildrenOf(Column[s][c]);
+	return Index >= 0 && Index < (int)List.size() ? List[Index] : NULL;
+}
+
+static int RandomIndex(int c)
+{
+	int Count = (int)ChildrenOf(Column[OURS][c]).size();
+	return Count == 0 ? -1 : (int)(Random() % Count);
+}
+
+static bool Captured() { return Column[OURS][0]->Capture != NULL || Column[OURS][1]->Capture != NULL; }
+
+// No window may be drawn above or left of the surface (TContentWindow::Draw's
+// assertions and TComponent::Draw's "dialog origin outside main window"): a
+// dragged window taller than its column goes above it.
+static bool CanDraw(int c, int x, int y)
+{
+	for (TComponent *Child = Column[OURS][c]->FirstChild; Child != NULL; Child = Child->Next) {
+		if (x + Child->OffsetX < 0 || y + Child->OffsetY < 0)
+			return false;
+	}
+	return true;
+}
+
+static int FrameHeight() { return Skins[133].height + Skins[132].height; }
+
+static int SerialIdentifier = 0;
+static int NewIdentifier(int c)
+{
+	static const int Sub[] = {6, 7, 8, 9};
+	if (c == 1)
+		return 1 + Random() % 5;
+	if (Random() % 2 == 0)
+		return Sub[Random() % 4];
+	return 0x40 + (SerialIdentifier++ % 16);
+}
+
+// A new sub-window, sized like ContentWindows.cpp's creators do, with its
+// buttons, icon and title on most.
+static TSubWindow *MakeSub(int s, int Identifier, int MinHeight, bool Resizable, bool Background, int Height, int Parts)
+{
+	TTestBody *Body = NewBody(MinHeight);
+	TSubWindow *W = NewSub(s, Identifier, Body, Resizable, Background);
+	W->SetSize(Column[s][0]->Width, Height);
+	TElement *Close = (Parts & 1) ? new TTestElement : NULL;
+	TTestSkinButton *Minimize = (Parts & 2) ? new TTestSkinButton : NULL;
+	TElement *Up = (Parts & 4) ? new TTestElement : NULL;
+	TElement *Icon = (Parts & 8) ? new TTestElement : NULL;
+	TElement *Title = (Parts & 16) ? new TTestElement : NULL;
+	if (Close != NULL) {
+		Register(Close, "Close");
+		if (s == OURS)
+			W->SetCloseButton(Close);
+		else
+			At<SetFn>(0x489cf0)(W, NULL, Close);
+	}
+	if (Minimize != NULL) {
+		Register(Minimize, "Min");
+		if (s == OURS)
+			W->SetMinimizeButton(Minimize);
+		else
+			At<SetFn>(0x489ed0)(W, NULL, Minimize);
+	}
+	if (Up != NULL) {
+		Register(Up, "Up");
+		if (s == OURS)
+			W->SetUpButton(Up);
+		else
+			At<SetFn>(0x489b10)(W, NULL, Up);
+	}
+	if (Icon != NULL) {
+		Register(Icon, "Icon");
+		if (s == OURS)
+			W->SetIcon(Icon);
+		else
+			At<SetFn>(0x48a0b0)(W, NULL, Icon);
+	}
+	if (Title != NULL) {
+		Register(Title, "Title");
+		if (s == OURS)
+			W->SetTitle(Title);
+		else
+			At<SetFn>(0x48a2a0)(W, NULL, Title);
+	}
+	return W;
+}
+
+static void RandomSkinProperties()
+{
+	TSkinProperties &O = Global<TSkinProperties>(0x5ccfc8);
+	TSkinProperties &M = SkinProperties;
+	M.Data184 = O.Data184 = 140 + Random() % 80;
+	M.Data188 = O.Data188 = TRGBColor(Random() % 256, Random() % 256, Random() % 256);
+	TSkinProperties194 &A = M.Style194, &B = O.Style194;
+	A.Data00 = B.Data00 = TRect(Random() % 8, Random() % 4, 8 + Random() % 8, 8 + Random() % 8);
+	A.Data10.x = B.Data10.x = -(int)(10 + Random() % 8);
+	A.Data10.y = B.Data10.y = Random() % 4;
+	A.Data18.x = B.Data18.x = -(int)(22 + Random() % 8);
+	A.Data18.y = B.Data18.y = Random() % 4;
+	A.Data20.x = B.Data20.x = -(int)(34 + Random() % 8);
+	A.Data20.y = B.Data20.y = Random() % 4;
+	A.Data28.x = B.Data28.x = 18 + Random() % 6;
+	A.Data28.y = B.Data28.y = Random() % 6;
+	A.Data30.x = B.Data30.x = -(int)(36 + Random() % 8);
+	A.Data30.y = B.Data30.y = 8 + Random() % 6;
+	// A minimized window is as high as its frame (as in the game): lower, Shrink
+	// fails its assertion; higher, it loops for ever, in both versions.
+	A.Data4C = B.Data4C = Skins[133].height + Skins[132].height;
+	// The body needs a height of at least 1 in the 19-pixel frame.
+	A.Data50 = B.Data50 = TRect(2 + Random() % 4, 13 + Random() % 3, -(int)(2 + Random() % 4),
+		-(int)(2 + Random() % 3));
+	A.Data60.x = B.Data60.x = Random() % 6;
+	A.Data60.y = B.Data60.y = -(int)(14 + Random() % 4);
+	A.Data68.x = B.Data68.x = 10 + Random() % 6;
+	A.Data68.y = B.Data68.y = 10 + Random() % 6;
+	A.Data70.x = B.Data70.x = 0;
+	A.Data70.y = B.Data70.y = -(int)(3 + Random() % 3);
+	A.Data78.x = B.Data78.x = 0;
+	A.Data78.y = B.Data78.y = 0;
+}
+
+// --- Operations ---------------------------------------------------------------------------
+
+static int KindCount[24];
+
+static void Operation()
+{
+	Kind = Random() % 24;
+	KindCount[Kind]++;
+	char What[64];
+	sprintf(What, "operation %d", Kind);
+	bool Busy = Captured();
+	switch (Kind) {
+	case 0: case 1: {
+		// A new sub-window, appended by Rearrange(16) like MainWindow.cpp does.
+		if (Busy)
+			return;
+		int Identifier = NewIdentifier(0), MinHeight = 1 + Random() % 60;
+		bool Resizable = Random() % 2 != 0, Background = Random() % 2 != 0;
+		int Height = FrameHeight() + MinHeight + Random() % 80, Parts = Random() % 32;
+		Both([&](int s) {
+			TSubWindow *W = MakeSub(s, Identifier, MinHeight, Resizable, Background, Height, Parts);
+			Column[s][0]->Rearrange(16, W);
+		});
+		break;
+	}
+	case 2: {
+		// A new window through the child functions, then Rearrange(32).
+		if (Busy)
+			return;
+		int c = Random() % 2, How = Random() % 3, Index = RandomIndex(c);
+		if (How == 2 && Index < 0)
+			How = 0;
+		int Identifier = NewIdentifier(c), MinHeight = 1 + Random() % 40;
+		bool Resizable = Random() % 2 != 0, Background = Random() % 2 != 0;
+		int Height = c == 0 ? FrameHeight() + MinHeight + Random() % 60 : 10 + Random() % 120, Parts = Random() % 32;
+		Both([&](int s) {
+			TComponent *W;
+			if (c == 0) {
+				W = MakeSub(s, Identifier, MinHeight, Resizable, Background, Height, Parts);
+			} else {
+				W = NewContent(s, Identifier, Background);
+				W->SetSize(Column[s][1]->Width, Height);
+			}
+			if (How == 0)
+				Column[s][c]->InsertChild(W);
+			else if (How == 1)
+				Column[s][c]->AppendChild(W);
+			else
+				Column[s][c]->InsertChildAfter(Counterpart(s, c, Index), W);
+			Column[s][c]->Rearrange(32, NULL);
+		});
+		break;
+	}
+	case 3: {
+		if (Busy)
+			return;
+		int c = Random() % 2, Index = RandomIndex(c);
+		if (Index < 0)
+			return;
+		Both([&](int s) { Column[s][c]->DeleteChild(Counterpart(s, c, Index)); });
+		break;
+	}
+	case 4: {
+		// The column's size (strategy 8 deletes the windows that do not fit).
+		if (Busy)
+			return;
+		int c = Random() % 2, Width = 70 + Random() % 180, Height = Random() % 3 == 0 ? (int)(Random() % 120)
+			: 100 + (int)(Random() % 600);
+		Both([&](int s) { Column[s][c]->SetSize(Width, Height); });
+		break;
+	}
+	case 5: {
+		int c = Random() % 2, x = Random() % 30, y = Random() % 30;
+		if (!CanDraw(c, x, y))
+			return;
+		int Surface = Random() % 3;
+		Both([&](int s) { Column[s][c]->Draw(Surface, x, y); });
+		break;
+	}
+	case 6: case 7: case 8: {
+		// Mouse events through a column: press, move, release.
+		int c = Random() % 2, Action = Kind - 6;
+		TDialogWindow *O = Column[OURS][c];
+		if (Action == 0 && Busy)
+			return;
+		int x = (int)(Random() % (O->Width + 20)) - 10, y = (int)(Random() % (O->Height + 40)) - 20;
+		bool Results[2];
+		Both([&](int s) {
+			TDialogWindow *D = Column[s][c];
+			if (Action == 0)
+				Results[s] = D->LeftButtonDown(x, y, 0);
+			else if (Action == 1)
+				Results[s] = D->MouseMove(x, y);
+			else
+				Results[s] = D->LeftButtonUp(x, y, 0);
+		});
+		CHECK(Results[OURS] == Results[ORIGINAL], "DialogWindow mouse %d result %d, original %d", Action,
+			Results[OURS], Results[ORIGINAL]);
+		break;
+	}
+	case 9: {
+		// A double click (minimizes or restores the sub-window under it).
+		if (Busy)
+			return;
+		TDialogWindow *O = Column[OURS][0];
+		int x = Random() % (O->Width + 1), y = Random() % (O->Height + 1);
+		bool Results[2];
+		Both([&](int s) { Results[s] = Column[s][0]->LeftButtonDoubleClick(x, y, 0); });
+		CHECK(Results[OURS] == Results[ORIGINAL], "DialogWindow double click result %d, original %d", Results[OURS],
+			Results[ORIGINAL]);
+		break;
+	}
+	case 10: {
+		// Events 9 (minimize, maximize) and 10 (close) and others.
+		if (Busy)
+			return;
+		int Index = RandomIndex(0);
+		if (Index < 0)
+			return;
+		static const int Events[] = {9, 9, 10, 0, 8, 11};
+		int Event = Events[Random() % 6];
+		Both([&](int s) { Counterpart(s, 0, Index)->HandleEvent(Event); });
+		break;
+	}
+	case 11: {
+		// Minimize or Maximize directly, as the state allows.
+		if (Busy)
+			return;
+		int Index = RandomIndex(0);
+		if (Index < 0)
+			return;
+		bool Minimized = ((TSubWindow *)Counterpart(OURS, 0, Index))->IsMinimized;
+		Both([&](int s) {
+			TSubWindow *W = (TSubWindow *)Counterpart(s, 0, Index);
+			if (Minimized)
+				W->Maximize();
+			else
+				W->Minimize();
+		});
+		break;
+	}
+	case 12: {
+		// A sub-window's size (strategies 2, 4 and 32, then 8).
+		if (Busy)
+			return;
+		int Index = RandomIndex(0);
+		if (Index < 0)
+			return;
+		int Height = Random() % 400;
+		Both([&](int s) {
+			TComponent *W = Counterpart(s, 0, Index);
+			W->SetSize(W->Width, Height);
+		});
+		break;
+	}
+	case 13: {
+		// A plain content window's size, then Rearrange 2 or 4 like a side-bar window.
+		if (Busy)
+			return;
+		int Index = RandomIndex(1);
+		if (Index < 0)
+			return;
+		int Height = Random() % 200;
+		bool Grew = Height > Counterpart(OURS, 1, Index)->Height;
+		Both([&](int s) {
+			TComponent *W = Counterpart(s, 1, Index);
+			W->SetSize(W->Width, Height);
+			Column[s][1]->Rearrange(Grew ? 2 : 32, W);
+		});
+		break;
+	}
+	case 14: {
+		// The setters replace a part.
+		if (Busy)
+			return;
+		int Index = RandomIndex(0);
+		if (Index < 0)
+			return;
+		int Which = Random() % 5;
+		Both([&](int s) {
+			TSubWindow *W = (TSubWindow *)Counterpart(s, 0, Index);
+			static const uint32 Setters[] = {0x489b10, 0x489cf0, 0x489ed0, 0x48a0b0, 0x48a2a0};
+			static const char *Kinds[] = {"Up", "Close", "Min", "Icon", "Title"};
+			TComponent *Part = Which == 2 ? (TComponent *)new TTestSkinButton : (TComponent *)new TTestElement;
+			Register(Part, Kinds[Which]);
+			if (s == ORIGINAL) {
+				At<SetFn>(Setters[Which])(W, NULL, Part);
+			} else if (Which == 0) {
+				W->SetUpButton(Part);
+			} else if (Which == 1) {
+				W->SetCloseButton(Part);
+			} else if (Which == 2) {
+				W->SetMinimizeButton((TSkinButton *)Part);
+			} else if (Which == 3) {
+				W->SetIcon(Part);
+			} else {
+				W->SetTitle(Part);
+			}
+		});
+		break;
+	}
+	case 15: {
+		// The "up" button comes and goes (the container body's 0x42e4e0 does this).
+		if (Busy)
+			return;
+		int Index = RandomIndex(0);
+		if (Index < 0)
+			return;
+		bool Show = Random() % 2 != 0;
+		Both([&](int s) {
+			TSubWindow *W = (TSubWindow *)Counterpart(s, 0, Index);
+			if (s == OURS) {
+				if (Show)
+					W->ShowUpButton();
+				else
+					W->HideUpButton();
+			} else {
+				At<VoidFn>(Show ? 0x4897d0 : 0x489970)(W, NULL);
+			}
+		});
+		break;
+	}
+	case 16: {
+		// Rearrange with a strategy that keeps the windows.
+		if (Busy)
+			return;
+		int c = Random() % 2, Index = RandomIndex(c);
+		static const int Strategies[] = {1, 2, 4, 8, 32};
+		int Strategy = Strategies[Random() % 5];
+		if ((Strategy == 4 || Strategy == 1) && Index < 0)
+			return;
+		if (c == 1 && Strategy == 4)
+			Strategy = 32;
+		Both([&](int s) {
+			TComponent *Work = Index >= 0 && Strategy != 8 && Strategy != 32 ? Counterpart(s, c, Index) : NULL;
+			Column[s][c]->Rearrange(Strategy, Work);
+			if (Strategy == 1)
+				Column[s][c]->Rearrange(1, NULL);
+		});
+		break;
+	}
+	case 17: {
+		// The queries.
+		int c = Random() % 2, Identifier = NewIdentifier(c);
+		int Ids[2], Free[2], MinH[2], MinW[2], Frame[2];
+		Both([&](int s) {
+			TDialogWindow *D = Column[s][c];
+			TContentWindow *W;
+			if (s == OURS) {
+				W = D->GetContentWindow(Identifier);
+				Free[s] = D->GetFreeHeight();
+				Frame[s] = TSubWindow::GetFrameHeight();
+			} else {
+				W = At<FindFn>(0x486400)(D, NULL, Identifier);
+				Free[s] = At<GetFn>(0x487060)(D, NULL);
+				Frame[s] = At<int (__cdecl *)()>(0x485670)();
+			}
+			Ids[s] = W == NULL ? -1 : Info[s][W].Serial;
+			MinH[s] = D->GetMinimumHeight();
+			MinW[s] = D->GetMinimumWidth();
+		});
+		CHECK(Ids[OURS] == Ids[ORIGINAL] && Free[OURS] == Free[ORIGINAL] && MinH[OURS] == MinH[ORIGINAL]
+			&& MinW[OURS] == MinW[ORIGINAL] && Frame[OURS] == Frame[ORIGINAL],
+			"DialogWindow queries: %d %d %d %d %d, original %d %d %d %d %d", Ids[OURS], Free[OURS], MinH[OURS],
+			MinW[OURS], Frame[OURS], Ids[ORIGINAL], Free[ORIGINAL], MinH[ORIGINAL], MinW[ORIGINAL], Frame[ORIGINAL]);
+		for (TComponent *Child = Column[OURS][0]->FirstChild; Child != NULL; Child = Child->Next) {
+			int Index = 0;
+			for (TComponent *C = Column[OURS][0]->FirstChild; C != Child; C = C->Next)
+				Index++;
+			int A = Child->GetMinimumHeight(), B = Counterpart(ORIGINAL, 0, Index)->GetMinimumHeight();
+			CHECK(A == B, "TSubWindow::GetMinimumHeight %d, original %d", A, B);
+		}
+		break;
+	}
+	case 18: {
+		int c = Random() % 2;
+		Both([&](int s) {
+			if (s == OURS)
+				Column[s][c]->StoreOpenDialogs();
+			else
+				At<VoidFn>(0x4865b0)(Column[s][c], NULL);
+		});
+		break;
+	}
+	case 19: {
+		// Arrange of the column or of one of its windows.
+		int c = Random() % 2, Index = Random() % 2 == 0 ? -1 : RandomIndex(c);
+		Both([&](int s) {
+			if (Index < 0)
+				Column[s][c]->Arrange();
+			else
+				Counterpart(s, c, Index)->Arrange();
+		});
+		break;
+	}
+	case 20: {
+		// A whole drag: press on a window's frame, moves, release.
+		if (Busy)
+			return;
+		int c = Random() % 2, Index = RandomIndex(c);
+		if (Index < 0)
+			return;
+		TComponent *W = Counterpart(OURS, c, Index);
+		int x = W->OffsetX + Random() % (W->Width > 0 ? W->Width : 1), y = W->OffsetY + Random() % 4;
+		int Moves = 1 + Random() % 4;
+		int dy[4];
+		for (int i = 0; i < 4; i++)
+			dy[i] = (int)(Random() % 160) - 80;
+		Both([&](int s) {
+			TDialogWindow *D = Column[s][c];
+			D->LeftButtonDown(x, y, 0);
+			int yy = y;
+			for (int i = 0; i < Moves; i++) {
+				yy += dy[i];
+				D->MouseMove(x, yy);
+			}
+		});
+		Compare("drag moves");
+		if (Column[OURS][c]->Capture != NULL) {
+			int c2 = c;
+			int Surface = 1;
+			if (CanDraw(c2, 5, 5))
+				Both([&](int s) { Column[s][c2]->Draw(Surface, 5, 5); });
+			Compare("drag draw");
+		}
+		Both([&](int s) { Column[s][c]->LeftButtonUp(x, y, 0); });
+		break;
+	}
+	case 21: {
+		// MouseMove without a capture (the resizers get it first).
+		if (Busy)
+			return;
+		TDialogWindow *O = Column[OURS][0];
+		int x = Random() % (O->Width + 1), y = Random() % (O->Height + 1);
+		bool Results[2];
+		Both([&](int s) { Results[s] = Column[s][0]->MouseMove(x, y); });
+		CHECK(Results[OURS] == Results[ORIGINAL], "DialogWindow move result %d, original %d", Results[OURS],
+			Results[ORIGINAL]);
+		break;
+	}
+	case 22: {
+		RandomSkinProperties();
+		int c = Random() % 2;
+		Both([&](int s) { Column[s][c]->Rearrange(32, NULL); });
+		break;
+	}
+	case 23: {
+		// Releases that come without a press (and a release of a stale capture).
+		int c = Random() % 2;
+		int x = Random() % 100, y = Random() % 300;
+		Both([&](int s) { Column[s][c]->LeftButtonUp(x, y, 0); });
+		break;
+	}
+	}
+	Compare(What);
+}
+
+void TestDialogWindow()
+{
+	int Before = Checks, BeforeFailures = Failures;
+	PatchImage();
+	InitSkins();
+	Global<int>(0x71c450) = NumberOfSkins;
+	Global<TSkin *>(0x71c454) = Skins;
+	InitSkinProperties();
+	At<void (__cdecl *)()>(0x498160)();
+	Surface = new TDialogSurface;
+	PatchCallees();
+	DialogFakes.Body = HookBody;
+	DialogFakes.BodyAccepts = HookBodyAccepts;
+	DialogFakes.NewResizer = HookNewResizer;
+	DialogFakes.SetSkins = HookSetSkins;
+
+	// The vtables: the image's classes and ours (from instances), the fake resizer.
+	{
+		TFakeResizer *R = new TFakeResizer;
+		FakeResizerVtable = VtableOf(R);
+		delete R;
+		TDialogWindow *D = new TDialogWindow;
+		TContentWindow *C = new TContentWindow(1, false);
+		TTestBody *B = new TTestBody;
+		B->MinHeight = 5;
+		TSubWindow *W = new TSubWindow(6, B, false, false);
+		ClassOf[OURS][VtableOf(D)] = CLASS_COLUMN;
+		ClassOf[OURS][VtableOf(C)] = CLASS_CONTENT;
+		ClassOf[OURS][VtableOf(W)] = CLASS_SUB;
+		delete D;
+		delete C;
+		delete W;
+		ClassOf[ORIGINAL][(void *)(uintptr_t)0x563f80] = CLASS_COLUMN;
+		ClassOf[ORIGINAL][(void *)(uintptr_t)0x563e38] = CLASS_CONTENT;
+		ClassOf[ORIGINAL][(void *)(uintptr_t)0x563ed8] = CLASS_SUB;
+	}
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+	Info[OURS].clear();
+	Info[ORIGINAL].clear();
+	Serials[OURS] = Serials[ORIGINAL] = 0;
+
+	for (int Round = 0; Round < 8; Round++) {
+		RandomSkinProperties();
+		int Width = 70 + Random() % 180, Height[2] = {100 + (int)(Random() % 600), 100 + (int)(Random() % 400)};
+		Both([&](int s) {
+			for (int c = 0; c < 2; c++) {
+				Column[s][c] = NewColumn(s);
+				Column[s][c]->SetSize(Width, Height[c]);
+			}
+		});
+		Compare("columns");
+		for (int i = 0; i < 1500; i++)
+			Operation();
+		// A capture left by the last drag goes with a release.
+		for (int c = 0; c < 2; c++) {
+			if (Column[OURS][c]->Capture != NULL)
+				Both([&](int s) { Column[s][c]->LeftButtonUp(0, 0, 0); });
+		}
+		Compare("release");
+		// The columns go, with their windows (the sub-windows store their sizes).
+		Both([&](int s) {
+			for (int c = 0; c < 2; c++) {
+				delete Column[s][c];
+				Column[s][c] = NULL;
+			}
+		});
+		Checks++;
+		if (Log[OURS] != Log[ORIGINAL]) {
+			Failures++;
+			if (Failures <= 20)
+				printf("FAIL DialogWindow destructors: logs differ\n  ours:     %.800s\n  original: %.800s\n",
+					Log[OURS].c_str(), Log[ORIGINAL].c_str());
+		}
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+		Info[OURS].clear();
+		Info[ORIGINAL].clear();
+		Serials[OURS] = Serials[ORIGINAL] = 0;
+	}
+
+	DialogFakes = TDialogFakes();
+	RestoreAll();
+	delete Surface;
+	ExitSkins();
+	Global<TSkin *>(0x71c454) = NULL;
+	int Least = KindCount[0];
+	for (int i = 1; i < 24; i++)
+		Least = KindCount[i] < Least ? KindCount[i] : Least;
+	printf("DialogWindow: %d checks, %d failures (each of the 24 operations at least %d times)\n", Checks - Before,
+		Failures - BeforeFailures, Least);
+}

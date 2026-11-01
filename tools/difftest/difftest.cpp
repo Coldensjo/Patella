@@ -368,11 +368,17 @@ int main(int argc, char **argv)
 #ifdef DIFFTEST_SYSINC
 	TestSysinc();
 #else
-	// DIFFTEST_ONLY=MainWindow runs only mainwindowtest.cpp (it needs none of
-	// the earlier tests), for quick runs while working on it.
+	// DIFFTEST_ONLY=MainWindow or DialogWindow runs only mainwindowtest.cpp or
+	// dialogwindowtest.cpp (they need none of the earlier tests), for quick
+	// runs while working on them.
 	const char *Only = getenv("DIFFTEST_ONLY");
 	if (Only != NULL && strcmp(Only, "MainWindow") == 0) {
 		TestMainWindow();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
+	if (Only != NULL && strcmp(Only, "DialogWindow") == 0) {
+		TestDialogWindow();
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
@@ -396,6 +402,7 @@ int main(int argc, char **argv)
 	TestCreatures(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestGraphics(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestGUI();
+	TestDialogWindow();
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif

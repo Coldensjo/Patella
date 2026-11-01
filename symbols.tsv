@@ -3089,13 +3089,13 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x48536a	20	Catch@0048536a	catch	Dialogs.cpp	between		0x485290	
 0x48537e	143	Catch@0048537e	catch	Dialogs.cpp	assert	490	0x485290	
 0x48540d	160	Catch@0048540d	catch	Dialogs.cpp	assert	490	0x485290	
-0x4854c0	51	FUN_004854c0	game	Dialogs.cpp|DialogWindow.cpp	gap			
-0x485500	364	FUN_00485500	game	Dialogs.cpp|DialogWindow.cpp	gap			
-0x485670	19	FUN_00485670	game	Dialogs.cpp|DialogWindow.cpp	gap			
-0x4856c0	200	FUN_004856c0	game	Dialogs.cpp|DialogWindow.cpp	gap			
-0x485790	30	FUN_00485790	game	Dialogs.cpp|DialogWindow.cpp	gap			
-0x4857b0	127	FUN_004857b0	game	Dialogs.cpp|DialogWindow.cpp	gap			
-0x48582f	20	Catch@0048582f	catch	Dialogs.cpp|DialogWindow.cpp	gap		0x4857b0	
+0x4854c0	51	FUN_004854c0	game	DialogWindow.cpp	range			
+0x485500	364	FUN_00485500	game	DialogWindow.cpp	range			
+0x485670	19	FUN_00485670	game	DialogWindow.cpp	range			
+0x4856c0	200	FUN_004856c0	game	DialogWindow.cpp	range			
+0x485790	30	FUN_00485790	game	DialogWindow.cpp	range			
+0x4857b0	127	FUN_004857b0	game	DialogWindow.cpp	range			
+0x48582f	20	Catch@0048582f	catch	DialogWindow.cpp	range		0x4857b0	
 0x485843	140	Catch@00485843	catch	DialogWindow.cpp	assert	63	0x4857b0	
 0x4858cf	157	Catch@004858cf	catch	DialogWindow.cpp	assert	63	0x4857b0	
 0x485970	87	FUN_00485970	game	DialogWindow.cpp	between			
