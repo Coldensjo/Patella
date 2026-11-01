@@ -1075,8 +1075,8 @@ address	name	kind	confidence	note
 0x451db0	CheckMonsterHint	game	low	Creatures.cpp lines 573-592: FUN_004a3460 for monsters next to the player ("Opponent!=NULL")
 0x452190	InitCreatures	game	medium	Creatures.cpp line 1366; called by InitControl
 0x452320	TCreature_SetPosition	game	medium	Creatures.cpp line 108, TEND1(CreatureID)
-0x452eb0	vector_TDialogText_at	game	low	Container.h vector<T>::operator() for a 0x18-byte element (char* + 20-byte font/colour), instantiated in DialogElements.cpp; element type name ours
-0x453600	vector_TDialogText_ctor	game	low	Container.h vector<T>::vector(min, max, block), lines 369-370, same 0x18-byte element, DialogElements.cpp; element type name ours
+0x452eb0	vector_TListBoxLine_at	game	high	Container.h vector<TListBoxLine>::operator() (0x18-byte element: text, TFont), DialogElements.cpp's TFontListBox
+0x453600	vector_TListBoxLine_ctor	game	high	Container.h vector<TListBoxLine>::vector(min, max, block), lines 369-370
 0x495480	TSkinProperties0D8_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
 0x4954f0	TSkinProperties194_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
 0x495590	TSkinProperties3E0_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours (used at +0x3e0 and +0x428)
@@ -1430,8 +1430,8 @@ address	name	kind	confidence	note
 0x48a990	TDialogWindow_Shrink	game	medium	DialogWindow.cpp lines 377-394 (DeltaHeight>0): strategy 2, the lowest children above their minimum give up the missing height; name ours
 0x48acb0	TDialogWindow_Grow	game	medium	DialogWindow.cpp line 505: strategy 4, the children below Work take the freed height; name ours
 0x48aea0	TDialogWindow_Rearrange	game	medium	DialogWindow.cpp lines 271-297 (Work!=NULL, unknown strategy, Strategy), vtable +0xa0; jump table 0x48b338/0x48b354; name ours
-0x453be0	TResizer_ctor	game	low	DialogElements.cpp line 74 (_ToResize!=NULL): element (vtable 0x5612b0, 0x38 bytes) that resizes _ToResize; TSubWindow makes two; class name ours
-0x458b20	TSkinButton_SetSkins	game	low	DialogElements.cpp lines 1228-1229 (_ButtonUp, _ButtonDown <NumberOfSkins): the two skins of a button (+0x24, +0x28); TSubWindow swaps its minimize button skins; names ours
+0x453be0	TResizer_ctor	game	medium	DialogElements.cpp line 74 (_ToResize!=NULL): vtable 0x5612b0, 0x38 bytes, (_ToResize, ResizeWidth, ResizeHeight, Invisible); class name ours
+0x458b20	TSkinButton_SetSkins	game	high	DialogElements.cpp lines 1228-1229 (_ButtonUp, _ButtonDown <NumberOfSkins)
 0x43d6f0	TSkillContextMenu_dtor	game	high	ContextMenus.cpp: vtable 0x55f5f0; clears the skill window's pointer to the menu (+0x30); first function of the object, no frame
 0x43d710	TSkillContextMenu_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TSkillContextMenu (vtable 0x55f5f0 slot 0), calls 0x43d6f0
 0x43d730	THelpBubble_SetSize	game	high	ContextMenus.cpp line 142 (Width, Height), vtable 0x55f8b8 +0x34: rounds to Data174 mod Data170, limits to minimum and Data158/Data15C, lays out the text
@@ -1473,8 +1473,8 @@ address	name	kind	confidence	note
 0x4451e0	TMarkContextMenu_ctor	game	medium	ContextMenus.cpp lines 1379-1397 (_Data!=NULL, x, y): vtable 0x5601e0, 0xb4 bytes; deletes _Data; class name ours
 0x4454f0	TSkillContextMenu_ctor	game	medium	ContextMenus.cpp lines 1442-1465 (_SkillsWindow, x, y): vtable 0x55f5f0, 0x38 bytes; class name ours
 0x429590	TElement_derived_scalar_deleting_dtor	stl	medium	compiler-generated deleting destructor of a TElement subclass without members to destroy (calls ~TComponent); kept in ContentWindows.obj, shared by folding with TContextMenuEntry (vtable 0x55f6a8) and TSeparator (0x5610b0)
-0x465e60	TFormattedText_ctor	game	low	DialogElements.cpp line 508: text window with formatting tokens (vtable 0x560c40, 0x38 bytes), the help bubble's text; class name ours
-0x452cb0	TSeparator_ctor	game	low	DialogElements.cpp: line element (vtable 0x5610b0, 0x28 bytes, bool at +0x24); context menu separators; class name ours
+0x465e60	TFormattedText_ctor	game	medium	DialogElements.cpp line 508: TWindow, vtable 0x560c40, 0x38 bytes; the help bubble's text; class name ours
+0x452cb0	TSeparator_ctor	game	high	DialogElements.h inline TSeparator(bool Horizontal), vtable 0x5610b0, 0x28 bytes
 0x417500	TDrawing_ctor	game	high	GUI.h inline TDrawing(): out-of-line copy (kept in an earlier object) that THelpBubble's constructor passes to vector_constructor_iterator; missed by Ghidra
 0x4174d0	In	game	high	common.h inline In(Value, Min, Max), out-of-line copy kept in ConsoleWindow.obj (the first object with an out-of-line use); called by ContentWindows.cpp, DialogElements.cpp and Objects.cpp
 0x417520	TEditLine_HasSelection	game	low	DialogElements.h inline: +0x5c != -1 && +0x60 != 0 (a selection); out-of-line copy kept in ConsoleWindow.obj, called by DialogElements.cpp; inlined into ConsoleWindow.cpp's KeyPress; name ours
@@ -1569,14 +1569,14 @@ address	name	kind	confidence	note
 0x425070	TConsoleWindow_OpenChannel	game	medium	ConsoleWindow.cpp lines 1965-1969 (RecvMode, SendMode, TextBuffer!=NULL): CreateTextBuffer or GetTextBuffer, AddChannel; Control.cpp's messages 0x2f-0x31; name ours
 0x425330	TConsoleWindow_ReportRuleViolation	game	medium	ConsoleWindow.cpp lines 2033-2051 (NewTab!=NULL, Question!=NULL, strlen(Question)>0, TextBuffer!=NULL): opens the player's request channel; Control.cpp's message 0x33; name ours
 0x425b10	vector_TMark_dtor	game	medium	Container.h ~vector<TMark> (delete[] entry at +0x88), out-of-line copy kept in ContentWindows.obj next to 0x425b20; atexit thunks 0x536e26, 0x536f86 jump to it
-0x452790	TMultiStateButton_Reset	game	low	DialogElements.cpp: state 0 and its skins (+0x44 = +0x48 + 1, then 0 because it is not below +0x48); ConsoleWindow.cpp's volume button after every message; names ours
-0x45bc80	TEditLine_SetActive	game	low	DialogElements.cpp: +0x58 = Active; false clears the selection length +0x60; ConsoleWindow.cpp's SetActive; names ours
-0x460450	TScrollBarRange_SetRange	game	low	DialogElements.cpp: (Minimum, Maximum, Value, Visible) of the part at TScrollBar+0x2c, whose +0x30 is the value; ConsoleWindow.cpp's TConsole::Arrange; names ours
-0x466860	TSkinButton_ctor	game	low	DialogElements.cpp: (x, y, _ButtonUp, _ButtonDown, TCallback, tooltip, 0), 0x44 bytes; base of TBlinkingButton, TToggleButton, TMultiStateButton; the console's buttons; names ours
-0x4671e0	TToggleButton_ctor	game	low	DialogElements.cpp: TSkinButton with a state (+0x44) and two tooltips, vtable 0x561cd0, 0x50 bytes; the console's server message button; names ours
-0x4672d0	TMultiStateButton_ctor	game	low	DialogElements.cpp: varargs constructor (__cdecl, this pushed): (x, y, tooltip, States, then skin pair and TCallback per state), vtable 0x560e10, 0x58 bytes; the console's volume; names ours
-0x467b50	TEditLine_ctor	game	low	DialogElements.cpp: TWindow, vtable 0x560e98, 0x68 bytes, (TRect area, maximum length, flag); the console's Input; names ours
-0x469a80	TScrollBar_ctor	game	low	DialogElements.cpp: TWindow, vtable 0x561f70, 0x38 bytes, (TRect area, 0, 0, 0, 0, step): 1 in ConsoleWindow.cpp, 10 or a part of a row in ContentWindows.cpp; names ours
+0x452790	TMultiStateButton_Reset	game	low	DialogElements.h inline: State = States+1, which wraps to 0, and its skins; ConsoleWindow.cpp's volume button; name ours
+0x45bc80	TEditLine_SetActive	game	medium	DialogElements.cpp: Active; false clears the selection length
+0x460450	TScrollBarRange_SetRange	game	high	DialogElements.cpp lines 3281-3291 (_Min<=_Max): (Min, Max, Value, Visible)
+0x466860	TSkinButton_ctor	game	medium	DialogElements.cpp line 1113: (x, y, _ButtonUp, _ButtonDown, TCallback, Tooltip, Repeat), vtable 0x5619f8, 0x44 bytes; class name ours
+0x4671e0	TToggleButton_ctor	game	medium	DialogElements.cpp: TSkinButton with State (+0x44) and two tooltips, vtable 0x561cd0, 0x50 bytes; passes its own unset Tooltip to the base; class name ours
+0x4672d0	TMultiStateButton_ctor	game	medium	DialogElements.cpp: varargs (__cdecl) (x, y, Tooltip, States, first skins and TCallback, ...), vtable 0x560e10, 0x58 bytes; class name ours
+0x467b50	TEditLine_ctor	game	medium	DialogElements.cpp lines 1878-1900 (_MaxLength>=0): TWindow, vtable 0x560e98, 0x68 bytes, (TRect, MaxLength, ReadOnly); class name ours
+0x469a80	TScrollBar_ctor	game	medium	DialogElements.cpp lines 3462-3475 (_ButtonRange>0): TWindow, vtable 0x561f70, 0x38 bytes, (TRect, Min, Max, Value, Visible, ButtonRange); class name ours
 0x512050	strstr	stl	high	CRT strstr (ConsoleWindow.cpp's account data check)
 0x425920	Limit	game	medium	common.h inline Limit(int *Value, int Min, int Max): clamps in either order; ContentWindows.obj's out-of-line copy (TTradeWindowBody::SetSize inlines it), called by DialogElements.cpp; name ours
 0x4259a0	TMark_ctor	game	medium	Map.h inline TMark(): clears x, y, Type and Text; out-of-line copy for the eh vector constructor iterator of vector<TMark> (0x426170)
@@ -1737,14 +1737,222 @@ address	name	kind	confidence	note
 0x43cc90	CreateBattleWindow	game	high	ContentWindows.cpp line 225: TSubWindow 7, "Battle"; name ours
 0x43d000	CreateTradeWindow	game	high	ContentWindows.cpp line 253: TSubWindow TRADE_WINDOW, "Trade"; name ours
 0x43d390	CreateBuddylistWindow	game	high	ContentWindows.cpp line 280: TSubWindow 9, "VIP"; name ours
-0x466bc0	TTextButton_ctor	game	low	DialogElements.cpp lines 1378-1379: TElement-based button with a text, vtable 0x561c40, 0x78 bytes; MainWindow.cpp; names ours
-0x466ed0	TTextButton_ctor_tooltip	game	low	DialogElements.cpp lines 1390-1391 (_Text, strlen(_Text)<50): TTextButton with skins 12/13 and a tooltip; ContentWindows.cpp; names ours
-0x467230	TTextToggleButton_ctor	game	low	DialogElements.cpp: TTextButton with State (+0x78) and two tooltips, vtable 0x561d58, 0x84 bytes; ContentWindows.cpp's TButtonsWindow; names ours
-0x465b40	TLabel_ctor	game	low	DialogElements.cpp line 376 (_Text!=NULL): TElement text, vtable 0x560bb8, 0x4c bytes, (TFont, text); names ours
-0x465510	TLabel_ctor_area	game	low	DialogElements.cpp line 337 (_Text!=NULL): TLabel with an area, (x, y, width, height, TFont, text, flag); ContentWindows.cpp's TTradeNames; names ours
-0x455e40	TLabel_SetText	game	low	DialogElements.cpp: TLabel vtable +0x84 (text, flag); ContentWindows.cpp's TTradeNames::Arrange; names ours
-0x457710	TSkinIcon_ctor	game	low	DialogElements.cpp line 1002: TElement drawing one skin, vtable 0x5614f8, 0x28 bytes, sized to the skin; ContentWindows.cpp's window icons; names ours
-0x4526c0	TObjectIcon_ctor	game	low	DialogElements.cpp: TElement drawing an object, vtable 0x560d88, 0x50 bytes, (TObject, colour, flag); names ours
-0x458de0	TSkinButton_SetRadioButtonGroup	game	low	DialogElements.cpp line 1239 (RadioButtonGroup==NULL): adds the button to a TRadioButtonGroup (+0x38); names ours
-0x460710	TScrollBarRange_SetValue	game	low	DialogElements.cpp (_Value): sets the value within the range, then Arrange; names ours
+0x466bc0	TTextButton_ctor	game	medium	DialogElements.cpp lines 1378-1379 (_Text!=NULL, strlen(_Text)<50): TSkinButton with a text, vtable 0x561c40, 0x78 bytes; class name ours
+0x466ed0	TTextButton_ctor_tooltip	game	medium	DialogElements.cpp lines 1390-1391: with the skins 12 and 13
+0x467230	TTextToggleButton_ctor	game	medium	DialogElements.cpp: TTextButton with State (+0x78) and two tooltips, vtable 0x561d58, 0x84 bytes; class name ours
+0x465b40	TLabel_ctor	game	medium	DialogElements.cpp lines 376-389 (_Text!=NULL): (TFont, text), sized to the text
+0x465510	TLabel_ctor_area	game	medium	DialogElements.cpp lines 337-348 (_Text!=NULL): (x, y, width, height, TFont, text, Shorten); vtable 0x560bb8, 0x4c bytes
+0x455e40	TLabel_SetText	game	medium	DialogElements.cpp lines 431-472 (_Text!=NULL): vtable +0x84 (text, Shorten); lines at line breaks
+0x457710	TSkinIcon_ctor	game	medium	DialogElements.cpp line 1002: TElement, vtable 0x5614f8, 0x28 bytes, sized to the skin; class name ours
+0x4526c0	TObjectIcon_ctor	game	high	DialogElements.h inline TObjectIcon(TObject, highlight colour, Framed), vtable 0x560d88, 0x50 bytes
+0x458de0	TSkinButton_SetRadioButtonGroup	game	high	DialogElements.cpp line 1239 (RadioButtonGroup==NULL)
+0x460710	TScrollBarRange_SetValue	game	high	DialogElements.cpp line 3303 (_Value)
 0x427697	TAutomapWindow_Scroll_block	game	medium	Ghidra split basic block of 0x4274c0 (case 1 of its jump table 0x4276e0), not an independent function
+0x4524e0	TEditLine_SetCursor	game	medium	DialogElements.h inline (out-of-line copy): Cursor = Position limited to the text
+0x452530	TEditLine_LimitCursor	game	medium	DialogElements.h inline: Limit(&Cursor, 0, strlen(Text))
+0x452570	TBorder_getMinimumHeight	game	high	DialogElements.h inline, vtable 0x561358 +0x40; missed by Ghidra
+0x4525a0	TBorder_getMinimumWidth	game	high	DialogElements.h inline, vtable 0x561358 +0x3c; missed by Ghidra; name from "Width>=getMinimumWidth()" (line 242)
+0x4525d0	TLabel_dtor	game	high	DialogElements.h inline ~TLabel (vtable 0x560bb8): frees Text, FullText, Line
+0x452620	TLabel_MouseMove	game	medium	DialogElements.h inline "return false" (x, y), vtable +0x4c of TLabel, TObjectIcon, TSkinIcon, TOutfitIcon (folded); missed by Ghidra
+0x452630	TFormattedText_dtor	game	high	DialogElements.h inline ~TFormattedText (vtable 0x560c40)
+0x452670	TLink_dtor	game	high	DialogElements.h inline ~TLink (vtable 0x560ce8): frees Destination
+0x452690	TLink_getMinimumHeight	game	high	DialogElements.h inline, vtable 0x560ce8 +0x40: the button's height; missed by Ghidra
+0x4526a0	TLink_getMinimumWidth	game	high	DialogElements.h inline, vtable 0x560ce8 +0x3c: the button's width; missed by Ghidra
+0x4526b0	TOutfitIcon_SetOutfit	game	low	DialogElements.h inline (+0x24), called by Dialogs.cpp only
+0x452730	TSkinButton_SetEnabled	game	low	DialogElements.h inline (+0x40), called by Dialogs.cpp only
+0x452740	TMultiStateButton_dtor	game	high	DialogElements.h inline ~TMultiStateButton (vtable 0x560e10): frees the skin and callback arrays
+0x452770	TSkinButton_ReleaseCapture	game	high	DialogElements.h inline, vtable 0x5619f8 +0x7c: Pressed=false, then TElement's; missed by Ghidra
+0x452780	TSkinButton_MouseHover	game	high	DialogElements.h inline, vtable +0x64: SetMouseOverText(Tooltip); missed by Ghidra
+0x4527c0	TCheckBox_LeftButtonUp	game	high	DialogElements.h inline, vtable 0x561de8 +0x54: toggles Checked when enabled; missed by Ghidra
+0x4527e0	TEditLine_dtor	game	high	DialogElements.h inline ~TEditLine (vtable 0x560e98): frees Text
+0x452800	TEditLine_ReleaseCapture	game	high	DialogElements.h inline, vtable +0x7c: Selecting=false, then TWindow's; missed by Ghidra
+0x452810	TEditLine_DeleteChar	game	medium	DialogElements.h inline, vtable +0xac: DeleteText(Position, 1); missed by Ghidra
+0x452830	TEditLine_SetDisabled	game	low	DialogElements.h inline, vtable +0xb8 (+0x65); ConsoleWindow.cpp's channels without writing; missed by Ghidra
+0x452840	TEditLine_IsDisabled	game	low	DialogElements.h inline, vtable +0xbc; missed by Ghidra
+0x452850	TEditLine_SetFont	game	medium	DialogElements.h inline, vtable +0xc0; missed by Ghidra
+0x452880	TEditLine_SetSelection	game	medium	DialogElements.h inline: selection start at Position (limited), length 0
+0x4528e0	TEditLine_GetPosition	game	medium	DialogElements.h inline, vtable +0xc4: the character under (x, y); missed by Ghidra
+0x452980	TPasswordEditLine_dtor	game	high	DialogElements.h inline ~TPasswordEditLine (vtable 0x560f60) with ~TEditLine inlined
+0x4529b0	TPasswordEditLine_RightButtonUp	game	medium	DialogElements.h inline, vtable 0x560f60 +0x5c: TWindow::RightButtonUp (no menu); missed by Ghidra
+0x4529c0	TPasswordEditLine_MouseMove	game	medium	DialogElements.h inline, vtable +0x4c: TWindow::MouseMove (no selecting); missed by Ghidra
+0x4529d0	TListBox_GetSelection	game	medium	DialogElements.h inline, called by Dialogs.cpp: Selected if it is a line, else -1
+0x4529f0	TListBox_SetEditable	game	low	DialogElements.h inline (+0x70), called by Dialogs.cpp only
+0x452a00	TProgressBar_ctor	game	medium	DialogElements.h inline TProgressBar(), vtable 0x561028, 0x2c bytes: Maximum 100
+0x452a90	TProgressBar_getMinimumWidth	game	high	DialogElements.h inline, vtable 0x561028 +0x3c; missed by Ghidra
+0x452ab0	TProgressBar_getMinimumHeight	game	high	DialogElements.h inline, vtable +0x40; missed by Ghidra
+0x452c50	vector_int_dtor	game	medium	Container.h ~vector<int> (delete[] entry), called by unwind funclets
+0x452c60	vector_TListBoxLine_dtor	game	medium	Container.h ~vector<TListBoxLine> (delete[] entry at +0x30), called by unwind funclets
+0x452c70	TListBoxLine_ctor	game	medium	DialogElements.h implicit TListBoxLine() (TFont's defaults), the element constructor of new TListBoxLine[]; missed by Ghidra
+0x452d50	TLabel_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TLabel (vtable 0x560bb8 slot 0), calls 0x4525d0
+0x452d70	TFormattedText_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TFormattedText, calls 0x452630
+0x452d90	TLink_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TLink, calls 0x452670
+0x452db0	TMultiStateButton_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TMultiStateButton, calls 0x452740
+0x452dd0	TEditLine_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TEditLine, calls 0x4527e0
+0x452df0	TPasswordEditLine_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TPasswordEditLine, calls 0x452980
+0x452e10	TListBox_dtor	game	high	DialogElements.h inline ~TListBox (vtable 0x561138): frees the lines, the edit line unless it is a child
+0x453230	TListBox_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TListBox, calls 0x452e10
+0x453250	TFontListBox_dtor	game	high	DialogElements.h inline ~TFontListBox (vtable 0x5611e0): frees its lines, then ~TListBox
+0x4532e0	TFontListBox_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TFontListBox, calls 0x453250
+0x453930	TSeparator_SetSize	game	high	DialogElements.cpp line 42, vtable 0x5610b0 +0x34
+0x453ad0	TSeparator_Arrange	game	high	DialogElements.cpp: skins 11/10 (vertical) or 9/8 (horizontal)
+0x453db0	TResizer_ReleaseCapture	game	high	DialogElements.h inline, vtable 0x5612b0 +0x7c: Dragging=false; missed by Ghidra
+0x453dc0	TResizer_SetSize	game	high	DialogElements.cpp line 94
+0x453f60	TResizer_Arrange	game	high	DialogElements.cpp: skin 42 unless invisible
+0x453fe0	TResizer_MouseMove	game	high	DialogElements.cpp lines 113-122 (ToResize!=NULL)
+0x4542a0	TResizer_LeftButtonDown	game	high	DialogElements.cpp lines 129-137
+0x454530	TResizer_LeftButtonUp	game	high	DialogElements.cpp lines 144-154
+0x4547f0	TBorder_ctor	game	medium	DialogElements.cpp lines 166-184 (_Window!=NULL): TWindow, vtable 0x561358, 0x68 bytes, (_Window, Border), skins 26-33; MainWindow.cpp's side bar
+0x454b10	TBorder_ctor_skins	game	medium	DialogElements.cpp lines 192-210: (_Window, eight skins, Border)
+0x454e30	TBorder_ctor_background	game	medium	DialogElements.cpp lines 217-235: (_Window, eight skins, background skin, Border)
+0x455150	TBorder_SetSize	game	high	DialogElements.cpp lines 242-251 (Width>=getMinimumWidth()): also places and sizes the window
+0x455500	TBorder_FitToWindow	game	low	DialogElements.cpp line 262: the frame's size for the window's; MainWindow.cpp's start window; name ours
+0x4556b0	TBorder_Arrange	game	high	DialogElements.cpp: the nine skins and the window's area
+0x455a50	TLabel_Draw	game	high	DialogElements.cpp line 413
+0x455ca0	TLabel_MouseHover	game	high	DialogElements.cpp line 423: the full text of a shortened label
+0x456200	TFormattedText_SetSize	game	high	DialogElements.cpp line 531
+0x4563d0	TFormattedText_GetToken	game	medium	DialogElements.cpp line 577 (TokenType, TokenData): length of the <...> token at the text's start
+0x456810	TFormattedText_SetText	game	medium	DialogElements.cpp lines 723-734 (_Text!=NULL), vtable 0x560c40 +0xa0
+0x456b00	TLink_Arrange	game	high	DialogElements.cpp lines 812-824 (Width>0)
+0x456df0	TLink_SetSize	game	high	DialogElements.cpp line 838
+0x456fa0	TLink_HandleEvent	game	high	DialogElements.cpp line 848: event 1 calls OpenURL(Destination)
+0x457140	TOutfitIcon_Draw	game	high	DialogElements.cpp lines 908-911 (getWidth()==getHeight())
+0x457440	TOutfitIcon_SetColor	game	medium	DialogElements.cpp line 934 (In(Mask,1,4))
+0x4575a0	TOutfitIcon_SetColors	game	medium	DialogElements.cpp line 942 (ColorData!=NULL)
+0x457700	TSkinIcon_LeftButtonDown	game	medium	DialogElements.h inline "return false" (x, y, Flags/Code), vtable +0x50/+0x54/+0x5c/+0x60 of TSkinIcon and +0x50/+0x54/+0x5c of the other icons and TLabel (folded); missed by Ghidra
+0x4578c0	TSkinIcon_Draw	game	high	DialogElements.cpp lines 1009-1014
+0x457c40	TObjectIcon_Draw	game	high	DialogElements.cpp lines 1052-1063: skin 102 frame narrows the clip area only
+0x458150	TSkinButton_Draw	game	high	DialogElements.cpp lines 1122-1127
+0x4584e0	TSkinButton_MouseMove	game	high	DialogElements.cpp: MouseInside
+0x458540	TSkinButton_LeftButtonDown	game	high	DialogElements.cpp line 1155
+0x458710	TSkinButton_LeftButtonUp	game	high	DialogElements.cpp line 1174: selects the radio button, sends Callback
+0x4588f0	TSkinButton_MouseWheel	game	high	DialogElements.cpp line 1192 (Code): code 6 repeats Callback while held (Repeat)
+0x458ab0	TSkinButton_IsPressed	game	medium	DialogElements.cpp: vtable 0x5619f8 +0x84
+0x458f50	TColorButton_Draw	game	high	DialogElements.cpp line 1274: a filled rectangle under the button
+0x459130	TIconButton_Draw	game	high	DialogElements.cpp lines 1305-1310 (SkinProperties.Buttons.Texture)
+0x4594e0	TBlinkingButton_Draw	game	high	DialogElements.cpp line 1363: switches the skin pair every SkinProperties.Data8C0 ms
+0x4596d0	TTextButton_Draw	game	high	DialogElements.cpp line 1410
+0x459940	TToggleButton_LeftButtonUp	game	high	DialogElements.cpp line 1454: toggles State
+0x459b00	TToggleButton_IsPressed	game	high	DialogElements.cpp: vtable 0x561cd0 +0x84
+0x459b70	TTextToggleButton_LeftButtonUp	game	high	DialogElements.cpp line 1511
+0x459d30	TTextToggleButton_IsPressed	game	high	DialogElements.cpp: vtable 0x561d58 +0x84
+0x459da0	TMultiStateButton_LeftButtonUp	game	high	DialogElements.cpp line 1609: sends the state's callback, next state
+0x459f90	TCheckBox_Draw	game	high	DialogElements.cpp lines 1711-1716 (SkinProperties.CheckBox.Item)
+0x45a360	TCheckBox_Arrange	game	high	DialogElements.cpp: skins 146-149
+0x45a4c0	TEditLine_ctor_length	game	high	DialogElements.cpp lines 1908-1927 (_MaxLength>=0): (MaxLength, ReadOnly) without an area
+0x45a800	TEditLine_Draw	game	high	DialogElements.cpp line 1963
+0x45ac40	TEditLine_SetSize	game	high	DialogElements.cpp line 1974
+0x45ade0	TEditLine_Arrange	game	high	DialogElements.cpp: skins 8-11
+0x45af40	TEditLine_MouseMove	game	high	DialogElements.cpp line 2014: extends the selection while Selecting
+0x45b130	TEditLine_LeftButtonUp	game	high	DialogElements.cpp line 2058
+0x45b2e0	TEditLine_LeftButtonDoubleClick	game	high	DialogElements.cpp line 2078: selects a word
+0x45b5b0	TEditLine_RightButtonUp	game	high	DialogElements.cpp line 2093: message 58 (the edit context menu)
+0x45b790	TEditLine_HandleEvent	game	high	DialogElements.cpp lines 2206-2209: 16 copy, 17 cut, 18 paste, 19 delete, 20 select all
+0x45bcc0	TEditLine_SetText	game	high	DialogElements.cpp lines 2243-2252 (_Text!=NULL), vtable +0xa0
+0x45bf70	TEditLine_InsertText	game	high	DialogElements.cpp lines 2263-2294 (Position, insertlength, Cursor, MaxLength), vtable +0xb0
+0x45c490	TEditLine_InsertChar	game	high	DialogElements.cpp lines 2302-2309, vtable +0xb4
+0x45c760	TEditLine_DeleteText	game	high	DialogElements.cpp line 2327 (start, length), vtable +0xa8
+0x45c980	TEditLine_Clear	game	high	DialogElements.cpp line 2342, vtable +0xa4
+0x45cb50	TPasswordEditLine_ctor	game	medium	DialogElements.cpp: TEditLine, vtable 0x560f60, 0x6c bytes; class name ours
+0x45cbb0	TPasswordEditLine_Draw	game	high	DialogElements.cpp line 2420: stars in place of the text
+0x45cda0	TPasswordEditLine_HandleEvent	game	high	DialogElements.cpp line 2430: only event 18 (paste)
+0x45cf30	TEditText_Draw	game	high	DialogElements.cpp line 2503
+0x45d400	TEditText_MouseWheel	game	high	DialogElements.cpp line 2549 (Code)
+0x45d5d0	TEditText_SetActive	game	medium	DialogElements.cpp line 2728, vtable 0x562040 +0xc8: never active when read-only
+0x45d770	TEditText_GetPosition	game	high	DialogElements.cpp line 2762, vtable +0xc4
+0x45da90	TEditText_FormatText	game	medium	DialogElements.cpp lines 2770-2795 (FieldWidth>0): the line starts
+0x45ddf0	TFocusGroup_ctor	game	medium	DialogElements.cpp: 0x28 bytes, MemberList vector(0, 2, 2, NULL); class name from _FocusGroup
+0x45de20	TFocusGroup_SetActive	game	medium	DialogElements.cpp line 2828
+0x45dfc0	TFocusGroup_AddMember	game	high	DialogElements.cpp lines 2835-2836 (MemberList(i) != Member, Member!=NULL)
+0x45e290	TFocusGroup_Next	game	high	DialogElements.cpp lines 2846-2860 (Active!=NULL, Next != -1): Tab
+0x45e630	TFocusGroup_Previous	game	high	DialogElements.cpp lines 2868-2882: Shift+Tab
+0x45e9e0	THorizontalScrollBarRange_ctor	game	medium	DialogElements.cpp lines 2925-2944 (_Min<=_Max): TElement, vtable 0x5617e0, 0x54 bytes, with a TCallback; class name ours
+0x45ede0	THorizontalScrollBarRange_ReleaseCapture	game	high	DialogElements.h inline, vtable 0x5617e0 +0x7c; missed by Ghidra
+0x45edf0	THorizontalScrollBarRange_getMinimumHeight	game	high	DialogElements.h inline, SkinProperties.Data880 (also THorizontalScrollBar +0x40, folded); missed by Ghidra
+0x45ee00	THorizontalScrollBarRange_getMinimumWidth	game	high	DialogElements.h inline, SkinProperties.Data87C; missed by Ghidra
+0x45ee10	THorizontalScrollBarRange_SetValue	game	high	DialogElements.cpp line 2974 (_Value)
+0x45eff0	THorizontalScrollBarRange_SetSize	game	high	DialogElements.cpp line 2986
+0x45f1a0	THorizontalScrollBarRange_Arrange	game	high	DialogElements.cpp: skins 161-164
+0x45f3d0	THorizontalScrollBarRange_MouseMove	game	high	DialogElements.cpp line 3039
+0x45f5c0	THorizontalScrollBarRange_LeftButtonDown	game	high	DialogElements.cpp line 3057
+0x45f790	THorizontalScrollBarRange_LeftButtonUp	game	high	DialogElements.cpp line 3081
+0x45f9d0	THorizontalScrollBarRange_MouseWheel	game	high	DialogElements.cpp line 3113 (Code)
+0x45fca0	THorizontalScrollBarRange_KeyPress	game	high	DialogElements.cpp line 3131 (Key)
+0x45fe90	THorizontalScrollBar_SetSize	game	high	DialogElements.cpp line 3188
+0x4600c0	THorizontalScrollBar_MouseWheel	game	high	DialogElements.cpp line 3200
+0x460280	THorizontalScrollBar_HandleEvent	game	high	DialogElements.cpp line 3213: events 5 and 6 of the buttons
+0x460430	TScrollBarRange_ReleaseCapture	game	high	DialogElements.h inline, vtable 0x561868 +0x7c; missed by Ghidra
+0x460440	TScrollBarRange_getMinimumHeight	game	high	DialogElements.h inline, SkinProperties.Data86C; missed by Ghidra
+0x4608e0	TScrollBarRange_SetSize	game	high	DialogElements.cpp line 3315
+0x460a90	TScrollBarRange_Arrange	game	high	DialogElements.cpp: skins 153-156
+0x460cc0	TScrollBarRange_MouseMove	game	high	DialogElements.cpp line 3367
+0x460eb0	TScrollBarRange_LeftButtonDown	game	high	DialogElements.cpp line 3385
+0x461080	TScrollBarRange_LeftButtonUp	game	high	DialogElements.cpp line 3408
+0x4612c0	TScrollBarRange_MouseWheel	game	high	DialogElements.cpp line 3438
+0x461580	TScrollBarRange_KeyPress	game	high	DialogElements.cpp line 3455 (Key)
+0x461770	TScrollBar_SetSize	game	high	DialogElements.cpp line 3509
+0x4619a0	TScrollBar_MouseWheel	game	high	DialogElements.cpp line 3521
+0x461b60	TScrollBar_HandleEvent	game	high	DialogElements.cpp line 3534: events 3 and 4 of the buttons
+0x461d10	TListBox_Draw	game	high	DialogElements.cpp line 3635
+0x4620e0	TListBox_SetSize	game	high	DialogElements.cpp line 3646
+0x462290	TListBox_MouseWheel	game	high	DialogElements.cpp line 3747
+0x462460	TListBox_AddLine	game	high	DialogElements.cpp lines 3799-3806 (Text!=NULL)
+0x462730	TListBox_SetLine	game	high	DialogElements.cpp lines 3831-3839 (In(Number,0,Lines-1))
+0x462b20	TListBox_GetLine	game	high	DialogElements.cpp line 3847
+0x462ca0	TListBox_Clear	game	high	DialogElements.cpp line 3921
+0x462e70	TListBox_GetLineAt	game	high	DialogElements.cpp line 3938 (y)
+0x463060	TListBox_StartEdit	game	medium	DialogElements.cpp line 3957, vtable 0x561138 +0xa0
+0x463280	TListBox_StopEdit	game	medium	DialogElements.cpp line 3971, vtable +0xa4
+0x463430	TFontListBox_Draw	game	high	DialogElements.cpp line 4029
+0x463820	TFontListBox_AddLine	game	high	DialogElements.cpp lines 4051-4059 (Text, TFont)
+0x463b10	TFontListBox_AddLine_length	game	high	DialogElements.cpp lines 4067-4074 (MaxLength>=0): an empty line
+0x463dc0	TFontListBox_SetLine	game	high	DialogElements.cpp lines 4082-4091
+0x4641e0	TFontListBox_Clear	game	high	DialogElements.cpp line 4105
+0x4643a0	TFontListBox_GetLine	game	high	DialogElements.cpp lines 4113-4118: the text and its font
+0x464670	TFontListBox_MouseHover	game	high	DialogElements.cpp line 4133
+0x464870	TFontListBox_StartEdit	game	medium	DialogElements.cpp line 4163, vtable 0x5611e0 +0xa0
+0x464af0	TFontListBox_StopEdit	game	medium	DialogElements.cpp line 4183, vtable +0xa4
+0x464d00	TProgressBar_Arrange	game	high	DialogElements.cpp: skins 256-261
+0x464f40	TProgressBar_SetMaximum	game	high	DialogElements.cpp lines 4271-4276 (maximum>0)
+0x4651c0	TProgressBar_SetCurrent	game	high	DialogElements.cpp line 4289 (current)
+0x465380	TProgressBar_SetComplete	game	low	DialogElements.cpp line 4301: current = maximum; name ours
+0x465810	TLabel_ctor_position	game	medium	DialogElements.cpp lines 355-369: (x, y, TFont, text), sized to the text
+0x466010	TFormattedText_Arrange	game	high	DialogElements.cpp lines 684-715 ("unknown token type"): a TLabel per piece, TSkinIcon per <skin=n>
+0x4666a0	TOutfitIcon_ctor	game	medium	DialogElements.cpp line 899 (_Outfit, _Direction): TElement, vtable 0x561970, 0x48 bytes; class name ours
+0x466a60	TColorButton_ctor	game	low	DialogElements.cpp: TSkinButton on a colour (vtable 0x561a80, 0x50 bytes); class name ours
+0x466ad0	TIconButton_ctor	game	low	DialogElements.cpp: TSkinButton with an icon skin (vtable 0x561b08, 0x48 bytes); class name ours
+0x466b20	TBlinkingButton_ctor	game	medium	DialogElements.cpp: two skin pairs (vtable 0x561b90, 0x5c bytes), MapWindow.cpp's hint button; class name ours
+0x466eb0	TTextButton_SetText	game	medium	DialogElements.h inline, vtable 0x561c40 +0x88: strcpy; missed by Ghidra
+0x4671b0	TToggleButton_MouseHover	game	high	DialogElements.h inline, vtable 0x561cd0 +0x64: the tooltip of the state; missed by Ghidra
+0x467290	TTextToggleButton_MouseHover	game	high	DialogElements.h inline, vtable 0x561d58 +0x64; missed by Ghidra
+0x4672c0	TElement_dtor	game	medium	GUI.h implicit ~TElement (jumps to ~TComponent), called by the folded deleting destructor 0x429590 and unwind funclets; kept in DialogElements.obj
+0x467420	TCheckBox_SetChecked	game	high	DialogElements.h inline, vtable 0x561de8 +0xa0; missed by Ghidra
+0x467430	TCheckBox_IsChecked	game	high	DialogElements.h inline, vtable +0xa4; missed by Ghidra
+0x467440	TCheckBox_ctor	game	high	DialogElements.cpp lines 1686-1699 (_Text!=NULL, strlen(_Text)<50): TWindow, vtable 0x561de8, 0x34 bytes; name from SkinProperties.CheckBox
+0x4678d0	TCheckBox_SetEnabled	game	medium	DialogElements.cpp line 1768: a new label in the enabled or disabled font
+0x467ec0	TEditLine_LeftButtonDown	game	high	DialogElements.cpp line 2037
+0x4680c0	TEditLine_KeyPress	game	high	DialogElements.cpp line 2156 (Key)
+0x468470	TEditLine_SetFocusGroup	game	high	DialogElements.cpp lines 2230-2235 (_FocusGroup!=NULL)
+0x4686f0	TEditText_Arrange	game	high	DialogElements.cpp line 2536
+0x468a60	TEditText_KeyPress	game	high	DialogElements.cpp line 2703 (Key)
+0x469120	TEditText_SetText	game	medium	DialogElements.cpp line 2711 (_Text!=NULL), vtable 0x562040 +0xcc (text, KeepPosition); Ghidra split it at 0x469144
+0x469144	TEditText_SetText_part	game	high	Ghidra split of TEditText_SetText 0x469120 (not a function)
+0x4692c0	THorizontalScrollBar_getMinimumWidth	game	high	DialogElements.h inline, vtable 0x561ed0 +0x3c, SkinProperties.Data884; missed by Ghidra
+0x4692d0	THorizontalScrollBar_ctor	game	medium	DialogElements.cpp lines 3158-3169 (_ButtonRange>0): TWindow, vtable 0x561ed0, 0x38 bytes; class name ours
+0x469670	TScrollBarRange_ctor	game	medium	DialogElements.cpp lines 3227-3248 (_Min<=_Max): TElement, vtable 0x561868, 0x4c bytes; class name ours
+0x469e50	TScrollBar_getMinimumHeight	game	high	DialogElements.h inline, vtable 0x561f70 +0x40, SkinProperties.Data874; missed by Ghidra
+0x469e60	TScrollBar_getMinimumWidth	game	high	DialogElements.h inline, SkinProperties.Data870 (also TScrollBarRange +0x3c, folded); missed by Ghidra
+0x469e70	TListBox_ctor	game	medium	DialogElements.cpp line 3596: TWindow, vtable 0x561138, 0x7c bytes, (SelectCallback, ActionCallback); class name ours (Lines from the assertions)
+0x46a120	TListBox_Arrange	game	high	DialogElements.cpp line 3676
+0x46a460	TListBox_LeftButtonDown	game	high	DialogElements.cpp line 3696
+0x46a640	TListBox_LeftButtonDoubleClick	game	high	DialogElements.cpp line 3720
+0x46a830	TListBox_MouseHover	game	high	DialogElements.cpp line 3734
+0x46aa30	TListBox_KeyPress	game	high	DialogElements.cpp line 3791 (_Key)
+0x46ad10	TListBox_SetSelection	game	high	DialogElements.cpp lines 3891-3896
+0x46afc0	TFontListBox_ctor	game	medium	DialogElements.cpp: TListBox, vtable 0x5611e0, 0xb0 bytes; class name ours
+0x46b030	TLink_ctor	game	medium	DialogElements.cpp lines 785-796 (_Destination, _Text, ButtonText !=NULL): TWindow, vtable 0x560ce8, 0x3c bytes; class name ours
+0x46b500	TEditText_getMinimumWidth	game	high	DialogElements.h inline, vtable 0x562040 +0x3c: the scroll bar's; missed by Ghidra
+0x46b510	TEditText_getMinimumHeight	game	high	DialogElements.h inline, vtable +0x40; missed by Ghidra
+0x46b520	TEditText_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TEditText, calls 0x46b540
+0x46b540	TEditText_dtor	stl	high	compiler-generated ~TEditText (vtable 0x562040): ~vector<int>, ~TEditLine inlined
+0x46b570	TEditText_ctor	game	medium	DialogElements.cpp line 2466 (MaxLength): TEditLine, vtable 0x562040, 0x9c bytes, multi-line with a scroll bar; class name ours (FieldWidth from the assertion)
+0x4731d0	TScrollBar_KeyPress	game	medium	DialogElements.h inline Range->KeyPress(Key), vtable +0x6c of both scroll bars; folded with a Dialogs.cpp copy

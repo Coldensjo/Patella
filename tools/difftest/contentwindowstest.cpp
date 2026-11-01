@@ -33,6 +33,7 @@
 // inside the windows).
 
 #include "difftest.h"
+#include "elementfakes.h"
 #include "../../src/ContentWindows.h"
 #include "../../src/Communication.h"
 #include "../../src/ContextMenus.h"
@@ -112,14 +113,19 @@ static std::map<const void *, std::string> Arguments[2];
 static std::map<const void *, std::string> LabelTexts[2];
 static int Serial[2];
 
+static bool IsRealElement(const std::string &Kind) { return Kind == "ObjectIcon" || Kind == "Separator"; }
 static std::string Name(int s, const void *Object)
 {
 	if (Object == NULL)
 		return "0";
+	// The real separators and object icons may reuse the memory of a fake
+	// (a stale role).
+	auto K = Kinds[s].find(VtableOf(Object));
+	if (K != Kinds[s].end() && IsRealElement(K->second))
+		return K->second;
 	auto R = Roles[s].find(Object);
 	if (R != Roles[s].end())
 		return R->second;
-	auto K = Kinds[s].find(VtableOf(Object));
 	if (K != Kinds[s].end())
 		return K->second;
 	return "?";
@@ -201,7 +207,7 @@ void ReportElement(void *Object, const char *Kind, const char *Format, ...)
 }
 
 // The new fakes of the DialogElements.cpp members ContentWindows.cpp uses.
-TTextButton::TTextButton(int x, int y, const char *_Text, TCallback Callback, const char *Tooltip)
+TFakeTextButton::TFakeTextButton(int x, int y, const char *_Text, TCallback Callback, const char *Tooltip)
 {
 	memset(Data24, 0, sizeof(Data24));
 	SetPosition(x, y);
@@ -209,9 +215,9 @@ TTextButton::TTextButton(int x, int y, const char *_Text, TCallback Callback, co
 	ReportElement(this, "TextButton", "%d,%d,%s,@%p/%d,%s", x, y, _Text, (void *)Callback.Receiver, Callback.Event,
 		Tooltip == NULL ? "-" : Tooltip);
 }
-TTextToggleButton::TTextToggleButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
+TFakeTextToggleButton::TFakeTextToggleButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
 	const char *_Tooltip1, const char *_Tooltip2, bool _State)
-	: TTextButton(x, y, _Text, Skin1, Skin2, Callback, 0)
+	: TFakeTextButton(x, y, _Text, Skin1, Skin2, Callback, NULL)
 {
 	State = _State;
 	Tooltip1 = _Tooltip1;
@@ -221,7 +227,7 @@ TTextToggleButton::TTextToggleButton(int x, int y, const char *_Text, int Skin1,
 	ReportElement(this, "TextToggle", "%d,%d,%s,%d,%d,@%p/%d,%s,%s,%d", x, y, _Text, Skin1, Skin2,
 		(void *)Callback.Receiver, Callback.Event, _Tooltip1, _Tooltip2, _State ? 1 : 0);
 }
-TLabel::TLabel(int x, int y, int Width, int Height, TFont Font, const char *_Text, bool Param)
+TFakeLabel::TFakeLabel(int x, int y, int Width, int Height, TFont Font, const char *_Text, bool Param)
 {
 	memset(Data24, 0, sizeof(Data24));
 	SetPosition(x, y);
@@ -229,27 +235,27 @@ TLabel::TLabel(int x, int y, int Width, int Height, TFont Font, const char *_Tex
 	ReportElement(this, "Label", "%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d", x, y, Width, Height, Font.FontNumber, Font.Color.R,
 		Font.Color.G, Font.Color.B, Font.Alignment, _Text, Param ? 1 : 0);
 }
-void TLabel::SetText(const char *_Text, bool Param)
+void TFakeLabel::SetText(const char *_Text, bool Param)
 {
 	Logf("SetText%s,%s,%d;", Name(this).c_str(), _Text, Param ? 1 : 0);
 	if (Testing)
 		LabelTexts[Side][this] = _Text;
 }
-TSkinIcon::TSkinIcon(int _Skin)
+TFakeSkinIcon::TFakeSkinIcon(int _Skin)
 {
 	Skin = _Skin;
 	SetSize(Skins[_Skin].width, Skins[_Skin].height);
 	ReportElement(this, "SkinIcon", "%d", _Skin);
 }
-void TSkinButton::SetRadioButtonGroup(TRadioButtonGroup *Group)
+void TFakeSkinButton::SetRadioButtonGroup(TRadioButtonGroup *Group)
 {
 	Logf("Radio%s;", Name(this).c_str());
 	RadioButtonGroup = Group;
-	Group->Buttons(Group->Count) = this;
+	Group->Buttons(Group->Count) = (TSkinButton *)this;
 	Group->Count++;
 }
 // The range (Data00[0], Data00[1]) comes from consolewindowtest.cpp's SetRange.
-void TScrollBarRange::SetValue(int _Value)
+void TFakeScrollBarRange::SetValue(int _Value)
 {
 	int Minimum = ((int *)Data00)[0], Maximum = ((int *)Data00)[1];
 	Logf("SetValue%d;", _Value);
@@ -260,49 +266,8 @@ void TScrollBarRange::SetValue(int _Value)
 	Value = _Value;
 }
 
-// The image's constructors build the same objects (the shared fakes).
-static void *__fastcall ImageSkinButton(void *This, void *, int x, int y, int Up, int Down, TCallback Callback,
-	const char *Tooltip, int Param)
-{
-	return new (This) TSkinButton(x, y, Up, Down, Callback, Tooltip, Param);
-}
-static void *__fastcall ImageToggleButton(void *This, void *, int x, int y, int Up, int Down, TCallback Callback,
-	const char *Tooltip1, const char *Tooltip2, int Param)
-{
-	return new (This) TToggleButton(x, y, Up, Down, Callback, Tooltip1, Tooltip2, Param);
-}
-static void *__fastcall ImageTextButton(void *This, void *, int x, int y, const char *Text, TCallback Callback,
-	const char *Tooltip)
-{
-	return new (This) TTextButton(x, y, Text, Callback, Tooltip);
-}
-static void *__fastcall ImageTextToggle(void *This, void *, int x, int y, const char *Text, int S1, int S2,
-	TCallback Callback, const char *T1, const char *T2, bool State)
-{
-	return new (This) TTextToggleButton(x, y, Text, S1, S2, Callback, T1, T2, State);
-}
-static void *__fastcall ImageLabel(void *This, void *, TFont Font, const char *Text) { return new (This) TLabel(Font, Text); }
-static void *__fastcall ImageAreaLabel(void *This, void *, int x, int y, int Width, int Height, TFont Font,
-	const char *Text, bool Param)
-{
-	return new (This) TLabel(x, y, Width, Height, Font, Text, Param);
-}
-static void *__fastcall ImageSkinIcon(void *This, void *, int Skin) { return new (This) TSkinIcon(Skin); }
-static void *__fastcall ImageObjectIcon(void *This, void *, TObject Obj, const TRGBColor *Color, int Param)
-{
-	return new (This) TObjectIcon(Obj, Color, Param);
-}
-static void *__fastcall ImageSeparator(void *This, void *, bool Horizontal) { return new (This) TSeparator(Horizontal); }
-static void *__fastcall ImageScrollBar(void *This, void *, TRect Area, int P2, int P3, int P4, int P5, int Step)
-{
-	return new (This) TScrollBar(Area, P2, P3, P4, P5, Step);
-}
-static void *__fastcall ImageResizer(void *This, void *, TComponent *ToResize, bool P2, bool P3, bool P4)
-{
-	return new (This) TResizer(ToResize, P2, P3, P4);
-}
 // Both sides' SetRange (the shared one logs only in consolewindowtest.cpp).
-static void __fastcall FakeSetRange(TScrollBarRange *Range, void *, int Minimum, int Maximum, int Value, int Visible)
+static void __fastcall FakeSetRange(TFakeScrollBarRange *Range, void *, int Minimum, int Maximum, int Value, int Visible)
 {
 	Logf("Range%d,%d,%d,%d;", Minimum, Maximum, Value, Visible);
 	((int *)Range->Data00)[0] = Minimum;
@@ -322,14 +287,14 @@ public:
 	bool LeftButtonDown(int x, int y, int Flags) { Logf("P%s,%d,%d,%d;", Name(this).c_str(), x, y, Flags); return false; }
 	bool LeftButtonUp(int x, int y, int Flags) { Logf("U%s,%d,%d,%d;", Name(this).c_str(), x, y, Flags); return false; }
 };
-class TCWTestLabel : public TLabel {
+class TCWTestLabel : public TFakeLabel {
 public:
-	TCWTestLabel() : TLabel(TFont(), "") {}
+	TCWTestLabel() : TFakeLabel(TFont(), "") {}
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
-class TCWTestScrollBar : public TScrollBar {
+class TCWTestScrollBar : public TFakeScrollBar {
 public:
-	TCWTestScrollBar() : TScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
+	TCWTestScrollBar() : TFakeScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
 	~TCWTestScrollBar() {}
 	int getMinimumHeight() { return ScrollMinimumHeight; }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d,%dx%d;", Name(this).c_str(), Surface, x, y, Width, Height); }
@@ -1033,24 +998,15 @@ static void PatchCallees()
 		{0x523817, (void *)(void *(__cdecl *)(size_t))operator new[], (void *)PatternNew},
 		{0x460450, Member(&TScrollBarRange::SetRange), (void *)FakeSetRange},
 	};
+	// DialogElements.cpp: both sides build the shared fakes (elementfakes.cpp; the
+	// separators and object icons are real, their constructors are inline);
+	// SetRange is this file's FakeSetRange (patched over the shared one).
+	PatchElementFakes(Redirect);
 	for (auto &T : Table) {
 		Redirect((void *)(uintptr_t)T.Image, T.Fake);
 		if (T.Ours != NULL)
 			Redirect(T.Ours, T.Fake);
 	}
-	// DialogElements.cpp: the image's constructors build the fakes, its members are the fakes.
-	struct { uint32 Image; void *Fake; } Elements[] = {
-		{0x466860, (void *)ImageSkinButton}, {0x4671e0, (void *)ImageToggleButton},
-		{0x466ed0, (void *)ImageTextButton}, {0x467230, (void *)ImageTextToggle},
-		{0x465b40, (void *)ImageLabel}, {0x465510, (void *)ImageAreaLabel},
-		{0x457710, (void *)ImageSkinIcon}, {0x4526c0, (void *)ImageObjectIcon},
-		{0x452cb0, (void *)ImageSeparator}, {0x469a80, (void *)ImageScrollBar},
-		{0x453be0, (void *)ImageResizer},
-		{0x455e40, Member(&TLabel::SetText)}, {0x458de0, Member(&TSkinButton::SetRadioButtonGroup)},
-		{0x460710, Member(&TScrollBarRange::SetValue)}, {0x458b20, Member(&TSkinButton::SetSkins)},
-	};
-	for (auto &E : Elements)
-		Redirect((void *)(uintptr_t)E.Image, E.Fake);
 }
 
 // Our printf is a fake only while our side runs (CHECK prints with it).
@@ -1249,7 +1205,7 @@ static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth)
 	}
 	std::string Kind = KindOf(s, C);
 	auto A = Arguments[s].find(C);
-	if (A != Arguments[s].end()) {
+	if (A != Arguments[s].end() && !IsRealElement(Kind)) {
 		Add(Out, " %s", A->second.c_str());
 		const std::string &Made = A->second;
 		if (Made.compare(0, 10, "SkinButton") == 0 || Made.compare(0, 12, "ToggleButton") == 0) {
@@ -1264,7 +1220,7 @@ static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth)
 			if (T != LabelTexts[s].end())
 				Add(Out, " text %s", T->second.c_str());
 		} else if (Made.compare(0, 9, "ScrollBar") == 0) {
-			TScrollBar *B = (TScrollBar *)C;
+			TFakeScrollBar *B = (TFakeScrollBar *)C;
 			Add(Out, " range %d,%d value %d", ((int *)B->Range->Data00)[0], ((int *)B->Range->Data00)[1], B->Range->Value);
 		}
 		return;
@@ -2028,6 +1984,18 @@ void TestContentWindows()
 	};
 	for (auto &I : Images)
 		Kinds[ORIGINAL][(void *)(uintptr_t)I.Vtable] = I.Kind;
+	// The real separators and object icons (inline constructors).
+	Kinds[ORIGINAL][(void *)(uintptr_t)0x5610b0] = "Separator";
+	Kinds[ORIGINAL][(void *)(uintptr_t)0x560d88] = "ObjectIcon";
+	{
+		TSeparator *Separator = new TSeparator(true);
+		TRGBColor Color;
+		TObjectIcon *Icon = new TObjectIcon(TObject(), &Color, false);
+		Kinds[OURS][VtableOf(Separator)] = "Separator";
+		Kinds[OURS][VtableOf(Icon)] = "ObjectIcon";
+		delete Separator;
+		delete Icon;
+	}
 	PatchCallees();
 	DialogFakes.SetSkins = HookSetSkins;
 	DialogFakes.NewResizer = HookResizer;

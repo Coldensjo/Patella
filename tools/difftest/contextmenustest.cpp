@@ -30,6 +30,7 @@
 // "unknown event" errors are not exercised.
 
 #include "difftest.h"
+#include "elementfakes.h"
 #include "../../src/ContextMenus.h"
 #include "../../src/ContentWindows.h"
 #include "../../src/Communication.h"
@@ -75,7 +76,7 @@ static_assert(sizeof(TEditContextMenu) == 0x38, "TEditContextMenu is 0x38 bytes"
 static_assert(sizeof(TMarkMenuData) == 0x80, "TMarkMenuData is 0x80 bytes");
 static_assert(sizeof(TMarkContextMenu) == 0xb4, "TMarkContextMenu is 0xb4 bytes");
 static_assert(sizeof(TSkillContextMenu) == 0x38, "TSkillContextMenu is 0x38 bytes");
-static_assert(offsetof(TEditLine, Data5C) == 0x5c && offsetof(TEditLine, Data66) == 0x66, "TEditLine layout");
+static_assert(offsetof(TFakeEditLine, Data5C) == 0x5c && offsetof(TFakeEditLine, Data66) == 0x66, "TEditLine layout");
 static_assert(offsetof(TTextWindow, TextBuffer) == 0x24, "TTextWindow::TextBuffer at +0x24");
 static_assert(offsetof(TSkillsWindowBody, ContextMenu) == 0x30, "TSkillsWindowBody::ContextMenu at +0x30");
 static_assert(sizeof(TFormattedText) == 0x38, "TFormattedText is 0x38 bytes");
@@ -328,7 +329,7 @@ public:
 };
 static void *TextVtable, *SeparatorVtable;
 static int TextChildWidth = 10, TextChildHeight = 10;
-TFormattedText::TFormattedText(const char *_Text)
+TFakeFormattedText::TFakeFormattedText(const char *_Text)
 {
 	memset(Data2C, 0, sizeof(Data2C));
 	Logf("NText%s;", _Text);
@@ -339,42 +340,43 @@ TFormattedText::TFormattedText(const char *_Text)
 	if (TextVtable != NULL)
 		*(void **)this = TextVtable;
 }
-TSeparator::TSeparator(bool _Horizontal)
+// The separators are real on both sides (TSeparator's constructor is inline
+// in DialogElements.h): SwapSeparators gives the new ones the test vtable.
+static void *OurSeparatorVtable;
+static void SwapSeparators(int s, TWindow *W)
 {
-	Horizontal = _Horizontal;
-	Logf("NSep%d;", _Horizontal ? 1 : 0);
-	if (Running && SeparatorVtable != NULL)
-		*(void **)this = SeparatorVtable;
-	ReportElement(this, "Separator", "%d", _Horizontal ? 1 : 0);
+	if (W == NULL || SeparatorVtable == NULL)
+		return;
+	void *Real = s == OURS ? OurSeparatorVtable : (void *)(uintptr_t)0x5610b0;
+	int Saved = Side;
+	Side = s;
+	for (TComponent *C = W->FirstChild; C != NULL; C = C->Next) {
+		if (VtableOf(C) == Real) {
+			Logf("NSep%d;", ((TSeparator *)C)->Horizontal ? 1 : 0);
+			*(void **)C = SeparatorVtable;
+		}
+	}
+	Side = Saved;
 }
 class TTestSeparator : public TSeparator {
 public:
 	TTestSeparator() : TSeparator(true) {}
 	void Draw(int Surface, int x, int y) { Logf("DSep%d,%d,%d,%dx%d;", Surface, x, y, Width, Height); }
 };
-class TTestFormattedText : public TFormattedText {
+class TTestFormattedText : public TFakeFormattedText {
 public:
-	TTestFormattedText() : TFormattedText("") {}
+	TTestFormattedText() : TFakeFormattedText("") {}
 	void Draw(int Surface, int x, int y)
 	{
 		Logf("DText%d,%d,%d,%dx%d;", Surface, x, y, Width, Height);
 		TWindow::Draw(Surface, x, y);
 	}
 };
-// The image's constructors build the same objects.
-static void *__fastcall ImageFormattedText(void *This, void *, const char *Text)
-{
-	return new (This) TFormattedText(Text);
-}
-static void *__fastcall ImageSeparator(void *This, void *, bool Horizontal)
-{
-	return new (This) TSeparator(Horizontal);
-}
 
 // The edit line and the skill window's body, one per side.
-class TTestEdit : public TEditLine {
+class TTestEdit : public TFakeEditLine {
 public:
-	TTestEdit() : TEditLine(TRect(0, 0, 0, 0), 0, 0) {}
+	TTestEdit() : TFakeEditLine(TRect(0, 0, 0, 0), 0, 0) {}
 	void HandleEvent(int Event) { Logf("EditEvent%d;", Event); }
 };
 // A stand-in of the skill window body (ContentWindows.cpp) with its layout up
@@ -764,8 +766,8 @@ static void PatchCallees()
 		if (T.Ours != NULL)
 			Redirect(T.Ours, T.Fake);
 	}
-	Redirect((void *)(uintptr_t)0x465e60, (void *)ImageFormattedText);
-	Redirect((void *)(uintptr_t)0x452cb0, (void *)ImageSeparator);
+	// DialogElements.cpp: both sides build the fakes (elementfakes.cpp).
+	PatchElementFakes(Redirect);
 	// ConsoleWindow.cpp's methods: the image's and ours.
 	struct { uint32 Image; void *Ours; void *Fake; } Console[] = {
 		{0x419030, Member(&TTextWindow::GetTalkLine), (void *)FakeGetTalkLine},
@@ -849,7 +851,7 @@ static TWindow *Build(int s, TArguments &A)
 			W = new (M) TRequestContextMenu(Console, A.LineNumber, A.x, A.y, A.ParentWidth, A.ParentHeight);
 			break;
 		case KIND_CHANNEL: W = new (M) TChannelContextMenu(Console, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
-		case KIND_EDIT: W = new (M) TEditContextMenu(Edit, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
+		case KIND_EDIT: W = new (M) TEditContextMenu((TEditLine *)Edit, A.x, A.y, A.ParentWidth, A.ParentHeight); break;
 		case KIND_MARK:
 			W = new (M) TMarkContextMenu(new TMarkMenuData(A.Data), A.x, A.y, A.ParentWidth, A.ParentHeight);
 			break;
@@ -857,6 +859,7 @@ static TWindow *Build(int s, TArguments &A)
 			W = new (M) TSkillContextMenu(SkillsWindow[s], A.x, A.y, A.ParentWidth, A.ParentHeight);
 			break;
 		}
+		SwapSeparators(s, W);
 		return W;
 	}
 
@@ -889,6 +892,7 @@ static TWindow *Build(int s, TArguments &A)
 		W = (TWindow *)At<PtrCtorFn>(0x4454f0)(M, NULL, SkillsWindow[s], A.x, A.y, A.ParentWidth, A.ParentHeight);
 		break;
 	}
+	SwapSeparators(s, W);
 	return W;
 }
 
@@ -968,7 +972,7 @@ static std::string Dump(int s)
 			sprintf(Buffer, " cw %d show %d", ((TChannelContextMenu *)W)->ConsoleWindow == Console ? 1 : 0,
 				((TChannelContextMenu *)W)->ShowServerMessages ? 1 : 0);
 			break;
-		case KIND_EDIT: sprintf(Buffer, " edit %d", ((TEditContextMenu *)W)->Edit == Edit ? 1 : 0); break;
+		case KIND_EDIT: sprintf(Buffer, " edit %d", ((TEditContextMenu *)W)->Edit == (TEditLine *)Edit ? 1 : 0); break;
 		case KIND_MARK: {
 			TMarkMenuData &D = ((TMarkContextMenu *)W)->Data;
 			sprintf(Buffer, " data %d,%d,%d %d,%d,%d,%s %p", D.Coordinate.x, D.Coordinate.y, D.Coordinate.z, D.Mark.x,
@@ -1294,6 +1298,7 @@ static void Action()
 						M->AddSeparator();
 					else
 						At<VoidFn>(0x43f1d0)(M, NULL);
+					SwapSeparators(s, M);
 				}
 				{
 					if (s == OURS)
@@ -1371,6 +1376,9 @@ void TestContextMenus()
 		TTestSeparator *S = new TTestSeparator;
 		SeparatorVtable = VtableOf(S);
 		delete S;
+		TSeparator *Real = new TSeparator(true);
+		OurSeparatorVtable = VtableOf(Real);
+		delete Real;
 		TTestFormattedText *T = new TTestFormattedText;
 		TextVtable = VtableOf(T);
 		delete T;

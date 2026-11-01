@@ -2511,36 +2511,36 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x46b63e	20	Catch@0046b63e	catch	DialogElements.cpp	between		0x46b570	
 0x46b652	133	Catch@0046b652	catch	DialogElements.cpp	assert	2466	0x46b570	MaxLength
 0x46b6d7	156	Catch@0046b6d7	catch	DialogElements.cpp	assert	2466	0x46b570	
-0x46b790	170	FUN_0046b790	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46b840	170	FUN_0046b840	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46b8f0	95	FUN_0046b8f0	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46b950	87	FUN_0046b950	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46b9b0	90	FUN_0046b9b0	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46ba10	135	FUN_0046ba10	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46baa0	94	FUN_0046baa0	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bb20	29	FUN_0046bb20	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bb40	29	FUN_0046bb40	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bb60	11	FUN_0046bb60	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bb70	636	FUN_0046bb70	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bdf0	5	thunk_FUN_004525d0	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46be00	30	FUN_0046be00	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46be20	30	FUN_0046be20	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46be40	30	FUN_0046be40	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46be60	30	FUN_0046be60	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46be80	30	FUN_0046be80	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bea0	30	FUN_0046bea0	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bec0	44	FUN_0046bec0	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bf00	44	FUN_0046bf00	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bf30	47	FUN_0046bf30	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bf60	44	FUN_0046bf60	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bf90	44	FUN_0046bf90	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46bfc0	72	FUN_0046bfc0	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46c010	30	FUN_0046c010	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46c030	30	FUN_0046c030	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46c050	30	FUN_0046c050	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46c070	30	FUN_0046c070	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46c090	30	FUN_0046c090	game	DialogElements.cpp|Dialogs.cpp	gap			
-0x46c0b0	30	FUN_0046c0b0	game	DialogElements.cpp|Dialogs.cpp	gap			
+0x46b790	170	FUN_0046b790	game	Dialogs.cpp	range			
+0x46b840	170	FUN_0046b840	game	Dialogs.cpp	range			
+0x46b8f0	95	FUN_0046b8f0	game	Dialogs.cpp	range			
+0x46b950	87	FUN_0046b950	game	Dialogs.cpp	range			
+0x46b9b0	90	FUN_0046b9b0	game	Dialogs.cpp	range			
+0x46ba10	135	FUN_0046ba10	game	Dialogs.cpp	range			
+0x46baa0	94	FUN_0046baa0	game	Dialogs.cpp	range			
+0x46bb20	29	FUN_0046bb20	game	Dialogs.cpp	range			
+0x46bb40	29	FUN_0046bb40	game	Dialogs.cpp	range			
+0x46bb60	11	FUN_0046bb60	game	Container.h	range			
+0x46bb70	636	FUN_0046bb70	game	Container.h	range			
+0x46bdf0	5	thunk_FUN_004525d0	game	Dialogs.cpp	range			
+0x46be00	30	FUN_0046be00	game	Dialogs.cpp	range			
+0x46be20	30	FUN_0046be20	game	Dialogs.cpp	range			
+0x46be40	30	FUN_0046be40	game	Dialogs.cpp	range			
+0x46be60	30	FUN_0046be60	game	Dialogs.cpp	range			
+0x46be80	30	FUN_0046be80	game	Dialogs.cpp	range			
+0x46bea0	30	FUN_0046bea0	game	Dialogs.cpp	range			
+0x46bec0	44	FUN_0046bec0	game	Dialogs.cpp	range			
+0x46bf00	44	FUN_0046bf00	game	Dialogs.cpp	range			
+0x46bf30	47	FUN_0046bf30	game	Dialogs.cpp	range			
+0x46bf60	44	FUN_0046bf60	game	Dialogs.cpp	range			
+0x46bf90	44	FUN_0046bf90	game	Dialogs.cpp	range			
+0x46bfc0	72	FUN_0046bfc0	game	Dialogs.cpp	range			
+0x46c010	30	FUN_0046c010	game	Dialogs.cpp	range			
+0x46c030	30	FUN_0046c030	game	Dialogs.cpp	range			
+0x46c050	30	FUN_0046c050	game	Dialogs.cpp	range			
+0x46c070	30	FUN_0046c070	game	Dialogs.cpp	range			
+0x46c090	30	FUN_0046c090	game	Dialogs.cpp	range			
+0x46c0b0	30	FUN_0046c0b0	game	Dialogs.cpp	range			
 0x46c0d0	773	FUN_0046c0d0	game	Container.h	header	369,370		
 0x46c3e0	489	FUN_0046c3e0	game	Dialogs.cpp	assert	687		
 0x46c5c9	20	Catch@0046c5c9	catch	Dialogs.cpp	between		0x46c3e0	

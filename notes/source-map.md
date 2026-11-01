@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 615 | 82160 |
+| range | 645 | 84366 |
 | header | 22 | 15065 |
-| gap | 93 | 34347 |
+| gap | 63 | 32141 |
 
 ## Source files
 
@@ -36,8 +36,8 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Control.cpp | 27 | 94 | 22840 | `0x445900` | `0x44b699` | 93-1661 |
 | Creatures.cpp | 96 | 87 | 27135 | `0x44b740` | `0x45243e` | 108-1414 |
 | DialogElements.cpp | 190 | 384 | 97128 | `0x4524e0` | `0x46b6d7` | 42-4301 |
-| Container.h | 6 | 0 | 1972 | `0x452ac0` | `0x4b0b20` |  |
-| Dialogs.cpp | 139 | 408 | 101452 | `0x46c3e0` | `0x48540d` | 48-4084 |
+| Container.h | 8 | 0 | 2619 | `0x452ac0` | `0x4b0b20` |  |
+| Dialogs.cpp | 167 | 408 | 103011 | `0x46b790` | `0x48540d` | 48-4084 |
 | DialogWindow.cpp | 45 | 120 | 23783 | `0x4854c0` | `0x48b287` | 63-1127 |
 | graphics.h | 2 | 0 | 96 | `0x48b380` | `0x48b3b0` |  |
 | graphics.cpp | 56 | 106 | 40578 | `0x48b430` | `0x4953c3` | 130-1539 |
@@ -75,7 +75,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 | Between | Functions | Bytes | Range |
 |---|---:|---:|---|
-| DialogElements.cpp / Dialogs.cpp | 30 | 2206 | `0x46b790`-`0x46c0ce` |
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |
 

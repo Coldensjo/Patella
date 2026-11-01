@@ -24,6 +24,7 @@
 // bodies at least one pixel high, no structural change while dragging).
 
 #include "difftest.h"
+#include "elementfakes.h"
 #include "../../src/DialogWindow.h"
 #include "../../src/ContentWindows.h"
 #include "../../src/GUI.h"
@@ -63,17 +64,17 @@ void __fastcall FakeUpdateUpButton(void *Body, void *)
 		DialogFakes.Body((TSubWindowBody *)Body, "Up");
 }
 
-TResizer::TResizer(TComponent *_ToResize, bool Param2, bool Param3, bool Param4)
+TFakeResizer::TFakeResizer(TComponent *_ToResize, bool Param2, bool Param3, bool Param4)
 {
 	memset(Data24, 0, sizeof(Data24));
 	if (DialogFakes.NewResizer != NULL)
-		DialogFakes.NewResizer(this, _ToResize, Param2, Param3, Param4);
+		DialogFakes.NewResizer((TResizer *)this, _ToResize, Param2, Param3, Param4);
 }
 
-void TSkinButton::SetSkins(int _ButtonUp, int _ButtonDown)
+void TFakeSkinButton::SetSkins(int _ButtonUp, int _ButtonDown)
 {
 	if (DialogFakes.SetSkins != NULL)
-		DialogFakes.SetSkins(this, _ButtonUp, _ButtonDown);
+		DialogFakes.SetSkins((TSkinButton *)this, _ButtonUp, _ButtonDown);
 }
 
 // --- Logs and names ----------------------------------------------------------------
@@ -181,9 +182,9 @@ public:
 	}
 };
 
-class TTestSkinButton : public TSkinButton {
+class TTestSkinButton : public TFakeSkinButton {
 public:
-	TTestSkinButton() : TSkinButton(0, 0, 0, 0, TCallback(), NULL, 0) {}
+	TTestSkinButton() : TFakeSkinButton(0, 0, 0, 0, TCallback(), NULL, 0) {}
 	void Draw(int Surface, int x, int y) { Logf("DSkin%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 	bool LeftButtonDown(int x, int y, int Flags)
 	{
@@ -193,9 +194,9 @@ public:
 };
 
 static void *FakeResizerVtable;
-class TFakeResizer : public TResizer {
+class TDWTestResizer : public TFakeResizer {
 public:
-	TFakeResizer() : TResizer(NULL, false, false, false) {}
+	TDWTestResizer() : TFakeResizer(NULL, false, false, false) {}
 	void Draw(int Surface, int x, int y) { Logf("DRes%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 	bool LeftButtonDown(int x, int y, int Flags)
 	{
@@ -215,7 +216,7 @@ static void HookNewResizer(TResizer *Resizer, TComponent *ToResize, bool Param2,
 {
 	Register(Resizer, "Res");
 	Logf("NRes%s,%s,%d,%d,%d;", Name(Resizer).c_str(), Name(ToResize).c_str(), Param2, Param3, Param4);
-	Resizer->Data24[0] = (uint8)(Param4 ? 1 : 0);
+	((TFakeResizer *)Resizer)->Data24[0] = (uint8)(Param4 ? 1 : 0);
 	if (FakeResizerVtable != NULL)
 		SetVtable(Resizer, FakeResizerVtable);
 }
@@ -224,11 +225,6 @@ static void HookSetSkins(TSkinButton *Button, int ButtonUp, int ButtonDown)
 	Logf("Skins%s,%d,%d;", Name(Button).c_str(), ButtonUp, ButtonDown);
 }
 
-// The image's TResizer constructor builds the same fake.
-static void *__fastcall ImageResizer(void *This, void *, TComponent *ToResize, bool P2, bool P3, bool P4)
-{
-	return new (This) TResizer(ToResize, P2, P3, P4);
-}
 
 // --- Fakes of the other callees ---------------------------------------------------------
 
@@ -299,8 +295,8 @@ static void PatchCallees()
 		Redirect((void *)(uintptr_t)T.Image, T.Fake);
 		Redirect(T.Ours, T.Fake);
 	}
-	Redirect((void *)(uintptr_t)0x453be0, (void *)ImageResizer);
-	Redirect((void *)(uintptr_t)0x458b20, Member(&TSkinButton::SetSkins));
+	// DialogElements.cpp: both sides build the fakes (elementfakes.cpp).
+	PatchElementFakes(Redirect);
 	Redirect((void *)(uintptr_t)0x42e4e0, (void *)FakeUpdateUpButton);
 	Redirect(Member(&TContainerWindowBody::UpdateUpButton), (void *)FakeUpdateUpButton);
 }
@@ -547,7 +543,7 @@ static TSubWindow *MakeSub(int s, int Identifier, int MinHeight, bool Resizable,
 	if (Minimize != NULL) {
 		Register(Minimize, "Min");
 		if (s == OURS)
-			W->SetMinimizeButton(Minimize);
+			W->SetMinimizeButton((TSkinButton *)Minimize);
 		else
 			At<SetFn>(0x489ed0)(W, NULL, Minimize);
 	}
@@ -984,7 +980,7 @@ void TestDialogWindow()
 
 	// The vtables: the image's classes and ours (from instances), the fake resizer.
 	{
-		TFakeResizer *R = new TFakeResizer;
+		TDWTestResizer *R = new TDWTestResizer;
 		FakeResizerVtable = VtableOf(R);
 		delete R;
 		TDialogWindow *D = new TDialogWindow;

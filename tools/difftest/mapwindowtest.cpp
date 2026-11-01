@@ -24,6 +24,7 @@
 // class, DialogElements.cpp's TBlinkingButton, is not reconstructed).
 
 #include "difftest.h"
+#include "elementfakes.h"
 #include "../../src/MapWindow.h"
 #include "../../src/Communication.h"
 #include "../../src/Help.h"
@@ -78,7 +79,7 @@ const char *TextSelectPlayerToTrade = "Select a player to trade with.";
 
 // DialogElements.cpp: never constructed here (GetShowNewHints is false
 // whenever the hint button could be created).
-TBlinkingButton::TBlinkingButton(int, int, int, int, int, int, TCallback, const char *) { abort(); }
+TFakeBlinkingButton::TFakeBlinkingButton(int, int, int, int, int, int, TCallback, const char *) { abort(); }
 
 // --- The fake world ----------------------------------------------------------
 

@@ -34,6 +34,7 @@
 // changes are followed by the console's change flag).
 
 #include "difftest.h"
+#include "elementfakes.h"
 #include "../../src/ConsoleWindow.h"
 #include "../../src/Communication.h"
 #include "../../src/Creatures.h"
@@ -68,7 +69,7 @@ static_assert(sizeof(TTabBar) == 0x40 && offsetof(TTabBar, Busy) == 0x3c && offs
 	"TTabBar layout");
 static_assert(sizeof(TConsoleWindow) == 0x6c && offsetof(TConsoleWindow, History) == 0x48
 	&& offsetof(TConsoleWindow, TalkMode) == 0x68, "TConsoleWindow layout");
-static_assert(sizeof(TEditLine) == 0x68 && offsetof(TEditLine, Text) == 0x2c && offsetof(TEditLine, Data60) == 0x60,
+static_assert(sizeof(TFakeEditLine) == 0x68 && offsetof(TFakeEditLine, Text) == 0x2c && offsetof(TFakeEditLine, Data60) == 0x60,
 	"TEditLine layout");
 static_assert(sizeof(TSkinButton) == 0x44 && sizeof(TToggleButton) == 0x50 && offsetof(TToggleButton, State) == 0x44,
 	"button layouts");
@@ -136,7 +137,7 @@ const char *TextReportRuleViolation = "Report Rule Violation";
 static void *TestEditVtable, *TestScrollVtable, *TestButtonVtable, *TestToggleVtable, *TestMultiVtable;
 static int ScrollMinimumHeight;
 
-TEditLine::TEditLine(TRect Area, int MaxLength, int Param)
+TFakeEditLine::TFakeEditLine(TRect Area, int MaxLength, int Param)
 {
 	Text = new char[256];
 	Text[0] = 0;
@@ -152,14 +153,14 @@ TEditLine::TEditLine(TRect Area, int MaxLength, int Param)
 		SetVtable(this, TestEditVtable);
 	}
 }
-void TEditLine::SetActive(bool Active)
+void TFakeEditLine::SetActive(bool Active)
 {
 	Logf("EActive%d;", Active ? 1 : 0);
 	Data30[0x58 - 0x30] = Active ? 1 : 0;
 	if (!Active)
 		Data60 = 0;
 }
-void TEditLine::SetText(const char *_Text)
+void TFakeEditLine::SetText(const char *_Text)
 {
 	Logf("ESet%s;", _Text);
 	strncpy(Text, _Text, 255);
@@ -167,32 +168,32 @@ void TEditLine::SetText(const char *_Text)
 	Data5C = -1;
 	Data60 = 0;
 }
-void TEditLine::Clear()
+void TFakeEditLine::Clear()
 {
 	Logf("EClear;");
 	Text[0] = 0;
 	Data5C = -1;
 	Data60 = 0;
 }
-void TEditLine::UnknownA8() { Logf("EA8;"); }
-void TEditLine::UnknownAC() { Logf("EAC;"); }
-void TEditLine::UnknownB0() { Logf("EB0;"); }
-void TEditLine::UnknownB4() { Logf("EB4;"); }
-void TEditLine::SetReadOnly(bool ReadOnly)
+void TFakeEditLine::UnknownA8() { Logf("EA8;"); }
+void TFakeEditLine::UnknownAC() { Logf("EAC;"); }
+void TFakeEditLine::UnknownB0() { Logf("EB0;"); }
+void TFakeEditLine::UnknownB4() { Logf("EB4;"); }
+void TFakeEditLine::SetDisabled(bool ReadOnly)
 {
 	Logf("EReadOnly%d;", ReadOnly ? 1 : 0);
 	Data66 = ReadOnly;
 }
-void TEditLine::UnknownBC() { Logf("EBC;"); }
-void TEditLine::SetFont(TFont Font)
+void TFakeEditLine::UnknownBC() { Logf("EBC;"); }
+void TFakeEditLine::SetFont(TFont Font)
 {
 	Logf("EFont%d,%d,%d,%d,%d;", Font.FontNumber, Font.Color.R, Font.Color.G, Font.Color.B, Font.Alignment);
 }
 // The console's edit line: typing appends printable characters, Backspace
 // deletes one.
-class TTestEditLine : public TEditLine {
+class TTestEditLine : public TFakeEditLine {
 public:
-	TTestEditLine() : TEditLine(TRect(0, 0, 0, 0), 255, 0) {}
+	TTestEditLine() : TFakeEditLine(TRect(0, 0, 0, 0), 255, 0) {}
 	~TTestEditLine() { delete[] Text; }
 	void Draw(int Surface, int x, int y) { Logf("DEdit%d,%d,%d,%dx%d;", Surface, x, y, Width, Height); }
 	void KeyPress(int Key)
@@ -209,9 +210,9 @@ public:
 	void HandleEvent(int Event) { Logf("EEvent%d;", Event); }
 };
 
-TScrollBar::TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, int Step)
+TFakeScrollBar::TFakeScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, int Step)
 {
-	Range = new TScrollBarRange;
+	Range = new TFakeScrollBarRange;
 	memset(Range, 0, sizeof(*Range));
 	memset(Data30, 0, sizeof(Data30));
 	SetSize(Area.Width, Area.Height);
@@ -225,7 +226,7 @@ TScrollBar::TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param
 		Param3, Param4, Param5, Step);
 }
 // The range is kept in Data00 for the wheel; the value stays inside it.
-void TScrollBarRange::SetRange(int Minimum, int Maximum, int _Value, int Visible)
+void TFakeScrollBarRange::SetRange(int Minimum, int Maximum, int _Value, int Visible)
 {
 	Logf("Range%d,%d,%d,%d;", Minimum, Maximum, _Value, Visible);
 	((int *)Data00)[0] = Minimum;
@@ -236,9 +237,9 @@ void TScrollBarRange::SetRange(int Minimum, int Maximum, int _Value, int Visible
 		_Value = Minimum;
 	Value = _Value;
 }
-class TTestScrollBar : public TScrollBar {
+class TTestScrollBar : public TFakeScrollBar {
 public:
-	TTestScrollBar() : TScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
+	TTestScrollBar() : TFakeScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
 	~TTestScrollBar() { delete Range; }
 	int getMinimumHeight() { return ScrollMinimumHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DScroll%d,%d,%d,%dx%d;", Surface, x, y, Width, Height); }
@@ -254,7 +255,7 @@ public:
 };
 
 // The button's callback is kept in Data2C (the test presses buttons).
-TSkinButton::TSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip,
+TFakeSkinButton::TFakeSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip,
 	int Param)
 {
 	ButtonUp = _ButtonUp;
@@ -272,10 +273,10 @@ TSkinButton::TSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback
 	ReportElement(this, "SkinButton", "%d,%d,%d,%d,@%p/%d,%s,%d", x, y, _ButtonUp, _ButtonDown, (void *)Callback.Receiver,
 		Callback.Event, Tooltip == NULL ? "-" : Tooltip, Param);
 }
-static TCallback &ButtonCallback(TSkinButton *Button) { return *(TCallback *)Button->Data2C; }
-TToggleButton::TToggleButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip1,
+static TCallback &ButtonCallback(TSkinButton *Real) { return *(TCallback *)((TFakeSkinButton *)Real)->Data2C; }
+TFakeToggleButton::TFakeToggleButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip1,
 	const char *Tooltip2, int Param)
-	: TSkinButton(x, y, _ButtonUp, _ButtonDown, Callback, Tooltip1, Param)
+	: TFakeSkinButton(x, y, _ButtonUp, _ButtonDown, Callback, Tooltip1, Param)
 {
 	State = false;
 	memset(Data45, 0, sizeof(Data45));
@@ -285,7 +286,7 @@ TToggleButton::TToggleButton(int x, int y, int _ButtonUp, int _ButtonDown, TCall
 	}
 	ReportElement(this, "ToggleButton", "%s,%s", Tooltip1 == NULL ? "-" : Tooltip1, Tooltip2 == NULL ? "-" : Tooltip2);
 }
-static void InitStates(TMultiStateButton *Button, int States, va_list Arguments)
+static void InitStates(TFakeMultiStateButton *Button, int States, va_list Arguments)
 {
 	Button->States = States;
 	Button->ButtonUps = new int[States + 1];
@@ -298,8 +299,8 @@ static void InitStates(TMultiStateButton *Button, int States, va_list Arguments)
 			Callback.Event);
 	}
 }
-TMultiStateButton::TMultiStateButton(int x, int y, const char *Tooltip, int _States, ...)
-	: TSkinButton(x, y, 0, 0, TCallback(), Tooltip, 0)
+TFakeMultiStateButton::TFakeMultiStateButton(int x, int y, const char *Tooltip, int _States, ...)
+	: TFakeSkinButton(x, y, 0, 0, TCallback(), Tooltip, 0)
 {
 	State = 0;
 	memset(Data54, 0, sizeof(Data54));
@@ -310,27 +311,22 @@ TMultiStateButton::TMultiStateButton(int x, int y, const char *Tooltip, int _Sta
 	if (Testing)
 		SetVtable(this, TestMultiVtable);
 }
-void TMultiStateButton::Reset()
-{
-	Logf("Reset%s;", Name(this).c_str());
-	State = 0;
-}
-class TTestSkinButtonC : public TSkinButton {
+class TTestSkinButtonC : public TFakeSkinButton {
 public:
-	TTestSkinButtonC() : TSkinButton(0, 0, 0, 0, TCallback(), NULL, 0) {}
+	TTestSkinButtonC() : TFakeSkinButton(0, 0, 0, 0, TCallback(), NULL, 0) {}
 	void Draw(int Surface, int x, int y)
 	{
 		Logf("D%s,%d,%d,%d,%d,%d;", Name(this).c_str(), Surface, x, y, ButtonUp, ButtonDown);
 	}
 };
-class TTestToggleButton : public TToggleButton {
+class TTestToggleButton : public TFakeToggleButton {
 public:
-	TTestToggleButton() : TToggleButton(0, 0, 0, 0, TCallback(), NULL, NULL, 0) {}
+	TTestToggleButton() : TFakeToggleButton(0, 0, 0, 0, TCallback(), NULL, NULL, 0) {}
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d,%d;", Name(this).c_str(), Surface, x, y, State ? 1 : 0); }
 };
-class TTestMultiStateButton : public TMultiStateButton {
+class TTestMultiStateButton : public TFakeMultiStateButton {
 public:
-	TTestMultiStateButton() : TMultiStateButton(0, 0, NULL, 0) {}
+	TTestMultiStateButton() : TFakeMultiStateButton(0, 0, NULL, 0) {}
 	~TTestMultiStateButton()
 	{
 		delete[] ButtonUps;
@@ -339,29 +335,10 @@ public:
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d,%d;", Name(this).c_str(), Surface, x, y, State); }
 };
 
-// The image's constructors build the same objects.
-static void *__fastcall ImageEditLine(void *This, void *, TRect Area, int MaxLength, int Param)
+// Both sides' 0x4672d0 (elementfakes.cpp): a varargs constructor, __cdecl with this as its first argument.
+void *__cdecl NewMultiStateButton(void *This, int x, int y, const char *Tooltip, int States, ...)
 {
-	return new (This) TEditLine(Area, MaxLength, Param);
-}
-static void *__fastcall ImageScrollBar(void *This, void *, TRect Area, int P2, int P3, int P4, int P5, int P6)
-{
-	return new (This) TScrollBar(Area, P2, P3, P4, P5, P6);
-}
-static void *__fastcall ImageSkinButton(void *This, void *, int x, int y, int Up, int Down, TCallback Callback,
-	const char *Tooltip, int Param)
-{
-	return new (This) TSkinButton(x, y, Up, Down, Callback, Tooltip, Param);
-}
-static void *__fastcall ImageToggleButton(void *This, void *, int x, int y, int Up, int Down, TCallback Callback,
-	const char *Tooltip1, const char *Tooltip2, int Param)
-{
-	return new (This) TToggleButton(x, y, Up, Down, Callback, Tooltip1, Tooltip2, Param);
-}
-// 0x4672d0 is a varargs constructor: __cdecl with this as its first argument.
-static void *__cdecl ImageMultiStateButton(void *This, int x, int y, const char *Tooltip, int States, ...)
-{
-	TMultiStateButton *Button = new (This) TMultiStateButton(x, y, Tooltip, 0);
+	TFakeMultiStateButton *Button = new (This) TFakeMultiStateButton(x, y, Tooltip, 0);
 	delete[] Button->ButtonUps;
 	delete[] Button->ButtonDowns;
 	va_list Arguments;
@@ -794,16 +771,9 @@ static void PatchCallees()
 		if (T.Ours != NULL)
 			Redirect(T.Ours, T.Fake);
 	}
-	// DialogElements.cpp: the image's constructors build the fakes, its members are the fakes.
-	Redirect((void *)(uintptr_t)0x467b50, (void *)ImageEditLine);
-	Redirect((void *)(uintptr_t)0x469a80, (void *)ImageScrollBar);
-	Redirect((void *)(uintptr_t)0x466860, (void *)ImageSkinButton);
-	Redirect((void *)(uintptr_t)0x4671e0, (void *)ImageToggleButton);
-	Redirect((void *)(uintptr_t)0x4672d0, (void *)ImageMultiStateButton);
-	Redirect((void *)(uintptr_t)0x45bc80, Member(&TEditLine::SetActive));
-	Redirect((void *)(uintptr_t)0x452790, Member(&TMultiStateButton::Reset));
-	Redirect((void *)(uintptr_t)0x460450, Member(&TScrollBarRange::SetRange));
-	Redirect((void *)(uintptr_t)0x458b20, Member(&TSkinButton::SetSkins));
+	// DialogElements.cpp: both sides' constructors and members build and are the fakes
+	// (elementfakes.cpp); TMultiStateButton::Reset is inline and runs for real.
+	PatchElementFakes(Redirect);
 	// The image's CRT reaches Windows: localtime, ctime, fprintf and _snprintf.
 	Redirect((void *)(uintptr_t)0x513eb1, (void *)ImageLocaltime);
 	Redirect((void *)(uintptr_t)0x5121d1, (void *)ImageCtime);
@@ -1015,7 +985,7 @@ static void DumpComponent(int s, std::string &Out, TComponent *Component, int De
 			T->Unread ? 1 : 0, T->BlinkEnd, Name(s, T->Callback.Receiver).c_str(), T->Callback.Event,
 			T->Shortened ? 1 : 0);
 	} else if (Kind == "Edit") {
-		TEditLine *E = (TEditLine *)Component;
+		TFakeEditLine *E = (TFakeEditLine *)Component;
 		Add(Out, " '%s' %d,%d,%d,%d", E->Text, E->Data5C, E->Data60, E->Data66 ? 1 : 0, E->Data30[0x58 - 0x30]);
 	} else if (Kind == "Button" || Kind == "Toggle" || Kind == "Multi") {
 		TSkinButton *B = (TSkinButton *)Component;
@@ -1113,8 +1083,8 @@ static void SetInput(const char *Text)
 			C(OURS)->CurrentConsole->TextWindow->TextBuffer->SendTalkMode);
 	Both([&](int s) {
 		strcpy(C(s)->Input->Text, Text);
-		C(s)->Input->Data5C = -1;
-		C(s)->Input->Data60 = 0;
+		C(s)->Input->SelectionStart = -1;
+		C(s)->Input->SelectionLength = 0;
 	});
 }
 

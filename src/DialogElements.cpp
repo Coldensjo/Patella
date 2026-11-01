@@ -1409,11 +1409,12 @@ bool TEditLine::LeftButtonDoubleClick(int x, int y, int Flags)
 }
 
 // 0x45b5b0, line 2093. Opens the edit line's context menu (ContextMenus.cpp)
-// unless a dialog or another menu is open.
+// unless a dialog or another menu is open. The base class gets the event as
+// a left button release (the binary calls TWindow::LeftButtonUp).
 bool TEditLine::RightButtonUp(int x, int y, int Flags)
 {
 	TBEGIN
-	if (!TWindow::RightButtonUp(x, y, Flags) && !IsDisabled() && GetActionState() != 10
+	if (!TWindow::LeftButtonUp(x, y, Flags) && !IsDisabled() && GetActionState() != 10
 	 && GetActionState() != 11)
 		AddMessage(58, (INT_PTR)this, 0);
 	return true;

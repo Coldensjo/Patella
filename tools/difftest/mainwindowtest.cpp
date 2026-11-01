@@ -24,6 +24,7 @@
 // arguments) are compared. Failing assertions are not exercised.
 
 #include "difftest.h"
+#include "elementfakes.h"
 #include "../../src/MainWindow.h"
 #include "../../src/ContentWindows.h"
 #include "../../src/MapWindow.h"
@@ -164,15 +165,15 @@ public:
 	uint8 Data2C[0x6c - 0x2c];
 };
 static_assert(sizeof(TFakeConsole) == sizeof(TConsoleWindow), "the fake console has the console's size");
-class TFakeBorder : public TBorder {
+class TMWTestBorder : public TFakeBorder {
 public:
-	TFakeBorder(TWindow *Window) : TBorder(Window, 0) {}
+	TMWTestBorder(TWindow *Window) : TFakeBorder(Window, 0) {}
 	int getMinimumHeight() { return BorderMinHeight; }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
-class TFakeButton : public TTextButton {
+class TMWTestButton : public TFakeTextButton {
 public:
-	TFakeButton() : TTextButton(0, 0, "", 0, 0, TCallback(), 0) {}
+	TMWTestButton() : TFakeTextButton(0, 0, "", 0, 0, TCallback(), NULL) {}
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
 // A body needs a height (TSubWindow fits it into its frame). Update is its
@@ -332,7 +333,7 @@ extern "C" void OurButtonsConstructor();
 #pragma comment(linker, "/alternatename:_OurStatusConstructor=??0TStatusWindow@@QAE@XZ")
 #pragma comment(linker, "/alternatename:_OurButtonsConstructor=??0TButtonsWindow@@QAE@PAVTDialogWindow@@PAVTMainWindow@@@Z")
 
-TBorder::TBorder(TWindow *_Window, int Param)
+TFakeBorder::TFakeBorder(TWindow *_Window, int Param)
 {
 	TInfo &I = Register(this, "Border");
 	char Buffer[128];
@@ -343,7 +344,7 @@ TBorder::TBorder(TWindow *_Window, int Param)
 	if (FakeBorderVtable != NULL)
 		SetVtable(this, FakeBorderVtable);
 }
-TBorder::TBorder(TWindow *_Window, int Skin1, int Skin2, int Skin3, int Skin4, int Skin5, int Skin6, int Skin7,
+TFakeBorder::TFakeBorder(TWindow *_Window, int Skin1, int Skin2, int Skin3, int Skin4, int Skin5, int Skin6, int Skin7,
 	int Skin8, int Skin9, int Border)
 {
 	TInfo &I = Register(this, "Border");
@@ -356,10 +357,12 @@ TBorder::TBorder(TWindow *_Window, int Skin1, int Skin2, int Skin3, int Skin4, i
 	if (FakeBorderVtable != NULL)
 		SetVtable(this, FakeBorderVtable);
 }
-void TBorder::FUN_00455500() { Logf("Fit%s;", Name(this).c_str()); }
+void TFakeBorder::FitToWindow() { Logf("Fit%s;", Name(this).c_str()); }
 
-TTextButton::TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback, int Param)
+TFakeTextButton::TFakeTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
+	const char *Tooltip)
 {
+	int Param = (int)(intptr_t)Tooltip;
 	ReportElement(this, "TextButton", "%d,%d,%s,%d,%d,@%p/%d,%d", x, y, _Text, Skin1, Skin2, (void *)Callback.Receiver,
 		Callback.Event, Param);
 	if (!Running)
@@ -374,7 +377,7 @@ TTextButton::TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, 
 	if (FakeButtonVtable != NULL)
 		SetVtable(this, FakeButtonVtable);
 }
-TLabel::TLabel(TFont Font, const char *_Text)
+TFakeLabel::TFakeLabel(TFont Font, const char *_Text)
 {
 	ReportElement(this, "Label", "%d,%d,%d,%d,%d,%s", Font.FontNumber, Font.Color.R, Font.Color.G, Font.Color.B,
 		Font.Alignment, _Text);
@@ -387,36 +390,18 @@ TLabel::TLabel(TFont Font, const char *_Text)
 	I.Detail = Buffer;
 	Logf("NLabel%s;", Buffer);
 }
-TObjectIcon::TObjectIcon(TObject Obj, const TRGBColor *Color, int Param)
+// TObjectIcon's constructor is inline in DialogElements.h: the icons are real
+// on both sides; DrawObject is faked.
+static void __cdecl FakeDrawObject(int Surface, int x, int y, int Size, TObject Obj, TRGBColor Highlight, TRect Clip,
+	TFont Font, bool ShowCount)
 {
-	ReportElement(this, "ObjectIcon", "%d,%d,%d,%d,%d,%d,%d", Obj.Type, Obj.Data1, Obj.Data2, Color->R, Color->G,
-		Color->B, Param);
-	if (!Running)
-		return;
-	TInfo &I = Register(this, "Icon");
-	char Buffer[160];
-	sprintf(Buffer, "%d,%d,%d,%d,%d,%d,%d", Obj.Type, Obj.Data1, Obj.Data2, Color->R, Color->G, Color->B, Param);
-	I.Detail = Buffer;
-	Logf("NIcon%s;", Buffer);
+	Logf("DObj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data1, Obj.Data2,
+		Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.Width, Clip.Height, ShowCount ? 1 : 0);
 }
 
-// The image's constructors build the same fakes.
-static void *__fastcall ImageBorder1(void *This, void *, TWindow *W, int P) { return new (This) TBorder(W, P); }
-static void *__fastcall ImageBorder2(void *This, void *, TWindow *W, int S1, int S2, int S3, int S4, int S5, int S6,
-	int S7, int S8, int S9, int B)
-{
-	return new (This) TBorder(W, S1, S2, S3, S4, S5, S6, S7, S8, S9, B);
-}
-static void *__fastcall ImageButton(void *This, void *, int x, int y, const char *Text, int S1, int S2, TCallback C,
-	int P)
-{
-	return new (This) TTextButton(x, y, Text, S1, S2, C, P);
-}
-static void *__fastcall ImageLabel(void *This, void *, TFont Font, const char *Text) { return new (This) TLabel(Font, Text); }
-static void *__fastcall ImageIcon(void *This, void *, TObject Obj, const TRGBColor *Color, int P)
-{
-	return new (This) TObjectIcon(Obj, Color, P);
-}
+// Both sides' DialogElements.cpp constructors and members build and are the
+// fakes (elementfakes.cpp), patched for good.
+static void PatchElement(void *Function, void *Target) { PatchOwn(Function, Target); }
 static void *__fastcall ImageSide3(void *This, void *) { return new (This) TMainSide3; }
 static void *__fastcall ImageSide4(void *This, void *) { return new (This) TMainSide4; }
 static void *__fastcall ImageSide5(void *This, void *, TDialogWindow *D, TMainWindow *M)
@@ -594,6 +579,7 @@ static void PatchCallees()
 		{0x414700, (void *)SendWalk, (void *)FakeSendWalk},
 		{0x414a10, (void *)SendStop, (void *)FakeSendStop},
 		{0x4ce300, (void *)Disconnect, (void *)FakeDisconnect},
+		{0x494ca0, (void *)DrawObject, (void *)FakeDrawObject},
 	};
 	for (auto &T : Table) {
 		PatchJump(T.Image, T.Fake);
@@ -605,10 +591,7 @@ static void PatchCallees()
 		{0x404c10, (void *)SendTurnWest}, {0x409140, (void *)SendCancel}, {0x404350, (void *)SendLogout},
 		{0x4074a0, (void *)SendJoinChannel}, {0x445c20, (void *)ChangeEngine},
 		{0x422410, (void *)FakeConsoleNew}, {0x41e960, (void *)FakeConsoleActive}, {0x422e70, (void *)FakeConsoleOpen},
-		{0x42e4e0, (void *)FakeUpdateUpButton}, {0x458b20, Member(&TSkinButton::SetSkins)},
-		{0x4547f0, (void *)ImageBorder1}, {0x454e30, (void *)ImageBorder2},
-		{0x455500, Member(&TBorder::FUN_00455500)},
-		{0x466bc0, (void *)ImageButton}, {0x465b40, (void *)ImageLabel}, {0x4526c0, (void *)ImageIcon},
+		{0x42e4e0, (void *)FakeUpdateUpButton},
 		{0x4368c0, (void *)ImageSide3}, {0x438310, (void *)ImageSide4}, {0x426480, (void *)ImageSide5},
 	};
 	for (auto &I : Images)
@@ -632,6 +615,7 @@ static void PatchCallees()
 			PatchJump(C.Image, C.Fake);
 		PatchOwn(C.Ours, C.Fake);
 	}
+	PatchElementFakes(PatchElement);
 	PatchOwn((void *)OurConsoleConstructor, (void *)FakeConsoleNew);
 	PatchOwn(Member(&TConsoleWindow::SetActive), (void *)FakeConsoleActive);
 	PatchOwn(Member(&TConsoleWindow::OpenDefaultChannel), (void *)FakeConsoleOpen);
@@ -643,9 +627,9 @@ static void FindFakeVtables()
 	Quiet = true;
 	TFakeConsole *Console = new TFakeConsole;
 	FakeConsoleVtable = VtableOf(Console);
-	TFakeBorder *Border = new TFakeBorder(new TWindow);
+	TMWTestBorder *Border = new TMWTestBorder(new TWindow);
 	FakeBorderVtable = VtableOf(Border);
-	TFakeButton *Button = new TFakeButton;
+	TMWTestButton *Button = new TMWTestButton;
 	FakeButtonVtable = VtableOf(Button);
 	TFakeMapFrame *Frame = new TFakeMapFrame;
 	FakeMapFrameVtable = VtableOf(Frame);
@@ -1215,10 +1199,10 @@ void TestMainWindow()
 		TMainSide4 *S4 = new TMainSide4;
 		TMainSide5 *S5 = new TMainSide5(NULL, NULL);
 		TFont Font;
-		TLabel *Label = new TLabel(Font, "");
+		TFakeLabel *Label = new TFakeLabel(Font, "");
 		TObject Obj;
 		TRGBColor Color;
-		TObjectIcon *Icon = new TObjectIcon(Obj, &Color, 0);
+		TObjectIcon *Icon = new TObjectIcon(Obj, &Color, false);
 		struct { void *Object; const char *Name; bool Window; } List[] = {
 			{Body, "Body", true}, {S3, "Side3", true}, {S4, "Side4", true}, {S5, "Side5", true},
 			{Label, "Label", false}, {Icon, "Icon", false},
@@ -1227,6 +1211,8 @@ void TestMainWindow()
 			NameVtable(OURS, VtableOf(L.Object), L.Name, L.Window);
 			NameVtable(ORIGINAL, VtableOf(L.Object), L.Name, L.Window);
 		}
+		// The real icons of the image (TObjectIcon's constructor is inline).
+		NameVtable(ORIGINAL, (void *)(uintptr_t)0x560d88, "Icon", false);
 		NameVtable(OURS, VtableOf(Sub), "Sub", true);
 		NameVtable(OURS, VtableOf(Content), "CW", true);
 		NameVtable(OURS, VtableOf(Dialog), "Dialog", true);
