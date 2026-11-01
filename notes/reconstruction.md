@@ -70,7 +70,9 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
 - `tools/difftest/build.cmd` runs the differential tests. `difftest.cpp` copies Tibia.exe into a
   child process at its base address 0x400000 (no loader, imports or entry point) and calls the
   original functions next to the reconstructed ones on the same inputs. Only functions that do
-  not touch imports or the original C runtime's heap can be called this way. `vlongtest.cpp` and
+  not touch imports can be called this way. `statustest.cpp` patches the image's `malloc` and
+  `free` (and a few helpers that would reach Windows) to jump to the test's own code, so
+  allocating functions can be compared too; reuse its `PatchImage`. `vlongtest.cpp` and
   `vlongcheck.py` check the big-number code and RSA against Python's exact integers. Add a test
   for every new pure function.
 - Before finishing a file, compare each function against its pseudocode once more: every
@@ -86,6 +88,9 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
 | TRSA.cpp | Reconstructed (name inferred); RSA output checked against Python. |
 | TXTEA.cpp | Reconstructed (name inferred); differentially tested. |
 | vlong.cpp | Reconstructed from George Barwood's vlong with CipSoft's changes; checked against Python. |
+| Skins.cpp | Reconstructed (name inferred; first part of the Script/Status gap, see file-ranges.tsv); differentially tested. |
+| Status.cpp | Reconstructed with the rest of the Script/Status gap; every function differentially tested except the assertion-failure paths (malloc/free redirected). |
+| Container.h | Partial: `vector<T>` constructor and `operator()`, from the Status.cpp instantiations; tested through Status.cpp. |
 
-Last differential run: 143,297 checks against the original code and 3,201 against exact
+Last differential run: 709,369 checks against the original code and 3,201 against exact
 arithmetic, no differences.

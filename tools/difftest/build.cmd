@@ -1,6 +1,6 @@
 @echo off
 rem Builds and runs the base-layer tests:
-rem   difftest.exe   reconstructed functions against the original machine code (see difftest.cpp)
+rem   difftest.exe   reconstructed functions against the original machine code (difftest.cpp, statustest.cpp)
 rem   vlongtest.exe  vlong and TRSA against exact integer arithmetic (vlongcheck.py)
 setlocal
 set VCVARS=C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat
@@ -11,8 +11,9 @@ set OUT=%ROOT%\build\difftest
 if not exist "%OUT%" mkdir "%OUT%"
 set FLAGS=/nologo /std:c++17 /MT /O2 /W3 /DTIBIA_MFC_SHIM /D_WIN32_WINNT=0x0601 /I"%ROOT%\src" /Fo"%OUT%\\"
 
-cl %FLAGS% /EHa /Fe"%OUT%\difftest.exe" "%~dp0difftest.cpp" "%ROOT%\src\Utils.cpp" ^
-	"%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" ^
+cl %FLAGS% /EHa /Fe"%OUT%\difftest.exe" "%~dp0difftest.cpp" "%~dp0statustest.cpp" ^
+	"%ROOT%\src\Utils.cpp" "%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" ^
+	"%ROOT%\src\Skins.cpp" "%ROOT%\src\Status.cpp" ^
 	/link /BASE:0x20000000 /DYNAMICBASE:NO /FIXED >nul || exit /b 1
 "%OUT%\difftest.exe" "%ROOT%\Tibia.exe" || exit /b 1
 

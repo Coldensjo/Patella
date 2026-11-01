@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2030 | 236072 |
-| range | 65 | 14787 |
+| range | 132 | 31076 |
 | header | 22 | 15065 |
-| gap | 642 | 101716 |
+| gap | 575 | 85427 |
 
 ## Source files
 
@@ -51,7 +51,8 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Player.cpp | 17 | 30 | 8096 | `0x4d9140` | `0x4db1ec` | 62-456 |
 | Preferences.cpp | 13 | 0 | 5969 | `0x4dc450` | `0x4ddaa0` | 223-850 |
 | Script.cpp | 33 | 20 | 17216 | `0x4df6d0` | `0x4e3bf7` | 48-883 |
-| Status.cpp | 17 | 3 | 9135 | `0x4e8580` | `0x4ea860` | 91-1051 |
+| Skins.cpp | 2 | 0 | 12531 | `0x4e3cb0` | `0x4e6da0` |  |
+| Status.cpp | 82 | 3 | 12893 | `0x4e6dc0` | `0x4ea860` | 91-1051 |
 | SurfaceDX.cpp | 1 | 0 | 3618 | `0x4eed40` | `0x4eed40` | 1106-1114 |
 | surfaceDX9.cpp | 1 | 0 | 1490 | `0x4f2040` | `0x4f2040` | 982-983 |
 | SurfaceGL.cpp | 3 | 0 | 3187 | `0x4fb7f0` | `0x4fc130` | 767-1023 |
@@ -90,7 +91,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | Objects.cpp / Player.cpp | 35 | 4130 | `0x4d7ce0`-`0x4d913e` |
 | Player.cpp / Preferences.cpp | 70 | 2553 | `0x4db286`-`0x4dbe84` |
 | Preferences.cpp / Script.cpp | 12 | 6779 | `0x4ddc00`-`0x4df6ca` |
-| Script.cpp / Status.cpp | 67 | 16289 | `0x4e3cb0`-`0x4e7f44` |
 | Status.cpp / SurfaceDX.cpp | 34 | 6203 | `0x4eaa80`-`0x4ed19f` |
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |

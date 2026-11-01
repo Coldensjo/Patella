@@ -4,3 +4,5 @@ start	end	file	evidence
 0x508c70	0x508f9f	TXTEA.cpp	TXTEA methods (vtable 0x573efc); name inferred
 0x508fa0	0x50bfef	Utils.cpp	helpers before line 66 run straight up to the first assertion and are inlined into later Utils functions
 0x50bff0	0x50eae7	vlong.cpp	George Barwood's vlong library; sorts right after Utils
+0x4e3cb0	0x4e6dbf	Skins.cpp	name inferred; the Skins table that GUI.cpp asserts on (Skins[skin].width, LASTSKIN), with its own init/exit calls separate from InitStatus/ExitStatus; data 0x71c450-0x71c457 just before Status data; Script.cpp has no globals
+0x4e6dc0	0x4e822f	Status.cpp	globals 0x71c458-0x71c64f interleave with those of the asserted Status functions (Rights 0x71c478, characters 0x71c54c, messages 0x71c5f0); includes the vector<TMessage> ctor at 0x4e7f50 that Ghidra missed; 0x4e8230 stays Container.h header code

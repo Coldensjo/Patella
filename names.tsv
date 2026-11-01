@@ -56,9 +56,9 @@ address	name	kind	confidence	note
 0x4cf5e0	TSocket_OnConnect	game	high	Network.cpp line 835; vtable +0x2c
 0x4cf850	CheckConnectionTimeout	game	high	Network.cpp line 518
 0x4db2a0	GetTestServerLogin	game	medium	returns 0x71c318
-0x4e71e0	SetConnectionState	game	medium	0x71c588
-0x4e71f0	GetConnectionState	game	medium	0x71c588
-0x4e72c0	GetActiveCharacter	game	high	name from an assertion string
+0x4e71e0	SetConnectionState	game	medium	Status.cpp: 0x71c588
+0x4e71f0	GetConnectionState	game	medium	Status.cpp: 0x71c588
+0x4e72c0	GetActiveCharacter	game	high	Status.cpp: name from an assertion string
 0x4ea090	GetCharacterIPAddress	game	medium	Status.cpp line 740
 0x4ea200	GetCharacterPort	game	medium	Status.cpp line 749
 0x508c70	TXTEA_ctor	game	medium	static instance at 0x719d74
@@ -142,3 +142,89 @@ address	name	kind	confidence	note
 0x50e360	DecimalToVlong	game	medium	vlong.cpp, CipSoft addition
 0x50e5e0	monty_ctor	game	high	vlong.cpp
 0x50ea70	modexp	game	high	vlong.cpp
+0x4e3cb0	InitSkins	game	medium	Skins.cpp (name inferred): fills Skins (0x71c454) with 261 rectangles from a local table; GUI.cpp asserts Skins[skin].width
+0x4e6da0	ExitSkins	game	medium	Skins.cpp: deletes Skins
+0x4e6dc0	CheckAnyRight	game	medium	Status.cpp: any of the 50 Rights set; inlined into CheckRight
+0x4e6de0	ClearRights	game	medium	Status.cpp: zeroes Rights; inlined into InitStatus
+0x4e6e00	GetActionNumber	game	low	Status.cpp: counter at 0x71c5ec, read after mouse events in Control.cpp
+0x4e6e10	IncrementActionNumber	game	low	Status.cpp
+0x4e6e20	SetActionState	game	high	Status.cpp: setter of GetActionState
+0x4e6e30	GetActionState	game	high	Status.cpp: "GetActionState()" in a Control.cpp catch block
+0x4e6e40	SetMousePosition	game	medium	Status.cpp: called with the mouse x, y on mouse move
+0x4e6e60	GetMouseX	game	medium	Status.cpp
+0x4e6e70	GetMouseY	game	medium	Status.cpp
+0x4e6e80	SetMouseCursor	game	low	Status.cpp: values 1, 2
+0x4e6e90	GetMouseCursor	game	low	Status.cpp: action states 6-9 override the cursor
+0x4e6ec0	SetPendingAction	game	low	Status.cpp: (6, action number) or (0, 0) from Control.cpp
+0x4e6ee0	GetPendingActionState	game	low	Status.cpp
+0x4e6ef0	GetPendingActionNumber	game	low	Status.cpp
+0x4e6f00	SetWindowSize	game	medium	Status.cpp: called from the main window's resize handler
+0x4e6f20	GetWindowWidth	game	medium	Status.cpp
+0x4e6f30	GetWindowHeight	game	medium	Status.cpp
+0x4e6f40	SetDragStart	game	medium	Status.cpp: mouse-down position; clears the drag object
+0x4e6f70	SetDragObject	game	medium	Status.cpp: object and position for drag state 6
+0x4e6fc0	SetDragTarget	game	low	Status.cpp: (0xffff, container, slot) or map position
+0x4e6fe0	CheckDragStart	game	medium	Status.cpp: state 6 once the mouse moved more than 3 pixels
+0x4e7030	GetDragObject	game	medium	Status.cpp
+0x4e7070	GetDragTarget	game	low	Status.cpp
+0x4e70a0	SetTradeObject	game	medium	Status.cpp: "TradeObject!=0" in MapWindow.cpp (action state 8)
+0x4e70f0	SetUseObject	game	medium	Status.cpp: "SrcObj" in MapWindow.cpp (action state 7)
+0x4e7140	SetTradeInfo	game	low	Status.cpp: 0x71c58c, set with the trade and use objects
+0x4e7150	GetTradeObject	game	medium	Status.cpp
+0x4e7190	GetUseObject	game	medium	Status.cpp
+0x4e71d0	GetTradeInfo	game	low	Status.cpp
+0x4e7200	SetProgress	game	low	Status.cpp: download percent from Communication.cpp, -1 none
+0x4e7210	GetProgress	game	low	Status.cpp
+0x4e7220	GetAccountNumber	game	medium	Status.cpp: set by SetAccount
+0x4e7230	GetAccountNumberString	game	medium	Status.cpp
+0x4e7240	GetAccountPassword	game	medium	Status.cpp
+0x4e7250	SetAccountCharacters	game	high	Status.cpp: AccountCharacters from "In(Number,0,AccountCharacters-1)"; reallocates the character list
+0x4e7290	SetPremiumDays	game	low	Status.cpp: set next to the character list
+0x4e72a0	GetAccountCharacters	game	high	Status.cpp
+0x4e72b0	GetPremiumDays	game	low	Status.cpp
+0x4e72d0	GetGamemaster	game	low	Status.cpp: the flag byte of the game login packet; set by InitStatus
+0x4e72e0	SetMouseOverText	game	low	Status.cpp: e.g. "Scroll automap (Alt Cursor)"
+0x4e72f0	SetMouseOverTextPosition	game	low	Status.cpp
+0x4e7310	GetMouseOverText	game	low	Status.cpp
+0x4e7320	GetMouseOverTextPosition	game	low	Status.cpp
+0x4e7340	UpdateBlinkState	game	medium	Status.cpp: toggles every 300 ms
+0x4e7370	GetBlinkState	game	medium	Status.cpp
+0x4e7380	DeleteErrorFile	game	medium	Status.cpp: removes error.txt
+0x4e7390	vector_TMessage_at	game	high	Container.h vector<TMessage>::operator(), instantiated in Status.cpp
+0x4e75d0	PeekMessageType	game	medium	Status.cpp: type of the first queued message
+0x4e75f0	FetchMessage	game	medium	Status.cpp: removes the first message
+0x4e76e0	ClearMessages	game	medium	Status.cpp: frees each message's owned parameters
+0x4e7860	vector_TErrorReport_at	game	high	Container.h vector<TErrorReport>::operator(), instantiated in Status.cpp
+0x4e7bb0	ClearErrorReports	game	medium	Status.cpp
+0x4e7c20	AddErrorReport	game	medium	Status.cpp: error.txt reader in Player.cpp
+0x4e7c70	SetErrorReportDate	game	low	Status.cpp: 26-byte field
+0x4e7cc0	AddErrorReportText	game	medium	Status.cpp
+0x4e7d60	SetErrorReportComment	game	medium	Status.cpp: "Comment: "
+0x4e7e10	GetNumberOfErrorReports	game	medium	Status.cpp
+0x4e7e40	GetErrorReportTitle	game	medium	Status.cpp
+0x4e7e70	GetErrorReportDate	game	low	Status.cpp
+0x4e7ea0	GetErrorReportText	game	medium	Status.cpp
+0x4e7ed0	GetErrorReportComment	game	medium	Status.cpp
+0x4e7f00	ExitStatus	game	medium	Status.cpp: called from the client shut-down in Control.cpp
+0x4e7f50	vector_TMessage_ctor	game	high	Container.h vector<TMessage>::vector(min, max, block), lines 369-370; not found by Ghidra
+0x4e8230	vector_TErrorReport_ctor	game	high	Container.h vector<TErrorReport>::vector(min, max, block), lines 369-370
+0x4e8580	SetRight	game	medium	Status.cpp line 91
+0x4e86e0	CheckRight	game	medium	Status.cpp line 100
+0x4e88c0	GetRightName	game	medium	Status.cpp line 165, "unknown right"
+0x4e8de0	GetActionName	game	medium	Status.cpp line 183, "unknown action"
+0x4e9020	AddMessage	game	medium	Status.cpp line 197; Type in MESSAGE_NONE..MESSAGE_STARTPATCHER
+0x4e91d0	AddMessageFirst	game	medium	Status.cpp line 209
+0x4e93d0	SetAccount	game	medium	Status.cpp lines 621-622
+0x4e96d0	SetCharacter	game	medium	Status.cpp lines 669-673
+0x4e9c50	SetActiveCharacter	game	high	Status.cpp line 696
+0x4e9db0	GetCharacterName	game	high	Status.cpp line 713
+0x4e9f20	GetCharacterWorld	game	high	Status.cpp line 722
+0x4ea370	CheckClipboardText	game	medium	Status.cpp line 869: link check before copying to the clipboard
+0x4ea5b0	CopyToClipboard	game	medium	Status.cpp line 875
+0x4ea710	CopyTaintedClipboardText	game	medium	Status.cpp line 882
+0x4ea860	InitStatus	game	medium	Status.cpp line 1051
+0x4fcb90	GetMilliseconds	game	medium	timeGetTime() minus the start time (SurfaceGL/sysinc gap)
+0x4fcbc0	RemoveFile	game	medium	remove() == 0 (SurfaceGL/sysinc gap)
+0x4fd1b0	SetClipboardText	game	medium	sysinc.cpp lines 139-143, "textdata!=NULL"
+0x50fa40	regcomp	library	high	Henry Spencer regexp
+0x50f360	regexec	library	high	Henry Spencer regexp

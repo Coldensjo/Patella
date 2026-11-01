@@ -12,6 +12,7 @@
 #include "Network.h"
 #include "Utils.h"
 #include "TXTEA.h"
+#include "Status.h"
 #include "external.h"
 
 class TSocket : public CAsyncSocket {
@@ -462,7 +463,7 @@ bool ResolveHostname(const char *Hostname)
 	if (HostnameRequest == NULL) {
 		char *Message = new char[1024];
 		GetErrorMessage(Message, WSAGetLastError(), 1);
-		FUN_004e9020(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
+		AddMessage(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
 		SetConnectionState(0);
 		return false;
 	}
@@ -572,7 +573,7 @@ void ConnectToLoginServer()
 	if (!GetCurrentServer(&Server)) {
 		char *Message = new char[1024];
 		GetErrorMessage(Message, GetServerErrorCode(), 1);
-		FUN_004e9020(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
+		AddMessage(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
 		for (int i = 0; i < NUMBEROFSERVER; i++)
 			Servers[i].Available = true;
 		TestServer.Available = true;
@@ -608,15 +609,15 @@ void ConnectToGameServer()
 	if (Error != 0) {
 		char *Message = new char[1024];
 		GetErrorMessage(Message, Error, 2);
-		FUN_004e9020(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
-		FUN_004e9020(10, 300, 0);
+		AddMessage(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
+		AddMessage(10, 300, 0);
 	}
 	Error = ConnectSocket(IPAddress, GetCharacterPort(Character), false);
 	if (Error != 0) {
 		char *Message = new char[1024];
 		GetErrorMessage(Message, Error, 2);
-		FUN_004e9020(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
-		FUN_004e9020(10, 300, 0);
+		AddMessage(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
+		AddMessage(10, 300, 0);
 	}
 	TEND
 }
@@ -645,8 +646,8 @@ void TSocket::OnConnect(int ErrorCode)
 	}
 	char *Message = new char[1024];
 	GetErrorMessage(Message, ErrorCode, 2);
-	FUN_004e9020(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
-	FUN_004e9020(10, 300, 0);
+	AddMessage(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
+	AddMessage(10, 300, 0);
 	Disconnect(false);
 	SetConnectionState(0);
 	TEND1(ErrorCode)

@@ -3,28 +3,25 @@
 //
 // Tibia.exe is copied to its base address (see RunChild and MapImage): no
 // imports are bound and no code runs except the functions called here. Only functions that do not
-// touch imports or the C runtime's heap are called (allocation would need the
-// original CRT to be initialised).
+// touch imports are called. The original C runtime is not initialised, so
+// statustest.cpp redirects the image's malloc and free to the test's own heap
+// (PatchJump) before it calls functions that allocate.
 //
 // Usage: difftest.exe [path to Tibia.exe]
 
+#include "difftest.h"
 #include "../../src/Utils.h"
 #include "../../src/TXTEA.h"
-#include <stdio.h>
 
-static int Failures = 0;
-static int Checks = 0;
-
-#define CHECK(Cond, ...) do { Checks++; if (!(Cond)) { Failures++; if (Failures <= 20) { printf("FAIL %s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n"); } } } while (0)
+int Failures = 0;
+int Checks = 0;
 
 static uint32 Seed = 12345;
-static uint32 Random()
+uint32 Random()
 {
 	Seed = Seed * 1103515245 + 12345;
 	return Seed >> 8;
 }
-
-template <class T> static T At(uint32 Address) { return (T)(uintptr_t)Address; }
 
 // Original functions.
 typedef void (__cdecl *XTEAFn)(uint32 *Block, const uint32 *Key);
@@ -48,7 +45,7 @@ typedef void (__fastcall *BufPutBytesFn)(void *This, void *, const uint8 *Buffer
 typedef void (__fastcall *XTEAKeyFn)(void *This, void *, const uint8 *Key);
 typedef void (__fastcall *XTEABlockFn)(void *This, void *, uint8 *Block);
 
-static void RandomText(char *Text, int Length)
+void RandomText(char *Text, int Length)
 {
 	static const char Chars[] = "aAzZ09 \t\n\r\f\v.,-_\xe4\xf6\xfc\xc4\xd6\xdc\xdf\xe9\xc9\xff\xc0\xde\xdf\xe0";
 	for (int i = 0; i < Length; i++)
@@ -352,6 +349,8 @@ int main(int argc, char **argv)
 	TestStrings();
 	TestFormatNumber();
 	TestBuffers();
+	TestSkins();
+	TestStatus();
 	printf("%d checks, %d failures\n", Checks, Failures);
 	return Failures == 0 ? 0 : 1;
 }
