@@ -566,7 +566,7 @@ void TObjectContextMenu::HandleEvent(int Event)
 		TASSERT1(LookedObjectX==0xFFFF, LookedObjectX);
 		TASSERT(LookedObject.Type!=CREATURE);
 		SendMoveObject(LookedObjectX, LookedObjectY, LookedObjectZ, LookedObject.Type, LookedObjectIndex,
-			LookedObjectX, LookedObjectY, 0xfe, GetObjectFlag(LookedObject, CUMULATIVE) ? LookedObject.Data1 : 1);
+			LookedObjectX, LookedObjectY, 0xfe, GetObjectFlag(LookedObject, CUMULATIVE) ? LookedObject.Data : 1);
 		break;
 	case 10011:
 		TASSERT1(UsedObjectX==0xFFFF, UsedObjectX);

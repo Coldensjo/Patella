@@ -791,7 +791,7 @@ void ClearField(int rx, int ry, int rz, bool DeleteEffects)
 	TMapPoint &Point = Fields(FieldNumber(rx, ry, rz));
 	for (i = 0; i < Point.ObjectCount; i++) {
 		if (Point.Objects[i].Type == CREATURE)
-			CreatureCallback(Point.Objects[i].Data1);
+			CreatureCallback(Point.Objects[i].Data);
 	}
 	Point.ObjectCount = 0;
 	Point.RefreshRequested = false;

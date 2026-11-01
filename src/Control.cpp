@@ -18,6 +18,7 @@
 
 #include "Control.h"
 #include "ContextMenus.h"
+#include "Dialogs.h"
 #include "Help.h"
 #include "Inventory.h"
 #include "Network.h"
@@ -866,57 +867,57 @@ void ProcessEvents()
 		FetchMessage(&Type, &Param1, &Param2);
 		switch (Type) {
 		case 0x01:
-			ModalWindow = FUN_0047f8a0((const char *)Param1, (const char *)Param2);
+			ModalWindow = CreateMessageDialog((const char *)Param1, (const char *)Param2);
 			delete[] (char *)Param2;
 			break;
 		case 0x02:
-			ModalWindow = FUN_0047faf0((const char *)Param1, (const char *)Param2);
+			ModalWindow = CreateFormattedMessageDialog((const char *)Param1, (const char *)Param2);
 			delete[] (char *)Param2;
 			break;
 		case 0x03:
-			ModalWindow = FUN_0047fd30("Connecting", TextCharacterListLoading, MainWindow);
+			ModalWindow = CreateConnectingDialog("Connecting", TextCharacterListLoading, MainWindow);
 			break;
 		case 0x04:
-			ModalWindow = FUN_0047fd30("Connecting", TextConnectingGameWorld, MainWindow);
+			ModalWindow = CreateConnectingDialog("Connecting", TextConnectingGameWorld, MainWindow);
 			break;
 		case 0x05:
-			ModalWindow = FUN_004801c0("Please wait", Param1, Param2);
+			ModalWindow = CreateReconnectDialog("Please wait", (const char *)Param1, (int)Param2);
 			delete[] (char *)Param1;
 			break;
 		case 0x06: {
 			INT_PTR *Data = (INT_PTR *)Param1;
-			ModalWindow = FUN_004803f0((const char *)Data[0], (const char *)Data[1], (TWindow *)Data[2],
+			ModalWindow = CreateQuestionDialog((const char *)Data[0], (const char *)Data[1], (TWindow *)Data[2],
 				(int)Data[3], 2);
 			delete[] Data;
 			break;
 		}
 		case 0x07: {
 			INT_PTR *Data = (INT_PTR *)Param1;
-			ModalWindow = FUN_00480640((const char *)Data[0], (const char *)Data[1], MainWindow);
+			ModalWindow = CreateLogoutDialog((const char *)Data[0], (const char *)Data[1], MainWindow);
 			delete[] Data;
 			break;
 		}
 		case 0x08:
-			ModalWindow = FUN_00480f40(URLCallback);
+			ModalWindow = CreateLoginDialog(URLCallback);
 			break;
 		case 0x09:
-			ModalWindow = FUN_0047ff60("Please wait", TextWaitForCharacterList, Param1);
+			ModalWindow = CreateWaitDialog("Please wait", TextWaitForCharacterList, (int)Param1);
 			break;
 		case 0x0a:
-			ModalWindow = FUN_00481160(Param1);
+			ModalWindow = CreateCharacterListDialog((int)Param1);
 			break;
 		case 0x0b:
-			ModalWindow = FUN_004803f0((const char *)Param1, TextLinkCopyWarning, MainWindow, 0x21, 2);
+			ModalWindow = CreateQuestionDialog((const char *)Param1, TextLinkCopyWarning, MainWindow, 0x21, 2);
 			break;
 		case 0x0c:
-			ModalWindow = FUN_0047f8a0((const char *)Param1, TextNeverGiveAccount);
+			ModalWindow = CreateMessageDialog((const char *)Param1, TextNeverGiveAccount);
 			break;
 		case 0x0d:
-			ModalWindow = FUN_00480cd0();
+			ModalWindow = CreateMoveObjectsDialog();
 			break;
 		case 0x0e: {
 			INT_PTR *Texts = (INT_PTR *)Param2;
-			ModalWindow = FUN_00481370(Param1, Texts[0], Texts[1]);
+			ModalWindow = CreateTextDialog((int *)Param1, (const char *)Texts[0], (const char *)Texts[1]);
 			delete[] (char *)Param1;
 			delete[] (char *)Texts[0];
 			delete[] (char *)Texts[1];
@@ -924,43 +925,43 @@ void ProcessEvents()
 			break;
 		}
 		case 0x0f:
-			ModalWindow = FUN_004817c0(Param1, Param2);
+			ModalWindow = CreateEditListDialog((int *)Param1, (const char *)Param2);
 			delete[] (char *)Param1;
 			delete[] (char *)Param2;
 			break;
 		case 0x10:
 			OutfitRequested = false;
-			ModalWindow = FUN_004819f0(Param1);
+			ModalWindow = CreateOutfitDialog((int *)Param1);
 			delete[] (char *)Param1;
 			break;
 		case 0x11:
-			ModalWindow = FUN_00481bf0();
+			ModalWindow = CreateBugReportDialog();
 			break;
 		case 0x12: {
 			INT_PTR *Data = (INT_PTR *)Param1;
-			ModalWindow = FUN_00481e00(Data[0], &Data[1], Param2);
+			ModalWindow = CreateNewChannelDialog((int)Data[0], (int *)&Data[1], (const char (*)[30])Param2);
 			delete[] Data;
 			if (Param2 != 0)
 				delete[] (char *)Param2;
 			break;
 		}
 		case 0x13:
-			ModalWindow = FUN_00482010();
+			ModalWindow = CreateInviteDialog();
 			break;
 		case 0x14:
-			ModalWindow = FUN_00482210();
+			ModalWindow = CreateExcludeDialog();
 			break;
 		case 0x15:
-			ModalWindow = FUN_00482410();
+			ModalWindow = CreateIgnoreListDialog();
 			break;
 		case 0x16:
-			ModalWindow = FUN_00482640();
+			ModalWindow = CreateReportDialog();
 			break;
 		case 0x17:
-			ModalWindow = FUN_00482870();
+			ModalWindow = CreateAddBuddyDialog();
 			break;
 		case 0x18:
-			ModalWindow = FUN_00482a70(Param1);
+			ModalWindow = CreateEditBuddyDialog((int)Param1);
 			break;
 		case 0x19:
 			AddTemporaryIgnore((const char *)Param1);
@@ -971,57 +972,57 @@ void ProcessEvents()
 			delete[] (char *)Param1;
 			break;
 		case 0x1b:
-			ModalWindow = FUN_004808b0(URLCallback);
+			ModalWindow = CreateInfoDialog(URLCallback);
 			break;
 		case 0x1c:
-			ModalWindow = FUN_00485290(Param1, Param2);
+			ModalWindow = CreateRuleViolationDialog((const char *)Param1, (TTalkLine *)Param2);
 			if (Param1 != 0)
 				delete[] (char *)Param1;
 			if (Param2 != 0)
 				delete[] (char *)Param2;
 			break;
 		case 0x1d:
-			ModalWindow = FUN_004832e0(Param1, 0);
+			ModalWindow = CreateEditMarkDialog((TCoordinate *)Param1, NULL);
 			break;
 		case 0x1e:
-			ModalWindow = FUN_004832e0(Param1, Param2);
+			ModalWindow = CreateEditMarkDialog((TCoordinate *)Param1, (TMark *)Param2);
 			break;
 		case 0x1f:
-			ModalWindow = FUN_00482ea0(URLCallback);
+			ModalWindow = CreateHelpDialog(URLCallback);
 			break;
 		case 0x20:
-			ModalWindow = FUN_004830c0();
+			ModalWindow = CreateHintsDialog();
 			break;
 		case 0x21:
-			ModalWindow = FUN_00483500();
+			ModalWindow = CreateOptionsDialog();
 			break;
 		case 0x22:
-			ModalWindow = FUN_00483fe0(URLCallback);
+			ModalWindow = CreateNetworkOptionsDialog(URLCallback);
 			break;
 		case 0x23:
-			ModalWindow = FUN_00483950(URLCallback, DisplayModeCallback, MainWindow);
+			ModalWindow = CreateGraphicsOptionsDialog(URLCallback, DisplayModeCallback, MainWindow);
 			break;
 		case 0x24:
-			ModalWindow = FUN_00483b80(URLCallback, Param1);
+			ModalWindow = CreateAdvancedGraphicsDialog(URLCallback, (TComponent *)Param1);
 			break;
 		case 0x25:
-			ModalWindow = FUN_00483dc0(URLCallback);
+			ModalWindow = CreateConsoleOptionsDialog(URLCallback);
 			break;
 		case 0x26:
-			ModalWindow = FUN_00484200(URLCallback);
+			ModalWindow = CreateHotkeyDialog(URLCallback);
 			break;
 		case 0x27:
-			ModalWindow = FUN_00483730(URLCallback);
+			ModalWindow = CreateGeneralOptionsDialog(URLCallback);
 			break;
 		case 0x28:
-			ModalWindow = FUN_0047f8a0("Message of the Day", GetMotD());
+			ModalWindow = CreateMessageDialog("Message of the Day", GetMotD());
 			break;
 		case 0x29:
-			ModalWindow = FUN_00482c80(Param1, Param2);
+			ModalWindow = CreateUpdateDialog((const char *)Param1, (int)Param2);
 			break;
 		case 0x2a:
 			if (GetNumberOfErrorReports() > 0)
-				ModalWindow = FUN_00484400();
+				ModalWindow = CreateErrorReportDialog();
 			break;
 		case 0x2b:
 			SendErrorReports();

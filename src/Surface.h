@@ -74,7 +74,7 @@ public:
 	virtual void Unknown80(int a, int b, int c, int d);               // +0x80, empty
 	virtual void FinishFrame() = 0;                                   // +0x84
 	virtual bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force) = 0; // +0x88
-	virtual void Unknown8C() = 0;
+	virtual int GetFullscreenModes(TFullscreenMode **Modes) = 0;      // +0x8c, the modes and their number (Dialogs.cpp)
 	virtual int GetCacheSurfaces() = 0;                               // +0x90, the number of video cache surfaces
 	virtual void GetSurfaceRect(int Surface, TRect *Rect) = 0;        // +0x94
 	virtual void Unknown98(int a, int b, int c, int d, int e);        // +0x98, empty
@@ -82,11 +82,12 @@ public:
 	virtual bool IsUnavailable() = 0;                                 // +0xa0
 	virtual bool CanShadeRectangles() = 0;                            // +0xa4, MapWindow.cpp draws the light with +0x4c only when true
 	virtual void UnknownA8() = 0;
-	virtual void UnknownAC() = 0;
+	virtual void SetFramerateLimit(int Limit) = 0;                    // +0xac, Dialogs.cpp; 201 or above is no limit
 	virtual double GetFPS() = 0;                                      // +0xb0
 	virtual void InitSurfaces() = 0;                                  // +0xb4
 	virtual void ExitSurfaces() = 0;                                  // +0xb8
 	virtual bool TestEngine();                                        // +0xbc
+	uint8 GetAvailableEngines();                                      // 0x4eabe0, the engines found at start-up (bit 0 OpenGL, bit 1 DirectX 9)
 
 	int Data04;          // +0x04
 	HWND Window;         // +0x08, the main window (TestEngine, SurfaceInitInstance)
@@ -102,5 +103,4 @@ public:
 int GetCurrentEngine();
 TSurface *GetSurface();
 void SurfaceExitInstance();
-uint8 GetAvailableEngines();
 void SurfaceInitInstance(HWND *Window);

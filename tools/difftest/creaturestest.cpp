@@ -51,7 +51,7 @@ static TObject Field(int x, int y)
 {
 	TObject Object;
 	Object.Type = FieldType[x & 15][y & 15];
-	Object.Data1 = 0;
+	Object.Data = 0;
 	Object.Data2 = 0;
 	return Object;
 }

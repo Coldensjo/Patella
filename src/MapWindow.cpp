@@ -147,8 +147,8 @@ bool TMapWindow::LeftButtonUp(int x, int y, int Flags)
 			TObject &SrcObj = *GetUseObject(&SrcIndex, &SrcX, &SrcY, &SrcZ);
 			TASSERT(SrcObj!=0);
 			TASSERT(SrcObj.Type!=CREATURE);
-			if (Obj.Type == CREATURE && !IsPlayer(Obj.Data1)) {
-				SendUseObjectOnCreature(SrcX, SrcY, SrcZ, SrcObj.Type, SrcIndex, Obj.Data1);
+			if (Obj.Type == CREATURE && !IsPlayer(Obj.Data)) {
+				SendUseObjectOnCreature(SrcX, SrcY, SrcZ, SrcObj.Type, SrcIndex, Obj.Data);
 				return true;
 			}
 			int DestX = FieldX, DestY = FieldY, DestZ = FieldZ;
@@ -172,7 +172,7 @@ bool TMapWindow::LeftButtonUp(int x, int y, int Flags)
 		int DragIndex, DragX, DragY, DragZ;
 		TObject *DragObject = GetDragObject(&DragIndex, &DragX, &DragY, &DragZ);
 		int Type = DragObject->Type;
-		int Count = DragObject->Data1;
+		int Count = DragObject->Data;
 		int DestX = FieldX, DestY = FieldY, DestZ = FieldZ;
 		RelativeToAbsolute(&DestX, &DestY, &DestZ);
 		if (DragX != DestX || DragY != DestY || DragZ != DestZ) {
@@ -339,7 +339,7 @@ bool TMapWindow::HelpMouseMove(int x, int y)
 	int Position = 0;
 	TObject Obj = GetTopLookObject(FieldX, FieldY, FieldZ, Position);
 	int Handle = 0;
-	if (Obj.Type == CREATURE && Obj.Data1 == (int)GetPlayerID())
+	if (Obj.Type == CREATURE && Obj.Data == (int)GetPlayerID())
 		Handle = 1001;
 	else if (Obj.Type == CREATURE)
 		Handle = 1000;
@@ -823,7 +823,7 @@ void TMapWindow::DrawField(int posx, int posy, int FieldX, int FieldY, int Field
 			for (Obj = GetFirstObject(i, j, FieldZ); Obj.Type != 0; Obj = GetNextObject()) {
 				if (Obj.Type != CREATURE || NumberOfCreatures == 10)
 					continue;
-				TCreature *Creature = GetCreature(Obj.Data1);
+				TCreature *Creature = GetCreature(Obj.Data);
 				if (Creature == NULL)
 					continue;
 				int sx = 0, sy = 0;

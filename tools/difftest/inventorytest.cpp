@@ -27,7 +27,7 @@ typedef TObject (__cdecl *OfferObjectFn)(int);
 
 static bool Same(TObject a, TObject b)
 {
-	return a.Type == b.Type && a.Data1 == b.Data1 && a.Data2 == b.Data2;
+	return a.Type == b.Type && a.Data == b.Data && a.Data2 == b.Data2;
 }
 
 static TObject RandomObject()

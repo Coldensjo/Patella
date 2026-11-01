@@ -97,10 +97,10 @@ void TSurfaceGL::Unknown78() STUB
 void TSurfaceGL::Unknown7C() STUB
 void TSurfaceGL::FinishFrame() STUB
 bool TSurfaceGL::Init(HWND *, int, TFullscreenMode *, bool) STUB
-void TSurfaceGL::Unknown8C() STUB
+int TSurfaceGL::GetFullscreenModes(TFullscreenMode **) STUB
 bool TSurfaceGL::IsUnavailable() STUB
 void TSurfaceGL::UnknownA8() STUB
-void TSurfaceGL::UnknownAC() STUB
+void TSurfaceGL::SetFramerateLimit(int) STUB
 double TSurfaceGL::GetFPS() STUB
 void TSurfaceGL::InitSurfaces() STUB
 void TSurfaceGL::ExitSurfaces() STUB
@@ -129,7 +129,9 @@ static void TestSurface()
 		Global<int>(0x71d0c4) = Engine;
 		CHECK(GetCurrentEngine() == At<int (__cdecl *)()>(0x4eaa80)(), "GetCurrentEngine %d", Engine);
 	}
-	CHECK(GetAvailableEngines() == 0 && At<uint8 (__cdecl *)()>(0x4eabe0)() == 0, "GetAvailableEngines");
+	// A member that does not read this (the binary passes the surface in ECX).
+	TSurface *Surface = NULL;
+	CHECK(Surface->GetAvailableEngines() == 0 && At<uint8 (__cdecl *)()>(0x4eabe0)() == 0, "GetAvailableEngines");
 }
 
 // MainFrm.cpp's TranslateKey: every virtual key, both extended flags and

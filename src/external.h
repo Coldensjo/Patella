@@ -11,8 +11,9 @@
 extern uint8 PacketHeader[16];
 
 // Objects.cpp: a reference to an object (12 bytes, passed by value). Type
-// is named in MapWindow.cpp's "SrcObj.Type!=CREATURE" (CREATURE is 99);
-// the other field names are ours. The default constructor clears the object:
+// is named in MapWindow.cpp's "SrcObj.Type!=CREATURE" (CREATURE is 99),
+// Data in Dialogs.cpp's "In(DraggedObject.Data,1,100)" (the count); Data2 is
+// ours. The default constructor clears the object:
 // Map.cpp's TMapPoint, ten TObjects and plain ints, has a compiler-generated
 // constructor (0x4b0b40) that zeroes exactly the ten objects. Written with
 // default member initializers so that the type stays an aggregate.
@@ -21,7 +22,7 @@ extern uint8 PacketHeader[16];
 // TObject to its Type.
 struct TObject {
 	int Type = 0;
-	int Data1 = 0;
+	int Data = 0;
 	int Data2 = 0;
 	operator int() const { return Type; }
 };
@@ -111,9 +112,9 @@ public:
 	void Unknown68(); void Unknown6C(); void Unknown70(); void Unknown74(); void Unknown78();
 	void Unknown7C(); void FinishFrame();
 	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force);
-	void Unknown8C(); int GetCacheSurfaces(); void GetSurfaceRect(int Surface, TRect *Rect);
+	int GetFullscreenModes(TFullscreenMode **Modes); int GetCacheSurfaces(); void GetSurfaceRect(int Surface, TRect *Rect);
 	bool Unknown9C(int Value);
-	bool IsUnavailable(); bool CanShadeRectangles(); void UnknownA8(); void UnknownAC(); double GetFPS();
+	bool IsUnavailable(); bool CanShadeRectangles(); void UnknownA8(); void SetFramerateLimit(int Limit); double GetFPS();
 	void InitSurfaces(); void ExitSurfaces();
 	uint8 DataGL[0x498 - 0x44];
 };
@@ -190,44 +191,81 @@ extern const char *TextPercentToGo;           // 0x5c0748, "You have %d percent 
 extern const char *TextWaitForCounterOffer;   // 0x5c0758, "Please wait for a\ncounteroffer"
 extern const char *TextWaitForPartner;        // 0x5c075c, "Please wait for \nyour partner to accept."
 
-// Dialogs.cpp: each creates a dialog and returns it as the new modal window.
-TWindow *FUN_0047f8a0(const char *Title, const char *Text);             // 0x47f8a0, message box
-TWindow *FUN_0047faf0(const char *Title, const char *Text);             // 0x47faf0
-TWindow *FUN_0047fd30(const char *Title, const char *Text, TWindow *Parent); // 0x47fd30, "Abort"
-TWindow *FUN_0047ff60(const char *Title, const char *Text, INT_PTR Param);   // 0x47ff60, "Abort"
-TWindow *FUN_004801c0(const char *Title, INT_PTR Param1, INT_PTR Param2);    // 0x4801c0, "Abort"
-TWindow *FUN_004803f0(const char *Title, const char *Text, TWindow *Parent, int Param4,
-	int Param5);                                                         // 0x4803f0
-TWindow *FUN_00480640(const char *Title, const char *Text, TWindow *Parent); // 0x480640, "Logout"
-TWindow *FUN_004808b0(void (*OpenURL)(const char *URL));                // 0x4808b0, "Official Website"
-TWindow *FUN_00480cd0();                                                // 0x480cd0, "Move Objects"
-TWindow *FUN_00480f40(void (*OpenURL)(const char *URL));                // 0x480f40, "Enter Game"
-TWindow *FUN_00481160(INT_PTR Timeout);                                 // 0x481160, "Select Character"
-TWindow *FUN_00481370(INT_PTR Param1, INT_PTR Param2, INT_PTR Param3);  // 0x481370
-TWindow *FUN_004817c0(INT_PTR Param1, INT_PTR Param2);                  // 0x4817c0, "Edit List"
-TWindow *FUN_004819f0(INT_PTR Param);                                   // 0x4819f0, "Select Outfit"
-TWindow *FUN_00481bf0();                                                // 0x481bf0, "Reporting"
-TWindow *FUN_00481e00(INT_PTR Param1, INT_PTR *Param2, INT_PTR Param3); // 0x481e00, "New Channel"
-TWindow *FUN_00482010();                // 0x482010, "Invite player to private chat channel"
-TWindow *FUN_00482210();                // 0x482210, "Exclude player from private chat channel"
-TWindow *FUN_00482410();                // 0x482410, "Edit Ignore List and White List"
-TWindow *FUN_00482640();                // 0x482640, "Report Rule Violation"
-TWindow *FUN_00482870();                // 0x482870, "Add to VIP list"
-TWindow *FUN_00482a70(INT_PTR CharacterID);                             // 0x482a70, "Change player in VIP list"
-TWindow *FUN_00482c80(INT_PTR Param1, INT_PTR DataSize);                // 0x482c80, "Updating ... Please wait"
-TWindow *FUN_00482ea0(void (*OpenURL)(const char *URL));                // 0x482ea0
-TWindow *FUN_004830c0();                                                // 0x4830c0, "Hints for Tibia"
-TWindow *FUN_004832e0(INT_PTR Param1, INT_PTR Param2);                  // 0x4832e0, "Edit Mark"
-TWindow *FUN_00483500();                                                // 0x483500, "Options"
-TWindow *FUN_00483730(void (*OpenURL)(const char *URL));                // 0x483730, "General Options"
-TWindow *FUN_00483950(void (*OpenURL)(const char *URL), void (*SetDisplayMode)(int Mode),
-	TWindow *Parent);                                                   // 0x483950, "Graphics Options"
-TWindow *FUN_00483b80(void (*OpenURL)(const char *URL), INT_PTR Param); // 0x483b80, "Advanced Graphics Options"
-TWindow *FUN_00483dc0(void (*OpenURL)(const char *URL));                // 0x483dc0, "Console Options"
-TWindow *FUN_00483fe0(void (*OpenURL)(const char *URL));                // 0x483fe0, "Network Options"
-TWindow *FUN_00484200(void (*OpenURL)(const char *URL));                // 0x484200, "Hotkey Options"
-TWindow *FUN_00484400();                                                // 0x484400, "Error Report"
-TWindow *FUN_00485290(INT_PTR Param1, INT_PTR Param2);                  // 0x485290, "Rule Violation"
+// Dialogs.cpp: the dialogs are in Dialogs.h, which its users include directly
+// (it needs DialogElements.h and Map.h). Dialogs.obj's copy of the text table
+// (0x5c123c-0x5c1484, then its regular expression pointer 0x5c1488 and its copy
+// of DefaultFontColor 0x5c148c; names ours), the entries Dialogs.cpp reads:
+extern const char *TextSwitchToDirectX5;              // 0x5c1310, "Switch to DirectX 5 Engine"
+extern const char *TextSwitchToDirectX9;              // 0x5c1314, "Switch to DirectX 9 Engine"
+extern const char *TextSwitchToOpenGL;                // 0x5c1318, "Switch to OpenGL Engine"
+extern const char *TextAccountNumber;                 // 0x5c1324, "Account number:"
+extern const char *TextPassword;                      // 0x5c1328, "Password:"
+extern const char *TextNoAccountYet;                  // 0x5c132c, "If you don't have\nan account yet:"
+extern const char *TextSelectCharacter;               // 0x5c1330, "Select character:"
+extern const char *TextTryingToReconnect;             // 0x5c1334, "Trying to reconnect in %d %s."
+extern const char *TextSetNumberOfItems;              // 0x5c1338, "Set the number of\nitems you want to move:"
+extern const char *TextChooseOutfit;                  // 0x5c133c, "Choose an outfit and determine ..."
+extern const char *TextSelectChannel;                 // 0x5c1340, "Select a channel:"
+extern const char *TextOpenPrivateChannel;            // 0x5c1344, "Open a private message channel:"
+extern const char *TextEnterCharacterName;            // 0x5c1348, "Please enter a character name:"
+extern const char *TextStateRuleViolation;            // 0x5c134c, "Please state the rule violation in one\nclear sentence ..."
+extern const char *TextReportBugsOnly;                // 0x5c1350, "Please use this dialog only to report bugs. ..."
+extern const char *TextSelectType;                    // 0x5c1354, "Select a type:"
+extern const char *TextEnterCharacterName2;           // 0x5c1358, "Please enter a character name:"
+extern const char *TextEnterShortDescription;         // 0x5c135c, "Enter a short description:"
+extern const char *TextDownloadingPictures;           // 0x5c1364, "Downloading new pictures"
+extern const char *TextDownloadingObjectData;         // 0x5c1368, "Downloading new object data"
+extern const char *TextDownloadingObjectGraphics;     // 0x5c136c, "Downloading new object graphics"
+extern const char *TextClientInfo;                    // 0x5c1370, "Click here to get\ninfo on the client."
+extern const char *TextShowPreviousHints;             // 0x5c1374, "Show previous hints"
+extern const char *TextAskTutor;                      // 0x5c1378, "Ask a tutor for help"
+extern const char *TextReportRuleViolations;          // 0x5c137c, "Report rule violations"
+extern const char *TextReadManual;                    // 0x5c1380, "Read the manual on\nthe website"
+extern const char *TextReadFAQ;                       // 0x5c1384, "Read the FAQ on\nthe website."
+extern const char *TextAvailableHints;                // 0x5c1388, "Available hints:"
+extern const char *TextChangeGeneralOptions;          // 0x5c138c, "Change general\ngame options"
+extern const char *TextChangeGraphicsOptions;         // 0x5c1390, "Change graphics and\nperformance settings"
+extern const char *TextCustomiseConsole;              // 0x5c1394, "Customise the console"
+extern const char *TextChangeNetworkSettings;         // 0x5c1398, "Change network settings"
+extern const char *TextEditHotkeys;                   // 0x5c139c, "Edit your hotkey texts"
+extern const char *TextShowMotD;                      // 0x5c13a0, "Show the most recent\nMessage of the Day"
+extern const char *TextAdvancedSettings;              // 0x5c13ac, "Advanced settings"
+extern const char *TextAvailableResolutions;          // 0x5c13b0, "Available resolutions:"
+extern const char *TextSelectEngine;                  // 0x5c13b4, "Select graphics engine:"
+extern const char *TextAvailableHotkeys;              // 0x5c13b8, "Available hotkeys:"
+extern const char *TextEditHotkeyText;                // 0x5c13bc, "Edit hotkey text:"
+extern const char *TextClientVersion;                 // 0x5c13c0, "Tibia Client\nVersion 7.72 ..."
+extern const char *TextOfficialWebsite;               // 0x5c13c4, "Official Website"
+extern const char *TextCharactersToIgnore;            // 0x5c13c8, "Characters you wish to ignore:"
+extern const char *TextGlobalIgnoreSettings;          // 0x5c13cc, "Global settings for ignoring messages:"
+extern const char *TextCharactersToAllow;             // 0x5c13d0, "Characters you allow to message you:"
+extern const char *TextGlobalAllowSettings;           // 0x5c13d4, "Global settings for allowing messages:"
+extern const char *TextEnterOneNamePerLine;           // 0x5c13d8, "Enter one name per line."
+extern const char *TextItIsEmpty;                     // 0x5c13dc, "It is empty."
+extern const char *TextItIsCurrentlyEmpty;            // 0x5c13e0, "It is currently empty."
+extern const char *TextYouReadTheFollowing;           // 0x5c13e4, "You read the following."
+extern const char *TextYouCanEnterNewText;            // 0x5c13e8, "You can enter new text."
+extern const char *TextYouReadWrittenBy;              // 0x5c13ec, "You read the following, written by"
+extern const char *TextSelectType2;                   // 0x5c13fc, "Select a type:"
+extern const char *TextEnterShortDescription2;        // 0x5c1400, "Enter a short description:"
+extern const char *TextClientCrashed;                 // 0x5c1410, "At your last visit in Tibia your client crashed ..."
+extern const char *TextTellUsWhatYouDid;              // 0x5c1414, "Please tell us what you were doing just before the crash:\n"
+extern const char *TextRequestAlreadySubmitted;       // 0x5c1420, "You have already submitted a request. Please close ..."
+extern const char *TextNoPrivateChannelWithYourself;  // 0x5c1428, "You cannot set up a private message channel with yourself."
+extern const char *TextNoPlayerName;                  // 0x5c143c, "No playername given."
+extern const char *TextNoReason;                      // 0x5c1440, "No reason has been selected."
+extern const char *TextNoAction;                      // 0x5c1444, "No action has been selected."
+extern const char *TextNoComment;                     // 0x5c1448, "You must enter a comment."
+extern const char *TextNoStatement;                   // 0x5c144c, "No statement has been selected."
+extern const char *TextCannotReportStatement;         // 0x5c1450, "You cannot report this statement."
+extern const char *TextTibiaURL;                      // 0x5c1458, "http://www.tibia.com/"
+extern const char *TextManualURL;                     // 0x5c145c, "http://www.tibia.com/guide/?subtopic=manual"
+extern const char *TextFAQURL;                        // 0x5c1460, "http://www.tibia.com/guide/?subtopic=faq"
+extern const char *TextOptionsURL;                    // 0x5c1464, "...manual&section=options"
+extern const char *TextGraphicsOptionsURL;            // 0x5c1468, "...options#graphicsoptions"
+extern const char *TextAdvancedGraphicsURL;           // 0x5c146c, "...options#graphicsoptions (the same text)"
+extern const char *TextConsoleOptionsURL;             // 0x5c1470, "...options#consoleoptions"
+extern const char *TextNetworkOptionsURL;             // 0x5c1474, "...options#networkoptions"
 
 
 // Map.cpp

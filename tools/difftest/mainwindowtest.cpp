@@ -395,7 +395,7 @@ TFakeLabel::TFakeLabel(TFont Font, const char *_Text)
 static void __cdecl FakeDrawObject(int Surface, int x, int y, int Size, TObject Obj, TRGBColor Highlight, TRect Clip,
 	TFont Font, bool ShowCount)
 {
-	Logf("DObj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data1, Obj.Data2,
+	Logf("DObj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data, Obj.Data2,
 		Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.Width, Clip.Height, ShowCount ? 1 : 0);
 }
 
@@ -493,7 +493,7 @@ static TObject __cdecl FakeGetContainerObject(int Container)
 {
 	TObject Obj;
 	Obj.Type = 100 + Container;
-	Obj.Data1 = Container * 3;
+	Obj.Data = Container * 3;
 	Obj.Data2 = 0;
 	return Obj;
 }

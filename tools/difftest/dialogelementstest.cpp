@@ -178,7 +178,7 @@ static void __cdecl FakePrintFormattedTextPart(int Surface, int x, int y, TFont 
 static void __cdecl FakeDrawObject(int Surface, int x, int y, int Size, TObject Obj, TRGBColor H, TRect Clip, TFont F,
 	bool ShowCount)
 {
-	Logf("Obj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data1, Obj.Data2,
+	Logf("Obj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data, Obj.Data2,
 		H.R, H.G, H.B, Clip.x, Clip.y, Clip.Width, Clip.Height, F.FontNumber, ShowCount ? 1 : 0);
 }
 static void __cdecl FakeDrawOutfit(int Surface, int x, int y, int Size, int Outfit, int *Colors, TRGBColor H, TRect Clip,
@@ -437,7 +437,7 @@ static TArguments RandomArguments()
 	for (int i = 0; i < 4; i++)
 		A.Colors[i] = Random() % 133;
 	A.Obj.Type = 100 + Random() % 3000;
-	A.Obj.Data1 = Random() % 100;
+	A.Obj.Data = Random() % 100;
 	A.Obj.Data2 = Random() % 3;
 	return A;
 }
@@ -668,7 +668,7 @@ static void Dump(std::string &Out, int s, TComponent *C, int Depth)
 		TObjectIcon *O = (TObjectIcon *)C;
 		Add(Out, " unused %d,%d,%d,%d framed %d hl %d,%d,%d obj %d,%d,%d", O->Unused24.x, O->Unused24.y,
 			O->Unused24.Width, O->Unused24.Height, O->Framed, O->Highlight.R, O->Highlight.G, O->Highlight.B, O->Obj.Type,
-			O->Obj.Data1, O->Obj.Data2);
+			O->Obj.Data, O->Obj.Data2);
 	} else if (K == "SkinButton" || K == "ColorButton" || K == "IconButton" || K == "Blinking" || K == "TextButton"
 		|| K == "Toggle" || K == "TextToggle" || K == "MultiState") {
 		DumpButton(Out, s, (TSkinButton *)C);

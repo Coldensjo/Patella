@@ -1,0 +1,3280 @@
+// Dialogs.cpp: the dialogs of the client (c:\mud\tibiaplayer\Dialogs.cpp);
+// see Dialogs.h.
+//
+// Order: the functions follow the source's line numbers: the creators
+// (lines 48-631), the frame TDialog (650-891) and the dialog bodies. The
+// binary moves the creators, the constructors that call functions defined
+// further down (TDialog's, the outfit's, the edit list's, the ignore
+// list's, the hotkeys', the error report's, the rule violation's) and the
+// rule violation's HandleEvent to the end of the object, Creatures.cpp's
+// pattern. The header code at the start of the object (0x46b790-0x46c0cf
+// with Container.h's vector<TIgnoreEntry>) is in Dialogs.h and Container.h.
+
+#include "Dialogs.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sstream>
+#include "Communication.h"
+#include "Control.h"
+#include "Creatures.h"
+#include "Help.h"
+#include "Map.h"
+#include "Objects.h"
+#include "Preferences.h"
+#include "Status.h"
+#include "Surface.h"
+#include "Talk.h"
+#include "Utils.h"
+#include "sysinc.h"
+
+// Data. Dialogs.obj's only static is NoCallback (static initialiser
+// 0x559e10). Its copy of the text table (0x5c123c-0x5c1484, then its
+// regular expression pointer 0x5c1488 and its copy of DefaultFontColor
+// 0x5c148c) is in external.h.
+static TCallback NoCallback(NULL, 0); // 0x5cc420
+
+// --- Creators ----------------------------------------------------------------------
+
+// 0x47f8a0, line 48. A message; OK and Escape close it.
+TDialog *CreateMessageDialog(const char *Caption, const char *Text)
+{
+	TBEGIN
+	TLabel *Label = new TLabel(0, 0, SkinProperties.StyleB08.Data64, Text);
+	TDialog *Dialog = new TDialog(Caption, Label);
+	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
+	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x47faf0, line 67. A message with formatting tokens.
+TDialog *CreateFormattedMessageDialog(const char *Caption, const char *Text)
+{
+	TBEGIN
+	TFormattedText *FormattedText = new TFormattedText(Text);
+	FormattedText->SetSize(SkinProperties.Data17C, SkinProperties.Data180);
+	FormattedText->FitToChildren(TRect(0, 0, 0, 0), false);
+	TDialog *Dialog = new TDialog(Caption, FormattedText);
+	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
+	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x47fd30, line 84. "Connecting": Abort (and Escape) send 29 to the
+// receiver (the main window); the next queued message closes it.
+TDialog *CreateConnectingDialog(const char *Caption, const char *Text, TComponent *Receiver)
+{
+	TBEGIN
+	TWaitLabel *Label = new TWaitLabel(Text, true, false);
+	TDialog *Dialog = new TDialog(Caption, Label);
+	Dialog->SetOkButton("Abort", TCallback(Receiver, 29));
+	Dialog->SetCancelButton(NULL, TCallback(Receiver, 29));
+	Dialog->CancelCallback = TCallback(Receiver, 29);
+	return Dialog;
+	TEND
+}
+
+// 0x47ff60, line 102. "Please wait": Abort clears the message queue; a
+// timeout (tenths of a second) closes the dialog.
+TDialog *CreateWaitDialog(const char *Caption, const char *Text, int Timeout)
+{
+	TBEGIN
+	TWaitLabel *Label = new TWaitLabel(Text, false, true);
+	TDialog *Dialog = new TDialog(Caption, Label);
+	Dialog->SetOkButton("Abort", TCallback(Label, 29));
+	Dialog->SetCancelButton(NULL, TCallback(Label, 29));
+	Dialog->CancelCallback = TCallback(Label, 29);
+	if (Timeout > 0)
+		Label->SetTimer(Timeout, TCallback(Label, 31));
+	return Dialog;
+	TEND
+}
+
+// 0x4801c0, line 119. The reconnect countdown (timeout in seconds).
+TDialog *CreateReconnectDialog(const char *Caption, const char *Text, int timeout)
+{
+	TBEGIN
+	TReconnectWindow *Window = new TReconnectWindow(Text, timeout);
+	TDialog *Dialog = new TDialog(Caption, Window);
+	Dialog->SetOkButton("Abort", TCallback(Window, 29));
+	Dialog->SetCancelButton(NULL, TCallback(Window, 29));
+	Dialog->CancelCallback = TCallback(Window, 29);
+	return Dialog;
+	TEND
+}
+
+// 0x4803f0, line 134. A yes/no question whose answers go to the receiver.
+TDialog *CreateQuestionDialog(const char *Caption, const char *Text, TComponent *Receiver, int YesEvent,
+	int NoEvent)
+{
+	TBEGIN
+	TQuestionLabel *Label = new TQuestionLabel(SkinProperties.StyleB08.Data64, Text, TCallback(Receiver, YesEvent),
+		TCallback(Receiver, NoEvent));
+	TDialog *Dialog = new TDialog(Caption, Label);
+	Dialog->SetOkButton("Yes", TCallback(Receiver, YesEvent));
+	Dialog->SetCancelButton("No", TCallback(Receiver, NoEvent));
+	return Dialog;
+	TEND
+}
+
+// 0x480640, line 149. Logout (506), Cancel (2) and Exit (7) go to the
+// receiver.
+TDialog *CreateLogoutDialog(const char *Caption, const char *Text, TComponent *Receiver)
+{
+	TBEGIN
+	TLogoutLabel *Label = new TLogoutLabel(SkinProperties.StyleB08.Data64, Text, TCallback(Receiver, 506),
+		TCallback(Receiver, 7));
+	TDialog *Dialog = new TDialog(Caption, Label);
+	Dialog->SetOkButton("Logout", TCallback(Receiver, 506));
+	Dialog->SetCancelButton("Cancel", TCallback(Receiver, 2));
+	Dialog->SetExtraButton("Exit", TCallback(Receiver, 7));
+	return Dialog;
+	TEND
+}
+
+// 0x4808b0, line 177. "Info": the client version and a link to the web
+// site, in a frame of skins.
+TDialog *CreateInfoDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	TWindow *Window = new TWindow();
+	Window->SetSize(SkinProperties.StyleE68.Data00, SkinProperties.StyleE68.Data04);
+	TLabel *Label = new TLabel(0, 0, SkinProperties.StyleE68.Data08, TextClientVersion);
+	TLink *Link = new TLink(TextOfficialWebsite, "www.tibia.com", TextTibiaURL, OpenURL,
+		SkinProperties.StyleE68.Data1C);
+	TSeparator *Separator = new TSeparator(true);
+	Window->InsertChild(Label);
+	Window->InsertChild(Separator);
+	Window->InsertChild(Link);
+	Window->SetChildArea(Label, SkinProperties.StyleE68.Data34.x, SkinProperties.StyleE68.Data34.y,
+		SkinProperties.StyleE68.Data34.Width, SkinProperties.StyleE68.Data34.Height);
+	Window->SetChildArea(Separator, SkinProperties.StyleE68.Data54.x, SkinProperties.StyleE68.Data54.y,
+		SkinProperties.StyleE68.Data54.Width, SkinProperties.StyleE68.Data54.Height);
+	Window->SetChildArea(Link, SkinProperties.StyleE68.Data44.x, SkinProperties.StyleE68.Data44.y,
+		SkinProperties.StyleE68.Data44.Width, SkinProperties.StyleE68.Data44.Height);
+	TBorder *Border = new TBorder(Window, 0, 9, 0, 11, 10, 0, 8, 0, SkinProperties.StyleE68.Data30);
+	Border->FitToWindow();
+	TDialog *Dialog = new TDialog("Info", Border);
+	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
+	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x480cd0, line 200. Only for a dragged pile of 1-100 objects; otherwise
+// it ends the drag and makes no dialog.
+TDialog *CreateMoveObjectsDialog()
+{
+	TBEGIN
+	int Unused;
+	TObject *Obj = GetDragObject(&Unused, &Unused, &Unused, &Unused);
+	if (*Obj != 0 && Obj->Data > 0 && Obj->Data < 101) {
+		TMoveObjectsDialog *Body = new TMoveObjectsDialog();
+		TDialog *Dialog = new TDialog("Move Objects", Body);
+		Dialog->SetOkButton("Ok", TCallback(Body, 1));
+		Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
+		return Dialog;
+	}
+	SetActionState(0);
+	return NULL;
+	TEND
+}
+
+// 0x480f40, line 214
+TDialog *CreateLoginDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	TLoginDialog *Body = new TLoginDialog(OpenURL);
+	TDialog *Dialog = new TDialog("Enter Game", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
+	return Dialog;
+	TEND
+}
+
+// 0x481160, line 230. Timeout in tenths of a second, 0 for none.
+TDialog *CreateCharacterListDialog(int Timeout)
+{
+	TBEGIN
+	TCharacterListDialog *Body = new TCharacterListDialog();
+	TDialog *Dialog = new TDialog("Select Character", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	if (Timeout > 0)
+		Body->SetTimeout(Timeout);
+	return Dialog;
+	TEND1(Timeout)
+}
+
+// 0x481370, line 280. ObjectData holds the server's object number, the
+// object type and the maximum length. The text can be edited when the
+// object is writable, or writable once and still empty; Return does not
+// close either form (OkCallback is cleared).
+TDialog *CreateTextDialog(int *ObjectData, const char *Author, const char *Text)
+{
+	TBEGIN
+	int ObjectNumber = ObjectData[0];
+	int Type = ObjectData[1];
+	int MaximumLength = ObjectData[2];
+	char Description[500];
+	Description[0] = 0;
+	TTextDialog *Body;
+	TDialog *Dialog;
+	if (GetObjectFlag(Type, WRITE) || (GetObjectFlag(Type, WRITEONCE) && strlen(Text) == 0)) {
+		if (strlen(Text) == 0)
+			_snprintf(Description, 255, "%s\n%s", TextItIsCurrentlyEmpty, TextYouCanEnterNewText);
+		else if (strlen(Author) != 0)
+			_snprintf(Description, 255, "%s\n%s.\n%s", TextYouReadWrittenBy, Author, TextYouCanEnterNewText);
+		else
+			_snprintf(Description, 255, "%s\n%s", TextYouReadTheFollowing, TextYouCanEnterNewText);
+		TObject Obj;
+		Obj.Type = Type;
+		Body = new TTextDialog(MaximumLength, Text, ObjectNumber, Obj, Description);
+		Dialog = new TDialog("Edit Text", Body);
+		Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	} else {
+		if (strlen(Text) == 0)
+			_snprintf(Description, 255, "%s", TextItIsEmpty);
+		else if (strlen(Author) != 0)
+			_snprintf(Description, 255, "%s\n%s.", TextYouReadWrittenBy, Author);
+		else
+			_snprintf(Description, 255, "%s", TextYouReadTheFollowing);
+		TObject Obj;
+		Obj.Type = Type;
+		Body = new TTextDialog(MaximumLength, Text, ObjectNumber, Obj, Description);
+		Dialog = new TDialog("Show Text", Body);
+		Dialog->SetOkButton("Ok", TCallback(Body, 2));
+		Dialog->SetCancelButton(NULL, TCallback(Body, 2));
+	}
+	Dialog->OkCallback = NoCallback;
+	return Dialog;
+	TEND
+}
+
+// 0x4817c0, line 294. HouseData holds the list's type and identifier.
+TDialog *CreateEditListDialog(int *HouseData, const char *Text)
+{
+	TBEGIN
+	TEditListDialog *Body = new TEditListDialog(2000, Text, HouseData[0], HouseData[1], TextEnterOneNamePerLine);
+	TDialog *Dialog = new TDialog("Edit List", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->OkCallback = NoCallback;
+	return Dialog;
+	TEND
+}
+
+// 0x4819f0, line 307
+TDialog *CreateOutfitDialog(int *Data)
+{
+	TBEGIN
+	TOutfitDialog *Body = new TOutfitDialog(Data);
+	TDialog *Dialog = new TDialog("Select Outfit", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x481bf0, line 321
+TDialog *CreateBugReportDialog()
+{
+	TBEGIN
+	TBugReportDialog *Body = new TBugReportDialog();
+	TDialog *Dialog = new TDialog("Reporting", Body);
+	Dialog->SetOkButton("Send", TCallback(Body, 1));
+	Dialog->OkCallback = NoCallback;
+	return Dialog;
+	TEND
+}
+
+// 0x481e00, line 334
+TDialog *CreateNewChannelDialog(int NumberOfChannels, int *ChannelIDs, const char (*ChannelNames)[30])
+{
+	TBEGIN
+	TNewChannelDialog *Body = new TNewChannelDialog(NumberOfChannels, ChannelIDs, ChannelNames);
+	TDialog *Dialog = new TDialog("New Channel", Body);
+	Dialog->SetOkButton("Open", TCallback(Body, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x482010, line 347
+TDialog *CreateInviteDialog()
+{
+	TBEGIN
+	TPrivateChannelDialog *Body = new TPrivateChannelDialog(false);
+	TDialog *Dialog = new TDialog("Invite player to private chat channel", Body);
+	Dialog->SetOkButton("Add", TCallback(Body, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x482210, line 360. The OK button says "Add" here too.
+TDialog *CreateExcludeDialog()
+{
+	TBEGIN
+	TPrivateChannelDialog *Body = new TPrivateChannelDialog(true);
+	TDialog *Dialog = new TDialog("Exclude player from private chat channel", Body);
+	Dialog->SetOkButton("Add", TCallback(Body, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x482410, line 375. OK sends 602.
+TDialog *CreateIgnoreListDialog()
+{
+	TBEGIN
+	TIgnoreListDialog *Body = new TIgnoreListDialog();
+	TDialog *Dialog = new TDialog("Edit Ignore List and White List", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 602));
+	Dialog->OkCallback = NoCallback;
+	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
+	return Dialog;
+	TEND
+}
+
+// 0x482640, line 407. Only one open request at a time (a rule violation
+// channel buffer exists while one is open).
+TDialog *CreateReportDialog()
+{
+	TBEGIN
+	if (GetTextBuffer(7, NULL, -1) != NULL) {
+		SetStatusMessage(TextRequestAlreadySubmitted, false);
+		return NULL;
+	}
+	TReportDialog *Body = new TReportDialog();
+	TDialog *Dialog = new TDialog("Report Rule Violation", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x482870, line 420
+TDialog *CreateAddBuddyDialog()
+{
+	TBEGIN
+	TAddBuddyDialog *Body = new TAddBuddyDialog();
+	TDialog *Dialog = new TDialog("Add to VIP list", Body);
+	Dialog->SetOkButton("Add", TCallback(Body, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x482a70, line 434
+TDialog *CreateEditBuddyDialog(int CharacterID)
+{
+	TBEGIN
+	TEditBuddyDialog *Body = new TEditBuddyDialog(CharacterID);
+	TDialog *Dialog = new TDialog("Change player in VIP list", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->OkCallback = NoCallback;
+	return Dialog;
+	TEND1(CharacterID)
+}
+
+// 0x482c80, line 448. Abort (and Escape) send 2.
+TDialog *CreateUpdateDialog(const char *FileName, int DataSize)
+{
+	TBEGIN
+	TUpdateDialog *Body = new TUpdateDialog(FileName, DataSize);
+	TDialog *Dialog = new TDialog("Updating ... Please wait", Body);
+	Dialog->SetOkButton("Abort", TCallback(Body, 2));
+	Dialog->SetCancelButton(NULL, TCallback(Body, 2));
+	return Dialog;
+	TEND1(DataSize)
+}
+
+// 0x482ea0, line 462. OK goes to the frame (which closes the dialog).
+TDialog *CreateHelpDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	THelpDialog *Body = new THelpDialog(OpenURL);
+	TDialog *Dialog = new TDialog("Help", Body);
+	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
+	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x4830c0, line 476. Cancel goes to the frame.
+TDialog *CreateHintsDialog()
+{
+	TBEGIN
+	THintsDialog *Body = new THintsDialog();
+	TDialog *Dialog = new TDialog("Hints for Tibia", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetCancelButton("Cancel", TCallback(Dialog, 2));
+	return Dialog;
+	TEND
+}
+
+// 0x485290, line 490. Name and Statement may be NULL.
+TDialog *CreateRuleViolationDialog(const char *Name, TTalkLine *Statement)
+{
+	TBEGIN
+	TRuleViolationDialog *Body = new TRuleViolationDialog(Name, Statement);
+	TDialog *Dialog = new TDialog("Rule Violation", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
+	return Dialog;
+	TEND
+}
+
+// 0x4832e0, line 504. The body deletes the coordinate and the mark.
+TDialog *CreateEditMarkDialog(TCoordinate *Coordinate, TMark *Mark)
+{
+	TBEGIN
+	TEditMarkDialog *Body = new TEditMarkDialog(Coordinate, Mark);
+	TDialog *Dialog = new TDialog("Edit Mark", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
+	return Dialog;
+	TEND
+}
+
+// 0x483500, line 533. Escape is OK here (both save the options).
+TDialog *CreateOptionsDialog()
+{
+	TBEGIN
+	TOptionsDialog *Body = new TOptionsDialog();
+	TDialog *Dialog = new TDialog("Options", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetCancelButton(NULL, TCallback(Body, 1));
+	Dialog->CancelCallback = TCallback(Body, 1);
+	return Dialog;
+	TEND
+}
+
+// 0x483730, line 547
+TDialog *CreateGeneralOptionsDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	TGeneralOptionsDialog *Body = new TGeneralOptionsDialog(OpenURL);
+	TDialog *Dialog = new TDialog("General Options", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetExtraButton("Help", TCallback(Body, 701));
+	return Dialog;
+	TEND
+}
+
+// 0x483950, line 561
+TDialog *CreateGraphicsOptionsDialog(void (*OpenURL)(const char *URL), void (*SetDisplayMode)(int Mode),
+	TWindow *Parent)
+{
+	TBEGIN
+	TGraphicsOptionsDialog *Body = new TGraphicsOptionsDialog(OpenURL, SetDisplayMode, Parent);
+	TDialog *Dialog = new TDialog("Graphics Options", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetExtraButton("Help", TCallback(Body, 701));
+	return Dialog;
+	TEND
+}
+
+// 0x483b80, line 576
+TDialog *CreateAdvancedGraphicsDialog(void (*OpenURL)(const char *URL), TComponent *Receiver)
+{
+	TBEGIN
+	TAdvancedGraphicsDialog *Body = new TAdvancedGraphicsDialog(OpenURL, Receiver);
+	TDialog *Dialog = new TDialog("Advanced Graphics Options", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
+	Dialog->SetExtraButton("Help", TCallback(Body, 701));
+	return Dialog;
+	TEND
+}
+
+// 0x483dc0, line 590
+TDialog *CreateConsoleOptionsDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	TConsoleOptionsDialog *Body = new TConsoleOptionsDialog(OpenURL);
+	TDialog *Dialog = new TDialog("Console Options", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetExtraButton("Help", TCallback(Body, 701));
+	return Dialog;
+	TEND
+}
+
+// 0x483fe0, line 604
+TDialog *CreateNetworkOptionsDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	TNetworkOptionsDialog *Body = new TNetworkOptionsDialog(OpenURL);
+	TDialog *Dialog = new TDialog("Network Options", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	Dialog->SetExtraButton("Help", TCallback(Body, 701));
+	return Dialog;
+	TEND
+}
+
+// 0x484200, line 617
+TDialog *CreateHotkeyDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	THotkeyDialog *Body = new THotkeyDialog(OpenURL);
+	TDialog *Dialog = new TDialog("Hotkey Options", Body);
+	Dialog->SetOkButton("Ok", TCallback(Body, 1));
+	return Dialog;
+	TEND
+}
+
+// 0x484400, line 631
+TDialog *CreateErrorReportDialog()
+{
+	TBEGIN
+	TErrorReportDialog *Body = new TErrorReportDialog();
+	TDialog *Dialog = new TDialog("Error Report", Body);
+	Dialog->SetOkButton("Send", TCallback(Body, 1));
+	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
+	return Dialog;
+	TEND
+}
+
+// --- TDialog ----------------------------------------------------------------------
+
+// 0x47c970, lines 650-677. The assertions come after the base class and the
+// two callbacks, before TBEGIN. The frame has nine skins (43-51, Arrange);
+// the caption is copied, the buttons are OK and Cancel until the creator
+// changes them.
+TDialog::TDialog(const char *_Caption, TComponent *_Dialog)
+{
+	TASSERT(_Caption!=NULL);
+	TASSERT1(strlen(_Caption)<100, strlen(_Caption));
+	TASSERT(_Dialog!=NULL);
+	TBEGIN
+	DrawingListLength = 9;
+	DrawingList = new TDrawing[9];
+	strcpy(Caption, _Caption);
+	Dragging = false;
+	OkCallback = NoCallback;
+	CancelCallback = NoCallback;
+	OkButton = NULL;
+	CancelButton = NULL;
+	ExtraButton = NULL;
+	Dialog = _Dialog;
+	CaptionLabel = new TLabel(0, 0, SkinProperties.StyleB08.Data18, Caption);
+	Separator = new TSeparator(true);
+	InsertChild(Dialog);
+	InsertChild(CaptionLabel);
+	InsertChild(Separator);
+	FitToChild(Dialog, SkinProperties.StyleB08.Data54, true);
+	SetOkButton("Ok", TCallback(this, 1));
+	SetCancelButton("Cancel", TCallback(this, 2));
+	TEND
+}
+
+// 0x46c3e0, lines 687-700
+void TDialog::SetOkButton(const char *Text, TCallback Callback)
+{
+	TBEGIN
+	if (Text == NULL) {
+		TASSERT(OkButton!=NULL);
+		DeleteChild(OkButton);
+		OkButton = NULL;
+		OkCallback = NoCallback;
+	} else {
+		if (OkButton != NULL)
+			DeleteChild(OkButton);
+		OkButton = new TTextButton(0, 0, Text, Callback, NULL);
+		if (Callback.Event == NoCallback.Event && Callback.Receiver == NoCallback.Receiver)
+			Callback = TCallback(this, 1);
+		OkCallback = Callback;
+		InsertChild(OkButton);
+	}
+	Arrange();
+	TEND
+}
+
+// 0x46c710, lines 710-723. Without a button Escape still sends (this, 2).
+void TDialog::SetCancelButton(const char *Text, TCallback Callback)
+{
+	TBEGIN
+	if (Text == NULL) {
+		TASSERT(CancelButton!=NULL);
+		DeleteChild(CancelButton);
+		CancelButton = NULL;
+		CancelCallback = TCallback(this, 2);
+	} else {
+		if (CancelButton != NULL)
+			DeleteChild(CancelButton);
+		CancelButton = new TTextButton(0, 0, Text, Callback, NULL);
+		if (Callback.Event == NoCallback.Event && Callback.Receiver == NoCallback.Receiver)
+			Callback = TCallback(this, 2);
+		CancelCallback = Callback;
+		InsertChild(CancelButton);
+	}
+	Arrange();
+	TEND
+}
+
+// 0x46ca40, lines 734-744
+void TDialog::SetExtraButton(const char *Text, TCallback Callback)
+{
+	TBEGIN
+	if (Text == NULL) {
+		TASSERT(ExtraButton!=NULL);
+		DeleteChild(ExtraButton);
+		ExtraButton = NULL;
+	} else {
+		if (ExtraButton != NULL)
+			DeleteChild(ExtraButton);
+		ExtraButton = new TTextButton(0, 0, Text, Callback, NULL);
+		InsertChild(ExtraButton);
+	}
+	Arrange();
+	TEND
+}
+
+// 0x46cd20, line 812. The buttons take the positions from the right in the
+// order Cancel, OK, extra. The bottom edge starts at Skins[45].height (the
+// corner's height where its width would fit; kept).
+void TDialog::Arrange()
+{
+	TBEGIN
+	SetChildArea(Dialog, SkinProperties.StyleB08.Data54.x, SkinProperties.StyleB08.Data54.y,
+		SkinProperties.StyleB08.Data54.Width, SkinProperties.StyleB08.Data54.Height);
+	SetChildArea(CaptionLabel, SkinProperties.StyleB08.Data08.x, SkinProperties.StyleB08.Data08.y,
+		SkinProperties.StyleB08.Data08.Width, SkinProperties.StyleB08.Data08.Height);
+	SetChildArea(Separator, SkinProperties.StyleB08.Data44.x, SkinProperties.StyleB08.Data44.y,
+		SkinProperties.StyleB08.Data44.Width, SkinProperties.StyleB08.Data44.Height);
+	int Button = 0;
+	if (CancelButton != NULL) {
+		SetChildPosition(CancelButton, SkinProperties.StyleB08.Data2C[Button].x,
+			SkinProperties.StyleB08.Data2C[Button].y);
+		Button++;
+	}
+	if (OkButton != NULL) {
+		SetChildPosition(OkButton, SkinProperties.StyleB08.Data2C[Button].x,
+			SkinProperties.StyleB08.Data2C[Button].y);
+		Button++;
+	}
+	if (ExtraButton != NULL) {
+		SetChildPosition(ExtraButton, SkinProperties.StyleB08.Data2C[Button].x,
+			SkinProperties.StyleB08.Data2C[Button].y);
+	}
+	DrawingList[0] = TDrawing(43, 0, 0, 0, 0, 0, 0);
+	DrawingList[1] = TDrawing(49, Skins[43].width, 0, Width - Skins[44].width - Skins[43].width,
+		Skins[49].height, 0, 0);
+	DrawingList[2] = TDrawing(44, Width - Skins[44].width, 0, 0, 0, 0, 0);
+	DrawingList[3] = TDrawing(47, 0, Skins[43].height, Skins[47].width,
+		Height - Skins[45].height - Skins[43].height, 0, 0);
+	DrawingList[4] = TDrawing(48, Width - Skins[48].width, Skins[49].height, Skins[48].width,
+		Height - Skins[46].height - Skins[44].height, 0, 0);
+	DrawingList[5] = TDrawing(45, 0, Height - Skins[45].height, 0, 0, 0, 0);
+	DrawingList[6] = TDrawing(50, Skins[45].height, Height - Skins[50].height,
+		Width - Skins[46].width - Skins[45].width, Skins[50].height, 0, 0);
+	DrawingList[7] = TDrawing(46, Width - Skins[46].width, Height - Skins[46].height, 0, 0, 0, 0);
+	DrawingList[8] = TDrawing(51, Skins[47].width, Skins[49].height, Width - Skins[48].width - Skins[47].width,
+		Height - Skins[50].height - Skins[49].height, 0, 0);
+	TEND
+}
+
+// 0x46d220, line 831
+void TDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13) {
+		if (OkButton != NULL
+				&& !(OkCallback.Event == NoCallback.Event && OkCallback.Receiver == NoCallback.Receiver)) {
+			OkCallback.Send();
+			return;
+		}
+	} else if (Key == 27) {
+		CancelCallback.Send();
+		return;
+	}
+	Dialog->KeyPress(Key);
+	TEND1(Key)
+}
+
+// 0x46d410, line 848. A drag keeps the dialog inside the game window.
+bool TDialog::MouseMove(int x, int y)
+{
+	TBEGIN
+	if (!Dragging)
+		return TWindow::MouseMove(x, y);
+	x = OffsetX - DragX + x;
+	y = OffsetY - DragY + y;
+	Limit(&x, 0, GetWindowWidth() - Width);
+	Limit(&y, 0, GetWindowHeight() - Height);
+	SetPosition(x, y);
+	return true;
+	TEND2(x, y)
+}
+
+// 0x46d660, line 867. A press on the caption line that no child takes
+// starts a drag.
+bool TDialog::LeftButtonDown(int x, int y, int Flags)
+{
+	TBEGIN
+	if (!TWindow::LeftButtonDown(x, y, Flags) && In(x, 0, Width - 1) && In(y, 0, Skins[49].height - 1)) {
+		Dragging = true;
+		DragX = x;
+		DragY = y;
+	}
+	return true;
+	TEND2(x, y)
+}
+
+// 0x46d830, line 880
+bool TDialog::LeftButtonUp(int x, int y, int Flags)
+{
+	TBEGIN
+	if (!Dragging)
+		return TWindow::LeftButtonUp(x, y, Flags);
+	Dragging = false;
+	return true;
+	TEND2(x, y)
+}
+
+// 0x46d9f0, line 891. Events 1 and 2 (the default callbacks) close the
+// dialog, and so does every other.
+void TDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	SetActionState(0);
+	TEND
+}
+
+// --- TQuestionLabel, TLogoutLabel ----------------------------------------------
+
+// 0x46db80, line 915
+void TQuestionLabel::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13 || Key == 'y' || Key == 'Y')
+		YesCallback.Send();
+	if (Key == 27 || Key == 'n' || Key == 'N')
+		NoAnswerCallback.Send();
+	TEND
+}
+
+// 0x46dd40, line 952
+void TLogoutLabel::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13 || Key == 'l' || Key == 'L') {
+		LogoutCallback.Send();
+		SetActionState(0);
+	}
+	if (Key == 'e' || Key == 'E')
+		ExitCallback.Send();
+	if (Key == 27 || Key == 'c' || Key == 'C')
+		SetActionState(0);
+	TEND1(Key)
+}
+
+// --- TWaitLabel ---------------------------------------------------------------------
+
+// 0x46df20, line 985
+void TWaitLabel::SetTimer(int Time, TCallback Callback)
+{
+	TBEGIN
+	delete Timer;
+	Timer = new TTimer(Time, Callback);
+	TEND
+}
+
+// 0x46e0e0, line 1000. The timer's ticks wait until it runs out.
+void TWaitLabel::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 31) {
+		if (!Timer->IsExpired())
+			return;
+	} else if (Event == 29 && ClearOnAbort) {
+		ClearMessages();
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// 0x46e2b0, line 1011
+void TWaitLabel::Draw(int Surface, int x, int y)
+{
+	TBEGIN
+	TLabel::Draw(Surface, x, y);
+	if (CloseOnMessage && PeekMessageType() != 0)
+		HandleEvent(29);
+	TEND1(Surface)
+}
+
+// --- TReconnectWindow ----------------------------------------------------------
+
+// 0x46e470, line 1052. The width is the widest of the text, the bar and the
+// time label with room for four digits (each compared twice, as with a max
+// macro).
+TReconnectWindow::TReconnectWindow(const char *Text, int timeout)
+{
+	TBEGIN
+	Timeout = timeout * 10;
+	Timer = new TTimer(Timeout, TCallback(this, 31));
+	SetTime(Timeout + 10);
+	TLabel *TextLabel = new TLabel(SkinProperties.StyleB08.Data64, Text);
+	ProgressBar = new TProgressBar();
+	TimeLabel = new TLabel(SkinProperties.StyleB08.Data64, this->Text);
+	int FullWidth = TextLabel->Width > ProgressBar->getMinimumWidth() ? TextLabel->Width
+		: ProgressBar->getMinimumWidth();
+	FullWidth = FullWidth > TimeLabel->Width + GetTextWidth(SkinProperties.StyleB08.Data64.FontNumber, "8888")
+		? FullWidth : TimeLabel->Width + GetTextWidth(SkinProperties.StyleB08.Data64.FontNumber, "8888");
+	int TextHeight = TextLabel->Height;
+	InsertChild(TextLabel);
+	int BarY = TextHeight + SkinProperties.DataBEC;
+	InsertChild(ProgressBar);
+	int BarHeight = ProgressBar->getMinimumHeight();
+	int TimeY = BarY + ProgressBar->getMinimumHeight() + SkinProperties.DataBEC;
+	InsertChild(TimeLabel);
+	int TimeHeight = TimeLabel->Height;
+	TComponent::SetSize(FullWidth, TimeY + TimeHeight);
+	SetChildArea(TextLabel, 0, 0, FullWidth, TextHeight);
+	SetChildArea(ProgressBar, 0, BarY, FullWidth, BarHeight);
+	SetChildArea(TimeLabel, 0, TimeY, FullWidth, TimeHeight);
+	ProgressBar->SetMaximum(Timeout);
+	ProgressBar->SetCurrent(0);
+	Arrange();
+	TEND1(timeout)
+}
+
+// 0x46e8b0, line 1073
+void TReconnectWindow::Draw(int Surface, int x, int y)
+{
+	TBEGIN
+	TWindow::Draw(Surface, x, y);
+	if (PeekMessageType() != 0)
+		SetActionState(0);
+	TEND1(Surface)
+}
+
+// 0x46ea60, line 1122. When the time is up it logs out of a running game
+// (states 7 and 8) or connects to the game world again; Abort (29) gives
+// up and shows the character list again.
+void TReconnectWindow::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 31) {
+		if (!Timer->IsExpired()) {
+			int Time = Timer->GetTime();
+			ProgressBar->SetCurrent(Timeout - Time);
+			SetTime(Time + 10);
+			TimeLabel->SetText(Text, false);
+		} else if (GetConnectionState() == 8 || GetConnectionState() == 7) {
+			AddMessage(0x3f, 0, 0);
+			SendLogout();
+		} else {
+			AddMessage(0x3e, 0, 0);
+			AddMessage(4, 0, 0);
+		}
+	} else {
+		if (Event == 29) {
+			AddMessage(9, 20, 0);
+			AddMessage(10, 300, 0);
+		}
+		SetActionState(0);
+	}
+	TEND1(Event)
+}
+
+// --- TLoginDialog -------------------------------------------------------------------
+
+// 0x46ecf0, line 1162
+TLoginDialog::TLoginDialog(void (*OpenURL)(const char *URL))
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.DataB94, SkinProperties.DataB98);
+	FocusGroup = new TFocusGroup();
+	Account = new TPasswordEditLine(8);
+	Account->SetFocusGroup(FocusGroup);
+	Password = new TPasswordEditLine(29);
+	Password->SetFocusGroup(FocusGroup);
+	TLink *Link = new TLink(TextNoAccountYet, "Create Account", "http://www.tibia.com/home/?subtopic=signup",
+		OpenURL, SkinProperties.StyleB08.Data78);
+	InsertChild(Account);
+	SetChildArea(Account, SkinProperties.DataBAC.x, SkinProperties.DataBAC.y, SkinProperties.DataBAC.Width,
+		SkinProperties.DataBAC.Height);
+	InsertChild(Password);
+	SetChildArea(Password, SkinProperties.DataBCC.x, SkinProperties.DataBCC.y, SkinProperties.DataBCC.Width,
+		SkinProperties.DataBCC.Height);
+	InsertChild(Link);
+	SetChildArea(Link, SkinProperties.DataBDC.x, SkinProperties.DataBDC.y, SkinProperties.DataBDC.Width,
+		SkinProperties.DataBDC.Height);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, TextAccountNumber);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.DataB9C.x, SkinProperties.DataB9C.y, SkinProperties.DataB9C.Width,
+		SkinProperties.DataB9C.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data64, TextPassword);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.DataBBC.x, SkinProperties.DataBBC.y, SkinProperties.DataBBC.Width,
+		SkinProperties.DataBBC.Height);
+	FocusGroup->SetActive(Account);
+	Arrange();
+	TEND
+}
+
+// 0x46f160, lines 1183-1187
+void TLoginDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13) {
+		HandleEvent(1);
+	} else if (Key == 27) {
+		HandleEvent(2);
+	} else {
+		TEditLine *FocusEdit = FocusGroup->Active;
+		TASSERT(FocusEdit!=NULL);
+		FocusEdit->KeyPress(Key);
+	}
+	TEND1(Key)
+}
+
+// 0x46f3e0, line 1203. OK (1) logs in with the account and password.
+void TLoginDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		SetAccount(atol(Account->Text), Password->Text);
+		AddMessage(0x3d, 0, 0);
+		AddMessage(3, 0, 0);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TCharacterListDialog ------------------------------------------------------
+
+// 0x46f5c0, line 1262. The selection is the character played last while
+// still in the game, else the first.
+TCharacterListDialog::TCharacterListDialog()
+{
+	TBEGIN
+	Timer = NULL;
+	TComponent::SetSize(SkinProperties.DataBF0, SkinProperties.DataBF4);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectCharacter);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.DataBF8.x, SkinProperties.DataBF8.y, SkinProperties.DataBF8.Width,
+		SkinProperties.DataBF8.Height);
+	ListBox = new TListBox(NoCallback, TCallback(this, 1));
+	InsertChild(ListBox);
+	SetChildArea(ListBox, SkinProperties.DataC08.x, SkinProperties.DataC08.y, SkinProperties.DataC08.Width,
+		SkinProperties.DataC08.Height);
+	int Characters = GetAccountCharacters();
+	for (int i = 0; i < Characters; i++) {
+		char Line[372];
+		Line[0] = 0;
+		sprintf(Line, "%s (%s)", GetCharacterName(i), GetCharacterWorld(i));
+		ListBox->AddLine(Line);
+	}
+	if (GetConnectionState() == 8 && GetActiveCharacter() < Characters)
+		ListBox->SetSelection(GetActiveCharacter());
+	else
+		ListBox->SetSelection(0);
+	char Status[256];
+	int PremiumDays = GetPremiumDays();
+	if (PremiumDays == 0) {
+		sprintf(Status, "<font=4><red=%d><green=%d><blue=%d>Account Status:\nFree Account",
+			SkinProperties.StyleB08.Data78.Color.R, SkinProperties.StyleB08.Data78.Color.G,
+			SkinProperties.StyleB08.Data78.Color.B);
+	} else if (PremiumDays == 0xffff) {
+		sprintf(Status, "<font=4><red=%d><green=%d><blue=%d>Account Status:\nGratis Premium Account\n",
+			SkinProperties.StyleB08.Data78.Color.R, SkinProperties.StyleB08.Data78.Color.G,
+			SkinProperties.StyleB08.Data78.Color.B);
+	} else if (PremiumDays < 14) {
+		sprintf(Status,
+			"<font=4><red=%d><green=%d><blue=%d>Account Status:\nPremium Account (<red=%d><green=%d><blue=%d>%d day%s left<red=%d><green=%d><blue=%d>)",
+			SkinProperties.StyleB08.Data78.Color.R, SkinProperties.StyleB08.Data78.Color.G,
+			SkinProperties.StyleB08.Data78.Color.B, 248, 96, 96, PremiumDays, PremiumDays < 2 ? "" : "s",
+			SkinProperties.StyleB08.Data78.Color.R, SkinProperties.StyleB08.Data78.Color.G,
+			SkinProperties.StyleB08.Data78.Color.B);
+	} else {
+		sprintf(Status, "<font=4><red=%d><green=%d><blue=%d>Account Status:\nPremium Account (%d day%s left)",
+			SkinProperties.StyleB08.Data78.Color.R, SkinProperties.StyleB08.Data78.Color.G,
+			SkinProperties.StyleB08.Data78.Color.B, PremiumDays, PremiumDays < 2 ? "" : "s");
+	}
+	TFormattedText *StatusText = new TFormattedText(Status);
+	InsertChild(StatusText);
+	SetChildArea(StatusText, SkinProperties.DataC18.x, SkinProperties.DataC18.y, SkinProperties.DataC18.Width,
+		SkinProperties.DataC18.Height);
+	Arrange();
+	TEND
+}
+
+// 0x46fa10, line 1274. Every click starts the timeout again.
+bool TCharacterListDialog::LeftButtonDown(int x, int y, int Flags)
+{
+	TBEGIN
+	SetTimeout(Seconds);
+	return TWindow::LeftButtonDown(x, y, Flags);
+	TEND2(x, y)
+}
+
+// 0x46fbc0, line 1286
+bool TCharacterListDialog::RightButtonUp(int x, int y, int Flags)
+{
+	TBEGIN
+	SetTimeout(Seconds);
+	return TWindow::RightButtonUp(x, y, Flags);
+	TEND2(x, y)
+}
+
+// 0x46fd70, line 1298
+bool TCharacterListDialog::MouseWheel(int x, int y, int Code)
+{
+	TBEGIN
+	SetTimeout(Seconds);
+	return TWindow::MouseWheel(x, y, Code);
+	TEND1(Code)
+}
+
+// 0x46ff20, line 1309
+void TCharacterListDialog::PositionChanged()
+{
+	TBEGIN
+	SetTimeout(Seconds);
+	TEND
+}
+
+// 0x4700b0, line 1335. Another key stops the timer before the list gets it;
+// SetTimeout starts it again.
+void TCharacterListDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13) {
+		HandleEvent(1);
+	} else if (Key == 27) {
+		HandleEvent(2);
+	} else {
+		delete Timer;
+		Timer = NULL;
+		ListBox->KeyPress(Key);
+	}
+	SetTimeout(Seconds);
+	TEND1(Key)
+}
+
+// 0x470280, line 1361. OK (1) or a double click enters the game with the
+// selected character (logging out of a running game first).
+void TCharacterListDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		int Selection = ListBox->GetSelection();
+		if (Selection >= 0) {
+			SetActiveCharacter(Selection);
+			if (GetConnectionState() == 8 || GetConnectionState() == 7) {
+				AddMessage(0x3f, 0, 0);
+				SendLogout();
+			} else {
+				AddMessage(0x3e, 0, 0);
+				AddMessage(4, 0, 0);
+			}
+		}
+	} else if (Event == 31 && !Timer->IsExpired()) {
+		return;
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// 0x470490, line 1374
+void TCharacterListDialog::SetTimeout(int seconds)
+{
+	TBEGIN
+	delete Timer;
+	Timer = new TTimer(seconds, TCallback(this, 31));
+	Seconds = seconds;
+	TEND1(seconds)
+}
+
+// --- TMoveObjectsDialog ---------------------------------------------------------
+
+// 0x470670, lines 1392-1406
+TMoveObjectsDialog::TMoveObjectsDialog()
+{
+	TBEGIN
+	LastDigit = 0;
+	DraggedObject = *GetDragObject(&SourceIndex, &SourceX, &SourceY, &SourceZ);
+	GetDragTarget(&DestinationX, &DestinationY, &DestinationZ);
+	TASSERT(DraggedObject!=0);
+	TASSERT2(In(DraggedObject.Data,1,100), DraggedObject.Data, DraggedObject);
+	TComponent::SetSize(SkinProperties.DataC28, SkinProperties.DataC2C);
+	TLabel *Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextSetNumberOfItems);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.DataC40.x, SkinProperties.DataC40.y, SkinProperties.DataC40.Width,
+		SkinProperties.DataC40.Height);
+	ScrollBar = new THorizontalScrollBar(1, DraggedObject.Data, DraggedObject.Data, 11, 1, NoCallback);
+	InsertChild(ScrollBar);
+	SetChildArea(ScrollBar, SkinProperties.DataC30.x, SkinProperties.DataC30.y, SkinProperties.DataC30.Width,
+		SkinProperties.DataC30.Height);
+	Arrange();
+	TEND
+}
+
+// 0x470b60, line 1423. The pile is drawn with the chosen count; the
+// cumulative pattern is computed and not used.
+void TMoveObjectsDialog::Draw(int Surface, int x, int y)
+{
+	TBEGIN
+	DraggedObject.Data = ScrollBar->Range->Value;
+	int PatternX = 1;
+	int PatternY = 1;
+	if (GetObjectFlag(DraggedObject, CUMULATIVE))
+		GetCumulativePattern(DraggedObject, &PatternX, &PatternY);
+	DrawObject(Surface, SkinProperties.DataC50.x + x, SkinProperties.DataC50.y + y, 32, DraggedObject,
+		TRGBColor(0, 0, 0), TRect(SkinProperties.DataC50.x + x, SkinProperties.DataC50.y + y, 32, 32),
+		SkinProperties.Data498, true);
+	TWindow::Draw(Surface, x, y);
+	TEND1(Surface)
+}
+
+// 0x470de0, line 1459. Digits type the count (the last two digits);
+// PageUp/PageDown change it by 10, Home/End and the arrow keys as they do
+// in a list.
+void TMoveObjectsDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13) {
+		HandleEvent(1);
+	} else if (Key == 27) {
+		HandleEvent(2);
+	} else if (Key >= '0' && Key <= '9') {
+		ScrollBar->Range->SetValue(LastDigit * 10 + Key - '0');
+		LastDigit = Key - '0';
+	} else if (Key == 0x114) {
+		ScrollBar->Range->SetValue(ScrollBar->Range->Value + 10);
+	} else if (Key == 0x115) {
+		ScrollBar->Range->SetValue(ScrollBar->Range->Value - 10);
+	} else if (Key == 0x112) {
+		ScrollBar->Range->SetValue(ScrollBar->Range->Max);
+	} else if (Key == 0x113) {
+		ScrollBar->Range->SetValue(1);
+	} else if (Key == 0x10c) {
+		ScrollBar->Range->SetValue(ScrollBar->Range->Value + 1);
+	} else if (Key == 0x10f) {
+		ScrollBar->Range->SetValue(ScrollBar->Range->Value - 1);
+	} else {
+		ScrollBar->KeyPress(Key);
+	}
+	TEND1(Key)
+}
+
+// 0x471080, line 1475
+void TMoveObjectsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		int Count = ScrollBar->Range->Value;
+		if (Count > 0)
+			SendMoveObject(SourceX, SourceY, SourceZ, DraggedObject.Type, SourceIndex, DestinationX, DestinationY,
+				DestinationZ, Count);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TOutfitDialog ------------------------------------------------------------------
+
+// The colour of an outfit colour button: GetOutfitColor runs inside the
+// new-expression (after the allocation), so the binary has it in the
+// argument list (inlined; the name is ours).
+static inline TRGBColor OutfitColor(int Color)
+{
+	int R, G, B;
+	GetOutfitColor(Color, &R, &G, &B);
+	return TRGBColor(R, G, B);
+}
+
+// 0x47cf70, lines 1488-1542. The colour buttons are laid out in rows of
+// 19 from SkinProperties.DataCA8; the head is the first part shown.
+TOutfitDialog::TOutfitDialog(int *Data)
+{
+	TASSERT(Data!=NULL);
+	TBEGIN
+	Outfit = Data[0];
+	FirstOutfit = Data[5];
+	LastOutfit = Data[6];
+	Limit(&Outfit, FirstOutfit, LastOutfit);
+	Colors[0] = Data[1];
+	Colors[1] = Data[2];
+	Colors[2] = Data[3];
+	Colors[3] = Data[4];
+	TComponent::SetSize(SkinProperties.DataC58, SkinProperties.DataC5C);
+	OutfitIcon = new TOutfitIcon(Outfit, 2, Colors, &SkinProperties.DataC74);
+	TBorder *Border = new TBorder(OutfitIcon, 0, 9, 0, 11, 10, 0, 8, 0, SkinProperties.DataC70);
+	InsertChild(Border);
+	SetChildArea(Border, SkinProperties.DataC60.x, SkinProperties.DataC60.y, SkinProperties.DataC60.Width,
+		SkinProperties.DataC60.Height);
+	TTextButton *NextButton = new TTextButton(0, 0, "Next", TCallback(this, 6), NULL);
+	InsertChild(NextButton);
+	SetChildPosition(NextButton, SkinProperties.DataC80.x, SkinProperties.DataC80.y);
+	PartGroup = new TRadioButtonGroup;
+	for (int i = 0; i < 4; i++) {
+		const char *PartName = "";
+		switch (i) {
+		case 0:
+			PartName = "Head";
+			break;
+		case 1:
+			PartName = "Body";
+			break;
+		case 2:
+			PartName = "Legs";
+			break;
+		case 3:
+			PartName = "Feet";
+			break;
+		}
+		PartButtons[i] = new TTextButton(70, i * 25, PartName, TCallback(this, i + 1000), NULL);
+		InsertChild(PartButtons[i]);
+		SetChildPosition(PartButtons[i], SkinProperties.DataC88[i].x, SkinProperties.DataC88[i].y);
+		PartButtons[i]->SetRadioButtonGroup(PartGroup);
+	}
+	ColorGroup = new TRadioButtonGroup;
+	for (int i = 0; i < 133; i++) {
+		ColorButtons[i] = new TColorButton(0, 0, OutfitColor(i), 22, 23, TCallback(this, i + 2000), NULL);
+		ColorButtons[i]->SetRadioButtonGroup(ColorGroup);
+		InsertChild(ColorButtons[i]);
+		SetChildPosition(ColorButtons[i], SkinProperties.DataCA8.x, SkinProperties.DataCA8.y);
+		ColorButtons[i]->SetPosition(i % 19 * SkinProperties.DataCB0 + ColorButtons[i]->OffsetX,
+			i / 19 * SkinProperties.DataCB4 + ColorButtons[i]->OffsetY);
+	}
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextChooseOutfit);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.DataCB8.x, SkinProperties.DataCB8.y);
+	PartGroup->Selected = PartButtons[0];
+	HandleEvent(1000);
+	TEND
+}
+
+// 0x471250, line 1586. A part button selects the colour button of its
+// colour; the loop runs over 216 colours and reads past the 133 buttons
+// (into the members after them) when a part has a higher colour (kept).
+void TOutfitDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event >= 1000 && Event <= 1003) {
+		Part = Event - 1000;
+		for (int i = 0; i < 216; i++) {
+			if (Colors[Part] == i)
+				ColorGroup->Selected = ColorButtons[i];
+		}
+	} else if (Event >= 2000 && Event <= 2215) {
+		Colors[Part] = Event - 2000;
+		OutfitIcon->SetColor(Part + 1, Colors[Part]);
+		OutfitIcon->Arrange();
+	} else if (Event == 6) {
+		Outfit++;
+		if (Outfit > LastOutfit)
+			Outfit = FirstOutfit;
+		OutfitIcon->SetOutfit(Outfit);
+		OutfitIcon->Arrange();
+	} else if (Event == 1) {
+		SendOutfit(Outfit, Colors);
+		SetActionState(0);
+	} else if (Event == 2) {
+		SetActionState(0);
+	}
+	TEND1(Event)
+}
+
+// --- TTextDialog ----------------------------------------------------------------
+
+// 0x471500, lines 1702-1727. A read-only text keeps its scroll position
+// (SetText's second argument).
+TTextDialog::TTextDialog(int MaximumLength, const char *Text, uint32 _ObjectNumber, TObject _Obj,
+	const char *Description)
+{
+	TASSERT(Text!=NULL);
+	TBEGIN
+	ObjectNumber = _ObjectNumber;
+	Obj = _Obj;
+	TComponent::SetSize(SkinProperties.DataCC0, SkinProperties.DataCC4);
+	bool ReadOnly = !GetObjectFlag(Obj, WRITE) && !(GetObjectFlag(Obj, WRITEONCE) && strlen(Text) == 0);
+	EditText = new TEditText(MaximumLength, ReadOnly);
+	InsertChild(EditText);
+	SetChildArea(EditText, SkinProperties.DataCF4.x, SkinProperties.DataCF4.y, SkinProperties.DataCF4.Width,
+		SkinProperties.DataCF4.Height);
+	EditText->SetActive(true);
+	EditText->SetText(Text, ReadOnly);
+	ObjectIcon = new TObjectIcon(Obj, &SkinProperties.DataCD8, false);
+	InsertChild(ObjectIcon);
+	SetChildArea(ObjectIcon, SkinProperties.DataCC8.x, SkinProperties.DataCC8.y, SkinProperties.DataCC8.Width,
+		SkinProperties.DataCC8.Height);
+	if (Description != NULL) {
+		TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, Description);
+		InsertChild(Label);
+		SetChildArea(Label, SkinProperties.DataCE4.x, SkinProperties.DataCE4.y, SkinProperties.DataCE4.Width,
+			SkinProperties.DataCE4.Height);
+	}
+	Arrange();
+	TEND2(MaximumLength, _ObjectNumber)
+}
+
+// 0x4719b0, line 1739
+void TTextDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1)
+		SendEditText(ObjectNumber, EditText->Text);
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TEditListDialog ----------------------------------------------------------
+
+// 0x47d660, lines 1752-1775
+TEditListDialog::TEditListDialog(int MaxLength, const char *Text, int _Type, uint32 _Identifier,
+	const char *Description)
+{
+	TASSERT(Text!=NULL);
+	TASSERT2((int)strlen(Text)<MaxLength, strlen(Text), MaxLength);
+	TBEGIN
+	Type = _Type;
+	Identifier = _Identifier;
+	TComponent::SetSize(SkinProperties.DataD04, SkinProperties.DataD08);
+	EditText = new TEditText(MaxLength - 1, false);
+	InsertChild(EditText);
+	SetChildArea(EditText, SkinProperties.DataD2C.x, SkinProperties.DataD2C.y, SkinProperties.DataD2C.Width,
+		SkinProperties.DataD2C.Height);
+	EditText->SetActive(true);
+	EditText->SetText(Text, false);
+	DrawingListLength = 1;
+	DrawingList = new TDrawing[1];
+	if (Description != NULL) {
+		TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, Description);
+		InsertChild(Label);
+		SetChildArea(Label, SkinProperties.DataD1C.x, SkinProperties.DataD1C.y, SkinProperties.DataD1C.Width,
+			SkinProperties.DataD1C.Height);
+	}
+	Arrange();
+	TEND
+}
+
+// 0x471b60. TBEGIN/TEND without a try block; the children keep their
+// areas (TWindow::Arrange is not called).
+void TEditListDialog::Arrange()
+{
+	TBEGIN
+	DrawingList[0] = TDrawing(217, SkinProperties.DataD0C.x, SkinProperties.DataD0C.y, Skins[217].width,
+		Skins[217].height, 0, 0);
+	TEND
+}
+
+// 0x471be0, line 1800
+void TEditListDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1)
+		SendEditHouseText(Type, Identifier, EditText->Text);
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TIgnoreListDialog --------------------------------------------------------
+
+// 0x47db60, lines 1875-1975. Talk.cpp's lists come as one text with a name
+// on every line; the names are sorted, each into an entry and a line.
+TIgnoreListDialog::TIgnoreListDialog()
+	: IgnoreEntries(0, 9, 10), WhiteEntries(0, 9, 10)
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.StyleD3C.Data00, SkinProperties.StyleD3C.Data04);
+	IgnoreListCheckBox = new TCheckBox("Activate Ignore List");
+	InsertChild(IgnoreListCheckBox);
+	SetChildArea(IgnoreListCheckBox, SkinProperties.StyleD3C.Data08.x, SkinProperties.StyleD3C.Data08.y,
+		SkinProperties.StyleD3C.Data08.Width, SkinProperties.StyleD3C.Data08.Height);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextCharactersToIgnore);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.StyleD3C.Data18.x, SkinProperties.StyleD3C.Data18.y,
+		SkinProperties.StyleD3C.Data18.Width, SkinProperties.StyleD3C.Data18.Height);
+	IgnoreList = new TFontListBox(TCallback(this, 11), NoCallback);
+	IgnoreList->SetEditable(true);
+	InsertChild(IgnoreList);
+	SetChildArea(IgnoreList, SkinProperties.StyleD3C.Data28.x, SkinProperties.StyleD3C.Data28.y,
+		SkinProperties.StyleD3C.Data28.Width, SkinProperties.StyleD3C.Data28.Height);
+	AddIgnoreButton = new TTextButton(SkinProperties.StyleD3C.Data38.x, SkinProperties.StyleD3C.Data38.y, "Add",
+		14, 15, TCallback(this, 709), NULL);
+	InsertChild(AddIgnoreButton);
+	DeleteIgnoreButton = new TTextButton(SkinProperties.StyleD3C.Data40.x, SkinProperties.StyleD3C.Data40.y,
+		"Delete", 14, 15, TCallback(this, 710), NULL);
+	InsertChild(DeleteIgnoreButton);
+	IgnorePermanently = new TCheckBox("Ignore Permanently");
+	InsertChild(IgnorePermanently);
+	SetChildArea(IgnorePermanently, SkinProperties.StyleD3C.Data48.x, SkinProperties.StyleD3C.Data48.y,
+		SkinProperties.StyleD3C.Data48.Width, SkinProperties.StyleD3C.Data48.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextGlobalIgnoreSettings);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.StyleD3C.Data58.x, SkinProperties.StyleD3C.Data58.y,
+		SkinProperties.StyleD3C.Data58.Width, SkinProperties.StyleD3C.Data58.Height);
+	IgnoreYelling = new TCheckBox("Ignore Yelling");
+	InsertChild(IgnoreYelling);
+	SetChildArea(IgnoreYelling, SkinProperties.StyleD3C.Data68.x, SkinProperties.StyleD3C.Data68.y,
+		SkinProperties.StyleD3C.Data68.Width, SkinProperties.StyleD3C.Data68.Height);
+	IgnorePrivate = new TCheckBox("Ignore Private Messages");
+	InsertChild(IgnorePrivate);
+	SetChildArea(IgnorePrivate, SkinProperties.StyleD3C.Data78.x, SkinProperties.StyleD3C.Data78.y,
+		SkinProperties.StyleD3C.Data78.Width, SkinProperties.StyleD3C.Data78.Height);
+	IgnoreListCheckBox->SetChecked(GetIgnoreListEnabled());
+	IgnoreYelling->SetChecked(IsModeIgnored(3));
+	IgnorePrivate->SetChecked(IsModeIgnored(4));
+	char *Text = GetIgnoreListText();
+	if (Text != NULL) {
+		int Length = strlen(Text);
+		int AllocationNumber = 0;
+		for (int i = 0; i < Length; i++) {
+			if (Text[i] == '\n')
+				AllocationNumber++;
+		}
+		char **Names = new char *[AllocationNumber];
+		memset(Names, 0, AllocationNumber * sizeof(char *));
+		int Number = 0;
+		bool NewLine = true;
+		for (int i = 0; i < Length; i++) {
+			if (Text[i] == '\n') {
+				Text[i] = 0;
+				NewLine = true;
+			} else if (NewLine) {
+				TASSERT2(Number < AllocationNumber, Number, AllocationNumber);
+				Names[Number] = Text + i;
+				Number++;
+				NewLine = false;
+			}
+		}
+		qsort(Names, Number, sizeof(char *), CompareNames);
+		for (int i = 0; i < Number; i++) {
+			CopyString(IgnoreEntries(i).Name, Names[i], 29);
+			IgnoreEntries(i).Permanent = IsPermanentIgnore(Names[i]);
+			TFont Font;
+			if (IgnoreEntries(i).Permanent)
+				Font.Color = SkinProperties.StyleD3C.Data88;
+			IgnoreList->AddLine(Names[i], Font);
+		}
+		delete[] Names;
+		if (Number > 0)
+			IgnoreList->SetSelection(0);
+	}
+	if (Text != NULL)
+		delete[] Text;
+	WhiteListCheckBox = new TCheckBox("Activate White List");
+	InsertChild(WhiteListCheckBox);
+	SetChildArea(WhiteListCheckBox, SkinProperties.StyleD3C.Data94.x, SkinProperties.StyleD3C.Data94.y,
+		SkinProperties.StyleD3C.Data94.Width, SkinProperties.StyleD3C.Data94.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextCharactersToAllow);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.StyleD3C.DataA4.x, SkinProperties.StyleD3C.DataA4.y,
+		SkinProperties.StyleD3C.DataA4.Width, SkinProperties.StyleD3C.DataA4.Height);
+	WhiteList = new TFontListBox(TCallback(this, 11), NoCallback);
+	WhiteList->SetEditable(true);
+	InsertChild(WhiteList);
+	SetChildArea(WhiteList, SkinProperties.StyleD3C.DataB4.x, SkinProperties.StyleD3C.DataB4.y,
+		SkinProperties.StyleD3C.DataB4.Width, SkinProperties.StyleD3C.DataB4.Height);
+	AddWhiteButton = new TTextButton(SkinProperties.StyleD3C.DataC4.x, SkinProperties.StyleD3C.DataC4.y, "Add",
+		14, 15, TCallback(this, 712), NULL);
+	InsertChild(AddWhiteButton);
+	DeleteWhiteButton = new TTextButton(SkinProperties.StyleD3C.DataCC.x, SkinProperties.StyleD3C.DataCC.y,
+		"Delete", 14, 15, TCallback(this, 713), NULL);
+	InsertChild(DeleteWhiteButton);
+	AllowPermanently = new TCheckBox("Allow Permanently");
+	InsertChild(AllowPermanently);
+	SetChildArea(AllowPermanently, SkinProperties.StyleD3C.DataD4.x, SkinProperties.StyleD3C.DataD4.y,
+		SkinProperties.StyleD3C.DataD4.Width, SkinProperties.StyleD3C.DataD4.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextGlobalAllowSettings);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.StyleD3C.DataE4.x, SkinProperties.StyleD3C.DataE4.y,
+		SkinProperties.StyleD3C.DataE4.Width, SkinProperties.StyleD3C.DataE4.Height);
+	AllowBuddies = new TCheckBox("Allow VIPs to message you");
+	InsertChild(AllowBuddies);
+	SetChildArea(AllowBuddies, SkinProperties.StyleD3C.DataF4.x, SkinProperties.StyleD3C.DataF4.y,
+		SkinProperties.StyleD3C.DataF4.Width, SkinProperties.StyleD3C.DataF4.Height);
+	WhiteListCheckBox->SetChecked(GetIgnoreEnabled());
+	AllowBuddies->SetChecked(GetBuddyIgnore());
+	Text = GetBuddyIgnoreText();
+	if (Text != NULL) {
+		int Length = strlen(Text);
+		int AllocationNumber = 0;
+		for (int i = 0; i < Length; i++) {
+			if (Text[i] == '\n')
+				AllocationNumber++;
+		}
+		char **Names = new char *[AllocationNumber];
+		memset(Names, 0, AllocationNumber * sizeof(char *));
+		int Number = 0;
+		bool NewLine = true;
+		for (int i = 0; i < Length; i++) {
+			if (Text[i] == '\n') {
+				Text[i] = 0;
+				NewLine = true;
+			} else if (NewLine) {
+				TASSERT2(Number < AllocationNumber, Number, AllocationNumber);
+				Names[Number] = Text + i;
+				Number++;
+				NewLine = false;
+			}
+		}
+		qsort(Names, Number, sizeof(char *), CompareNames);
+		for (int i = 0; i < Number; i++) {
+			CopyString(WhiteEntries(i).Name, Names[i], 29);
+			WhiteEntries(i).Permanent = IsPermanentBuddyIgnore(Names[i]);
+			TFont Font;
+			if (WhiteEntries(i).Permanent)
+				Font.Color = SkinProperties.StyleD3C.Data88;
+			WhiteList->AddLine(Names[i], Font);
+		}
+		delete[] Names;
+		if (Number > 0)
+			WhiteList->SetSelection(0);
+	}
+	if (Text != NULL)
+		delete[] Text;
+	Arrange();
+	HandleEvent(11);
+	TEND
+}
+
+// 0x471d90, line 1987
+void TIgnoreListDialog::Arrange()
+{
+	TBEGIN
+	TWindow::Arrange();
+	TEND
+}
+
+// 0x471f20, line 2171. OK (602) replaces Talk.cpp's lists with the lines of
+// the list boxes (except empty lines and "new entry") and sets the global
+// switches; OK then closes the dialog like every event not handled below.
+// Add (709, 712) keeps the line being edited in its entry and appends
+// "new entry" for editing; Delete (710, 713) removes the selected entry and
+// rebuilds the list from the entries (the loops stop one short of the
+// vector's last index, so they never see the entry moved last). A
+// selection (11) shows the selected entries' permanent flags; it computes
+// each entry once more without using it (kept).
+void TIgnoreListDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 602) {
+		IgnoreList->StopEdit();
+		ClearIgnoreList();
+		for (int i = 0; i < IgnoreList->GetNumberOfLines(); i++) {
+			TFont Font;
+			char *Name = IgnoreList->GetLine(i, &Font);
+			if (strlen(Name) != 0 && strcmp(Name, "new entry") != 0)
+				IgnoreName(Name, IgnoreEntries(i).Permanent);
+		}
+		SetIgnoreListEnabled(IgnoreListCheckBox->IsChecked());
+		if (IgnoreYelling->IsChecked())
+			IgnoreMode(3);
+		else
+			UnignoreMode(3);
+		if (IgnorePrivate->IsChecked())
+			IgnoreMode(4);
+		else
+			UnignoreMode(4);
+		WhiteList->StopEdit();
+		ClearBuddyIgnore();
+		for (int i = 0; i < WhiteList->GetNumberOfLines(); i++) {
+			TFont Font;
+			char *Name = WhiteList->GetLine(i, &Font);
+			if (strlen(Name) != 0 && strcmp(Name, "new entry") != 0)
+				AddBuddyIgnore(Name, WhiteEntries(i).Permanent);
+		}
+		SetIgnoreEnabled(WhiteListCheckBox->IsChecked());
+		SetBuddyIgnore(AllowBuddies->IsChecked());
+	}
+	if (Event == 709) {
+		WhiteList->StopEdit();
+		IgnoreList->StopEdit();
+		int Selection = IgnoreList->GetSelection();
+		if (Selection > -1) {
+			TFont Font;
+			char *Name = IgnoreList->GetLine(Selection, &Font);
+			strcpy(IgnoreEntries(Selection).Name, Name);
+			IgnoreEntries(Selection).Permanent = IgnorePermanently->IsChecked();
+		}
+		TFont Font;
+		TIgnoreEntry Entry;
+		Entry.Permanent = false;
+		CopyString(Entry.Name, "new entry", 30);
+		IgnoreEntries(IgnoreList->GetNumberOfLines()) = Entry;
+		IgnoreList->AddLine("new entry", Font);
+		IgnoreList->SetSelection(IgnoreList->GetNumberOfLines() - 1);
+		IgnorePermanently->SetChecked(false);
+		IgnoreList->StartEdit();
+	} else if (Event == 712) {
+		IgnoreList->StopEdit();
+		WhiteList->StopEdit();
+		int Selection = WhiteList->GetSelection();
+		if (Selection > -1) {
+			TFont Font;
+			char *Name = WhiteList->GetLine(Selection, &Font);
+			strcpy(WhiteEntries(Selection).Name, Name);
+			WhiteEntries(Selection).Permanent = AllowPermanently->IsChecked();
+		}
+		TFont Font;
+		TIgnoreEntry Entry;
+		Entry.Permanent = false;
+		CopyString(Entry.Name, "new entry", 30);
+		WhiteEntries(WhiteList->GetNumberOfLines()) = Entry;
+		WhiteList->AddLine("new entry", Font);
+		WhiteList->SetSelection(WhiteList->GetNumberOfLines() - 1);
+		AllowPermanently->SetChecked(false);
+		WhiteList->StartEdit();
+	} else if (Event == 710) {
+		IgnoreList->StopEdit();
+		int Selection = IgnoreList->GetSelection();
+		if (Selection > -1) {
+			TFont Font;
+			char *Name = IgnoreList->GetLine(Selection, &Font);
+			strcpy(IgnoreEntries(Selection).Name, Name);
+			IgnoreEntries(Selection).Permanent = IgnorePermanently->IsChecked();
+			IgnoreList->Clear();
+			int i;
+			for (i = 0; i < IgnoreEntries.max - IgnoreEntries.min; i++) {
+				if (i >= Selection)
+					IgnoreEntries(i) = IgnoreEntries(i + 1);
+			}
+			IgnoreEntries(i).Name[0] = 0;
+			for (i = 0; i < IgnoreEntries.max - IgnoreEntries.min; i++) {
+				if (strlen(IgnoreEntries(i).Name) != 0) {
+					TFont LineFont;
+					if (IgnoreEntries(i).Permanent)
+						LineFont.Color = SkinProperties.StyleD3C.Data88;
+					IgnoreList->AddLine(IgnoreEntries(i).Name, LineFont);
+				}
+			}
+		}
+		IgnoreList->SetSelection(-1);
+	} else if (Event == 713) {
+		WhiteList->StopEdit();
+		int Selection = WhiteList->GetSelection();
+		if (Selection > -1) {
+			TFont Font;
+			char *Name = WhiteList->GetLine(Selection, &Font);
+			strcpy(WhiteEntries(Selection).Name, Name);
+			WhiteEntries(Selection).Permanent = AllowPermanently->IsChecked();
+			WhiteList->Clear();
+			int i;
+			for (i = 0; i < WhiteEntries.max - WhiteEntries.min; i++) {
+				if (i >= Selection)
+					WhiteEntries(i) = WhiteEntries(i + 1);
+			}
+			WhiteEntries(i).Name[0] = 0;
+			for (i = 0; i < WhiteEntries.max - WhiteEntries.min; i++) {
+				if (strlen(WhiteEntries(i).Name) != 0) {
+					TFont LineFont;
+					if (WhiteEntries(i).Permanent)
+						LineFont.Color = SkinProperties.StyleD3C.Data88;
+					WhiteList->AddLine(WhiteEntries(i).Name, LineFont);
+				}
+			}
+		}
+		WhiteList->SetSelection(-1);
+	} else if (Event == 11) {
+		int Selection = IgnoreList->GetSelection();
+		if (Selection != -1) {
+			IgnoreEntries(Selection);
+			IgnorePermanently->SetChecked(IgnoreEntries(Selection).Permanent);
+		}
+		Selection = WhiteList->GetSelection();
+		if (Selection != -1) {
+			WhiteEntries(Selection);
+			AllowPermanently->SetChecked(WhiteEntries(Selection).Permanent);
+		}
+	} else {
+		SetActionState(0);
+	}
+	TEND1(Event)
+}
+
+// 0x472970, line 2205. A click that changes a permanent check box recolours
+// the selected line and stores the flag in its entry.
+bool TIgnoreListDialog::LeftButtonUp(int x, int y, int Flags)
+{
+	TBEGIN
+	bool Result = TWindow::LeftButtonUp(x, y, Flags);
+	int Selection = IgnoreList->GetSelection();
+	if (Result && Selection > -1 && IgnoreEntries(Selection).Permanent != IgnorePermanently->IsChecked()) {
+		TFont Font;
+		IgnoreList->StopEdit();
+		char Name[30];
+		CopyString(Name, IgnoreList->GetLine(Selection, &Font), 30);
+		TFont LineFont;
+		if (IgnorePermanently->IsChecked())
+			LineFont.Color = SkinProperties.StyleD3C.Data88;
+		IgnoreList->SetLine(Selection, Name, LineFont);
+		TIgnoreEntry Entry;
+		Entry.Permanent = IgnorePermanently->IsChecked();
+		CopyString(Entry.Name, Name, 30);
+		IgnoreEntries(Selection) = Entry;
+	}
+	Selection = WhiteList->GetSelection();
+	if (Result && Selection > -1 && WhiteEntries(Selection).Permanent != AllowPermanently->IsChecked()) {
+		TFont Font;
+		WhiteList->StopEdit();
+		char Name[30];
+		CopyString(Name, WhiteList->GetLine(Selection, &Font), 30);
+		TFont LineFont;
+		if (AllowPermanently->IsChecked())
+			LineFont.Color = SkinProperties.StyleD3C.Data88;
+		WhiteList->SetLine(Selection, Name, LineFont);
+		TIgnoreEntry Entry;
+		Entry.Permanent = AllowPermanently->IsChecked();
+		CopyString(Entry.Name, Name, 30);
+		WhiteEntries(Selection) = Entry;
+	}
+	return Result;
+	TEND2(x, y)
+}
+
+// 0x472d80, line 2216
+void TIgnoreListDialog::KeyPress(int Key)
+{
+	TBEGIN
+	IgnoreList->KeyPress(Key);
+	WhiteList->KeyPress(Key);
+	TEND1(Key)
+}
+
+// --- TBugReportDialog ------------------------------------------------------------
+
+// 0x472f20, line 2240
+TBugReportDialog::TBugReportDialog()
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.DataE40, SkinProperties.DataE44);
+	EditText = new TEditText(1024, false);
+	InsertChild(EditText);
+	SetChildArea(EditText, SkinProperties.DataE48.x, SkinProperties.DataE48.y, SkinProperties.DataE48.Width,
+		SkinProperties.DataE48.Height);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, TextReportBugsOnly);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.DataE58.x, SkinProperties.DataE58.y, SkinProperties.DataE58.Width,
+		SkinProperties.DataE58.Height);
+	EditText->SetActive(true);
+	Arrange();
+	TEND
+}
+
+// 0x4731e0, line 2252
+void TBugReportDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		const char *Text = EditText->Text;
+		if (strlen(Text) != 0)
+			SendBugReport(Text);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TNewChannelDialog -----------------------------------------------------------
+
+// 0x4733a0, lines 2265-2297
+TNewChannelDialog::TNewChannelDialog(int _NumberOfChannels, int *_ChannelIDs, const char (*ChannelNames)[30])
+{
+	TASSERT(_ChannelIDs!=NULL);
+	TASSERT1(_NumberOfChannels>0, _NumberOfChannels);
+	TBEGIN
+	TComponent::SetSize(SkinProperties.DataECC, SkinProperties.DataED0);
+	ListBox = new TListBox(NoCallback, TCallback(this, 301));
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectChannel);
+	InsertChild(ListBox);
+	InsertChild(Label);
+	SetChildArea(ListBox, SkinProperties.DataEE4.x, SkinProperties.DataEE4.y, SkinProperties.DataEE4.Width,
+		SkinProperties.DataEE4.Height);
+	SetChildArea(Label, SkinProperties.DataED4.x, SkinProperties.DataED4.y, SkinProperties.DataED4.Width,
+		SkinProperties.DataED4.Height);
+	NameEdit = new TEditLine(29, false);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextOpenPrivateChannel);
+	InsertChild(NameEdit);
+	InsertChild(Label);
+	SetChildArea(NameEdit, SkinProperties.DataF04.x, SkinProperties.DataF04.y, SkinProperties.DataF04.Width,
+		SkinProperties.DataF04.Height);
+	SetChildArea(Label, SkinProperties.DataEF4.x, SkinProperties.DataEF4.y, SkinProperties.DataEF4.Width,
+		SkinProperties.DataEF4.Height);
+	NumberOfChannels = _NumberOfChannels;
+	ChannelIDs = new int[_NumberOfChannels];
+	for (int i = 0; i < NumberOfChannels; i++) {
+		ChannelIDs[i] = _ChannelIDs[i];
+		ListBox->AddLine(ChannelNames[i]);
+	}
+	NameEdit->SetActive(true);
+	Arrange();
+	TEND1(_NumberOfChannels)
+}
+
+// 0x473980, line 2321. Return sends 301 (join the selected channel)
+// without a name and 302 (nothing but closing) with one; the frame's OK
+// button takes Return first.
+void TNewChannelDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13) {
+		if (strlen(NameEdit->Text) != 0)
+			HandleEvent(302);
+		else
+			HandleEvent(301);
+	} else if (Key == 27) {
+		HandleEvent(2);
+	} else {
+		NameEdit->KeyPress(Key);
+	}
+	TEND1(Key)
+}
+
+// 0x473b80, lines 2333-2349. OK (1) with a name opens a private
+// conversation (not with oneself), without one it joins the selected
+// channel like a double click (301).
+void TNewChannelDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		const char *Name = NameEdit->Text;
+		if (strlen(Name) != 0) {
+			TCreature *Creature = GetCreature(GetPlayerID());
+			TASSERT(Creature!=NULL);
+			if (CompareStrings(Creature->Name, Name, -1) == 0)
+				SetStatusMessage(TextNoPrivateChannelWithYourself, false);
+			else
+				SendOpenPrivateConversation(Name);
+		} else {
+			Event = 301;
+		}
+	}
+	if (Event == 301) {
+		int Selection = ListBox->GetSelection();
+		if (Selection != -1) {
+			int ChannelID = ChannelIDs[Selection];
+			if (ChannelID == 0xffff)
+				SendOpenPrivateChannel();
+			else
+				SendJoinChannel(ChannelID);
+		}
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TPrivateChannelDialog -------------------------------------------------------
+
+// 0x473e60, line 2378
+TPrivateChannelDialog::TPrivateChannelDialog(bool _Exclude)
+{
+	TBEGIN
+	Exclude = _Exclude;
+	TComponent::SetSize(SkinProperties.DataF14, SkinProperties.DataF18);
+	NameEdit = new TEditLine(29, false);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterCharacterName);
+	InsertChild(NameEdit);
+	InsertChild(Label);
+	SetChildArea(NameEdit, SkinProperties.DataF1C.x, SkinProperties.DataF1C.y, SkinProperties.DataF1C.Width,
+		SkinProperties.DataF1C.Height);
+	SetChildArea(Label, SkinProperties.DataF2C.x, SkinProperties.DataF2C.y, SkinProperties.DataF2C.Width,
+		SkinProperties.DataF2C.Height);
+	NameEdit->SetActive(true);
+	Arrange();
+	TEND
+}
+
+// 0x474110, line 2392
+void TPrivateChannelDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	else
+		NameEdit->KeyPress(Key);
+	TEND1(Key)
+}
+
+// 0x4742e0, line 2406
+void TPrivateChannelDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		const char *Name = NameEdit->Text;
+		if (strlen(Name) != 0) {
+			if (!Exclude)
+				SendInviteToPrivateChannel(Name);
+			else
+				SendExcludeFromPrivateChannel(Name);
+		}
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TReportDialog ----------------------------------------------------------------
+
+// 0x4744b0, line 2551
+TReportDialog::TReportDialog()
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.DataF3C, SkinProperties.DataF40);
+	TextEdit = new TEditLine(255, false);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextStateRuleViolation);
+	InsertChild(TextEdit);
+	InsertChild(Label);
+	SetChildArea(TextEdit, SkinProperties.DataF44.x, SkinProperties.DataF44.y, SkinProperties.DataF44.Width,
+		SkinProperties.DataF44.Height);
+	SetChildArea(Label, SkinProperties.DataF54.x, SkinProperties.DataF54.y, SkinProperties.DataF54.Width,
+		SkinProperties.DataF54.Height);
+	TextEdit->SetActive(true);
+	Arrange();
+	TEND
+}
+
+// 0x474760, line 2565
+void TReportDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	else
+		TextEdit->KeyPress(Key);
+	TEND1(Key)
+}
+
+// 0x474930, line 2580. The request goes to Control.cpp's event queue as a
+// copy (event 0x33).
+void TReportDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1 && strlen(TextEdit->Text) != 0) {
+		char *Text = new char[strlen(TextEdit->Text) + 1];
+		strcpy(Text, TextEdit->Text);
+		AddMessage(0x33, (INT_PTR)Text, 0);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TAddBuddyDialog ------------------------------------------------------------
+
+// 0x474b20, line 2607
+TAddBuddyDialog::TAddBuddyDialog()
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.DataF64, SkinProperties.DataF68);
+	NameEdit = new TEditLine(29, false);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterCharacterName2);
+	InsertChild(NameEdit);
+	InsertChild(Label);
+	SetChildArea(NameEdit, SkinProperties.DataF6C.x, SkinProperties.DataF6C.y, SkinProperties.DataF6C.Width,
+		SkinProperties.DataF6C.Height);
+	SetChildArea(Label, SkinProperties.DataF7C.x, SkinProperties.DataF7C.y, SkinProperties.DataF7C.Width,
+		SkinProperties.DataF7C.Height);
+	NameEdit->SetActive(true);
+	Arrange();
+	TEND
+}
+
+// 0x474dd0, line 2621
+void TAddBuddyDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	else
+		NameEdit->KeyPress(Key);
+	TEND1(Key)
+}
+
+// 0x474fa0, line 2635
+void TAddBuddyDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		const char *Name = NameEdit->Text;
+		if (strlen(Name) != 0)
+			SendAddBuddy(Name);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TEditBuddyDialog -----------------------------------------------------------
+
+// 0x475160, lines 2652-2696. The icons are skins 218-227 after "none".
+TEditBuddyDialog::TEditBuddyDialog(int _CharacterID)
+{
+	TBEGIN
+	CharacterID = _CharacterID;
+	int Position = GetBuddyPosition(_CharacterID);
+	TASSERT2(Position >= 0, Position, CharacterID);
+	TComponent::SetSize(SkinProperties.StyleF8C.Data00, SkinProperties.StyleF8C.Data04);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, GetBuddyListName(Position));
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.StyleF8C.Data08.x, SkinProperties.StyleF8C.Data08.y,
+		SkinProperties.StyleF8C.Data08.Width, SkinProperties.StyleF8C.Data08.Height);
+	TSeparator *Separator = new TSeparator(true);
+	InsertChild(Separator);
+	SetChildArea(Separator, SkinProperties.StyleF8C.Data18.x, SkinProperties.StyleF8C.Data18.y,
+		SkinProperties.StyleF8C.Data18.Width, SkinProperties.StyleF8C.Data18.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectType);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.StyleF8C.Data28.x, SkinProperties.StyleF8C.Data28.y,
+		SkinProperties.StyleF8C.Data28.Width, SkinProperties.StyleF8C.Data28.Height);
+	IconGroup = new TRadioButtonGroup;
+	for (int i = 0; i < 11; i++) {
+		int Icon;
+		if (i == 0)
+			Icon = 0;
+		else
+			Icon = i + 217;
+		IconButtons[i] = new TIconButton(0, 0, Icon, 24, 25, NoCallback, NULL);
+		InsertChild(IconButtons[i]);
+		IconButtons[i]->SetRadioButtonGroup(IconGroup);
+		if (GetBuddyListIcon(Position) == i)
+			IconGroup->Selected = IconButtons[i];
+		SetChildPosition(IconButtons[i], SkinProperties.StyleF8C.Data38[i].x, SkinProperties.StyleF8C.Data38[i].y);
+	}
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterShortDescription);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.StyleF8C.Data90.x, SkinProperties.StyleF8C.Data90.y,
+		SkinProperties.StyleF8C.Data90.Width, SkinProperties.StyleF8C.Data90.Height);
+	Description = new TEditText(127, false);
+	InsertChild(Description);
+	SetChildArea(Description, SkinProperties.StyleF8C.DataA0.x, SkinProperties.StyleF8C.DataA0.y,
+		SkinProperties.StyleF8C.DataA0.Width, SkinProperties.StyleF8C.DataA0.Height);
+	if (GetBuddyListDescription(Position) != NULL)
+		Description->SetText(GetBuddyListDescription(Position), false);
+	Notify = new TCheckBox("Notify at login");
+	InsertChild(Notify);
+	SetChildArea(Notify, SkinProperties.StyleF8C.DataB0.x, SkinProperties.StyleF8C.DataB0.y,
+		SkinProperties.StyleF8C.DataB0.Width, SkinProperties.StyleF8C.DataB0.Height);
+	Notify->SetChecked(GetBuddyListNotify(Position));
+	Description->SetActive(true);
+	Arrange();
+	TEND1(_CharacterID)
+}
+
+// 0x475820, line 2720. Without a selected icon the icon is 0.
+void TEditBuddyDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		int Icon = 0;
+		for (int i = 0; i < 11; i++) {
+			if (IconGroup->Selected == IconButtons[i]) {
+				Icon = i;
+				break;
+			}
+		}
+		EditBuddy(CharacterID, Icon, Description->Text, Notify->IsChecked());
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TUpdateDialog -----------------------------------------------------------------
+
+// 0x4759f0, line 2761
+TUpdateDialog::TUpdateDialog(const char *FileName, int _DataSize)
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.Data104C, SkinProperties.Data1050);
+	DataSize = _DataSize;
+	StartTime = GetMilliseconds();
+	Progress = 0;
+	Done = false;
+	char Buffer[512];
+	const char *Text;
+	if (CompareStrings(FileName, "tibia.pic", -1) == 0) {
+		Text = TextDownloadingPictures;
+	} else if (CompareStrings(FileName, "tibia.dat", -1) == 0) {
+		Text = TextDownloadingObjectData;
+	} else if (CompareStrings(FileName, "tibia.spr", -1) == 0) {
+		Text = TextDownloadingObjectGraphics;
+	} else {
+		sprintf(Buffer, "Downloading %s", FileName);
+		Text = Buffer;
+	}
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, Text);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Data1054.x, SkinProperties.Data1054.y, SkinProperties.Data1054.Width,
+		SkinProperties.Data1054.Height);
+	ProgressBar = new TProgressBar();
+	InsertChild(ProgressBar);
+	SetChildArea(ProgressBar, SkinProperties.Data1074.x, SkinProperties.Data1074.y, SkinProperties.Data1074.Width,
+		SkinProperties.Data1074.Height);
+	Arrange();
+	TEND
+}
+
+// 0x475d00, line 2793. The progress -1 ends the download.
+void TUpdateDialog::Draw(int Surface, int x, int y)
+{
+	TBEGIN
+	if (Progress != GetProgress()) {
+		Progress = GetProgress();
+		if (Done || Progress == -1) {
+			Progress = 100;
+			Done = true;
+			if (GetMilliseconds() > StartTime + 2000)
+				SetActionState(0);
+		}
+		if (Done)
+			ProgressBar->SetComplete();
+		else
+			ProgressBar->SetCurrent(Progress);
+	}
+	TWindow::Draw(Surface, x, y);
+	TEND1(Surface)
+}
+
+// 0x475f00, line 2806. The try block is inside the test (the catch block
+// names Event with the constant 2).
+void TUpdateDialog::HandleEvent(int Event)
+{
+	if (Event == 2) {
+		TBEGIN
+		if (!Done)
+			CancelPatch();
+		SetActionState(0);
+		TEND1(Event)
+	}
+}
+
+// --- THelpDialog -------------------------------------------------------------------
+
+// 0x4760a0, line 2869. No Arrange at the end.
+THelpDialog::THelpDialog(void (*_OpenURL)(const char *URL))
+{
+	TBEGIN
+	OpenURL = _OpenURL;
+	TComponent::SetSize(SkinProperties.Style1084.Data00, SkinProperties.Style1084.Data04);
+	TTextButton *Button = new TTextButton(0, 0, "Client Help", 18, 19, TCallback(this, 702), NULL);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextClientInfo);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1084.Data08.x, SkinProperties.Style1084.Data08.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1084.Data38.x, SkinProperties.Style1084.Data38.y);
+	Button = new TTextButton(0, 0, "Hints", 18, 19, TCallback(this, 703), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextShowPreviousHints);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1084.Data10.x, SkinProperties.Style1084.Data10.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1084.Data40.x, SkinProperties.Style1084.Data40.y);
+	Button = new TTextButton(0, 0, "Tutor Help", 18, 19, TCallback(this, 704), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextAskTutor);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1084.Data18.x, SkinProperties.Style1084.Data18.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1084.Data48.x, SkinProperties.Style1084.Data48.y);
+	Button = new TTextButton(0, 0, "Rule Violation", 18, 19, TCallback(this, 705), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextReportRuleViolations);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1084.Data20.x, SkinProperties.Style1084.Data20.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1084.Data50.x, SkinProperties.Style1084.Data50.y);
+	Button = new TTextButton(0, 0, "Manual", 18, 19, TCallback(this, 706), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextReadManual);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1084.Data28.x, SkinProperties.Style1084.Data28.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1084.Data58.x, SkinProperties.Style1084.Data58.y);
+	Button = new TTextButton(0, 0, "FAQ", 18, 19, TCallback(this, 707), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextReadFAQ);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1084.Data30.x, SkinProperties.Style1084.Data30.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1084.Data60.x, SkinProperties.Style1084.Data60.y);
+	TEND
+}
+
+// 0x476770, line 2882
+void THelpDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	TEND1(Key)
+}
+
+// 0x476930, lines 2914-2918. Client Help (702) closes first and then asks
+// for the client info; Hints (703) opens the hints dialog (0x1f) after
+// closing the help menu (0x20).
+void THelpDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	switch (Event) {
+	case 1:
+	case 2:
+		SetActionState(0);
+		break;
+	case 702:
+		SetActionState(0);
+		AddMessage(0x2e, 0, 0);
+		break;
+	case 703:
+		AddMessage(0x20, 0, 0);
+		AddMessage(0x1f, 0, 0);
+		SetActionState(0);
+		break;
+	case 704:
+		SendJoinChannel(7);
+		SetActionState(0);
+		break;
+	case 705:
+		AddMessage(0x16, 0, 0);
+		SetActionState(0);
+		break;
+	case 706:
+		OpenURL(TextManualURL);
+		SetActionState(0);
+		break;
+	case 707:
+		OpenURL(TextFAQURL);
+		SetActionState(0);
+		break;
+	default:
+		TERROR1("unknown event", Event);
+	}
+	TEND1(Event)
+}
+
+// --- THintsDialog ------------------------------------------------------------------
+
+// 0x476cd0, line 2945. The hints 1-14 the player has seen.
+THintsDialog::THintsDialog()
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.Data10EC, SkinProperties.Data10F0);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextAvailableHints);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Data10F4.x, SkinProperties.Data10F4.y, SkinProperties.Data10F4.Width,
+		SkinProperties.Data10F4.Height);
+	ListBox = new TListBox(NoCallback, TCallback(this, 1));
+	InsertChild(ListBox);
+	SetChildArea(ListBox, SkinProperties.Data1104.x, SkinProperties.Data1104.y, SkinProperties.Data1104.Width,
+		SkinProperties.Data1104.Height);
+	for (int i = 1; i < 15; i++) {
+		if (IsKnownHint(i))
+			ListBox->AddLine(GetEventHelpTitle(i));
+	}
+	TEND
+}
+
+// 0x476fb0, line 2959
+void THintsDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	else
+		ListBox->KeyPress(Key);
+	TEND1(Key)
+}
+
+// 0x477180, lines 2974-2983. The selected hint is shown again: the help
+// menu (0x20) and the hint (2) are put first in the event queue.
+void THintsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1 && ListBox->GetSelection() != -1) {
+		char *Title = ListBox->GetLine(ListBox->GetSelection());
+		int Number = -1;
+		for (int i = 1; i < 15; i++) {
+			if (CompareStrings(Title, GetEventHelpTitle(i), -1) == 0) {
+				Number = i;
+				break;
+			}
+		}
+		TASSERT(Number!=-1);
+		const char *HelpText = GetEventHelpText(Number);
+		char *Text = new char[strlen(HelpText) + 1];
+		strcpy(Text, HelpText);
+		AddMessageFirst(0x20, 0, 0);
+		AddMessageFirst(2, (INT_PTR)GetEventHelpTitle(Number), (INT_PTR)Text);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TRuleViolationDialog --------------------------------------------------------
+
+// 0x484620, line 3056. A given name (or the statement's author) cannot be
+// changed; the statement line is read-only and as long as its text.
+TRuleViolationDialog::TRuleViolationDialog(const char *Name, TTalkLine *Statement)
+{
+	TBEGIN
+	for (int i = 0; i < 50; i++)
+		Reasons[i] = -1;
+	StatementID = Statement != NULL ? Statement->StatementID : 0;
+	TComponent::SetSize(SkinProperties.Style1114.Data00, SkinProperties.Style1114.Data04);
+	FocusGroup = new TFocusGroup();
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, "Name");
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Style1114.Data08.x, SkinProperties.Style1114.Data08.y,
+		SkinProperties.Style1114.Data08.Width, SkinProperties.Style1114.Data08.Height);
+	NameEdit = new TEditLine(29, Name != NULL || Statement != NULL);
+	if (Name != NULL)
+		NameEdit->SetText(Name);
+	if (Statement != NULL)
+		NameEdit->SetText(Statement->Addressee);
+	NameEdit->SetFocusGroup(FocusGroup);
+	InsertChild(NameEdit);
+	SetChildArea(NameEdit, SkinProperties.Style1114.Data18.x, SkinProperties.Style1114.Data18.y,
+		SkinProperties.Style1114.Data18.Width, SkinProperties.Style1114.Data18.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data64, "Reason");
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Style1114.Data28.x, SkinProperties.Style1114.Data28.y,
+		SkinProperties.Style1114.Data28.Width, SkinProperties.Style1114.Data28.Height);
+	ReasonList = new TListBox(TCallback(this, 21), NoCallback);
+	InsertChild(ReasonList);
+	SetChildArea(ReasonList, SkinProperties.Style1114.Data38.x, SkinProperties.Style1114.Data38.y,
+		SkinProperties.Style1114.Data38.Width, SkinProperties.Style1114.Data38.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data64, "Action");
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Style1114.Data48.x, SkinProperties.Style1114.Data48.y,
+		SkinProperties.Style1114.Data48.Width, SkinProperties.Style1114.Data48.Height);
+	ActionList = new TListBox(NoCallback, NoCallback);
+	InsertChild(ActionList);
+	SetChildArea(ActionList, SkinProperties.Style1114.Data58.x, SkinProperties.Style1114.Data58.y,
+		SkinProperties.Style1114.Data58.Width, SkinProperties.Style1114.Data58.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data64, "Comment");
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Style1114.Data68.x, SkinProperties.Style1114.Data68.y,
+		SkinProperties.Style1114.Data68.Width, SkinProperties.Style1114.Data68.Height);
+	CommentEdit = new TEditLine(100, false);
+	CommentEdit->SetFocusGroup(FocusGroup);
+	InsertChild(CommentEdit);
+	SetChildArea(CommentEdit, SkinProperties.Style1114.Data78.x, SkinProperties.Style1114.Data78.y,
+		SkinProperties.Style1114.Data78.Width, SkinProperties.Style1114.Data78.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data64, "Statement");
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Style1114.Data88.x, SkinProperties.Style1114.Data88.y,
+		SkinProperties.Style1114.Data88.Width, SkinProperties.Style1114.Data88.Height);
+	StatementEdit = new TEditLine(Statement != NULL ? strlen(Statement->Text) : 0, true);
+	if (Statement != NULL)
+		StatementEdit->SetText(Statement->Text);
+	StatementEdit->SetFocusGroup(FocusGroup);
+	InsertChild(StatementEdit);
+	SetChildArea(StatementEdit, SkinProperties.Style1114.Data98.x, SkinProperties.Style1114.Data98.y,
+		SkinProperties.Style1114.Data98.Width, SkinProperties.Style1114.Data98.Height);
+	IPBanishment = new TCheckBox("IP Address Banishment");
+	IPBanishment->SetChecked(false);
+	IPBanishment->SetEnabled(false);
+	InsertChild(IPBanishment);
+	SetChildArea(IPBanishment, SkinProperties.Style1114.DataA8.x, SkinProperties.Style1114.DataA8.y,
+		SkinProperties.Style1114.DataA8.Width, SkinProperties.Style1114.DataA8.Height);
+	int Number = 0;
+	for (int i = 0; i < 32; i++) {
+		if (CheckRight(i, -1)) {
+			ReasonList->AddLine(GetRightName(i));
+			Reasons[Number] = i;
+			Number++;
+		}
+	}
+	UpdateActions();
+	FocusGroup->SetActive(NameEdit->ReadOnly ? CommentEdit : NameEdit);
+	Arrange();
+	TEND
+}
+
+// 0x4774d0, line 3080
+void TRuleViolationDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13) {
+		HandleEvent(1);
+	} else if (Key == 27) {
+		HandleEvent(2);
+	} else if (FocusGroup->Active != NULL) {
+		FocusGroup->Active->KeyPress(Key);
+	}
+	TEND1(Key)
+}
+
+// 0x484e70, lines 3124-3128. Every missing part gets a status message; the
+// dialog closes in any case. A disabled statement line sends statement 0.
+void TRuleViolationDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	switch (Event) {
+	case 1: {
+		bool Valid = true;
+		int Reason = GetReason();
+		int Action = GetAction();
+		if (strlen(NameEdit->Text) == 0) {
+			SetStatusMessage(TextNoPlayerName, false);
+			Valid = false;
+		}
+		if (Reason == -1) {
+			SetStatusMessage(TextNoReason, false);
+			Valid = false;
+		}
+		if (Action == -1) {
+			SetStatusMessage(TextNoAction, false);
+			Valid = false;
+		}
+		if (strlen(CommentEdit->Text) == 0) {
+			SetStatusMessage(TextNoComment, false);
+			Valid = false;
+		}
+		if (Action == 6) {
+			if (strlen(StatementEdit->Text) == 0) {
+				SetStatusMessage(TextNoStatement, false);
+				Valid = false;
+			} else if (StatementID == 0) {
+				SetStatusMessage(TextCannotReportStatement, false);
+				Valid = false;
+			}
+		}
+		if (Valid) {
+			uint32 ID = StatementEdit->IsDisabled() ? 0 : StatementID;
+			SendRuleViolationReport(NameEdit->Text, Reason, Action, CommentEdit->Text, ID,
+				IPBanishment->IsChecked());
+		}
+		break;
+	}
+	case 2:
+		break;
+	case 21:
+		UpdateActions();
+		return;
+	default:
+		TERROR1("unknown event", Event);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// 0x47eae0, line 3158. The actions the reason allows; the statement line
+// is enabled for reasons with action 0, 2 or 6 among the statement reasons
+// 9-27 and 29.
+void TRuleViolationDialog::UpdateActions()
+{
+	TBEGIN
+	int Reason = GetReason();
+	if (Reason != -1) {
+		ActionList->Clear();
+		for (int i = 0; i < 7; i++) {
+			if (CheckRight(Reason, i))
+				ActionList->AddLine(GetActionName(i));
+		}
+		bool IPBanishmentAllowed = CheckRight(Reason, 7);
+		IPBanishment->SetChecked(false);
+		IPBanishment->SetEnabled(IPBanishmentAllowed);
+		StatementEdit->SetDisabled(!(CheckRight(Reason, 0) || CheckRight(Reason, 2) || CheckRight(Reason, 6))
+			|| ((Reason < 9 || Reason > 27) && Reason != 29));
+	}
+	TEND
+}
+
+// 0x4776b0, line 3171
+int TRuleViolationDialog::GetReason()
+{
+	TBEGIN
+	int Selection = ReasonList->GetSelection();
+	if (Selection == -1)
+		return -1;
+	return Reasons[Selection];
+	TEND
+}
+
+// 0x477860, line 3191. The action of the selected line, by its name.
+int TRuleViolationDialog::GetAction()
+{
+	TBEGIN
+	int Selection = ActionList->GetSelection();
+	if (Selection == -1)
+		return -1;
+	for (int i = 0; i < 7; i++) {
+		if (strcmp(ActionList->GetLine(Selection), GetActionName(i)) == 0)
+			return i;
+	}
+	return -1;
+	TEND
+}
+
+// --- TEditMarkDialog ------------------------------------------------------------
+
+// 0x477c80, lines 3207-3242. The symbols are skins 74-87.
+TEditMarkDialog::TEditMarkDialog(TCoordinate *_Coordinate, TMark *_Mark)
+{
+	TBEGIN
+	Coordinate.x = 0;
+	Coordinate.y = 0;
+	Coordinate.z = 0;
+	TComponent::SetSize(SkinProperties.Data11CC, SkinProperties.Data11D0);
+	TASSERT(_Coordinate != NULL);
+	Coordinate = *_Coordinate;
+	if (_Mark != NULL)
+		Mark = *_Mark;
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterShortDescription2);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Data11D4.x, SkinProperties.Data11D4.y, SkinProperties.Data11D4.Width,
+		SkinProperties.Data11D4.Height);
+	TextEdit = new TEditLine(100, false);
+	if (Mark.Text != NULL)
+		TextEdit->SetText(Mark.Text);
+	InsertChild(TextEdit);
+	SetChildArea(TextEdit, SkinProperties.Data11E4.x, SkinProperties.Data11E4.y, SkinProperties.Data11E4.Width,
+		SkinProperties.Data11E4.Height);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectType2);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Data11F4.x, SkinProperties.Data11F4.y, SkinProperties.Data11F4.Width,
+		SkinProperties.Data11F4.Height);
+	TypeGroup = new TRadioButtonGroup;
+	for (int i = 0; i < 14; i++) {
+		TypeButtons[i] = new TIconButton(0, 0, i + 74, 24, 25, NoCallback, NULL);
+		InsertChild(TypeButtons[i]);
+		TypeButtons[i]->SetRadioButtonGroup(TypeGroup);
+		if (Mark.Type == i)
+			TypeGroup->Selected = TypeButtons[i];
+		SetChildPosition(TypeButtons[i], SkinProperties.Data1204[i].x, SkinProperties.Data1204[i].y);
+	}
+	TextEdit->SetActive(true);
+	Arrange();
+	delete _Coordinate;
+	if (_Mark != NULL)
+		delete _Mark;
+	TEND
+}
+
+// 0x478200, line 3268
+void TEditMarkDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	else
+		TextEdit->KeyPress(Key);
+	TEND
+}
+
+// 0x4783d0, lines 3294-3298. An edited mark is deleted and added again at
+// its own position.
+void TEditMarkDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		CopyString(Mark.Text, TextEdit->Text, 100);
+		int Type = 0;
+		for (int i = 0; i < 14; i++) {
+			if (TypeGroup->Selected == TypeButtons[i]) {
+				Type = i;
+				break;
+			}
+		}
+		if (Mark.x != 0 && Mark.y != 0) {
+			DeleteAutomapMark(Mark, Coordinate.z);
+			Coordinate.x = Mark.x;
+			Coordinate.y = Mark.y;
+		}
+		AddAutomapMark(Coordinate, Mark.Text, Type);
+	} else if (Event != 2) {
+		TERROR1("unknown event", Event);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TOptionsDialog -----------------------------------------------------------------
+
+// 0x4786d0, line 3366. The labels of Network and Motd use the label
+// constructor with a position.
+TOptionsDialog::TOptionsDialog()
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.Style1274.Data00, SkinProperties.Style1274.Data04);
+	TTextButton *Button = new TTextButton(0, 0, "General", 18, 19, TCallback(this, 404), NULL);
+	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextChangeGeneralOptions);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1274.Data08.x, SkinProperties.Style1274.Data08.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1274.Data38.x, SkinProperties.Style1274.Data38.y);
+	Button = new TTextButton(0, 0, "Graphics", 18, 19, TCallback(this, 401), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextChangeGraphicsOptions);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1274.Data10.x, SkinProperties.Style1274.Data10.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1274.Data40.x, SkinProperties.Style1274.Data40.y);
+	Button = new TTextButton(0, 0, "Console", 18, 19, TCallback(this, 402), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextCustomiseConsole);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1274.Data18.x, SkinProperties.Style1274.Data18.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1274.Data48.x, SkinProperties.Style1274.Data48.y);
+	Button = new TTextButton(0, 0, "Network", 18, 19, TCallback(this, 400), NULL);
+	Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextChangeNetworkSettings);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1274.Data20.x, SkinProperties.Style1274.Data20.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1274.Data50.x, SkinProperties.Style1274.Data50.y);
+	Button = new TTextButton(0, 0, "Hotkeys", 18, 19, TCallback(this, 403), NULL);
+	Label = new TLabel(SkinProperties.StyleB08.Data78, TextEditHotkeys);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1274.Data28.x, SkinProperties.Style1274.Data28.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1274.Data58.x, SkinProperties.Style1274.Data58.y);
+	Button = new TTextButton(0, 0, "Motd", 18, 19, TCallback(this, 406), NULL);
+	Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextShowMotD);
+	InsertChild(Button);
+	SetChildPosition(Button, SkinProperties.Style1274.Data30.x, SkinProperties.Style1274.Data30.y);
+	InsertChild(Label);
+	SetChildPosition(Label, SkinProperties.Style1274.Data60.x, SkinProperties.Style1274.Data60.y);
+	TSeparator *Separator = new TSeparator(true);
+	InsertChild(Separator);
+	SetChildArea(Separator, SkinProperties.Style1274.Data68.x, SkinProperties.Style1274.Data68.y,
+		SkinProperties.Style1274.Data68.Width, SkinProperties.Style1274.Data68.Height);
+	Arrange();
+	TEND
+}
+
+// 0x478e50, line 3380
+void TOptionsDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	TEND1(Key)
+}
+
+// 0x479010, lines 3422-3426. Closing saves the options; each button opens
+// its dialog and this one again after it (0x21).
+void TOptionsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	switch (Event) {
+	case 1:
+	case 2:
+		SavePreferences();
+		break;
+	case 400:
+		AddMessage(0x22, 0, 0);
+		AddMessage(0x21, 0, 0);
+		break;
+	case 401:
+		AddMessage(0x23, 0, 0);
+		AddMessage(0x21, 0, 0);
+		break;
+	case 402:
+		AddMessage(0x25, 0, 0);
+		AddMessage(0x21, 0, 0);
+		break;
+	case 403:
+		AddMessage(0x26, 0, 0);
+		AddMessage(0x21, 0, 0);
+		break;
+	case 404:
+		AddMessage(0x27, 0, 0);
+		AddMessage(0x21, 0, 0);
+		break;
+	case 406:
+		AddMessage(0x28, 0, 0);
+		AddMessage(0x21, 0, 0);
+		break;
+	default:
+		TERROR1("unknown event", Event);
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TGeneralOptionsDialog ------------------------------------------------------
+
+// 0x479310, line 3472
+TGeneralOptionsDialog::TGeneralOptionsDialog(void (*_OpenURL)(const char *URL))
+{
+	TBEGIN
+	OpenURL = _OpenURL;
+	TComponent::SetSize(SkinProperties.Data12EC, SkinProperties.Data12F0);
+	ClassicControl = new TCheckBox("Tibia Classic Control");
+	AutoChaseOff = new TCheckBox("Auto Chase Off");
+	ShowHints = new TCheckBox("Show Hints");
+	CreatureNames = new TCheckBox("Show Names of Creatures");
+	TextualEffects = new TCheckBox("Show Textual Effects");
+	InsertChild(ClassicControl);
+	InsertChild(AutoChaseOff);
+	InsertChild(ShowHints);
+	InsertChild(CreatureNames);
+	InsertChild(TextualEffects);
+	SetChildArea(ClassicControl, SkinProperties.Data12F4.x, SkinProperties.Data12F4.y, SkinProperties.Data12F4.Width,
+		SkinProperties.Data12F4.Height);
+	SetChildArea(AutoChaseOff, SkinProperties.Data1304.x, SkinProperties.Data1304.y, SkinProperties.Data1304.Width,
+		SkinProperties.Data1304.Height);
+	SetChildArea(ShowHints, SkinProperties.Data1314.x, SkinProperties.Data1314.y, SkinProperties.Data1314.Width,
+		SkinProperties.Data1314.Height);
+	SetChildArea(CreatureNames, SkinProperties.Data1334.x, SkinProperties.Data1334.y, SkinProperties.Data1334.Width,
+		SkinProperties.Data1334.Height);
+	SetChildArea(TextualEffects, SkinProperties.Data1324.x, SkinProperties.Data1324.y, SkinProperties.Data1324.Width,
+		SkinProperties.Data1324.Height);
+	ClassicControl->SetChecked(GetClassicControl());
+	AutoChaseOff->SetChecked(GetAutoChaseOff());
+	ShowHints->SetChecked(GetShowNewHints());
+	CreatureNames->SetChecked(GetCreatureInfo() != 0);
+	TextualEffects->SetChecked(GetTextualEffects());
+	Arrange();
+	TEND
+}
+
+// 0x479720, lines 3495-3498. The creature names are creature info 2 (names
+// and bars) or 0. Help (701) keeps the dialog open.
+void TGeneralOptionsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	switch (Event) {
+	case 1:
+		SetClassicControl(ClassicControl->IsChecked());
+		SetAutoChaseOff(AutoChaseOff->IsChecked());
+		SetShowNewHints(ShowHints->IsChecked());
+		SetCreatureInfo(CreatureNames->IsChecked() ? 2 : 0);
+		SetTextualEffects(TextualEffects->IsChecked());
+		SetActionState(0);
+		break;
+	case 2:
+		SetActionState(0);
+		break;
+	case 701:
+		OpenURL(TextOptionsURL);
+		break;
+	default:
+		TERROR1("unknown event", Event);
+	}
+	TEND1(Event)
+}
+
+// --- TGraphicsOptionsDialog ------------------------------------------------------
+
+// 0x479a30, line 3549. The selection is the configured fullscreen mode (by
+// size and depth), else the first.
+TGraphicsOptionsDialog::TGraphicsOptionsDialog(void (*_OpenURL)(const char *URL), void (*_SetDisplayMode)(int Mode),
+	TWindow *_Parent)
+{
+	TBEGIN
+	OpenURL = _OpenURL;
+	SetDisplayMode = _SetDisplayMode;
+	Parent = _Parent;
+	Fullscreen = new TCheckBox("Fullscreen");
+	ResolutionList = new TListBox(NoCallback, NoCallback);
+	AdvancedButton = new TTextButton(0, 0, "Advanced", 18, 19, TCallback(this, 407), NULL);
+	TLabel *ResolutionLabel = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextAvailableResolutions);
+	TLabel *AdvancedLabel = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextAdvancedSettings);
+	InsertChild(Fullscreen);
+	InsertChild(ResolutionList);
+	InsertChild(ResolutionLabel);
+	InsertChild(AdvancedLabel);
+	InsertChild(AdvancedButton);
+	TComponent::SetSize(SkinProperties.Data1344, SkinProperties.Data1348);
+	SetChildArea(Fullscreen, SkinProperties.Data134C.x, SkinProperties.Data134C.y, SkinProperties.Data134C.Width,
+		SkinProperties.Data134C.Height);
+	SetChildArea(ResolutionList, SkinProperties.Data135C.x, SkinProperties.Data135C.y,
+		SkinProperties.Data135C.Width, SkinProperties.Data135C.Height);
+	SetChildArea(ResolutionLabel, SkinProperties.Data136C.x, SkinProperties.Data136C.y,
+		SkinProperties.Data136C.Width, SkinProperties.Data136C.Height);
+	SetChildArea(AdvancedLabel, SkinProperties.Data1384.x, SkinProperties.Data1384.y, SkinProperties.Data1384.Width,
+		SkinProperties.Data1384.Height);
+	SetChildPosition(AdvancedButton, SkinProperties.Data137C.x, SkinProperties.Data137C.y);
+	Fullscreen->SetChecked(GetViewMode() == 2);
+	NumberOfModes = GetSurface()->GetFullscreenModes(&Modes);
+	TFullscreenMode *Current = GetFullscreenMode();
+	for (int i = 0; i < NumberOfModes; i++) {
+		char Frequency[16];
+		sprintf(Frequency, ", %d Hz", Modes[i].Frequency);
+		char Line[244];
+		sprintf(Line, "%d*%d, %d Bits%s", Modes[i].Width, Modes[i].Height, Modes[i].Depth,
+			Modes[i].Frequency != 0 ? Frequency : "");
+		ResolutionList->AddLine(Line);
+		if (i == 0 || (Current->Width == Modes[i].Width && Current->Height == Modes[i].Height
+				&& Current->Depth == Modes[i].Depth))
+			ResolutionList->SetSelection(i);
+	}
+	Arrange();
+	TEND
+}
+
+// 0x479f50, line 3573. Only the arrow keys up and down reach the list.
+void TGraphicsOptionsDialog::KeyPress(int Key)
+{
+	TBEGIN
+	switch (Key) {
+	case 13:
+		HandleEvent(1);
+		break;
+	case 27:
+		HandleEvent(2);
+		break;
+	case 0x10c:
+		ResolutionList->KeyPress(0x10c);
+		break;
+	case 0x10f:
+		ResolutionList->KeyPress(0x10f);
+		break;
+	}
+	TEND1(Key)
+}
+
+// 0x47a150, line 3598. OK stores the selected mode and switches the
+// display mode when the fullscreen setting changed (to fullscreen only with
+// a selected mode); the OpenGL engine (2) is resized for fullscreen.
+// Advanced (407) closes and opens the advanced options and this dialog
+// again; Help (701) keeps it open.
+void TGraphicsOptionsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		int ViewMode = GetViewMode();
+		bool FullscreenChecked = Fullscreen->IsChecked();
+		if (ResolutionList->GetSelection() != -1)
+			SetFullscreenMode(&Modes[ResolutionList->GetSelection()]);
+		if ((ViewMode == 2) != FullscreenChecked
+				&& (!Fullscreen->IsChecked() || ResolutionList->GetSelection() != -1))
+			SetDisplayMode(Fullscreen->IsChecked() + 1);
+		if (curEngine == 2 && Fullscreen->IsChecked())
+			Resize(0, 0);
+	} else if (Event == 407) {
+		AddMessageFirst(0x23, 0, 0);
+		AddMessageFirst(0x24, (INT_PTR)Parent, 0);
+	} else if (Event == 701) {
+		OpenURL(TextGraphicsOptionsURL);
+		return;
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TAdvancedGraphicsDialog ------------------------------------------------------
+
+// 0x47a3d0, line 3689. Fullscreen allows no engine switch; otherwise the
+// engines the surface reports are enabled and the current one selected
+// (curEngine 0 DirectX 5, 1 OpenGL, 2 DirectX 9).
+TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(void (*_OpenURL)(const char *URL), TComponent *_Receiver)
+{
+	TBEGIN
+	OpenURL = _OpenURL;
+	Receiver = _Receiver;
+	EngineGroup = new TRadioButtonGroup;
+	LightEffects = new TCheckBox("Show Light Effects");
+	NoStretching = new TCheckBox("Don't stretch/shrink the Map");
+	WindowsMousepointer = new TCheckBox("Windows Mouse Pointer");
+	Framerate = new THorizontalScrollBar(10, 201, 10, 11, 1, TCallback(this, 30));
+	TLabel *Label = new TLabel(SkinProperties.Style1394.Data08.x, SkinProperties.Style1394.Data08.y,
+		SkinProperties.StyleB08.Data78, TextSelectEngine);
+	DirectX5Button = new TTextButton(SkinProperties.Style1394.Data10.x, SkinProperties.Style1394.Data10.y,
+		"DirectX5", 16, 17, TCallback(_Receiver, 800), TextSwitchToDirectX5);
+	DirectX5Button->SetRadioButtonGroup(EngineGroup);
+	DirectX9Button = new TTextButton(SkinProperties.Style1394.Data18.x, SkinProperties.Style1394.Data18.y,
+		"DirectX9", 16, 17, TCallback(_Receiver, 801), TextSwitchToDirectX9);
+	DirectX9Button->SetRadioButtonGroup(EngineGroup);
+	OpenGLButton = new TTextButton(SkinProperties.Style1394.Data20.x, SkinProperties.Style1394.Data20.y,
+		"OpenGL", 16, 17, TCallback(_Receiver, 802), TextSwitchToOpenGL);
+	OpenGLButton->SetRadioButtonGroup(EngineGroup);
+	InsertChild(Label);
+	InsertChild(DirectX5Button);
+	InsertChild(DirectX9Button);
+	InsertChild(OpenGLButton);
+	InsertChild(LightEffects);
+	InsertChild(NoStretching);
+	InsertChild(WindowsMousepointer);
+	InsertChild(Framerate);
+	TComponent::SetSize(SkinProperties.Style1394.Data00, SkinProperties.Style1394.Data04);
+	SetChildArea(LightEffects, SkinProperties.Style1394.Data28.x, SkinProperties.Style1394.Data28.y,
+		SkinProperties.Style1394.Data28.Width, SkinProperties.Style1394.Data28.Height);
+	SetChildArea(NoStretching, SkinProperties.Style1394.Data38.x, SkinProperties.Style1394.Data38.y,
+		SkinProperties.Style1394.Data38.Width, SkinProperties.Style1394.Data38.Height);
+	SetChildArea(WindowsMousepointer, SkinProperties.Style1394.Data48.x, SkinProperties.Style1394.Data48.y,
+		SkinProperties.Style1394.Data48.Width, SkinProperties.Style1394.Data48.Height);
+	SetChildArea(Framerate, SkinProperties.Style1394.Data58.x, SkinProperties.Style1394.Data58.y,
+		SkinProperties.Style1394.Data58.Width, SkinProperties.Style1394.Data58.Height);
+	LightEffects->SetChecked(GetLightEffects());
+	if (!GetSurface()->CanShadeRectangles())
+		LightEffects->SetEnabled(false);
+	NoStretching->SetChecked(GetNoStretching());
+	WindowsMousepointer->SetChecked(GetWindowsMousepointer());
+	int FramerateLimit = GetConfineFramerate();
+	if (FramerateLimit < 10)
+		FramerateLimit = 201;
+	Framerate->Range->SetValue(FramerateLimit);
+	if (GetViewMode() == 2) {
+		DirectX5Button->SetEnabled(false);
+		DirectX9Button->SetEnabled(false);
+		OpenGLButton->SetEnabled(false);
+	} else {
+		if ((GetSurface()->GetAvailableEngines() & 2) == 0)
+			DirectX9Button->SetEnabled(false);
+		if ((GetSurface()->GetAvailableEngines() & 1) == 0)
+			OpenGLButton->SetEnabled(false);
+		switch (curEngine) {
+		case 0:
+			EngineGroup->Selected = DirectX5Button;
+			break;
+		case 1:
+			EngineGroup->Selected = OpenGLButton;
+			break;
+		case 2:
+			EngineGroup->Selected = DirectX9Button;
+			break;
+		}
+	}
+	Arrange();
+	TEND
+}
+
+// 0x47aa30, line 3723. Draws the frame rate texts over the children and
+// shows the current engine as selected.
+void TAdvancedGraphicsDialog::Draw(int Surface, int x, int y)
+{
+	TBEGIN
+	TWindow::Draw(Surface, x, y);
+	char Text[612];
+	if (Framerate->Range->Value < 201)
+		sprintf(Text, "Adjust framerate limit: %d", Framerate->Range->Value);
+	else
+		sprintf(Text, "Adjust framerate limit: max");
+	PrintFormattedText(Surface, SkinProperties.Style1394.Data68.x + x, SkinProperties.Style1394.Data68.y + y,
+		SkinProperties.StyleB08.Data78, Text);
+	double FPS = GetSurface()->GetFPS();
+	sprintf(Text, "Current framerate: %2.2f", FPS);
+	PrintFormattedText(Surface, SkinProperties.Style1394.Data70.x + x, SkinProperties.Style1394.Data70.y + y,
+		SkinProperties.StyleB08.Data78, Text);
+	switch (curEngine) {
+	case 0:
+		EngineGroup->Selected = DirectX5Button;
+		break;
+	case 1:
+		EngineGroup->Selected = OpenGLButton;
+		break;
+	case 2:
+		EngineGroup->Selected = DirectX9Button;
+		break;
+	}
+	TEND1(Surface)
+}
+
+// 0x47ad10, line 3751. The frame rate bar (30) sets the limit while it
+// moves; Cancel (2) restores the configured one. Turning on "don't stretch"
+// makes the receiver arrange the game window again (event 9).
+void TAdvancedGraphicsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		bool Rearrange = !GetNoStretching() && NoStretching->IsChecked();
+		SetNoStretching(NoStretching->IsChecked());
+		SetWindowsMousepointer(WindowsMousepointer->IsChecked());
+		SetLightEffects(LightEffects->IsChecked());
+		SetConfineFramerate(Framerate->Range->Value);
+		GetSurface()->SetFramerateLimit(GetConfineFramerate());
+		if (Rearrange)
+			Receiver->HandleEvent(9);
+	} else if (Event == 701) {
+		OpenURL(TextAdvancedGraphicsURL);
+		return;
+	} else if (Event == 30) {
+		GetSurface()->SetFramerateLimit(Framerate->Range->Value);
+		return;
+	} else if (Event == 2) {
+		GetSurface()->SetFramerateLimit(GetConfineFramerate());
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TConsoleOptionsDialog --------------------------------------------------------
+
+// 0x47afb0, line 3797
+TConsoleOptionsDialog::TConsoleOptionsDialog(void (*_OpenURL)(const char *URL))
+{
+	TBEGIN
+	OpenURL = _OpenURL;
+	TComponent::SetSize(SkinProperties.Data140C, SkinProperties.Data1410);
+	InfoMessages = new TCheckBox("Show Info Messages in Console");
+	EventMessages = new TCheckBox("Show Event Messages in Console");
+	StatusMessages = new TCheckBox("Show Status Messages in Console");
+	TimeStamps = new TCheckBox("Show Timestamp in Console");
+	PrivateMessages = new TCheckBox("Show Private Messages in Game Window");
+	InsertChild(InfoMessages);
+	InsertChild(EventMessages);
+	InsertChild(StatusMessages);
+	InsertChild(TimeStamps);
+	InsertChild(PrivateMessages);
+	SetChildArea(InfoMessages, SkinProperties.Data1414.x, SkinProperties.Data1414.y, SkinProperties.Data1414.Width,
+		SkinProperties.Data1414.Height);
+	SetChildArea(EventMessages, SkinProperties.Data1424.x, SkinProperties.Data1424.y, SkinProperties.Data1424.Width,
+		SkinProperties.Data1424.Height);
+	SetChildArea(StatusMessages, SkinProperties.Data1434.x, SkinProperties.Data1434.y,
+		SkinProperties.Data1434.Width, SkinProperties.Data1434.Height);
+	SetChildArea(TimeStamps, SkinProperties.Data1444.x, SkinProperties.Data1444.y, SkinProperties.Data1444.Width,
+		SkinProperties.Data1444.Height);
+	SetChildArea(PrivateMessages, SkinProperties.Data1454.x, SkinProperties.Data1454.y,
+		SkinProperties.Data1454.Width, SkinProperties.Data1454.Height);
+	InfoMessages->SetChecked(GetInfoMessages());
+	EventMessages->SetChecked(GetEventMessages());
+	StatusMessages->SetChecked(GetStatusMessages());
+	TimeStamps->SetChecked(GetTimeStamps());
+	PrivateMessages->SetChecked(GetPrivateMessages());
+	Arrange();
+	TEND
+}
+
+// 0x47b3c0, line 3819
+void TConsoleOptionsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		SetInfoMessages(InfoMessages->IsChecked());
+		SetEventMessages(EventMessages->IsChecked());
+		SetStatusMessages(StatusMessages->IsChecked());
+		SetTimeStamps(TimeStamps->IsChecked());
+		SetPrivateMessages(PrivateMessages->IsChecked());
+		SetConsoleChanged();
+	} else if (Event == 701) {
+		OpenURL(TextConsoleOptionsURL);
+		return;
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- TNetworkOptionsDialog ---------------------------------------------------------
+
+// 0x47b5e0, line 3843
+TNetworkOptionsDialog::TNetworkOptionsDialog(void (*_OpenURL)(const char *URL))
+{
+	TBEGIN
+	OpenURL = _OpenURL;
+	TComponent::SetSize(SkinProperties.Data1464, SkinProperties.Data1468);
+	TestServerLogin = new TCheckBox("Test Server Login");
+	InsertChild(TestServerLogin);
+	SetChildArea(TestServerLogin, SkinProperties.Data146C.x, SkinProperties.Data146C.y,
+		SkinProperties.Data146C.Width, SkinProperties.Data146C.Height);
+	TestServerLogin->SetChecked(GetTestServerLogin());
+	Arrange();
+	TEND
+}
+
+// 0x47b800, line 3860
+void TNetworkOptionsDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1) {
+		SetTestServerLogin(TestServerLogin->IsChecked());
+	} else if (Event == 701) {
+		OpenURL(TextNetworkOptionsURL);
+		return;
+	}
+	SetActionState(0);
+	TEND1(Event)
+}
+
+// --- THotkeyDialog -------------------------------------------------------------------
+
+// 0x47edf0, line 3906. Every hotkey gets a line (271 characters at most)
+// that UpdateLine fills.
+THotkeyDialog::THotkeyDialog(void (*_OpenURL)(const char *URL))
+{
+	TBEGIN
+	OpenURL = _OpenURL;
+	TComponent::SetSize(SkinProperties.Data147C, SkinProperties.Data1480);
+	TLabel *Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextAvailableHotkeys);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Data1494.x, SkinProperties.Data1494.y, SkinProperties.Data1494.Width,
+		SkinProperties.Data1494.Height);
+	Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextEditHotkeyText);
+	InsertChild(Label);
+	SetChildArea(Label, SkinProperties.Data14B4.x, SkinProperties.Data14B4.y, SkinProperties.Data14B4.Width,
+		SkinProperties.Data14B4.Height);
+	ListBox = new TFontListBox(TCallback(this, 11), NoCallback);
+	InsertChild(ListBox);
+	SetChildArea(ListBox, SkinProperties.Data1484.x, SkinProperties.Data1484.y, SkinProperties.Data1484.Width,
+		SkinProperties.Data1484.Height);
+	for (int i = 0; i < HOTKEYS; i++) {
+		strcpy(Texts[i], GetHotkey(i, &AutoSend[i]));
+		ListBox->AddLine(271);
+		UpdateLine(i);
+	}
+	TextEdit = new TEditLine(255, false);
+	InsertChild(TextEdit);
+	SetChildArea(TextEdit, SkinProperties.Data14A4.x, SkinProperties.Data14A4.y, SkinProperties.Data14A4.Width,
+		SkinProperties.Data14A4.Height);
+	AutoSendCheckBox = new TCheckBox("Send automatically");
+	InsertChild(AutoSendCheckBox);
+	SetChildArea(AutoSendCheckBox, SkinProperties.Data14C4.x, SkinProperties.Data14C4.y,
+		SkinProperties.Data14C4.Width, SkinProperties.Data14C4.Height);
+	Selected = -1;
+	Arrange();
+	TEND
+}
+
+// 0x47b9c0, lines 3914-3933. Hotkeys sent automatically are drawn in their
+// own colour.
+void THotkeyDialog::UpdateLine(int Number)
+{
+	TASSERT1(In(Number,0,HOTKEYS-1), Number);
+	TBEGIN
+	char Line[732];
+	if (Number < 12)
+		sprintf(Line, "F%d%s: %s", Number + 1, "", Texts[Number]);
+	if (Number >= 12 && Number <= 23)
+		sprintf(Line, "Shift+F%d%s: %s", Number - 11, "", Texts[Number]);
+	if (Number >= 24)
+		sprintf(Line, "Control+F%d%s: %s", Number - 23, "", Texts[Number]);
+	TFont Font = SkinProperties.Style9A0.Data0C;
+	if (AutoSend[Number])
+		Font.Color = SkinProperties.Data14D4;
+	ListBox->SetLine(Number, Line, Font);
+	TEND1(Number)
+}
+
+// 0x47bd40, line 3958. Every other key edits the selected hotkey's text; an
+// empty text cannot be sent automatically.
+void THotkeyDialog::KeyPress(int Key)
+{
+	TBEGIN
+	switch (Key) {
+	case 13:
+		HandleEvent(1);
+		break;
+	case 27:
+		HandleEvent(2);
+		break;
+	case 0x10c:
+		ListBox->KeyPress(0x10c);
+		break;
+	case 0x10f:
+		ListBox->KeyPress(0x10f);
+		break;
+	default:
+		if (Selected != -1) {
+			TextEdit->KeyPress(Key);
+			strcpy(Texts[Selected], TextEdit->Text);
+			AutoSendCheckBox->SetEnabled(strlen(Texts[Selected]) != 0);
+			if (strlen(Texts[Selected]) == 0) {
+				AutoSend[Selected] = false;
+				AutoSendCheckBox->SetChecked(false);
+			}
+			UpdateLine(Selected);
+		}
+		break;
+	}
+	TEND1(Key)
+}
+
+// 0x47c010, lines 3993-3996. OK stores the hotkeys and saves the options
+// unless the options dialog comes next (it saves them itself). A selection
+// (11) stores the check box of the hotkey left and edits the new one; no
+// selection (-1) reads before the texts (kept).
+void THotkeyDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	switch (Event) {
+	case 1:
+		if (Selected != -1)
+			AutoSend[Selected] = AutoSendCheckBox->IsChecked();
+		for (int i = 0; i < HOTKEYS; i++)
+			SetHotkey(i, Texts[i], AutoSend[i]);
+		SetActionState(0);
+		if (PeekMessageType() != 0x21)
+			SavePreferences();
+		break;
+	case 2:
+		SetActionState(0);
+		break;
+	case 11:
+		if (Selected != -1)
+			AutoSend[Selected] = AutoSendCheckBox->IsChecked();
+		Selected = ListBox->GetSelection();
+		TextEdit->SetText(Texts[Selected]);
+		TextEdit->SetActive(true);
+		AutoSendCheckBox->SetChecked(AutoSend[Selected]);
+		AutoSendCheckBox->SetEnabled(strlen(Texts[Selected]) != 0);
+		if (strlen(Texts[Selected]) == 0)
+			AutoSendCheckBox->SetChecked(false);
+		break;
+	default:
+		TERROR1("unknown event", Event);
+	}
+	TEND1(Event)
+}
+
+// 0x47c400, line 4010. A click may have changed the check box.
+bool THotkeyDialog::LeftButtonUp(int x, int y, int Flags)
+{
+	TBEGIN
+	bool Result = TWindow::LeftButtonUp(x, y, Flags);
+	if (Selected != -1) {
+		AutoSend[Selected] = AutoSendCheckBox->IsChecked();
+		UpdateLine(Selected);
+	}
+	return Result;
+	TEND2(x, y)
+}
+
+// --- TErrorReportDialog ---------------------------------------------------------------
+
+// 0x47f290, line 4053. The reports are shown one after another (title,
+// date, text) in a read-only text.
+TErrorReportDialog::TErrorReportDialog()
+{
+	TBEGIN
+	TComponent::SetSize(SkinProperties.Data14E0, SkinProperties.Data14E4);
+	TLabel *CrashLabel = new TLabel(SkinProperties.StyleB08.Data78, TextClientCrashed);
+	TEditText *ReportText = new TEditText(4096, true);
+	TLabel *CommentLabel = new TLabel(SkinProperties.StyleB08.Data78, TextTellUsWhatYouDid);
+	CommentEdit = new TEditLine(511, false);
+	InsertChild(CrashLabel);
+	InsertChild(ReportText);
+	InsertChild(CommentLabel);
+	InsertChild(CommentEdit);
+	SetChildArea(CrashLabel, SkinProperties.Data14E8.x, SkinProperties.Data14E8.y, SkinProperties.Data14E8.Width,
+		SkinProperties.Data14E8.Height);
+	SetChildArea(ReportText, SkinProperties.Data14F8.x, SkinProperties.Data14F8.y, SkinProperties.Data14F8.Width,
+		SkinProperties.Data14F8.Height);
+	SetChildArea(CommentLabel, SkinProperties.Data1508.x, SkinProperties.Data1508.y, SkinProperties.Data1508.Width,
+		SkinProperties.Data1508.Height);
+	SetChildArea(CommentEdit, SkinProperties.Data1518.x, SkinProperties.Data1518.y, SkinProperties.Data1518.Width,
+		SkinProperties.Data1518.Height);
+	int Reports = GetNumberOfErrorReports();
+	std::stringstream Text;
+	for (int i = 0; i < Reports; i++) {
+		if (i != 0)
+			Text << std::endl << std::endl;
+		Text << GetErrorReportTitle(i) << std::endl << GetErrorReportDate(i) << std::endl << GetErrorReportText(i);
+	}
+	ReportText->SetText(Text.str().c_str(), false);
+	CommentEdit->SetActive(true);
+	Arrange();
+	TEND
+}
+
+// 0x47c5e0, line 4067
+void TErrorReportDialog::KeyPress(int Key)
+{
+	TBEGIN
+	if (Key == 13)
+		HandleEvent(1);
+	else if (Key == 27)
+		HandleEvent(2);
+	else
+		CommentEdit->KeyPress(Key);
+	TEND1(Key)
+}
+
+// 0x47c7b0, line 4084. Send (1) adds the comment (Control.cpp sends the
+// reports); Cancel (2) drops them and their file.
+void TErrorReportDialog::HandleEvent(int Event)
+{
+	TBEGIN
+	if (Event == 1)
+		SetErrorReportComment(CommentEdit->Text);
+	if (Event == 2) {
+		ClearErrorReports();
+		DeleteErrorFile();
+	}
+	SetActionState(0);
+	TEND1(Event)
+}

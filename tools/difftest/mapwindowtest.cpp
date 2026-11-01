@@ -244,9 +244,9 @@ static int TradeInfo;
 static int __cdecl FakeActionState() { return ActionState; }
 static int __cdecl FakeActionNumber() { return ActionNumber; }
 static bool __cdecl FakeBlinkState() { return Blink; }
-static void __cdecl FakeSetDragObject(TObject Obj, int Index, int x, int y, int z) { Logf("SD%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data1, Obj.Data2, Index, x, y, z); }
-static void __cdecl FakeSetTradeObject(TObject Obj, int Index, int x, int y, int z) { Logf("ST%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data1, Obj.Data2, Index, x, y, z); }
-static void __cdecl FakeSetUseObject(TObject Obj, int Index, int x, int y, int z) { Logf("SU%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data1, Obj.Data2, Index, x, y, z); }
+static void __cdecl FakeSetDragObject(TObject Obj, int Index, int x, int y, int z) { Logf("SD%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data, Obj.Data2, Index, x, y, z); }
+static void __cdecl FakeSetTradeObject(TObject Obj, int Index, int x, int y, int z) { Logf("ST%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data, Obj.Data2, Index, x, y, z); }
+static void __cdecl FakeSetUseObject(TObject Obj, int Index, int x, int y, int z) { Logf("SU%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data, Obj.Data2, Index, x, y, z); }
 static void __cdecl FakeSetDragTarget(int x, int y, int z) { Logf("SG%d,%d,%d;", x, y, z); }
 static void __cdecl FakeSetTradeInfo(int Info) { Logf("SI%d;", Info); }
 static int __cdecl FakeGetTradeInfo() { return TradeInfo; }
@@ -692,7 +692,7 @@ static void RandomWorld()
 		if (F.Count < 6) {
 			TObject Obj = {CREATURE, (int)World[i].CreatureID, 0};
 			if (Random() % 6 == 0) // a creature that is not in the table
-				Obj.Data1 = 0x7000000 + i;
+				Obj.Data = 0x7000000 + i;
 			F.Objects[F.Count++] = Obj;
 		}
 	}
