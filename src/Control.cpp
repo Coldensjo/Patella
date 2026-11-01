@@ -180,14 +180,14 @@ void Redraw(bool Force)
 	}
 	MainWindow->Draw(1, 0, 0);
 	if (ModalWindow != NULL)
-		ModalWindow->Draw(1, ModalWindow->X, ModalWindow->Y);
+		ModalWindow->Draw(1, ModalWindow->OffsetX, ModalWindow->OffsetY);
 	UpdateBlinkState();
 	const char *Tooltip = GetMouseOverText();
 	if (Tooltip != NULL) {
 		int x, y;
 		GetMouseOverTextPosition(&x, &y);
-		int Width = FUN_00494570(GUIStyle.TooltipFont.FontNumber, Tooltip) + GUIStyle.TooltipBorder * 2;
-		int Height = FUN_00491880(GUIStyle.TooltipFont.FontNumber, Tooltip) + GUIStyle.TooltipBorder * 2;
+		int Width = FUN_00494570(SkinProperties.TooltipFont.FontNumber, Tooltip) + SkinProperties.TooltipBorder * 2;
+		int Height = FUN_00491880(SkinProperties.TooltipFont.FontNumber, Tooltip) + SkinProperties.TooltipBorder * 2;
 		y -= Height;
 		int MaxX = GetWindowWidth() - Width - 1;
 		if (MaxX >= 1) {
@@ -214,9 +214,9 @@ void Redraw(bool Force)
 				y = 1;
 		}
 		TRect Rect = {x, y, Width, Height};
-		GetSurface()->FillRectangle(1, Rect, GUIStyle.TooltipBackground);
-		GetSurface()->DrawFrame(1, Rect, 1, GUIStyle.TooltipFrame);
-		FUN_00493f60(1, GUIStyle.TooltipBorder + x, GUIStyle.TooltipBorder + y, GUIStyle.TooltipFont,
+		GetSurface()->FillRectangle(1, Rect, SkinProperties.TooltipBackground);
+		GetSurface()->DrawFrame(1, Rect, 1, SkinProperties.TooltipFrame);
+		FUN_00493f60(1, SkinProperties.TooltipBorder + x, SkinProperties.TooltipBorder + y, SkinProperties.TooltipFont,
 			Tooltip);
 	}
 	if (ShowFPS) {
@@ -248,28 +248,28 @@ void Redraw(bool Force)
 			int y = GetMouseY();
 			switch (Cursor) {
 			case 1:
-				x -= GUIStyle.CursorHotspot1.x;
-				y -= GUIStyle.CursorHotspot1.y;
+				x -= SkinProperties.CursorHotspot1.x;
+				y -= SkinProperties.CursorHotspot1.y;
 				break;
 			case 2:
-				x -= GUIStyle.CursorHotspot2.x;
-				y -= GUIStyle.CursorHotspot2.y;
+				x -= SkinProperties.CursorHotspot2.x;
+				y -= SkinProperties.CursorHotspot2.y;
 				break;
 			case 3:
-				x -= GUIStyle.CursorHotspot3.x;
-				y -= GUIStyle.CursorHotspot3.y;
+				x -= SkinProperties.CursorHotspot3.x;
+				y -= SkinProperties.CursorHotspot3.y;
 				break;
 			case 4:
-				x -= GUIStyle.CursorHotspot4.x;
-				y -= GUIStyle.CursorHotspot4.y;
+				x -= SkinProperties.CursorHotspot4.x;
+				y -= SkinProperties.CursorHotspot4.y;
 				break;
 			case 5:
-				x -= GUIStyle.CursorHotspot5.x;
-				y -= GUIStyle.CursorHotspot5.y;
+				x -= SkinProperties.CursorHotspot5.x;
+				y -= SkinProperties.CursorHotspot5.y;
 				break;
 			case 6:
-				x -= GUIStyle.CursorHotspot6.x;
-				y -= GUIStyle.CursorHotspot6.y;
+				x -= SkinProperties.CursorHotspot6.x;
+				y -= SkinProperties.CursorHotspot6.y;
 				break;
 			}
 			TSkin *Picture = &Skins[Cursor];
@@ -348,7 +348,7 @@ void MouseMove(int x, int y)
 	case 10:
 	case 11:
 		TASSERT1(ModalWindow!=NULL, GetActionState());
-		ModalWindow->MouseMove(x - ModalWindow->X, y - ModalWindow->Y);
+		ModalWindow->MouseMove(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY);
 		break;
 	case 9:
 		SetHelpPosition(0, 0);
@@ -386,7 +386,7 @@ void LeftButtonDown(int x, int y, int Flags)
 	case 10:
 	case 11:
 		TASSERT(ModalWindow!=NULL);
-		ModalWindow->LeftButtonDown(x - ModalWindow->X, y - ModalWindow->Y, Flags);
+		ModalWindow->LeftButtonDown(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		break;
 	}
 	SetPendingAction(6, GetActionNumber());
@@ -402,7 +402,7 @@ void LeftButtonUp(int x, int y, int Flags)
 	TBEGIN
 	switch (GetActionState()) {
 	case 0:
-		if (MainWindow->IsDragging() != 0) {
+		if (MainWindow->GetCapture() != NULL) {
 			MainWindow->LeftButtonUp(x, y, Flags);
 			MainWindow->StopDragging();
 		}
@@ -424,7 +424,7 @@ void LeftButtonUp(int x, int y, int Flags)
 	case 10:
 	case 11:
 		TASSERT(ModalWindow!=NULL);
-		ModalWindow->LeftButtonUp(x - ModalWindow->X, y - ModalWindow->Y, Flags);
+		ModalWindow->LeftButtonUp(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		if (GetActionState() == 0 || GetActionState() == 7 || GetActionState() == 8) {
 			delete ModalWindow;
 			ModalWindow = NULL;
@@ -460,7 +460,7 @@ void LeftButtonDoubleClick(int x, int y, int Flags)
 	case 10:
 	case 11:
 		TASSERT(ModalWindow!=NULL);
-		ModalWindow->LeftButtonDoubleClick(x - ModalWindow->X, y - ModalWindow->Y, Flags);
+		ModalWindow->LeftButtonDoubleClick(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		if (GetActionState() == 0 || GetActionState() == 7 || GetActionState() == 8) {
 			delete ModalWindow;
 			ModalWindow = NULL;
@@ -500,7 +500,7 @@ void RightButtonUp(int x, int y, int Flags)
 	TBEGIN
 	switch (GetActionState()) {
 	case 0:
-		if (MainWindow->IsDragging() != 0)
+		if (MainWindow->GetCapture() != NULL)
 			MainWindow->StopDragging();
 		break;
 	case 2:
@@ -517,7 +517,7 @@ void RightButtonUp(int x, int y, int Flags)
 	case 10:
 	case 11:
 		TASSERT(ModalWindow!=NULL);
-		ModalWindow->RightButtonUp(x - ModalWindow->X, y - ModalWindow->Y, Flags);
+		ModalWindow->RightButtonUp(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		if (GetActionState() == 0) {
 			delete ModalWindow;
 			ModalWindow = NULL;
@@ -549,7 +549,7 @@ void MouseWheel(int x, int y, int Direction)
 	case 10:
 	case 11:
 		TASSERT(ModalWindow!=NULL);
-		ModalWindow->MouseWheel(x - ModalWindow->X, y - ModalWindow->Y, Direction);
+		ModalWindow->MouseWheel(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Direction);
 		break;
 	default:
 		MainWindow->MouseWheel(x, y, Direction);
@@ -577,7 +577,7 @@ void KeyPress(int Key)
 			ModalWindow = NULL;
 			MainWindow->FUN_004ad650(1);
 		}
-	} else if (!FUN_004a1480(Key)) {
+	} else if (!CheckHotkey(Key)) {
 		MainWindow->KeyPress(Key);
 	}
 	LastMouseMove = 0;
@@ -813,7 +813,7 @@ void TimerEvent()
 	IncrementActionNumber();
 	if (LastMouseMove != 0 && LastMouseMove == GetActionNumber() - 10) {
 		if (ModalWindow != NULL)
-			ModalWindow->MouseHover(GetMouseX() - ModalWindow->X, GetMouseY() - ModalWindow->Y);
+			ModalWindow->MouseHover(GetMouseX() - ModalWindow->OffsetX, GetMouseY() - ModalWindow->OffsetY);
 		else
 			MainWindow->MouseHover(GetMouseX(), GetMouseY());
 		if (GetMouseOverText() != NULL)
@@ -829,13 +829,13 @@ void TimerEvent()
 			return;
 		if (GetPendingActionState() == 6) {
 			if (ModalWindow != NULL)
-				ModalWindow->MouseWheel(GetMouseX() - ModalWindow->X, GetMouseY() - ModalWindow->Y, 6);
+				ModalWindow->MouseWheel(GetMouseX() - ModalWindow->OffsetX, GetMouseY() - ModalWindow->OffsetY, 6);
 			else
 				MainWindow->MouseWheel(GetMouseX(), GetMouseY(), 6);
 		}
 	}
 	CheckConnectionTimeout();
-	FUN_004a27c0();
+	UpdateTimers();
 	UpdateSkulls();
 	TEND
 }
@@ -858,7 +858,7 @@ void ProcessEvents()
 		MainWindow->FUN_004ad650(1);
 		Redraw(false);
 	}
-	while (MainWindow->IsDragging() == 0 && ModalWindow == NULL && PeekMessageType() != 0) {
+	while (MainWindow->GetCapture() == NULL && ModalWindow == NULL && PeekMessageType() != 0) {
 		INT_PTR Param1, Param2;
 		FetchMessage(&Type, &Param1, &Param2);
 		switch (Type) {
@@ -1192,10 +1192,10 @@ void InitControl(bool Gamemaster)
 		InitTalk();
 		FUN_00494af0(0xa00000);
 		InitSkins();
-		FUN_00498160();
+		InitSkinProperties();
 		InitNetwork(ConnectionEstablished, ReceivePackets, ConnectionClosed);
 		InitCommunication();
-		FUN_00496150();
+		InitHotkeys();
 	} catch (PROGRAM_ERROR Error) {
 		try {
 			ExitControl();
@@ -1208,13 +1208,15 @@ void InitControl(bool Gamemaster)
 
 // 0x448e30, line 1661. Called from the main frame's destructor. GetSurface
 // creates a surface first if there is none, so one may be created only to be
-// deleted.
+// deleted. The five empty Exit functions are folded into one copy
+// (0x496160); which module each belongs to follows InitControl's order in
+// reverse (names ours).
 void ExitControl()
 {
 	TBEGIN
 	FUN_004ac090();
-	FUN_00496160();
-	FUN_00496160();
+	ExitHotkeys();
+	ExitCommunication();
 	ExitNetwork();
 	ExitSkins();
 	FUN_0048b4a0();
@@ -1222,10 +1224,10 @@ void ExitControl()
 	SurfaceExitInstance();
 	ExitPreferences();
 	ExitTalk();
-	FUN_00496160();
+	ExitHelp();
 	ExitStatus();
-	FUN_00496160();
-	FUN_00496160();
+	ExitCreatures();
+	ExitInventory();
 	FUN_004b5760();
 	ExitObjects();
 	ExitSysinc();

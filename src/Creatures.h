@@ -172,4 +172,5 @@ const char *GetBuddyListDescription(int Position); // 0x4504a0, lines 1334-1338
 bool GetBuddyListNotify(int Position);            // 0x450740, lines 1346-1350
 
 void InitCreatures();                             // 0x452190, line 1366
+void ExitCreatures();                             // empty, folded into 0x496160
 void ResetCreatures();                            // 0x4509e0, line 1414

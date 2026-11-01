@@ -10,6 +10,7 @@
 extern bool OutfitRequested; // 0x5c4358; also reset by Control.cpp
 
 void InitCommunication();
+void ExitCommunication(); // empty, folded into 0x496160
 void SendLogin(uint32 AccountID, const char *Password);
 void SendGameLogin(uint32 AccountID, const char *Name, const char *Password);
 void SendLogout();

@@ -14,6 +14,7 @@ void GetHelpArea(int *x, int *y, int *Width, int *Height);
 int GetHelpHandle();
 bool GetHelpHandleChanged();
 void InitHelp();
+void ExitHelp(); // empty, folded into 0x496160
 int GetEventHelp();
 int PopEventHelp();
 const char *GetHelpText(int Handle);

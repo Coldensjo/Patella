@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 519 | 71142 |
-| header | 19 | 12721 |
-| gap | 192 | 47709 |
+| range | 557 | 79561 |
+| header | 18 | 11957 |
+| gap | 155 | 40054 |
 
 ## Source files
 
@@ -36,11 +36,11 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Control.cpp | 27 | 94 | 22840 | `0x445900` | `0x44b699` | 93-1661 |
 | Creatures.cpp | 96 | 87 | 27135 | `0x44b740` | `0x45243e` | 108-1414 |
 | DialogElements.cpp | 190 | 384 | 97128 | `0x4524e0` | `0x46b6d7` | 42-4301 |
-| Container.h | 7 | 0 | 3653 | `0x452ac0` | `0x4fd6e0` | 355-370 |
+| Container.h | 9 | 0 | 5069 | `0x452ac0` | `0x4fd6e0` | 355-370 |
 | Dialogs.cpp | 139 | 408 | 101452 | `0x46c3e0` | `0x48540d` | 48-4084 |
 | DialogWindow.cpp | 39 | 119 | 22972 | `0x485843` | `0x48b287` | 63-1127 |
 | graphics.cpp | 53 | 106 | 40314 | `0x48b550` | `0x4953c3` | 130-1539 |
-| GUI.cpp | 51 | 114 | 42555 | `0x497a00` | `0x4a291e` | 42-2004 |
+| GUI.cpp | 87 | 114 | 49558 | `0x495480` | `0x4a291e` | 42-2004 |
 | Help.cpp | 18 | 0 | 5560 | `0x4a29e0` | `0x4a4440` | 354-691 |
 | Inventory.cpp | 31 | 12 | 15494 | `0x4a4460` | `0x4a7f00` | 55-400 |
 | MainFrm.cpp | 36 | 91 | 15505 | `0x4a8210` | `0x4abf66` | 112-871 |
@@ -80,7 +80,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | DialogElements.cpp / Dialogs.cpp | 30 | 2206 | `0x46b790`-`0x46c0ce` |
 | Dialogs.cpp / DialogWindow.cpp | 7 | 811 | `0x4854c0`-`0x485843` |
 | DialogWindow.cpp / graphics.cpp | 5 | 360 | `0x48b380`-`0x48b547` |
-| graphics.cpp / GUI.cpp | 37 | 7655 | `0x495480`-`0x4973e5` |
 | MainWindow.cpp / Map.cpp | 10 | 581 | `0x4b08a0`-`0x4b0b2b` |
 | Map.cpp / MapWindow.cpp | 6 | 616 | `0x4bf860`-`0x4bfb0c` |
 | MapWindow.cpp / Network.cpp | 8 | 502 | `0x4ca0e0`-`0x4ca2f5` |
@@ -91,7 +90,7 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 | Header | Functions |
 |---|---:|
-| Container.h | 14 |
+| Container.h | 13 |
 | GUI.h | 1 |
 | ConsoleWindow.h | 1 |
 | Utils.h | 1 |

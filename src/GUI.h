@@ -1,0 +1,946 @@
+// GUI.h: the window system's base classes, timers, hotkeys and the skin
+// properties (c:\mud\tibiaplayer\GUI.h; GUI.cpp is .\GUI.cpp).
+//
+// Names from the binary: SkinProperties and the member paths in its
+// assertions (PlayerStates.NumberOfIcons, BuddylistWindow.Logo,
+// Buttons.Texture, CheckBox.Item, StatusWindow.HitpointsBar/ManaBar),
+// DrawingList (and DrawingListLength, skin, srcx, srcy from an error text),
+// Parent, FirstChild, Capture, getWidth, getHeight, OffsetX/OffsetY (from
+// the parameters _OffsetX/_OffsetY), Width, Height and the parameter names.
+// The class names and the other member names are ours; see
+// notes/decisions.md "GUI.cpp".
+
+#pragma once
+
+#include "common.h"
+#include "Container.h"
+
+// --- Graphics types -----------------------------------------------------
+// They belong to graphics.cpp's header, which is not reconstructed yet; they
+// are here because the window classes and SkinProperties need them complete.
+// The binary's default constructors zero them (SkinProperties' constructor
+// 0x496800 zeroes every such member).
+
+struct TRect {     // passed by value (16 bytes)
+	constexpr TRect() : x(0), y(0), Width(0), Height(0) {}
+	constexpr TRect(int x, int y, int Width, int Height) : x(x), y(y), Width(Width), Height(Height) {}
+	int x, y, Width, Height;
+};
+
+struct TRGBColor { // passed by value (12 bytes)
+	constexpr TRGBColor() : R(0), G(0), B(0) {}
+	constexpr TRGBColor(int R, int G, int B) : R(R), G(G), B(B) {}
+	int R, G, B;
+};
+
+// The colour TFont's default constructor reads from memory. Every object
+// that constructs a TFont has its own copy (GUI.obj 0x5c1954, DialogElements
+// 0x5c1230, an earlier object 0x5c066c), so it is a constant defined in a
+// header (internal linkage). The name is ours.
+const TRGBColor DefaultFontColor(224, 224, 224);
+
+struct TFont {     // passed by value (20 bytes)
+	TFont() : FontNumber(4), Color(DefaultFontColor), Unknown10(0) {}
+	int FontNumber;
+	TRGBColor Color;
+	int Unknown10;
+};
+
+void DrawSkin(int Surface, int x, int y, int width, int height, int skin, int srcx, int srcy); // 0x497a00
+void DrawSkinClipped(int Surface, int x, int y, int width, int height, int skin, int ClipX, int ClipY,
+	int ClipWidth, int ClipHeight, int skinoffsetx, int skinoffsety);               // 0x4a1690
+
+// --- Window classes -------------------------------------------------------
+
+class TComponent;
+
+// A receiver and an event number (8 bytes, passed by value): Send() calls
+// Receiver->HandleEvent(Event). Buttons, timers and hotkeys keep one.
+struct TCallback {
+	TCallback() : Receiver(NULL), Event(0) {} // inlined (vector<THotkey>, TTimer)
+	TCallback(TComponent *Receiver, int Event); // 0x496130
+	void Send();                                // 0x4a0f00, line 1931
+	TComponent *Receiver; // +0x00
+	int Event;            // +0x04
+};
+
+// One entry of a component's drawing list (0x1c bytes): a skin drawn at an
+// offset in the component, tiled to width x height when they are not 0.
+struct TDrawing {
+	int skin;   // +0x00
+	int x;      // +0x04
+	int y;      // +0x08
+	int width;  // +0x0c
+	int height; // +0x10
+	int srcx;   // +0x14
+	int srcy;   // +0x18
+};
+
+// The abstract base class of every window element (vtable 0x5644a0). Slots
+// with _purecall in the binary are pure; the child functions throw "not
+// possible" (only TWindow has children).
+class TComponent {
+public:
+	// Inlined into the constructors of TWindow and TElement.
+	TComponent() : DrawingList(NULL), DrawingListLength(0), Parent(NULL), Next(NULL), OffsetX(0),
+		OffsetY(0), Width(0), Height(0) {}
+	virtual ~TComponent();                                          // +0x00, 0x496040 (deleting 0x496520)
+	virtual void InsertChild(TComponent *Child);                    // +0x04, 0x49b450, line 993
+	virtual void AppendChild(TComponent *Child);                    // +0x08, 0x49b570, line 1001
+	virtual void RemoveChild(TComponent *Child);                    // +0x0c, 0x49b690, line 1009
+	virtual void DeleteChild(TComponent *Child);                    // +0x10, 0x49b7b0, line 1017
+	virtual void InsertChildAfter(TComponent *Previous, TComponent *Child); // +0x14, 0x49b8d0, line 1025
+	virtual void SwapChildren(TComponent *Child1, TComponent *Child2); // +0x18, 0x49b9f0, line 1041
+	virtual bool IsChild(TComponent *Child);                        // +0x1c, 0x49bb10, line 1049
+	// GUI.h lines 681 and 682 (0x417de0, 0x417f00, kept in an earlier object).
+	virtual TComponent *GetFirstChild() { TERROR("not possible"); }  // +0x20
+	virtual TComponent *GetLastChild() { TERROR("not possible"); }   // +0x24
+	virtual TComponent *GetNext() { return Next; }                   // +0x28, 0x417680
+	virtual TComponent *GetPrevious();                               // +0x2c, 0x49bc30, lines 1057-1066
+	virtual TComponent *GetParent() { return Parent; }               // +0x30, 0x417690
+	virtual void SetSize(int _Width, int _Height);                   // +0x34, 0x49bee0, lines 1092-1093
+	virtual void SetPosition(int _OffsetX, int _OffsetY);            // +0x38, 0x496060
+	virtual int GetMinimumWidth() { return 0; }                      // +0x3c, 0x417a20
+	virtual int GetMinimumHeight() { return 0; }                     // +0x40, 0x417a20
+	virtual void Draw(int Surface, int x, int y);                    // +0x44, 0x4a1fb0, lines 1118-1163
+	virtual void Arrange() {}                                        // +0x48, empty (0x496160); rebuilds the drawing list in subclasses
+	virtual bool MouseMove(int x, int y) = 0;                        // +0x4c
+	virtual bool LeftButtonDown(int x, int y, int Flags) = 0;        // +0x50
+	virtual bool LeftButtonUp(int x, int y, int Flags) = 0;          // +0x54, Flags 0x200: both buttons
+	virtual bool LeftButtonDoubleClick(int x, int y, int Flags) = 0; // +0x58
+	virtual bool RightButtonUp(int x, int y, int Flags) = 0;         // +0x5c
+	virtual bool MouseWheel(int x, int y, int Direction) = 0;        // +0x60, 1 up, 2 down, 6 left button held
+	virtual void MouseHover(int x, int y) = 0;                       // +0x64
+	virtual bool HelpMouseMove(int x, int y) = 0;                    // +0x68, action state 9
+	virtual void KeyPress(int Key) {}                                // +0x6c, empty (0x4eac00)
+	virtual void HandleEvent(int Event) {}                           // +0x70, empty (0x4eac00); see TCallback
+	virtual void PositionChanged() {}                                // +0x74, empty (0x496160); the parent moved
+	virtual void SetCapture(TComponent *Component) = 0;              // +0x78
+	virtual void ReleaseCapture(TComponent *Component) = 0;          // +0x7c
+	virtual void StopDragging() = 0;                                 // +0x80
+
+	int getWidth() { return Width; }   // "Child->getWidth()" (line 1725), inlined
+	int getHeight() { return Height; } // "Child->getHeight()" (line 1726), inlined
+
+	TDrawing *DrawingList;   // +0x04, allocated by the subclasses
+	int DrawingListLength;   // +0x08
+	TComponent *Parent;      // +0x0c
+	TComponent *Next;        // +0x10, the next child of Parent
+	int OffsetX;             // +0x14, relative to Parent
+	int OffsetY;             // +0x18
+	int Width;               // +0x1c
+	int Height;              // +0x20
+};
+
+// A component without children (vtable 0x5645c8, 0x24 bytes). It takes
+// every mouse event; a double click is a second button press. The inline
+// slots are kept in earlier objects (ConsoleWindow.obj and the
+// Communication/ConsoleWindow gap).
+class TElement : public TComponent {
+public:
+	TElement();                                                            // 0x496100
+	// The destructor is the implicit one (deleting destructor 0x496550).
+	bool MouseMove(int x, int y) { return true; }                          // +0x4c, 0x4259f0
+	bool LeftButtonDown(int x, int y, int Flags) { return true; }          // +0x50, 0x425a00
+	bool LeftButtonUp(int x, int y, int Flags) { return true; }            // +0x54, 0x425a00
+	bool LeftButtonDoubleClick(int x, int y, int Flags) { return LeftButtonDown(x, y, Flags); } // +0x58, 0x41acb0
+	bool RightButtonUp(int x, int y, int Flags) { return true; }           // +0x5c, 0x425a00
+	bool MouseWheel(int x, int y, int Direction) { return true; }          // +0x60, 0x425a00
+	void MouseHover(int x, int y) {}                                       // +0x64, 0x417a30
+	bool HelpMouseMove(int x, int y);                                      // +0x68, 0x417a40 (inline, below)
+	void SetCapture(TComponent *Component);                                // +0x78, 0x4a0bc0, line 1893
+	void ReleaseCapture(TComponent *Component);                            // +0x7c, 0x4a0d60, line 1905
+	void StopDragging() {}                                                 // +0x80, empty (0x496160)
+};
+
+// A component with children (vtable 0x564528, 0x2c bytes); the base of the
+// main window, the dialogs and the context menus. Children are a singly
+// linked list through Next; Capture is the child that gets every mouse
+// event while it is set (a drag).
+class TWindow : public TComponent {
+public:
+	TWindow();                                                     // 0x496080
+	~TWindow();                                                    // +0x00, 0x4a2590 (deleting 0x4a29e0)
+	void InsertChild(TComponent *Child);                           // +0x04, 0x49c190, lines 1193-1194
+	void AppendChild(TComponent *Child);                           // +0x08, 0x49c430, lines 1206-1207
+	void RemoveChild(TComponent *Child);                           // +0x0c, 0x49c890, lines 1239-1260
+	void DeleteChild(TComponent *Child);                           // +0x10, 0x49c6f0, line 1231
+	void InsertChildAfter(TComponent *Previous, TComponent *Child); // +0x14, 0x49cd00, lines 1269-1287
+	void SwapChildren(TComponent *Child1, TComponent *Child2);     // +0x18, 0x49d200, lines 1295-1347
+	bool IsChild(TComponent *Child);                               // +0x1c, 0x4960b0
+	TComponent *GetFirstChild() { return FirstChild; }             // +0x20, 0x4176a0
+	TComponent *GetLastChild();                                    // +0x24, 0x4960e0
+	void SetPosition(int _OffsetX, int _OffsetY);                  // +0x38, 0x49da60, line 1389
+	void Draw(int Surface, int x, int y);                          // +0x44, 0x4a2600, line 1408
+	void Arrange();                                                // +0x48, 0x49dc20, line 1424
+	bool MouseMove(int x, int y);                                  // +0x4c, 0x49ddc0, line 1448
+	bool LeftButtonDown(int x, int y, int Flags);                  // +0x50, 0x49dff0, line 1472
+	bool LeftButtonUp(int x, int y, int Flags);                    // +0x54, 0x49e230, line 1496
+	bool LeftButtonDoubleClick(int x, int y, int Flags);           // +0x58, 0x49e470, line 1520
+	bool RightButtonUp(int x, int y, int Flags);                   // +0x5c, 0x49e6b0, line 1544
+	bool MouseWheel(int x, int y, int Direction);                  // +0x60, 0x49e8f0, line 1568
+	void MouseHover(int x, int y);                                 // +0x64, 0x49eb30, line 1588
+	bool HelpMouseMove(int x, int y);                              // +0x68, 0x49ed10, line 1611
+	void SetCapture(TComponent *Component);                        // +0x78, 0x49ef10, lines 1633-1638
+	void ReleaseCapture(TComponent *Component);                    // +0x7c, 0x49f1a0, lines 1648-1653
+	void StopDragging();                                           // +0x80, 0x49f430, line 1668
+	virtual TComponent *GetCapture() { return Capture; }           // +0x84, 0x4176b0
+	virtual void SetChildPosition(TComponent *Child, int x, int y); // +0x88, 0x49fa40, lines 1700-1708
+	virtual void SetChildArea(TComponent *Child, int x, int y, int width, int height); // +0x8c, 0x49f5d0, lines 1679-1690
+	// +0x90, 0x4176c0. The binary passes the four zeros as one 16-byte block
+	// (same stack layout as four ints).
+	virtual void Fit(bool Notify) { FitToChildren(0, 0, 0, 0, Notify); }
+	virtual void FitToChildren(int Left, int Top, int Right, int Bottom, bool Notify); // +0x94, 0x4a0300, lines 1772-1794
+	virtual void FitToChild(TComponent *Child, int x, int y, int width, int height, bool Notify); // +0x98, 0x49fe70, lines 1724-1738
+	virtual void ClipChildren(bool Strict);                        // +0x9c, 0x4a0920, line 1860
+
+	TComponent *FirstChild; // +0x24
+	TComponent *Capture;    // +0x28
+};
+
+// --- Timers ---------------------------------------------------------------
+
+// A countdown (vtable 0x5646e8, 0x14 bytes) registered in the timer list
+// while it runs. UpdateTimers counts it down and sends its callback on every
+// update, the last time when it reaches 0.
+class TTimer {
+public:
+	TTimer(int Time, TCallback Callback); // 0x49b290, line 905; Time in tenths of a second
+	virtual ~TTimer();                    // +0x00, inlined into the deleting destructor 0x4a1dc0
+	int GetTime();                        // 0x496000, tenths of a second left
+	bool IsExpired();                     // 0x496020
+	void Update(int elapsed);             // 0x4a1df0, line 947
+	int Remaining;      // +0x04, milliseconds
+	bool Active;        // +0x08
+	TCallback Callback; // +0x0c
+};
+
+void AddTimer(TTimer *Timer);    // 0x49af20, line 851
+void RemoveTimer(TTimer *Timer); // 0x49b0d0, line 868
+void UpdateTimers();             // 0x4a27c0, line 887
+
+// --- Hotkeys --------------------------------------------------------------
+
+struct THotkey {        // 12 bytes
+	int Key;            // +0x00, with the modifier flags (0x200 is dropped by CheckHotkey)
+	TCallback Callback; // +0x04
+};
+
+void InitHotkeys();                            // 0x496150
+void ExitHotkeys();                            // empty, folded into 0x496160
+void AddHotkey(int Key, TCallback Callback);   // 0x4a10a0, line 1965
+void RemoveHotkey(int Key);                    // 0x4a12a0, line 1983
+bool CheckHotkey(int Key);                     // 0x4a1480, line 2004
+
+// --- Skin properties ------------------------------------------------------
+
+struct TGUIPoint {
+	TGUIPoint() : x(0), y(0) {}
+	int x, y;
+};
+
+// SkinProperties (0x5ccfc8, 0x1528 bytes): positions, sizes, colours and
+// fonts of the window graphics, filled in by InitSkinProperties (0x498160).
+// Its constructor (0x496800) and those of the blocks below (the gap
+// 0x495480-0x4964ff) are compiler-generated: they construct the members
+// that have constructors (TGUIPoint, TRGBColor, TRect, TFont) and leave the
+// ints alone. Names from the assertions where there are any; the other
+// members are named by their offset. The block boundaries are those of the
+// out-of-line block constructors; blocks whose constructor was inlined are
+// not visible and their members are direct members here (for example
+// PlayerStates, whose NumberOfIcons is Data490). The member types of the
+// zero-initialised members (TGUIPoint, TRGBColor or TRect) are guesses from
+// the values InitSkinProperties stores.
+
+// GUIStyle+0xd8 (0x5cd0a0); compiler-generated constructor 0x495480.
+struct TSkinProperties0D8 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TRGBColor Data10; // +0x10
+	TGUIPoint Data1C; // +0x1c
+	TGUIPoint Data24; // +0x24
+	TGUIPoint Data2C; // +0x2c
+	TGUIPoint Data34; // +0x34
+	TRGBColor Data3C; // +0x3c
+	TFont Data48; // +0x48
+};
+
+// GUIStyle+0x194 (0x5cd15c); compiler-generated constructor 0x4954f0.
+struct TSkinProperties194 {
+	TRect Data00; // +0x00
+	TGUIPoint Data10; // +0x10
+	TGUIPoint Data18; // +0x18
+	TGUIPoint Data20; // +0x20
+	TGUIPoint Data28; // +0x28
+	TGUIPoint Data30; // +0x30
+	TFont Data38; // +0x38
+	int Data4C; // +0x4c
+	TGUIPoint Data50; // +0x50
+	TGUIPoint Data58; // +0x58
+	TGUIPoint Data60; // +0x60
+	TGUIPoint Data68; // +0x68
+	TGUIPoint Data70; // +0x70
+	TGUIPoint Data78; // +0x78
+	TRGBColor Data80; // +0x80
+};
+
+// GUIStyle+0x288 (0x5cd250); compiler-generated constructor 0x496180.
+struct TSkinProperties288 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TRect Data10; // +0x10
+	TRect Data20; // +0x20
+	TRect Data30; // +0x30
+	TRect Data40; // +0x40
+	TRect Data50; // +0x50
+	TRect Data60; // +0x60
+	TRect Data70; // +0x70
+	TRect Data80; // +0x80
+	TRect Data90; // +0x90
+	TRect DataA0; // +0xa0
+	TRect DataB0; // +0xb0
+	TRect DataC0; // +0xc0
+	TRect DataD0; // +0xd0
+	TRect DataE0; // +0xe0
+	TRect DataF0; // +0xf0
+	int Data100; // +0x100
+	int Data104; // +0x104
+	int Data108; // +0x108
+	int Data10C; // +0x10c
+	int Data110; // +0x110
+	int Data114; // +0x114
+	int Data118; // +0x118
+	int Data11C; // +0x11c
+	int Data120; // +0x120
+	int Data124; // +0x124
+	TRect Data128; // +0x128
+	TRect Data138; // +0x138
+	TRect Data148; // +0x148
+};
+
+// GUIStyle+0x3e0, +0x428 (0x5cd3a8, 0x5cd3f0); compiler-generated constructor 0x495590.
+struct TSkinProperties3E0 {
+	TRect Data00; // +0x00
+	TFont Data10; // +0x10
+	TRect Data24; // +0x24
+	TFont Data34; // +0x34
+};
+
+// GUIStyle+0x5a0 (0x5cd568); compiler-generated constructor 0x495610.
+struct TStatusWindowProperties {
+	int Data00; // +0x00
+	TRect Data04; // +0x04
+	TRect HitpointsBar; // +0x14
+	TRect ManaBar; // +0x24
+	TRect Data34; // +0x34
+	TRect Data44; // +0x44
+	TFont Data54; // +0x54
+};
+
+// GUIStyle+0x688 (0x5cd650); compiler-generated constructor 0x495680.
+struct TSkinProperties688 {
+	int Data00; // +0x00
+	TRect Data04; // +0x04
+	TRect Data14; // +0x14
+	int Data24; // +0x24
+	TRect Data28; // +0x28
+	TRect Data38; // +0x38
+	TRGBColor Data48; // +0x48
+	TFont Data54; // +0x54
+	TRGBColor Data68; // +0x68
+};
+
+// GUIStyle+0x6fc (0x5cd6c4); compiler-generated constructor 0x495700.
+struct TSkinProperties6FC {
+	int Data00; // +0x00
+	TGUIPoint Data04; // +0x04
+	TGUIPoint Data0C; // +0x0c
+	TRect Data14; // +0x14
+	TRect Data24; // +0x24
+	TGUIPoint Data34; // +0x34
+	TGUIPoint Data3C; // +0x3c
+	TFont Data44; // +0x44
+	TGUIPoint Data58; // +0x58
+	TGUIPoint Data60; // +0x60
+	TRect Data68; // +0x68
+	TRect Data78; // +0x78
+	TRect Data88; // +0x88
+	int Data98; // +0x98
+	int Data9C; // +0x9c
+	int DataA0; // +0xa0
+	int DataA4; // +0xa4
+	TGUIPoint DataA8; // +0xa8
+	TGUIPoint DataB0; // +0xb0
+	TGUIPoint DataB8; // +0xb8
+	TGUIPoint DataC0; // +0xc0
+	TRect DataC8; // +0xc8
+	TRect DataD8; // +0xd8
+	TGUIPoint DataE8; // +0xe8
+	TGUIPoint DataF0; // +0xf0
+	TFont DataF8; // +0xf8
+};
+
+// GUIStyle+0x808 (0x5cd7d0); compiler-generated constructor 0x495870.
+struct TBuddylistWindowProperties {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TRect Logo; // +0x08
+	TRect Data18; // +0x18
+	TFont Data28; // +0x28
+	TGUIPoint Data3C; // +0x3c
+	TRect Data44; // +0x44
+	TRGBColor Data54; // +0x54
+};
+
+// GUIStyle+0x88c (0x5cd854); compiler-generated constructor 0x4958e0.
+struct TButtonsProperties {
+	TFont Data00; // +0x00
+	TFont Data14; // +0x14
+	int Data28; // +0x28
+	TGUIPoint Texture; // +0x2c
+};
+
+// GUIStyle+0x8c4 (0x5cd88c); compiler-generated constructor 0x495950.
+struct TSkinProperties8C4 {
+	TFont Data00; // +0x00
+	TFont Data14; // +0x14
+	TFont Data28; // +0x28
+};
+
+// GUIStyle+0x900 (0x5cd8c8); compiler-generated constructor 0x4959e0.
+struct TCheckBoxProperties {
+	TGUIPoint Item; // +0x00
+	TGUIPoint Data08; // +0x08
+	TGUIPoint Data10; // +0x10
+	TFont Data18; // +0x18
+	TFont Data2C; // +0x2c
+};
+
+// GUIStyle+0x944 (0x5cd90c); compiler-generated constructor 0x495a60.
+struct TSkinProperties944 {
+	TRGBColor Data00; // +0x00
+	TRGBColor Data0C; // +0x0c
+	TRGBColor Data18; // +0x18
+	TFont Data24; // +0x24
+	TFont Data38; // +0x38
+	TRGBColor Data4C; // +0x4c
+};
+
+// GUIStyle+0x9a0 (0x5cd968); compiler-generated constructor 0x495af0.
+struct TSkinProperties9A0 {
+	TRGBColor Data00; // +0x00
+	TFont Data0C; // +0x0c
+	int Data20; // +0x20
+	TRGBColor Data24; // +0x24
+	TFont Data30; // +0x30
+};
+
+// GUIStyle+0x9e8 (0x5cd9b0); compiler-generated constructor 0x495b70.
+struct TSkinProperties9E8 {
+	int Data00; // +0x00
+	TGUIPoint Data04; // +0x04
+	TGUIPoint Data0C; // +0x0c
+	TRGBColor Data14; // +0x14
+	TGUIPoint Data20; // +0x20
+	TGUIPoint Data28; // +0x28
+	TGUIPoint Data30; // +0x30
+	TGUIPoint Data38; // +0x38
+	TGUIPoint Data40; // +0x40
+	TGUIPoint Data48; // +0x48
+	TGUIPoint Data50; // +0x50
+	TGUIPoint Data58; // +0x58
+	TGUIPoint Data60; // +0x60
+	TGUIPoint Data68; // +0x68
+	TGUIPoint Data70; // +0x70
+	TGUIPoint Data78; // +0x78
+	TGUIPoint Data80; // +0x80
+	TGUIPoint Data88; // +0x88
+	TGUIPoint Data90; // +0x90
+	TGUIPoint Data98; // +0x98
+	TGUIPoint DataA0; // +0xa0
+	TFont DataA8; // +0xa8
+};
+
+// GUIStyle+0xaa4 (0x5cda6c); compiler-generated constructor 0x495c60.
+struct TSkinPropertiesAA4 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	int Data10; // +0x10
+	TFont Data14; // +0x14
+	TFont Data28; // +0x28
+	TFont Data3C; // +0x3c
+	TFont Data50; // +0x50
+};
+
+// GUIStyle+0xb08 (0x5cdad0); compiler-generated constructor 0x4962c0.
+struct TSkinPropertiesB08 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TGUIPoint Data10; // +0x10
+	TFont Data18; // +0x18
+	TGUIPoint Data2C; // +0x2c
+	TGUIPoint Data34; // +0x34
+	TGUIPoint Data3C; // +0x3c
+	TGUIPoint Data44; // +0x44
+	TGUIPoint Data4C; // +0x4c
+	TGUIPoint Data54; // +0x54
+	TGUIPoint Data5C; // +0x5c
+	TFont Data64; // +0x64
+	TFont Data78; // +0x78
+};
+
+// GUIStyle+0xd3c (0x5cdd04); compiler-generated constructor 0x495d20.
+struct TSkinPropertiesD3C {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TRect Data08; // +0x08
+	TRGBColor Data18; // +0x18
+	TRect Data24; // +0x24
+	TRect Data34; // +0x34
+	TRect Data44; // +0x44
+	TGUIPoint Data54; // +0x54
+	TGUIPoint Data5C; // +0x5c
+	TRect Data64; // +0x64
+	TGUIPoint Data74; // +0x74
+	TRect Data7C; // +0x7c
+	TGUIPoint Data8C; // +0x8c
+	TGUIPoint Data94; // +0x94
+	TRect Data9C; // +0x9c
+	TRect DataAC; // +0xac
+	TRect DataBC; // +0xbc
+	TRect DataCC; // +0xcc
+	TRect DataDC; // +0xdc
+	TGUIPoint DataEC; // +0xec
+	TRect DataF4; // +0xf4
+};
+
+// GUIStyle+0xe68 (0x5cde30); compiler-generated constructor 0x495e50.
+struct TSkinPropertiesE68 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TFont Data08; // +0x08
+	TFont Data1C; // +0x1c
+	int Data30; // +0x30
+	TGUIPoint Data34; // +0x34
+	TGUIPoint Data3C; // +0x3c
+	TGUIPoint Data44; // +0x44
+	TGUIPoint Data4C; // +0x4c
+	TGUIPoint Data54; // +0x54
+	TGUIPoint Data5C; // +0x5c
+};
+
+// GUIStyle+0xf8c (0x5cdf54); compiler-generated constructor 0x4963a0.
+struct TSkinPropertiesF8C {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TGUIPoint Data10; // +0x10
+	TGUIPoint Data18; // +0x18
+	TGUIPoint Data20; // +0x20
+	TGUIPoint Data28; // +0x28
+	TGUIPoint Data30; // +0x30
+	TGUIPoint Data38[11]; // +0x38
+	TGUIPoint Data90; // +0x90
+	TGUIPoint Data98; // +0x98
+	TGUIPoint DataA0; // +0xa0
+	TGUIPoint DataA8; // +0xa8
+	TGUIPoint DataB0; // +0xb0
+	TGUIPoint DataB8; // +0xb8
+};
+
+// GUIStyle+0x1084 (0x5ce04c); compiler-generated constructor 0x496430.
+struct TSkinProperties1084 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TGUIPoint Data10; // +0x10
+	TGUIPoint Data18; // +0x18
+	TGUIPoint Data20; // +0x20
+	TGUIPoint Data28; // +0x28
+	TGUIPoint Data30; // +0x30
+	TRect Data38; // +0x38
+	TRect Data48; // +0x48
+	TRect Data58; // +0x58
+};
+
+// GUIStyle+0x1114 (0x5ce0dc); compiler-generated constructor 0x495ee0.
+struct TSkinProperties1114 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TGUIPoint Data10; // +0x10
+	TGUIPoint Data18; // +0x18
+	TGUIPoint Data20; // +0x20
+	TGUIPoint Data28; // +0x28
+	TGUIPoint Data30; // +0x30
+	TGUIPoint Data38; // +0x38
+	TGUIPoint Data40; // +0x40
+	TGUIPoint Data48; // +0x48
+	TGUIPoint Data50; // +0x50
+	TGUIPoint Data58; // +0x58
+	TGUIPoint Data60; // +0x60
+	TGUIPoint Data68; // +0x68
+	TGUIPoint Data70; // +0x70
+	TGUIPoint Data78; // +0x78
+	TGUIPoint Data80; // +0x80
+	TGUIPoint Data88; // +0x88
+	TGUIPoint Data90; // +0x90
+	TGUIPoint Data98; // +0x98
+	TGUIPoint DataA0; // +0xa0
+	TGUIPoint DataA8; // +0xa8
+	TGUIPoint DataB0; // +0xb0
+};
+
+// GUIStyle+0x1274 (0x5ce23c); compiler-generated constructor 0x4964a0.
+struct TSkinProperties1274 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TGUIPoint Data10; // +0x10
+	TGUIPoint Data18; // +0x18
+	TGUIPoint Data20; // +0x20
+	TGUIPoint Data28; // +0x28
+	TGUIPoint Data30; // +0x30
+	TRect Data38; // +0x38
+	TRect Data48; // +0x48
+	TRect Data58; // +0x58
+	TGUIPoint Data68; // +0x68
+	TGUIPoint Data70; // +0x70
+};
+
+// GUIStyle+0x1394 (0x5ce35c); compiler-generated constructor 0x495fa0.
+struct TSkinProperties1394 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TGUIPoint Data08; // +0x08
+	TGUIPoint Data10; // +0x10
+	TRect Data18; // +0x18
+	TGUIPoint Data28; // +0x28
+	TGUIPoint Data30; // +0x30
+	TGUIPoint Data38; // +0x38
+	TGUIPoint Data40; // +0x40
+	TGUIPoint Data48; // +0x48
+	TGUIPoint Data50; // +0x50
+	TGUIPoint Data58; // +0x58
+	TGUIPoint Data60; // +0x60
+	TGUIPoint Data68; // +0x68
+	TGUIPoint Data70; // +0x70
+};
+
+struct TSkinProperties {
+	TGUIPoint CursorHotspot1; // +0x000
+	TGUIPoint CursorHotspot2; // +0x008
+	TGUIPoint CursorHotspot3; // +0x010
+	TGUIPoint CursorHotspot4; // +0x018
+	TGUIPoint CursorHotspot5; // +0x020
+	TGUIPoint CursorHotspot6; // +0x028
+	TFont TooltipFont; // +0x030
+	int TooltipBorder; // +0x044
+	TRGBColor TooltipBackground; // +0x048
+	TRGBColor TooltipFrame; // +0x054
+	TRGBColor Data060; // +0x060
+	TRect Data06C; // +0x06c
+	TRect Data07C; // +0x07c
+	TRect Data08C; // +0x08c
+	int Data09C; // +0x09c
+	TGUIPoint Data0A0; // +0x0a0
+	TGUIPoint Data0A8; // +0x0a8
+	TFont Data0B0; // +0x0b0
+	int Data0C4; // +0x0c4
+	TRGBColor Data0C8; // +0x0c8
+	int Data0D4; // +0x0d4
+	TSkinProperties0D8 Style0D8; // +0x0d8, 0x5c bytes
+	int Data134; // +0x134
+	int Data138; // +0x138
+	int Data13C; // +0x13c
+	TGUIPoint Data140; // +0x140
+	TGUIPoint Data148; // +0x148
+	int Data150; // +0x150
+	int Data154; // +0x154
+	int Data158; // +0x158
+	int Data15C; // +0x15c
+	TGUIPoint Data160; // +0x160
+	TGUIPoint Data168; // +0x168
+	int Data170; // +0x170
+	int Data174; // +0x174
+	int Data178; // +0x178
+	int Data17C; // +0x17c
+	int Data180; // +0x180
+	int Data184; // +0x184
+	TRGBColor Data188; // +0x188
+	TSkinProperties194 Style194; // +0x194, 0x8c bytes
+	int Data220; // +0x220
+	TRect Data224; // +0x224
+	TRect Data234; // +0x234
+	TRect Data244; // +0x244
+	TRect Data254; // +0x254
+	TRect Data264; // +0x264
+	int Data274; // +0x274
+	TRect Data278; // +0x278
+	TSkinProperties288 Style288; // +0x288, 0x158 bytes
+	TSkinProperties3E0 Style3E0; // +0x3e0, 0x48 bytes
+	TSkinProperties3E0 Style428; // +0x428, 0x48 bytes
+	TRect Data470; // +0x470
+	TRect Data480; // +0x480
+	int Data490; // +0x490, SkinProperties.PlayerStates.NumberOfIcons (ContentWindows.cpp line 1036)
+	int Data494; // +0x494
+	TFont Data498; // +0x498
+	int Data4AC; // +0x4ac
+	int Data4B0; // +0x4b0
+	TGUIPoint Data4B4; // +0x4b4
+	TGUIPoint Data4BC; // +0x4bc
+	TGUIPoint Data4C4; // +0x4c4
+	TGUIPoint Data4CC; // +0x4cc
+	TRect Data4D4; // +0x4d4
+	TGUIPoint Data4E4; // +0x4e4
+	TGUIPoint Data4EC; // +0x4ec
+	TGUIPoint Data4F4; // +0x4f4
+	int Data4FC; // +0x4fc
+	int Data500; // +0x500
+	TGUIPoint Data504; // +0x504
+	TGUIPoint Data50C; // +0x50c
+	TGUIPoint Data514; // +0x514
+	TGUIPoint Data51C; // +0x51c
+	TRect Data524; // +0x524
+	TGUIPoint Data534; // +0x534
+	TRect Data53C; // +0x53c
+	int Data54C; // +0x54c
+	TRect Data550; // +0x550
+	TRect Data560; // +0x560
+	TRect Data570; // +0x570
+	TRect Data580; // +0x580
+	TRect Data590; // +0x590
+	TStatusWindowProperties StatusWindow; // +0x5a0, 0x68 bytes
+	int Data608; // +0x608
+	TRect Data60C; // +0x60c
+	TRect Data61C; // +0x61c
+	int Data62C; // +0x62c
+	TGUIPoint Data630; // +0x630
+	TRect Data638; // +0x638
+	int Data648; // +0x648
+	int Data64C; // +0x64c
+	int Data650; // +0x650
+	TFont Data654; // +0x654
+	int Data668; // +0x668
+	int Data66C; // +0x66c
+	TGUIPoint Data670; // +0x670
+	TGUIPoint Data678; // +0x678
+	TGUIPoint Data680; // +0x680
+	TSkinProperties688 Style688; // +0x688, 0x74 bytes
+	TSkinProperties6FC Style6FC; // +0x6fc, 0x10c bytes
+	TBuddylistWindowProperties BuddylistWindow; // +0x808, 0x60 bytes
+	int Data868; // +0x868
+	int Data86C; // +0x86c
+	int Data870; // +0x870
+	int Data874; // +0x874
+	int Data878; // +0x878
+	int Data87C; // +0x87c
+	int Data880; // +0x880
+	int Data884; // +0x884
+	int Data888; // +0x888
+	TButtonsProperties Buttons; // +0x88c, 0x34 bytes
+	int Data8C0; // +0x8c0
+	TSkinProperties8C4 Style8C4; // +0x8c4, 0x3c bytes
+	TCheckBoxProperties CheckBox; // +0x900, 0x40 bytes
+	int Data940; // +0x940
+	TSkinProperties944 Style944; // +0x944, 0x58 bytes
+	int Data99C; // +0x99c
+	TSkinProperties9A0 Style9A0; // +0x9a0, 0x44 bytes
+	int Data9E4; // +0x9e4
+	TSkinProperties9E8 Style9E8; // +0x9e8, 0xbc bytes
+	TSkinPropertiesAA4 StyleAA4; // +0xaa4, 0x64 bytes
+	TSkinPropertiesB08 StyleB08; // +0xb08, 0x8c bytes
+	int DataB94; // +0xb94
+	int DataB98; // +0xb98
+	TRect DataB9C; // +0xb9c
+	TGUIPoint DataBAC; // +0xbac
+	TGUIPoint DataBB4; // +0xbb4
+	TRect DataBBC; // +0xbbc
+	TGUIPoint DataBCC; // +0xbcc
+	TGUIPoint DataBD4; // +0xbd4
+	TGUIPoint DataBDC; // +0xbdc
+	TGUIPoint DataBE4; // +0xbe4
+	int DataBEC; // +0xbec
+	int DataBF0; // +0xbf0
+	int DataBF4; // +0xbf4
+	TGUIPoint DataBF8; // +0xbf8
+	TGUIPoint DataC00; // +0xc00
+	TGUIPoint DataC08; // +0xc08
+	TGUIPoint DataC10; // +0xc10
+	TGUIPoint DataC18; // +0xc18
+	TGUIPoint DataC20; // +0xc20
+	int DataC28; // +0xc28
+	int DataC2C; // +0xc2c
+	TGUIPoint DataC30; // +0xc30
+	TRect DataC38; // +0xc38
+	TGUIPoint DataC48; // +0xc48
+	TGUIPoint DataC50; // +0xc50
+	int DataC58; // +0xc58
+	int DataC5C; // +0xc5c
+	TRect DataC60; // +0xc60
+	int DataC70; // +0xc70
+	TRGBColor DataC74; // +0xc74
+	TGUIPoint DataC80; // +0xc80
+	TRect DataC88; // +0xc88
+	TRect DataC98; // +0xc98
+	TGUIPoint DataCA8; // +0xca8
+	int DataCB0; // +0xcb0
+	int DataCB4; // +0xcb4
+	TGUIPoint DataCB8; // +0xcb8
+	int DataCC0; // +0xcc0
+	int DataCC4; // +0xcc4
+	TRect DataCC8; // +0xcc8
+	TRGBColor DataCD8; // +0xcd8
+	TGUIPoint DataCE4; // +0xce4
+	TGUIPoint DataCEC; // +0xcec
+	TGUIPoint DataCF4; // +0xcf4
+	TGUIPoint DataCFC; // +0xcfc
+	int DataD04; // +0xd04
+	int DataD08; // +0xd08
+	TRect DataD0C; // +0xd0c
+	TGUIPoint DataD1C; // +0xd1c
+	TGUIPoint DataD24; // +0xd24
+	TGUIPoint DataD2C; // +0xd2c
+	TGUIPoint DataD34; // +0xd34
+	TSkinPropertiesD3C StyleD3C; // +0xd3c, 0x104 bytes
+	int DataE40; // +0xe40
+	int DataE44; // +0xe44
+	TGUIPoint DataE48; // +0xe48
+	TGUIPoint DataE50; // +0xe50
+	TGUIPoint DataE58; // +0xe58
+	TGUIPoint DataE60; // +0xe60
+	TSkinPropertiesE68 StyleE68; // +0xe68, 0x64 bytes
+	int DataECC; // +0xecc
+	int DataED0; // +0xed0
+	TGUIPoint DataED4; // +0xed4
+	TGUIPoint DataEDC; // +0xedc
+	TGUIPoint DataEE4; // +0xee4
+	TGUIPoint DataEEC; // +0xeec
+	TGUIPoint DataEF4; // +0xef4
+	TGUIPoint DataEFC; // +0xefc
+	TGUIPoint DataF04; // +0xf04
+	TGUIPoint DataF0C; // +0xf0c
+	int DataF14; // +0xf14
+	int DataF18; // +0xf18
+	TGUIPoint DataF1C; // +0xf1c
+	TGUIPoint DataF24; // +0xf24
+	TGUIPoint DataF2C; // +0xf2c
+	TGUIPoint DataF34; // +0xf34
+	int DataF3C; // +0xf3c
+	int DataF40; // +0xf40
+	TGUIPoint DataF44; // +0xf44
+	TGUIPoint DataF4C; // +0xf4c
+	TGUIPoint DataF54; // +0xf54
+	TGUIPoint DataF5C; // +0xf5c
+	int DataF64; // +0xf64
+	int DataF68; // +0xf68
+	TGUIPoint DataF6C; // +0xf6c
+	TGUIPoint DataF74; // +0xf74
+	TGUIPoint DataF7C; // +0xf7c
+	TGUIPoint DataF84; // +0xf84
+	TSkinPropertiesF8C StyleF8C; // +0xf8c, 0xc0 bytes
+	int Data104C; // +0x104c
+	int Data1050; // +0x1050
+	TRGBColor Data1054; // +0x1054
+	TGUIPoint Data1060; // +0x1060
+	TRGBColor Data1068; // +0x1068
+	TGUIPoint Data1074; // +0x1074
+	TGUIPoint Data107C; // +0x107c
+	TSkinProperties1084 Style1084; // +0x1084, 0x68 bytes
+	int Data10EC; // +0x10ec
+	int Data10F0; // +0x10f0
+	TGUIPoint Data10F4; // +0x10f4
+	TGUIPoint Data10FC; // +0x10fc
+	TGUIPoint Data1104; // +0x1104
+	TGUIPoint Data110C; // +0x110c
+	TSkinProperties1114 Style1114; // +0x1114, 0xb8 bytes
+	int Data11CC; // +0x11cc
+	int Data11D0; // +0x11d0
+	TGUIPoint Data11D4; // +0x11d4
+	TGUIPoint Data11DC; // +0x11dc
+	TGUIPoint Data11E4; // +0x11e4
+	TGUIPoint Data11EC; // +0x11ec
+	TGUIPoint Data11F4; // +0x11f4
+	TGUIPoint Data11FC; // +0x11fc
+	TGUIPoint Data1204[14]; // +0x1204
+	TSkinProperties1274 Style1274; // +0x1274, 0x78 bytes
+	int Data12EC; // +0x12ec
+	int Data12F0; // +0x12f0
+	TGUIPoint Data12F4; // +0x12f4
+	TGUIPoint Data12FC; // +0x12fc
+	TGUIPoint Data1304; // +0x1304
+	TGUIPoint Data130C; // +0x130c
+	TGUIPoint Data1314; // +0x1314
+	TGUIPoint Data131C; // +0x131c
+	TGUIPoint Data1324; // +0x1324
+	TGUIPoint Data132C; // +0x132c
+	TGUIPoint Data1334; // +0x1334
+	TGUIPoint Data133C; // +0x133c
+	int Data1344; // +0x1344
+	int Data1348; // +0x1348
+	TGUIPoint Data134C; // +0x134c
+	TGUIPoint Data1354; // +0x1354
+	TGUIPoint Data135C; // +0x135c
+	TGUIPoint Data1364; // +0x1364
+	TGUIPoint Data136C; // +0x136c
+	TGUIPoint Data1374; // +0x1374
+	TGUIPoint Data137C; // +0x137c
+	TGUIPoint Data1384; // +0x1384
+	TGUIPoint Data138C; // +0x138c
+	TSkinProperties1394 Style1394; // +0x1394, 0x78 bytes
+	int Data140C; // +0x140c
+	int Data1410; // +0x1410
+	TGUIPoint Data1414; // +0x1414
+	TGUIPoint Data141C; // +0x141c
+	TGUIPoint Data1424; // +0x1424
+	TGUIPoint Data142C; // +0x142c
+	TGUIPoint Data1434; // +0x1434
+	TGUIPoint Data143C; // +0x143c
+	TGUIPoint Data1444; // +0x1444
+	TGUIPoint Data144C; // +0x144c
+	TGUIPoint Data1454; // +0x1454
+	TGUIPoint Data145C; // +0x145c
+	int Data1464; // +0x1464
+	int Data1468; // +0x1468
+	TGUIPoint Data146C; // +0x146c
+	TGUIPoint Data1474; // +0x1474
+	int Data147C; // +0x147c
+	int Data1480; // +0x1480
+	TGUIPoint Data1484; // +0x1484
+	TGUIPoint Data148C; // +0x148c
+	TRGBColor Data1494; // +0x1494
+	TGUIPoint Data14A0; // +0x14a0
+	TGUIPoint Data14A8; // +0x14a8
+	TGUIPoint Data14B0; // +0x14b0
+	TGUIPoint Data14B8; // +0x14b8
+	TGUIPoint Data14C0; // +0x14c0
+	TGUIPoint Data14C8; // +0x14c8
+	TRect Data14D0; // +0x14d0
+	int Data14E0; // +0x14e0
+	int Data14E4; // +0x14e4
+	TGUIPoint Data14E8; // +0x14e8
+	TGUIPoint Data14F0; // +0x14f0
+	TGUIPoint Data14F8; // +0x14f8
+	TGUIPoint Data1500; // +0x1500
+	TGUIPoint Data1508; // +0x1508
+	TGUIPoint Data1510; // +0x1510
+	TGUIPoint Data1518; // +0x1518
+	TGUIPoint Data1520; // +0x1520
+};
+
+extern TSkinProperties SkinProperties; // 0x5ccfc8
+
+void InitSkinProperties();             // 0x498160
+
+// TElement::HelpMouseMove needs Help.h's SetHelpHandle.
+#include "Help.h"
+
+inline bool TElement::HelpMouseMove(int x, int y)
+{
+	SetHelpHandle(0);
+	return false;
+}

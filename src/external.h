@@ -82,65 +82,9 @@ struct TFullscreenMode; // Preferences.h
 // SurfaceExitInstance (error messages in ChangeEngine). The other class,
 // member and variable names are ours; member offsets are from the reads.
 
-struct TRect {     // passed by value (16 bytes)
-	int x, y, Width, Height;
-};
-
-struct TRGBColor { // passed by value (12 bytes)
-	int R, G, B;
-};
-
-struct TFont {     // passed by value (20 bytes)
-	int FontNumber;
-	TRGBColor Color;
-	int Unknown10;
-};
-
-// GUI.cpp: window base class. Only the slots Control.cpp calls are named;
-// the others keep the binary's vtable offsets.
-class TWindow {
-public:
-	virtual ~TWindow();                                    // +0x00, scalar deleting destructor
-	virtual void Unknown04();
-	virtual void Unknown08();
-	virtual void Unknown0C();
-	virtual void Unknown10();
-	virtual void Unknown14();
-	virtual void Unknown18();
-	virtual void Unknown1C();
-	virtual void Unknown20();
-	virtual void Unknown24();
-	virtual void Unknown28();
-	virtual void Unknown2C();
-	virtual void Unknown30();
-	virtual void SetSize(int Width, int Height);           // +0x34
-	virtual void SetPosition(int x, int y);                // +0x38
-	virtual void Unknown3C();
-	virtual void Unknown40();
-	virtual void Draw(int Surface, int x, int y);          // +0x44
-	virtual void Unknown48();
-	virtual void MouseMove(int x, int y);                  // +0x4c
-	virtual void LeftButtonDown(int x, int y, int Flags);  // +0x50
-	virtual void LeftButtonUp(int x, int y, int Flags);    // +0x54, Flags 0x200: both buttons
-	virtual void LeftButtonDoubleClick(int x, int y, int Flags); // +0x58
-	virtual void RightButtonUp(int x, int y, int Flags);   // +0x5c
-	virtual void MouseWheel(int x, int y, int Direction);  // +0x60, 1 up, 2 down, 6 left button held
-	virtual void MouseHover(int x, int y);                 // +0x64
-	virtual void HelpMouseMove(int x, int y);              // +0x68, action state 9
-	virtual void KeyPress(int Key);                        // +0x6c
-	virtual void Unknown70();
-	virtual void Unknown74();
-	virtual void Unknown78();
-	virtual void Unknown7C();
-	virtual void StopDragging();                           // +0x80
-	virtual int IsDragging();                              // +0x84
-
-	int Data04[4];
-	int X;      // +0x14
-	int Y;      // +0x18
-	int Width;  // +0x1c
-	int Height; // +0x20
-};
+// GUI.cpp: the window classes (TComponent, TElement, TWindow), and for now
+// the graphics types TRect, TRGBColor and TFont (GUI.h).
+#include "GUI.h"
 
 // ConsoleWindow.cpp. Not instantiated here; the arrays stand for the members
 // before the ones used.
@@ -171,7 +115,7 @@ public:
 	void FUN_004afec0();               // 0x4afec0, lines 560-561
 	void FUN_004b0230();               // 0x4b0230
 
-	int Data24[6];
+	int Data2C[4];                     // +0x2c, after TWindow's members
 	TConsoleWindow *Console;           // +0x3c
 };
 
@@ -254,24 +198,6 @@ TSurface *FUN_004f1430();               // 0x4f1430, surfaceDX9.cpp: creates the
 bool FUN_004efd10();                    // 0x4efd10, between SurfaceDX.cpp and surfaceDX9.cpp: DirectX 9 is installed
 bool FUN_004f9710(HDC Context);         // 0x4f9710, between surfaceDX9.cpp and SurfaceGL.cpp: OpenGL works on the context
 
-// GUI.cpp: style data at 0x5ccfc8 (constructor 0x496800, filled in by 0x498160).
-struct TGUIPoint {
-	int x, y;
-};
-struct TGUIStyle {
-	TGUIPoint CursorHotspot1;         // +0x00 (0x5ccfc8), mouse cursors 1-6
-	TGUIPoint CursorHotspot2;         // +0x08
-	TGUIPoint CursorHotspot3;         // +0x10
-	TGUIPoint CursorHotspot4;         // +0x18
-	TGUIPoint CursorHotspot5;         // +0x20
-	TGUIPoint CursorHotspot6;         // +0x28
-	TFont TooltipFont;                // +0x30 (0x5ccff8)
-	int TooltipBorder;                // +0x44 (0x5cd00c)
-	TRGBColor TooltipBackground;      // +0x48 (0x5cd010)
-	TRGBColor TooltipFrame;           // +0x54 (0x5cd01c)
-};
-extern TGUIStyle GUIStyle;            // 0x5ccfc8
-
 // Text table (owner unknown, .data 0x5c0c80-0x5c0d7c).
 extern const char *TextCharacterListLoading; // 0x5c0ce8
 extern const char *TextConnectingGameWorld;  // 0x5c0cec
@@ -336,15 +262,8 @@ void FUN_00493f60(int Surface, int x, int y, TFont Font, const char *Text); // 0
 int FUN_00494570(int FontNumber, const char *Text); // 0x494570, lines 1373-1374; text width
 void FUN_00494900();                   // 0x494900
 void FUN_00494af0(int MemoryCacheBytes); // 0x494af0
-
-// Between graphics.cpp and GUI.cpp
-void FUN_00496150();                   // 0x496150, clears 0x5ccf98
-void FUN_00496160();                   // 0x496160, an empty function; ExitControl calls it five times
-
-// GUI.cpp and the gap to Help.cpp (help mode)
-void FUN_00498160();                   // 0x498160, initialises GUIStyle among others
-bool FUN_004a1480(int Key);            // 0x4a1480
-void FUN_004a27c0();                   // 0x4a27c0
+void FUN_004910e0(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
+	int Height, int ClipX, int ClipY, int ClipWidth, int ClipHeight); // 0x4910e0, lines 1191-1193; clipped
 
 // Between MainFrm.cpp and MainWindow.cpp, and MainWindow.cpp and Map.cpp
 void FUN_004ac090();                   // 0x4ac090

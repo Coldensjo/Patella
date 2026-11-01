@@ -433,3 +433,10 @@ const char *GetCurrentHelpText()
 {
 	return GetHelpText(HelpHandle);
 }
+
+// Empty; the linker kept one copy of the identical empty functions (0x496160,
+// GUI.obj). ExitControl calls it where Help.cpp's exit belongs in the reverse
+// order of InitControl (name ours, low confidence).
+void ExitHelp()
+{
+}
