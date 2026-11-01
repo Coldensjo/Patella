@@ -89,8 +89,8 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x404070	96	FUN_00404070	game	?|Communication.cpp	gap			
 0x4042f0	46	FUN_004042f0	game	?|Communication.cpp	gap			
 0x404320	34	FUN_00404320	game	?|Communication.cpp	gap			
-0x404350	80	FUN_00404350	game	?|Communication.cpp	gap			
-0x4043a0	20	Catch@004043a0	catch	?|Communication.cpp	gap		0x404350	
+0x404350	80	FUN_00404350	game	Communication.cpp	range			
+0x4043a0	20	Catch@004043a0	catch	Communication.cpp	range		0x404350	
 0x4043b4	143	Catch@004043b4	catch	Communication.cpp	assert	178	0x404350	
 0x404443	160	Catch@00404443	catch	Communication.cpp	assert	178	0x404350	
 0x4044f0	125	FUN_004044f0	game	Communication.cpp	between			

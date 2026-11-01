@@ -7,7 +7,7 @@ address	name	kind	confidence	note
 0x403a10	std_stringstream_ctor	stl	medium	std::basic_stringstream constructor, openmode 3 (in|out)
 0x508400	TMyException_ctor_assert	game	high	TMyException(file, line, kind, name1, value1, name2, value2, expr); thrown by assertions
 0x5086a0	TMyException_ctor_rethrow	game	high	TMyException(file, line, kind, name1, value1, name2, value2, inner); thrown at the end of catch blocks
-0x413780	SendLogin	game	medium	builds the login packet: RSA block (0, XTEA key, AccountID, Password), version 772, file signatures (Communication.cpp line 41)
+0x413780	SendLogin	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
 0x44a900	ReceivePackets	game	medium	reads opcodes and dispatches login and game packets (Control.cpp)
 0x4ca0e0	InitServerList	game	high	fills the 4 login servers, port 7171, picks rand()&3 as CurrentServer
 0x4ce210	SetSymmetricKey	game	medium	stores the 16-byte session key in the cipher object
@@ -82,7 +82,7 @@ address	name	kind	confidence	note
 0x50b780	TWriteBuffer_PutString	game	high	Utils.cpp
 0x50ba00	TWriteBuffer_PutBytes	game	high	Utils.cpp line 451
 0x4042f0	TMyException_GetMessage	game	high	TMyException.h, inline accessor
-0x404570	TMyException_scalar_deleting_dtor	game	high	compiler-generated, emitted in the first object
+0x404570	TMyException_scalar_deleting_dtor	stl	high	compiler-generated, emitted into Communication.obj; not in the source
 0x4d9110	TMyException_GetOrigin	game	high	TMyException.h, inline accessor
 0x508270	std_string_find_last_of	stl	high	instantiated in TMyException.cpp
 0x508300	TMyException_dtor	game	high	TMyException.cpp
@@ -317,3 +317,143 @@ address	name	kind	confidence	note
 0x501400	FUN_00501400	game	low	Talk.cpp line 982: frees the strings of a list; called by SetDefaultPreferences
 0x51262a	atol	library	high	CRT atol
 0x513620	strchr	library	high	CRT strchr
+0x404350	SendLogout	game	high	Communication.cpp line 178 (catch blocks); the body lies in the gap before the first assertion
+0x4044f0	TMyException_copy_ctor	stl	high	compiler-generated TMyException copy constructor, emitted into Communication.obj; not in the source
+0x404590	SendPing	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x404730	SendTurnNorth	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4048d0	SendTurnEast	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x404a70	SendTurnSouth	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x404c10	SendTurnWest	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x404db0	SendMoveObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x405000	SendRequestTrade	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4051f0	SendInspectTrade	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4053b0	SendAcceptTrade	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x405550	SendRejectTrade	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4056f0	SendUseObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4058f0	SendUseObjectWith	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x405b20	SendUseObjectOnCreature	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x405d10	SendRotateObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x405ef0	SendCloseContainer	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4060a0	SendContainerUp	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x406250	SendEditText	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x406410	SendEditHouseText	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4065e0	SendLook	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4067c0	SendTalk	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x406b40	SendTalk	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x406f90	SendTalk	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x407300	SendRequestChannels	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4074a0	SendJoinChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x407650	SendLeaveChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x407800	SendOpenPrivateConversation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4079b0	SendProcessRuleViolation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x407b60	SendCloseRuleViolation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x407d10	SendCancelRuleViolation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x407eb0	SendFightModes	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408080	SendAttack	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408230	SendFollow	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4083e0	SendOpenPrivateChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408580	SendInviteToPrivateChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408730	SendExcludeFromPrivateChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4088e0	SendInviteToParty	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408a90	SendJoinParty	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408c40	SendRevokePartyInvitation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408df0	SendPassPartyLeadership	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x408fa0	SendLeaveParty	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x409140	SendCancel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4092e0	SendRefreshField	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4094d0	SendRefreshContainer	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x409680	SendRequestOutfit	game	high	The request flag is set before sending and is not rolled back on an exception.
+0x409830	SendOutfit	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x409b00	SendAddBuddy	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x409d90	SendRemoveBuddy	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x409f40	SendBugReport	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40a0f0	SendRuleViolationReport	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40a2f0	SendDebugReport	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40a4c0	ReceiveLoginError	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40a670	ReceiveLoginMessage	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40a810	ReceiveMessageOfTheDay	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40a9c0	ReceivePatch	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40ae70	ReceiveWholeFile	game	high	Patch metadata is overwritten before checking that no previous transfer exists.
+0x40b290	ReceivePatchBlock	game	high	A zero-sized completed transfer still divides by PatchDataSize; no extra guard exists.
+0x40b8b0	ReceiveCharacterList	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40bac0	CancelPatch	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40bc80	ReceiveLoginServerOverloaded	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40be30	ReceiveGameLogin	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40c000	ReceiveGamemasterActions	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40c1b0	ReceiveGameError	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40c360	ReceiveGameMessage	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40c500	ReceiveLoginWait	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40c6a0	ReceivePing	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40c830	ReadCreature	game	high	A missing known creature consumes a byte, not a word, for outfit type and skips no skull/shield bytes.
+0x40cd10	ReceiveAddObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40cfa0	ReceiveChangeObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40d440	ReceiveDeleteObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40d7d0	ReceiveOpenContainer	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40da70	ReceiveCloseContainer	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40dc20	ReceiveContainerAddObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40de40	ReceiveContainerChangeObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40e060	ReceiveContainerDeleteObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40e230	ReceiveInventoryObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40e440	ReceiveDeleteInventoryObject	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40e5e0	ReceiveOwnTrade	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40e800	ReceiveCounterTrade	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40ea30	ReceiveCloseTrade	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40ebc0	ReceiveWorldLight	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40ed60	ReceiveMagicEffect	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40ef50	ReceiveAnimatedText	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40f150	ReceiveDistanceEffect	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40f380	ReceiveCreatureMark	game	medium	Inferred name for the timed creature square/highlight update at +0x7c
+0x40f550	ReceiveCreatureHealth	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40f710	ReceiveCreatureLight	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40f8e0	ReceiveCreatureOutfit	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40fb20	ReceiveCreatureSpeed	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40fce0	ReceiveCreatureSkull	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x40fec0	ReceiveCreatureShield	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x410080	ReceiveEditText	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x410260	ReceiveEditHouseText	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x410410	ReceivePlayerStats	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x410660	ReceivePlayerSkills	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x410810	ReceivePlayerIcons	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4109b0	ReceiveCancelAttack	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x410b40	ReceiveTalk	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x411030	ReceiveChannelList	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x411230	ReceiveOpenChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4113f0	ReceiveOpenPrivateConversation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4115a0	ReceiveRuleViolationChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x411760	ReceiveRemoveRuleViolation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x411940	ReceiveCancelRuleViolation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x411b20	ReceiveLockRuleViolation	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x411ce0	ReceiveOwnChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x411ea0	ReceiveCloseChannel	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x412060	ReceiveTextMessage	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x412350	ReceiveOutfit	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x412540	ReceiveBuddy	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x412720	ReceiveBuddyLogin	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4128c0	ReceiveBuddyLogout	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x412a60	std_stringstream_str	stl	high	VC7.1 STL instance in Communication.obj (stringstream::str)
+0x412a80	std_num_put_do_put_double	stl	high	VC7.1 STL instance in Communication.obj (num_put::do_put(double))
+0x412be0	std_num_put_Ffmt	stl	high	VC7.1 STL instance in Communication.obj (num_put::_Ffmt)
+0x412c40	std_num_put_Fput	stl	high	VC7.1 STL instance in Communication.obj (num_put::_Fput)
+0x4131f0	std_string_append_count_char	stl	high	VC7.1 STL instance in Communication.obj
+0x4132c0	std_string_insert_count_char	stl	high	VC7.1 STL instance in Communication.obj
+0x4133e0	std_string_append_ptr_count	stl	high	VC7.1 STL instance in Communication.obj
+0x4134f0	std_string_append_substr	stl	high	VC7.1 STL instance in Communication.obj
+0x4135e0	std_num_put_do_put_long_double	stl	high	VC7.1 STL instance in Communication.obj (num_put::do_put(long double))
+0x413de0	SendGameLogin	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x414530	PrepareMovement	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x414700	SendWalk	game	high	An invalid single-step direction still sends the existing command buffer.
+0x414a10	SendStop	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x414bb0	ReadField	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x414ff0	ReadMap	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x415200	ReceiveMap	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4153f0	ReceiveMapNorth	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x4155c0	ReceiveMapEast	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x415790	ReceiveMapSouth	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x415960	ReceiveMapWest	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x415b30	ReceiveField	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x415d40	ReceiveMoveCreature	game	high	Diagnostics may follow creature mutation; a missing creature record still moves the map object.
+0x416c40	ReceiveCancelWalk	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x416e60	ReadFloor	game	high	0x416e90 is this loop's interior basic block, misidentified as a second function.
+0x416e90	ReadFloorLoop	game	high	Interior basic block of ReadFloor, not a separate callable entry; shares its EH frame
+0x417020	ReceiveFloorUp	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
+0x417270	ReceiveFloorDown	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence

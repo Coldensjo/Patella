@@ -8,3 +8,4 @@ start	end	file	evidence
 0x4e6dc0	0x4e822f	Status.cpp	globals 0x71c458-0x71c64f interleave with those of the asserted Status functions (Rights 0x71c478, characters 0x71c54c, messages 0x71c5f0); includes the vector<TMessage> ctor at 0x4e7f50 that Ghidra missed; 0x4e8230 stays Container.h header code
 0x4db2a0	0x4dc44f	Preferences.cpp	gap after Player.cpp: these functions use only Preferences data (0x719e70-0x71c44f, after Player.cpp's last global 0x719e6c; 0x5c2558-0x5c255f), the same globals as the asserted Preferences functions and the Tibia.cfg loader/saver; includes the vector ctors 0x4dbe90 and 0x4dc170 that Ghidra missed
 0x4db286	0x4db29f	Player.cpp	catch block of 0x4dae60 (Player.cpp); it calls 0x4d9bd0 in Player.cpp and returns into 0x4dae60
+0x404350	0x4044ef	Communication.cpp	SendLogout: its catch blocks (0x4043b4, 0x404443) name Communication.cpp line 178; the rest of the gap before it (0x401000-0x40434f) is not settled

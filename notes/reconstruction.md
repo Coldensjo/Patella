@@ -91,6 +91,7 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
 | Skins.cpp | Reconstructed (name inferred; first part of the Script/Status gap, see file-ranges.tsv); differentially tested. |
 | Status.cpp | Reconstructed with the rest of the Script/Status gap; every function differentially tested except the assertion-failure paths (malloc/free redirected). |
 | Preferences.cpp | Reconstructed with the Player/Preferences gap (its catch funclet 0x4db286 goes to Player.cpp); every function differentially tested except the assertion-failure paths (malloc/free and atol redirected). The Tibia.cfg loader/saver after it (Preferences/Script gap) is not settled yet. |
+| Communication.cpp | Reconstructed (first version by ChatGPT gpt-6.1-sol, reviewed); includes SendLogout from the gap before it. EH tables checked for every function; calls cross-checked against the pseudocode with `tools/callcheck.py`. Not differentially tested (no function is pure). The STL and compiler-generated code in its range is not part of the source. Details: notes/Communication.md. |
 | Container.h | Partial: `vector<T>` constructors and `operator()`, from the Status.cpp and Preferences.cpp instantiations; tested through them. |
 
 Last differential run: 811,429 checks against the original code and 3,201 against exact
