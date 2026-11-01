@@ -22,6 +22,14 @@ Read this and `git log` first when resuming.
 (0x4df550-0x4df6cf) are settled (file-ranges.tsv); left are the Tibia.cfg
 loader 0x4ddc00, the saver 0x4de890 and 0x4df520.
 
+## Delegates (running)
+
+- Objects.cpp + Objects/Player gap (item 5): Claude Opus 5.5, own worktree.
+- Talk.cpp + sysinc/Talk and Talk/TMyException gaps (item 9): ChatGPT
+  gpt-6.1-sol, own worktree.
+Both append-only to names.tsv/external.h; review each against decomp/clean
+and the binary before merging.
+
 ## Open questions
 
 - None yet.
