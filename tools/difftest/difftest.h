@@ -28,8 +28,10 @@ inline void PatchJump(uint32 Address, void *Target)
 // statustest.cpp: redirects the image's malloc/free and the helpers that
 // would reach Windows; safe to call more than once.
 void PatchImage();
+void SetTestClock(int Value);
 
 void TestSkins();
 void TestStatus();
 void TestPreferences();
 void TestScript();
+void TestTalk();

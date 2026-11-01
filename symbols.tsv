@@ -5132,23 +5132,23 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4fcff0	60	FUN_004fcff0	game	sysinc.cpp	assert	104		
 0x4fd02c	384	FUN_004fd02c	game	sysinc.cpp	assert	104		
 0x4fd1b0	653	FUN_004fd1b0	game	sysinc.cpp	assert	139,143		
-0x4fd440	13	FUN_004fd440	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd450	101	FUN_004fd450	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd4c0	8	FUN_004fd4c0	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd4d0	15	FUN_004fd4d0	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd4e0	10	FUN_004fd4e0	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd4f0	6	FUN_004fd4f0	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd500	10	FUN_004fd500	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd510	6	FUN_004fd510	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd520	10	FUN_004fd520	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd530	6	FUN_004fd530	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd540	16	FUN_004fd540	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd550	38	FUN_004fd550	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd580	13	FUN_004fd580	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd590	8	FUN_004fd590	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd5a0	65	FUN_004fd5a0	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd6c0	21	FUN_004fd6c0	game	sysinc.cpp|Talk.cpp	gap			
-0x4fd6e0	764	FUN_004fd6e0	game	Container.h	header	355,356		
+0x4fd440	13	FUN_004fd440	game	Talk.cpp	range			
+0x4fd450	101	FUN_004fd450	game	Talk.cpp	range			
+0x4fd4c0	8	FUN_004fd4c0	game	Talk.cpp	range			
+0x4fd4d0	15	FUN_004fd4d0	game	Talk.cpp	range			
+0x4fd4e0	10	FUN_004fd4e0	game	Talk.cpp	range			
+0x4fd4f0	6	FUN_004fd4f0	game	Talk.cpp	range			
+0x4fd500	10	FUN_004fd500	game	Talk.cpp	range			
+0x4fd510	6	FUN_004fd510	game	Talk.cpp	range			
+0x4fd520	10	FUN_004fd520	game	Talk.cpp	range			
+0x4fd530	6	FUN_004fd530	game	Talk.cpp	range			
+0x4fd540	16	FUN_004fd540	game	Talk.cpp	range			
+0x4fd550	38	FUN_004fd550	game	Talk.cpp	range			
+0x4fd580	13	FUN_004fd580	game	Talk.cpp	range			
+0x4fd590	8	FUN_004fd590	game	Talk.cpp	range			
+0x4fd5a0	65	FUN_004fd5a0	game	Talk.h	range			
+0x4fd6c0	21	FUN_004fd6c0	game	Talk.h	range			
+0x4fd6e0	764	FUN_004fd6e0	game	Container.h	range	355,356		
 0x4fd9e0	853	FUN_004fd9e0	game	Talk.cpp	assert	81,107		
 0x4fdd80	384	FUN_004fdd80	game	Talk.cpp	assert	142		
 0x4fdf10	75	FUN_004fdf10	game	Talk.cpp	between			Number
@@ -5391,7 +5391,7 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x506d7e	136	Catch@00506d7e	catch	Talk.cpp	assert	1693	0x506bf0	TalkMode
 0x506e06	156	Catch@00506e06	catch	Talk.cpp	assert	1693	0x506bf0	
 0x506ec0	410	FUN_00506ec0	game	Talk.cpp	assert	1700		
-0x507060	4	FUN_00507060	game	Talk.cpp	between			
+0x507060	4	FUN_00507060	game	Talk.h	range			
 0x507070	170	FUN_00507070	game	Talk.cpp	between			ReceiveTalkMode,SendTalkMode
 0x5070ff	20	Catch@005070ff	catch	Talk.cpp	between		0x507070	
 0x507113	135	Catch@00507113	catch	Talk.cpp	assert	1729	0x507070	ReceiveTalkMode,SendTalkMode

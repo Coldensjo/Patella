@@ -18,10 +18,10 @@ Game and catch functions by assignment method:
 | How | Functions | Bytes |
 |---|---:|---:|
 | assert | 2746 | 676388 |
-| between | 2030 | 236072 |
-| range | 211 | 34071 |
-| header | 22 | 15065 |
-| gap | 496 | 82432 |
+| between | 2029 | 236068 |
+| range | 229 | 35185 |
+| header | 21 | 14301 |
+| gap | 480 | 82086 |
 
 ## Source files
 
@@ -58,7 +58,9 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | surfaceDX9.cpp | 1 | 0 | 1490 | `0x4f2040` | `0x4f2040` | 982-983 |
 | SurfaceGL.cpp | 3 | 0 | 3187 | `0x4fb7f0` | `0x4fc130` | 767-1023 |
 | sysinc.cpp | 4 | 0 | 1510 | `0x4fce50` | `0x4fd1b0` | 63-143 |
-| Talk.cpp | 77 | 192 | 42058 | `0x4fd9e0` | `0x5081b5` | 81-1952 |
+| Talk.cpp | 90 | 192 | 42314 | `0x4fd440` | `0x5081b5` | 81-1952 |
+| Talk.h | 3 | 0 | 90 | `0x4fd5a0` | `0x507060` |  |
+| Container.h | 1 | 0 | 764 | `0x4fd6e0` | `0x4fd6e0` | 355-356 |
 | TMyException.cpp | 6 | 0 | 1753 | `0x508270` | `0x5086a0` |  |
 | TRSA.cpp | 6 | 3 | 722 | `0x508970` | `0x508c25` |  |
 | TXTEA.cpp | 6 | 0 | 716 | `0x508c70` | `0x508f80` |  |
@@ -95,13 +97,12 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |
 | SurfaceGL.cpp / sysinc.cpp | 12 | 498 | `0x4fcb90`-`0x4fce4f` |
-| sysinc.cpp / Talk.cpp | 16 | 346 | `0x4fd440`-`0x4fd6d5` |
 
 ## Header code
 
 | Header | Functions |
 |---|---:|
-| Container.h | 17 |
+| Container.h | 16 |
 | GUI.h | 1 |
 | ConsoleWindow.h | 1 |
 | Utils.h | 1 |

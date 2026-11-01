@@ -1,0 +1,184 @@
+#pragma once
+#include "common.h"
+#include "Container.h"
+#include "Preferences.h"
+#include "external.h"
+#include <time.h>
+
+enum {
+	TALK_SAY = 1, TALK_WHISPER = 2, TALK_YELL = 3,
+	TALK_PRIVATE_MESSAGE = 4, TALK_GAMEMASTER_BROADCAST = 9,
+	TALK_GAMEMASTER_MESSAGE = 11, TALK_ANIMAL_LOW = 16, TALK_ANIMAL_LOUD = 17,
+	TALK_ADMIN_MESSAGE = 18, TALK_EVENT_MESSAGE = 19, TALK_INFO_MESSAGE = 22,
+	TALK_MODE_BEYONDLAST = 27, TALKBOXES = 10, STATUSMESSAGE_LENGTH = 512
+};
+struct TTalkbox {
+	int State, Order, RemainingTime, Mode;
+	int x, y, z, Lines;
+	char Text[10][40];
+	int Left, Top, Width, Height;
+};
+struct TTalkLine {
+	char *Line;
+	uint32 StatementID;
+	int Mode;
+	TTalkLine *Previous, *Next;
+	char Addressee[30];
+	char *WithoutTime, *Text;
+	__time32_t Time;
+	TTalkLine(uint32 _StatementID, int _Mode, const char *_Line, int DiffTime);
+	TTalkLine(uint32 _StatementID, int _Mode, const char *_Addressee, const char *_Line, int DiffTime);
+	// 0x4fd6c0, Talk.h inline.
+	const char *GetText() const { return GetTimeStamps() ? Line : WithoutTime; }
+};
+class TTalkBuffer;
+extern TTalkBuffer *DefaultTextBuffer;
+class TTalkBuffer {
+public:
+	// 0x4fd5a0, Talk.h inline; Closed is deliberately not initialized.
+	TTalkBuffer(int TalkMode) : ReceiveTalkMode(TalkMode), SendTalkMode(TalkMode),
+		Changed(true), first(NULL), last(NULL), cursor(NULL), lines(0), limit(1000),
+		ShowMessages(false), Enabled(true), Complete(true), LinesChanged(true), Locked(false), Selected(false) {}
+	~TTalkBuffer() noexcept(false);
+	// 0x4fd5f0-0x4fd6b7, Talk.h inlines, in vtable order.
+	virtual bool GetChanged() { bool Result = Changed; Changed = false; return Result; }
+	virtual bool GetClosed() { bool Result = Closed; Closed = false; return Result; }
+	virtual void Close() { Closed = true; }
+	virtual bool CanWrite() { return true; }
+	virtual bool SetWriteEnabled(bool Value) { (void)Value; return true; }
+	virtual void Append(TTalkLine *line);
+	virtual void AddText(int Mode, const char *text, int DiffTime);
+	virtual void Remove(int lineNumber);
+	virtual void Remove(TTalkLine *line);
+	virtual void Clear();
+	virtual bool IsDefault() { return this == DefaultTextBuffer; }
+	virtual bool AcceptMessages() { return IsDefault(); }
+	virtual bool IsRuleViolation() { return false; }
+	virtual bool IsRuleViolationChannel() { return false; }
+	virtual bool IsPrivateChannel() { return false; }
+	virtual bool GetSelected() { return Selected; }
+	virtual void SetSelected(bool Value) { Selected = Value; }
+	virtual void SetLocked(bool Value) { Locked = Value; }
+	virtual bool GetLocked() { return Locked; }
+	virtual int GetReceiveTalkMode() { return ReceiveTalkMode; }
+	virtual int GetSendTalkMode() { return SendTalkMode; }
+	virtual const char *GetAddressee() { return NULL; }
+	virtual int GetChannelID() { return -1; }
+	TTalkLine *GetLine(int lineNumber);
+	TTalkLine *GetNext();
+	int Write(FILE *F);
+	int ReceiveTalkMode, SendTalkMode;
+	bool Changed, Closed;
+	TTalkLine *first, *last, *cursor;
+	int lines, limit;
+	bool ShowMessages, Enabled, Complete, LinesChanged, Locked, Selected;
+};
+class TPrivateTalkBuffer : public TTalkBuffer {
+public:
+	TPrivateTalkBuffer(int TalkMode, const char *_Addressee);
+	// 0x506eb0, Talk.h inline.
+	const char *GetAddressee() override { return Addressee; }
+	char Addressee[30];
+};
+class TChannelTalkBuffer : public TTalkBuffer {
+public:
+	TChannelTalkBuffer(int TalkMode, int _ChannelID);
+	// 0x507060, Talk.h inline.
+	int GetChannelID() override { return ChannelID; }
+	int ChannelID;
+};
+class TRuleViolationTalkBuffer : public TTalkBuffer {
+public:
+	TRuleViolationTalkBuffer(int ReceiveTalkMode, int SendTalkMode, const char *_Addressee);
+	// 0x507260 and 0x507270, Talk.h inline.
+	bool SetWriteEnabled(bool Value) override { WriteEnabled = Value; return Value; }
+	bool CanWrite() override { return WriteEnabled; }
+	void Append(TTalkLine *line) override;
+	void AddText(int Mode, const char *text, int DiffTime) override;
+	bool IsRuleViolation() override { return true; }
+	const char *GetAddressee() override { return Addressee; }
+	char Addressee[30];
+	bool WriteEnabled;
+};
+class TRuleViolationChannel : public TTalkBuffer {
+public:
+	TRuleViolationChannel(int TalkMode, int _ChannelID);
+	int GetChannelID() override { return ChannelID; }
+	int ChannelID;
+	void Append(TTalkLine *line) override;
+	// 0x5075c0, Talk.h line 321.
+	void AddText(int Mode, const char *text, int DiffTime) override
+	{
+		(void)Mode; (void)text; (void)DiffTime;
+		TERROR("not possible");
+	}
+	void Remove(int lineNumber) override;
+	void Remove(TTalkLine *line) override;
+	bool AcceptMessages() override { return true; }
+	bool IsRuleViolationChannel() override { return true; }
+};
+class TPrivateChannel : public TChannelTalkBuffer {
+public:
+	TPrivateChannel(int TalkMode, int _ChannelID);
+	// Folded with 0x467420/0x467430 from another header instantiation.
+	bool SetWriteEnabled(bool Value) override { WriteEnabled = Value; return Value; }
+	bool CanWrite() override { return WriteEnabled; }
+	// 0x5079f0, Talk.h inline.
+	bool IsPrivateChannel() override { return GetChannelID() >= 8; }
+	bool WriteEnabled;
+};
+struct TTalkFilter {
+	TTalkBuffer *TextBuffer;
+	char Addressee[30];
+	int Mode, Channel;
+	bool Permanent;
+	bool Matches(int _Mode, const char *_Addressee, int _Channel);
+};
+bool GetTalkChanged();
+int GetNumberOfTalkboxes();
+const char *GetStatusMessage();
+void SetIgnoreEnabled(bool Value);
+bool GetIgnoreEnabled();
+void SetBuddyIgnore(bool Value);
+bool GetBuddyIgnore();
+void SetIgnoreListEnabled(bool Value);
+bool GetIgnoreListEnabled();
+bool IsTalkThrottled();
+bool GetConsoleChanged();
+TRGBColor *GetTalkColor(TRGBColor *Color, int TalkMode);
+TTalkbox *GetTalkbox(int Number);
+int GetTalkboxMode(int Number);
+void GetTalkboxPosition(int Number, int *x, int *y, int *z);
+void GetTalkboxRectangle(int Number, int *x, int *y, int *Width, int *Height);
+TRGBColor *GetTalkboxColor(TRGBColor *Color, int Number);
+int GetTalkboxLines(int Number);
+const char *GetTalkboxLine(int Number, int Line);
+void RemoveTalkbox(int Position);
+int FindFreeTalkbox();
+void WrapTalkbox(TTalkbox *Talkbox, const char *Text);
+void SetTalkboxRectangle(int Number, int x, int y, int Width, int Height);
+void RemoveOldestTalkbox();
+int FindTalkFilter(int Mode, const char *Addressee, int Channel, vector<TTalkFilter *> &List);
+int FindTextBuffer(TTalkBuffer *TextBuffer, vector<TTalkFilter *> &List);
+void AddTalkFilter(int Mode, const char *Addressee, int Channel, TTalkBuffer *TextBuffer,
+	vector<TTalkFilter *> &List, bool Permanent);
+char *GetBuddyIgnoreText();
+void ClearBuddyIgnore();
+void AddBuddyIgnore(const char *Addressee, bool Permanent);
+bool IsPermanentBuddyIgnore(const char *Addressee);
+void ClearTemporaryIgnore();
+char *GetIgnoreListText();
+bool IsModeIgnored(int Mode);
+void AddIgnoreFilter(int Mode, const char *Addressee, bool Permanent);
+void IgnoreMode(int Mode);
+void IgnoreName(const char *Addressee, bool Permanent);
+bool IsPermanentIgnore(const char *Addressee);
+void RemoveIgnoreFilter(int Mode, const char *Addressee);
+void UnignoreMode(int Mode);
+void UnignoreName(const char *Addressee);
+void ClearDefaultTextBuffer();
+void ClearTextBuffer(TTalkBuffer *TextBuffer);
+bool HasUnreadConsoleText();
+void AddChannelNotice(const char *Addressee, const char *Text, int Mode, const char *Name, int Channel);
+void DeleteTextBuffer(TTalkBuffer *TextBuffer);
+TCommunicationChannel *CreateTextBuffer(int ReceiveTalkMode, int SendTalkMode, const char *Name, int Channel);

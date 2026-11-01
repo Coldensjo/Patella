@@ -16,6 +16,7 @@
 
 enum { OURS = 0, ORIGINAL = 1 };
 static int Clock;
+void SetTestClock(int Value) { Clock = Value; }
 static char Clipboard[2][4096];
 static int ClipboardCalls[2];
 static char Removed[2][64];

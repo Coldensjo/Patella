@@ -13,6 +13,8 @@
 //   vector<TErrorReport>    constructor 0x4e8230, operator() 0x4e7860 (Status.cpp)
 //   vector<TContentWindow>  constructor 0x4dbe90, operator() 0x4db880 (Preferences.cpp)
 //   vector<TBuddy>          constructor 0x4dc170, operator() 0x4dba60 (Preferences.cpp)
+//   vector<TTalkFilter *>   initialized constructor 0x4fd6e0 (Talk.cpp),
+//                           operator() folded with vector<int> at 0x452ac0
 // Preferences.cpp also uses vector<int>, whose code the linker kept from an
 // earlier object: constructors 0x453300 (with init) and 0x4a2b90,
 // operator() 0x452ac0.
