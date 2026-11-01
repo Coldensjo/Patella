@@ -13,7 +13,7 @@ Read this and `git log` first when resuming.
 6. Map.cpp and the gaps on both sides.
 7. MapWindow.cpp and the MapWindow/Network gap.
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps.
-9. Talk.cpp and the gaps next to it.
+9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first.
 
 ## Current item
@@ -24,14 +24,13 @@ loader 0x4ddc00, the saver 0x4de890 and 0x4df520.
 
 ## Delegates (running)
 
-- Map.cpp + MainWindow/Map and Map/MapWindow gaps (item 6): Claude Opus 5.5, own worktree.
-- Talk.cpp (item 9): first version f5ccfa7 (branch t3/reconstruct-talk-cpp,
-  ChatGPT gpt-6.1-sol) NOT merged: 21 functions kept FUN_ names and it added
-  shim wrappers/casts to Communication's temporary views. Sent back to
-  gpt-6.1-sol (branch t3/talk-cpp-integration) to name them, drop the shims
-  and replace the external.h views by Talk.h types.
-Both append-only to names.tsv/external.h; review each against decomp/clean
-and the binary before merging.
+- Map.cpp + MainWindow/Map and Map/MapWindow gaps (item 6): ChatGPT
+  gpt-6.1-sol, own worktree (the first Claude attempt failed on a rate limit).
+- Creatures.cpp + Control/Creatures and Creatures/DialogElements gaps
+  (item 8): Claude Opus 5.5, own worktree.
+Both told: real names only, no shims, replace their external.h views and
+rename the callers. Review each against decomp/clean and the binary before
+merging.
 
 ## Open questions
 
@@ -39,7 +38,7 @@ and the binary before merging.
 
 ## Last difftest
 
-1,594,670 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
+2,796,382 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
