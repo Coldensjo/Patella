@@ -47,21 +47,21 @@ static int AccountNumber;                     // 0x71c580
 static int Progress;                          // 0x71c584, -1 = none
 static int ConnectionState;                   // 0x71c588, see SetConnectionState
 static int TradeInfo;                         // 0x71c58c
-static int UseIndex;                          // 0x71c590
-static int UseZ;                              // 0x71c594
-static int UseY;                              // 0x71c598
-static int UseX;                              // 0x71c59c
-static int TradeIndex;                        // 0x71c5a0
-static int TradeZ;                            // 0x71c5a4
-static int TradeY;                            // 0x71c5a8
-static int TradeX;                            // 0x71c5ac
+static int UseZ;                              // 0x71c590
+static int UseY;                              // 0x71c594
+static int UseX;                              // 0x71c598
+static int UseIndex;                          // 0x71c59c
+static int TradeZ;                            // 0x71c5a0
+static int TradeY;                            // 0x71c5a4
+static int TradeX;                            // 0x71c5a8
+static int TradeIndex;                        // 0x71c5ac
 static int DragTargetZ;                       // 0x71c5b0
 static int DragTargetY;                       // 0x71c5b4
 static int DragTargetX;                       // 0x71c5b8
-static int DragIndex;                         // 0x71c5bc
-static int DragZ;                             // 0x71c5c0
-static int DragY;                             // 0x71c5c4
-static int DragX;                             // 0x71c5c8
+static int DragZ;                             // 0x71c5bc
+static int DragY;                             // 0x71c5c0
+static int DragX;                             // 0x71c5c4
+static int DragIndex;                         // 0x71c5c8
 static int DragStartY;                        // 0x71c5cc
 static int DragStartX;                        // 0x71c5d0
 static int PendingActionNumber;               // 0x71c5d4
@@ -210,13 +210,13 @@ void SetDragStart(int x, int y)
 }
 
 // 0x4e6f70
-void SetDragObject(TObject Obj, int x, int y, int z, int Index)
+void SetDragObject(TObject Obj, int Index, int x, int y, int z)
 {
 	DraggedObject = Obj;
+	DragIndex = Index;
 	DragX = x;
 	DragY = y;
 	DragZ = z;
-	DragIndex = Index;
 }
 
 // 0x4e6fc0
@@ -237,12 +237,12 @@ void CheckDragStart(int x, int y)
 }
 
 // 0x4e7030
-TObject *GetDragObject(int *x, int *y, int *z, int *Index)
+TObject *GetDragObject(int *Index, int *x, int *y, int *z)
 {
+	*Index = DragIndex;
 	*x = DragX;
 	*y = DragY;
 	*z = DragZ;
-	*Index = DragIndex;
 	return &DraggedObject;
 }
 
@@ -255,23 +255,23 @@ void GetDragTarget(int *x, int *y, int *z)
 }
 
 // 0x4e70a0
-void SetTradeObject(TObject Obj, int x, int y, int z, int Index)
+void SetTradeObject(TObject Obj, int Index, int x, int y, int z)
 {
 	TradeObject = Obj;
+	TradeIndex = Index;
 	TradeX = x;
 	TradeY = y;
 	TradeZ = z;
-	TradeIndex = Index;
 }
 
 // 0x4e70f0
-void SetUseObject(TObject Obj, int x, int y, int z, int Index)
+void SetUseObject(TObject Obj, int Index, int x, int y, int z)
 {
 	UseObject = Obj;
+	UseIndex = Index;
 	UseX = x;
 	UseY = y;
 	UseZ = z;
-	UseIndex = Index;
 }
 
 // 0x4e7140. Set together with the trade and use objects; meaning unknown.
@@ -281,22 +281,22 @@ void SetTradeInfo(int Info)
 }
 
 // 0x4e7150
-TObject *GetTradeObject(int *x, int *y, int *z, int *Index)
+TObject *GetTradeObject(int *Index, int *x, int *y, int *z)
 {
+	*Index = TradeIndex;
 	*x = TradeX;
 	*y = TradeY;
 	*z = TradeZ;
-	*Index = TradeIndex;
 	return &TradeObject;
 }
 
 // 0x4e7190
-TObject *GetUseObject(int *x, int *y, int *z, int *Index)
+TObject *GetUseObject(int *Index, int *x, int *y, int *z)
 {
+	*Index = UseIndex;
 	*x = UseX;
 	*y = UseY;
 	*z = UseZ;
-	*Index = UseIndex;
 	return &UseObject;
 }
 

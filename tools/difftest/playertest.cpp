@@ -78,19 +78,15 @@ WNDPROC AfxGetAfxWndProc() STUB
 
 void OutputControlErrorInformations(std::ostream &) STUB
 int DAT_005c2564;
-// The constructor and the slots graphics.cpp calls are graphicstest.cpp's recorders.
+// The constructor and the slots graphics.cpp calls are graphicstest.cpp's recorders, those
+// MapWindow.cpp calls mapwindowtest.cpp's.
 void TSurfaceGL::Unknown0C() STUB
 void TSurfaceGL::Unknown10() STUB
-void TSurfaceGL::FillRectangle(int, TRect, TRGBColor) STUB
 void TSurfaceGL::Unknown18() STUB
 void TSurfaceGL::Unknown1C() STUB
-void TSurfaceGL::Unknown20() STUB
 void TSurfaceGL::DrawFrame(int, TRect, int, TRGBColor) STUB
-void TSurfaceGL::Unknown30() STUB
 void TSurfaceGL::Unknown38() STUB
-void TSurfaceGL::Unknown40() STUB
 void TSurfaceGL::Unknown44() STUB
-void TSurfaceGL::Unknown4C() STUB
 void TSurfaceGL::Unknown58() STUB
 void TSurfaceGL::Unknown5C() STUB
 void TSurfaceGL::Unknown60() STUB
@@ -103,9 +99,7 @@ void TSurfaceGL::Unknown7C() STUB
 void TSurfaceGL::FinishFrame() STUB
 bool TSurfaceGL::Init(HWND *, int, TFullscreenMode *, bool) STUB
 void TSurfaceGL::Unknown8C() STUB
-bool TSurfaceGL::Unknown9C(int) STUB
 bool TSurfaceGL::IsUnavailable() STUB
-void TSurfaceGL::UnknownA4() STUB
 void TSurfaceGL::UnknownA8() STUB
 void TSurfaceGL::UnknownAC() STUB
 double TSurfaceGL::GetFPS() STUB

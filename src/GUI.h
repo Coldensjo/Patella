@@ -38,8 +38,13 @@ struct TCallback {
 };
 
 // One entry of a component's drawing list (0x1c bytes): a skin drawn at an
-// offset in the component, tiled to width x height when they are not 0.
+// offset in the component, tiled to width x height when they are not 0. The
+// constructors are inlined: new TDrawing[8] zeroes the entries (MapWindow.cpp
+// 0x4c1ab4), and the subclasses assign whole entries.
 struct TDrawing {
+	TDrawing() : skin(0), x(0), y(0), width(0), height(0), srcx(0), srcy(0) {}
+	TDrawing(int skin, int x, int y, int width, int height, int srcx, int srcy)
+		: skin(skin), x(x), y(y), width(width), height(height), srcx(srcx), srcy(srcy) {}
 	int skin;   // +0x00
 	int x;      // +0x04
 	int y;      // +0x08
@@ -616,10 +621,13 @@ struct TSkinProperties {
 	int TooltipBorder; // +0x044
 	TRGBColor TooltipBackground; // +0x048
 	TRGBColor TooltipFrame; // +0x054
-	TRGBColor Data060; // +0x060
-	TRect Data06C; // +0x06c
-	TRect Data07C; // +0x07c
-	TRect Data08C; // +0x08c
+	// The frames around creatures on the map (MapWindow.cpp): under the
+	// mouse, attacked and followed, the last two also under the mouse.
+	TRGBColor HighlightColor; // +0x060
+	TRGBColor AttackColor; // +0x06c
+	TRGBColor FollowColor; // +0x078
+	TRGBColor HighlightedAttackColor; // +0x084
+	TRGBColor HighlightedFollowColor; // +0x090
 	int Data09C; // +0x09c
 	TRect Data0A0; // +0x0a0, the margins passed to FitToChildren by ContextMenus.cpp (0x442f4e)
 	TFont Data0B0; // +0x0b0

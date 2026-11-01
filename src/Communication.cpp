@@ -35,7 +35,7 @@ static int LastCancelX;       // 0x5c4384
 
 static_assert(offsetof(TCreature, Direction) == 0x50, "creature direction");
 static_assert(offsetof(TCreature, OutfitType) == 0x60, "creature outfit");
-static_assert(offsetof(TCreature, Skull) == 0x90, "creature skull");
+static_assert(offsetof(TCreature, PKFlag) == 0x90, "creature skull");
 static_assert(offsetof(TTalkBuffer, first) == 0x10, "channel first statement");
 static_assert(offsetof(TTalkBuffer, cursor) == 0x18, "channel cursor");
 static_assert(offsetof(TTalkLine, Addressee) == 0x14, "statement addressee");
@@ -1114,8 +1114,8 @@ uint32 ReadCreature(int Type, int x, int y, int z)
 		Creature->Speed = GetWord();
 		int Skull = GetByte();
 		Creature->SetSkull(Skull, false);
-		NotifySkull(Creature->Skull);
-		Creature->Shield = GetByte();
+		NotifySkull(Creature->PKFlag);
+		Creature->PARTYFlag = GetByte();
 	} else if (Type == 0x62) {
 		CreatureID = GetQuad();
 		Creature = GetCreature(CreatureID);
@@ -1153,8 +1153,8 @@ uint32 ReadCreature(int Type, int x, int y, int z)
 			Creature->Speed = GetWord();
 			int Skull = GetByte();
 			Creature->SetSkull(Skull, false);
-			NotifySkull(Creature->Skull);
-			Creature->Shield = GetByte();
+			NotifySkull(Creature->PKFlag);
+			Creature->PARTYFlag = GetByte();
 		}
 	} else {
 		if (Type != 0x63)
@@ -1954,7 +1954,7 @@ void ReceiveCreatureSkull()
 	if (Creature != NULL) {
 		int Skull = GetByte();
 		Creature->SetSkull(Skull, true);
-		NotifySkull(Creature->Skull);
+		NotifySkull(Creature->PKFlag);
 		return;
 	}
 	GetByte();
@@ -1970,7 +1970,7 @@ void ReceiveCreatureShield()
 	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL) {
 		int Value = GetByte();
-		Creature->Shield = Value;
+		Creature->PARTYFlag = Value;
 		return;
 	}
 	GetByte();

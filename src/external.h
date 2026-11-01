@@ -16,10 +16,14 @@ extern uint8 PacketHeader[16];
 // Map.cpp's TMapPoint, ten TObjects and plain ints, has a compiler-generated
 // constructor (0x4b0b40) that zeroes exactly the ten objects. Written with
 // default member initializers so that the type stays an aggregate.
+// MapWindow.cpp compares objects with numbers ("SrcObj!=0", "Obj!=CREATURE")
+// and prints one as the int value of TEND1(Obj): the original converts a
+// TObject to its Type.
 struct TObject {
 	int Type = 0;
 	int Data1 = 0;
 	int Data2 = 0;
+	operator int() const { return Type; }
 };
 
 // sysinc.cpp
@@ -139,28 +143,29 @@ class TSurfaceGL : public TSurface {       // 0x498 bytes
 public:
 	TSurfaceGL();                          // 0x4fb670
 	void Unknown0C(); void Unknown10(); void FillRectangle(int Surface, TRect Rect, TRGBColor Color);
-	void Unknown18(); void Unknown1C(); void Unknown20();
+	void Unknown18(); void Unknown1C();
+	void DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color, TRect Clip);
 	void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color);
 	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data);
 	void WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data, uint8 *Mask,
 		TRGBColor *Colors);
-	void Unknown30();
+	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source);
 	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
 		TRGBColor ColorKey);
 	void Unknown38();
 	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
 		int Height, TRGBColor ColorKey, TRect Clip);
-	void Unknown40(); void Unknown44();
+	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source); void Unknown44();
 	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
 		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip);
-	void Unknown4C();
+	void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors);
 	void Unknown54(int Surface, TRGBColor ColorKey); void Unknown58(); void Unknown5C(); void Unknown60();
 	void Unknown68(); void Unknown6C(); void Unknown70(); void Unknown74(); void Unknown78();
 	void Unknown7C(); void FinishFrame();
 	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force);
 	void Unknown8C(); int GetCacheSurfaces(); void GetSurfaceRect(int Surface, TRect *Rect);
 	bool Unknown9C(int Value);
-	bool IsUnavailable(); void UnknownA4(); void UnknownA8(); void UnknownAC(); double GetFPS();
+	bool IsUnavailable(); bool CanShadeRectangles(); void UnknownA8(); void UnknownAC(); double GetFPS();
 	void InitSurfaces(); void ExitSurfaces();
 	uint8 DataGL[0x498 - 0x44];
 };
@@ -176,8 +181,22 @@ extern const char *TextWaitForCharacterList; // 0x5c0cf0
 extern const char *TextLinkCopyWarning;      // 0x5c0cfc
 extern const char *TextNeverGiveAccount;     // 0x5c0d00
 extern const char *TextRuleViolations;       // 0x5c0d78
+// MapWindow.obj's copy of the same table (0x5c2180-0x5c22ac, the texts start
+// earlier): every object that includes the text header has its own.
+extern const char *TextReceiveHint;          // 0x5c2130, "Receive hint"
+extern const char *TextSelectPlayerToTrade;  // 0x5c2258, "Select a player to trade with."
 
 // Communication.cpp
+
+// DialogElements.cpp: a button that blinks until it is pressed (vtable
+// 0x561b90, 0x5c bytes; base constructor 0x466860). MapWindow.cpp's hint
+// button. The base class and the member layout are not known yet.
+class TBlinkingButton : public TElement {
+public:
+	TBlinkingButton(int x, int y, int Skin1, int Skin2, int Skin3, int Skin4, TCallback Callback,
+		const char *Tooltip); // 0x466b20
+	uint8 Data24[0x5c - 0x24];
+};
 
 // Dialogs.cpp: each creates a dialog and returns it as the new modal window.
 TWindow *FUN_0047f8a0(const char *Title, const char *Text);             // 0x47f8a0, message box

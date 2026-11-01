@@ -52,6 +52,7 @@ enum {
 	ANIMATEALWAYS = 27,
 	AUTOMAP = 28,         // reads AutomapColor
 	LENSHELP = 29,        // reads LensHelp
+	FULLBANK = 30,        // ours: a ground that covers the whole field; MapWindow.cpp hides the levels below
 };
 
 // One Tibia.dat entry (0x4c bytes); the same layout serves objects, outfits,

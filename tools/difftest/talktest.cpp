@@ -221,7 +221,8 @@ static void TestFilters()
 			&& strcmp(Ours(Index)->Addressee, Original(Index)->Addressee) == 0, "new filter");
 	}
 	for (int Index = Ours.min; Index <= Ours.max; Index++) { free(Ours(Index)); free(Original(Index)); }
-	delete[] Ours.entry; free(Original.entry);
+	// vector<T>'s destructor deletes the entries again at the end of the function.
+	delete[] Ours.entry; Ours.entry = NULL; free(Original.entry);
 	const char *Names[] = {"Alice", "Bob", "alice", "Carol", "", "Daniel"};
 	for (int Round = 0; Round < 2500; Round++) {
 		const char *Name = Names[Random() % 6];

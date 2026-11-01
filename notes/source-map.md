@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 578 | 81118 |
+| range | 586 | 81620 |
 | header | 18 | 11957 |
-| gap | 134 | 38497 |
+| gap | 126 | 37995 |
 
 ## Source files
 
@@ -48,7 +48,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | MainWindow.cpp | 31 | 76 | 17738 | `0x4ac010` | `0x4b07c6` | 85-828 |
 | Map.cpp | 83 | 151 | 56255 | `0x4b08a0` | `0x4bf7ba` | 169-1842 |
 | MapWindow.cpp | 31 | 121 | 42742 | `0x4bf860` | `0x4ca00e` | 130-1606 |
-| Network.cpp | 36 | 93 | 21574 | `0x4ca450` | `0x4cf982` | 132-961 |
+| Network.cpp | 44 | 93 | 22076 | `0x4ca0e0` | `0x4cf982` | 132-961 |
 | Objects.cpp | 62 | 184 | 31867 | `0x4cfbb0` | `0x4d7c29` | 67-1023 |
 | Player.cpp | 47 | 36 | 12247 | `0x4d7ce0` | `0x4db286` | 62-456 |
 | Preferences.cpp | 85 | 2 | 14938 | `0x4db2a0` | `0x4df520` | 223-850 |
@@ -80,7 +80,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | ContentWindows.cpp / ContextMenus.cpp | 4 | 371 | `0x43d6f0`-`0x43d86c` |
 | DialogElements.cpp / Dialogs.cpp | 30 | 2206 | `0x46b790`-`0x46c0ce` |
 | Dialogs.cpp / DialogWindow.cpp | 7 | 811 | `0x4854c0`-`0x485843` |
-| MapWindow.cpp / Network.cpp | 8 | 502 | `0x4ca0e0`-`0x4ca2f5` |
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |
 

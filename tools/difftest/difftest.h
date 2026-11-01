@@ -46,3 +46,4 @@ void TestCreatures(const char *ExePath); // creaturestest.cpp, loads Tibia.dat n
 void TestGUI();
 void TestMap(const char *ExePath);     // maptest.cpp, also loads Tibia.dat
 void TestGraphics(const char *ExePath); // graphicstest.cpp, loads Tibia.spr, Tibia.pic and Tibia.dat
+void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat

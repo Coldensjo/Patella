@@ -118,12 +118,12 @@ bool TCreature::IsMarked()
 // away four seconds later.
 void TCreature::SetSkull(int Skull, bool Delay)
 {
-	if (Delay && this->Skull != 0 && Skull == 0) {
+	if (Delay && this->PKFlag != 0 && Skull == 0) {
 		SkullTime = _time32(NULL);
 		return;
 	}
 	SkullTime = 0;
-	this->Skull = Skull;
+	this->PKFlag = Skull;
 }
 
 // 0x44b870
@@ -719,8 +719,8 @@ TCreature *AddCreature(uint32 RemoveID, uint32 NewCreatureID)
 	TCreature *Creature = &Creatures[Index];
 	if (Creature->CreatureID == 0)
 		Creature->NextOpponent = NOT_AN_OPPONENT;
-	Creature->Skull = 0;
-	Creature->Shield = 0;
+	Creature->PKFlag = 0;
+	Creature->PARTYFlag = 0;
 	Creature->SkullTime = 0;
 	Creature->CreatureID = NewCreatureID;
 	return Creature;
@@ -748,7 +748,7 @@ void UpdateSkulls()
 		TCreature *Creature = &Creatures[i];
 		if (Creature->SkullTime != 0 && (Now < Creature->SkullTime || Now > Creature->SkullTime + 4)) {
 			Creature->SkullTime = 0;
-			Creature->Skull = 0;
+			Creature->PKFlag = 0;
 		}
 	}
 	TEND
@@ -908,21 +908,21 @@ const char *GetSkillName(int SkillNumber)
 // 0x44d6d0. No check for a missing player creature.
 bool HasPlayerSkull()
 {
-	return GetCreature(GetPlayerID())->Skull != 0;
+	return GetCreature(GetPlayerID())->PKFlag != 0;
 }
 
 // 0x44d6f0. Party flag 1, 3 or 4; ContextMenus.cpp offers "Leave Party"
 // then.
 bool IsPlayerInParty()
 {
-	int Shield = GetCreature(GetPlayerID())->Shield;
+	int Shield = GetCreature(GetPlayerID())->PARTYFlag;
 	return Shield == 4 || Shield == 3 || Shield == 1;
 }
 
 // 0x44d720
 int GetPlayerPartyFlag()
 {
-	return GetCreature(GetPlayerID())->Shield;
+	return GetCreature(GetPlayerID())->PARTYFlag;
 }
 
 // --- The battle list -------------------------------------------------------

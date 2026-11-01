@@ -13,7 +13,6 @@
 #include "Container.h"
 #include "Preferences.h"
 
-#define EVENTHELPS 14 // "In(Number,1,EVENTHELPS)"
 
 // Data, in .bss order.
 static int NumberOfEventHelps;                // 0x5ce520, queued in EventHelps

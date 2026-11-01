@@ -425,7 +425,7 @@ static void TestCreatureTable()
 					T->Colors[0] = Color;
 					T->Visible = Visible;
 					T->Speed = Speed;
-					T->Shield = Shield;
+					T->PARTYFlag = Shield;
 					sprintf(T->Name, "Creature %d", Slot);
 				}
 			}
@@ -567,8 +567,8 @@ static void TestCreatureTable()
 				int Skull = (int)(Random() % 3), Shield = (int)(Random() % 6);
 				bool Moving = Random() % 2 != 0;
 				for (TCreature *T : {A, B}) {
-					T->Skull = Skull;
-					T->Shield = Shield;
+					T->PKFlag = Skull;
+					T->PARTYFlag = Shield;
 					T->Moving = Moving;
 				}
 			}

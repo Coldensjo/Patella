@@ -63,8 +63,8 @@ public:
 	int Health;          // +0x84, percent
 	int Speed;           // +0x88
 	bool Visible;        // +0x8c
-	int Skull;           // +0x90
-	int Shield;          // +0x94, party shield
+	int PKFlag;          // +0x90, the skull; name from "Creature->PKFlag" (MapWindow.cpp)
+	int PARTYFlag;       // +0x94, the party shield; "Creature->PARTYFlag" (MapWindow.cpp)
 	__time32_t SkullTime; // +0x98, time a skull was removed; it stays four seconds longer
 };
 

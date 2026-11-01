@@ -4309,14 +4309,14 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4c9f63	29	Catch@004c9f63	catch	MapWindow.cpp	between		0x4c7750	
 0x4c9f80	142	Catch@004c9f80	catch	MapWindow.cpp	assert	834	0x4c7750	Surface
 0x4ca00e	174	Catch@004ca00e	catch	MapWindow.cpp	assert	834	0x4c7750	
-0x4ca0e0	379	FUN_004ca0e0	game	MapWindow.cpp|Network.cpp	gap			
-0x4ca260	10	FUN_004ca260	game	MapWindow.cpp|Network.cpp	gap			
-0x4ca270	26	FUN_004ca270	game	MapWindow.cpp|Network.cpp	gap			
-0x4ca290	28	FUN_004ca290	game	MapWindow.cpp|Network.cpp	gap			
-0x4ca2b0	10	FUN_004ca2b0	game	MapWindow.cpp|Network.cpp	gap			
-0x4ca2c0	14	FUN_004ca2c0	game	MapWindow.cpp|Network.cpp	gap			
-0x4ca2d0	30	FUN_004ca2d0	game	MapWindow.cpp|Network.cpp	gap			
-0x4ca2f0	5	CAsyncSocket::~CAsyncSocket	game	MapWindow.cpp|Network.cpp	gap			
+0x4ca0e0	379	FUN_004ca0e0	game	Network.cpp	range			
+0x4ca260	10	FUN_004ca260	game	Network.cpp	range			
+0x4ca270	26	FUN_004ca270	game	Network.cpp	range			
+0x4ca290	28	FUN_004ca290	game	Network.cpp	range			
+0x4ca2b0	10	FUN_004ca2b0	game	Network.cpp	range			
+0x4ca2c0	14	FUN_004ca2c0	game	Network.cpp	range			
+0x4ca2d0	30	FUN_004ca2d0	game	Network.cpp	range			
+0x4ca2f0	5	CAsyncSocket::~CAsyncSocket	game	Network.cpp	range			
 0x4ca300	332	FUN_004ca300	game	Utils.h	header	50		
 0x4ca450	722	FUN_004ca450	game	Network.cpp	assert	132,133		
 0x4ca730	369	FUN_004ca730	game	Network.cpp	assert	152		errorcode
