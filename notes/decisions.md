@@ -502,3 +502,12 @@ callcheck differences, caller integration and differential coverage.
 - **Tests**: TranslateKey is compared for all keys, flags and modifiers; the
   rest needs MFC and the window system. MainFrm.cpp is linked into the
   difftest against stubs.
+
+## Order of the GUI files
+
+- **GUI.cpp before MainWindow.cpp** (judgement): the backlog says smallest
+  first, but MainWindow.cpp and the other window files derive from GUI.cpp's
+  TWindow and its subclasses, whose layouts and vtables are only partly known
+  in external.h. Reconstructing the base first avoids writing the derived
+  classes against guessed layouts.
+

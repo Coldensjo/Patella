@@ -18,8 +18,16 @@ Read this and `git log` first when resuming.
 
 ## Current item
 
-6 (Map.cpp) and 8 (Creatures.cpp) are with delegates; 7 (MapWindow.cpp)
-waits for Map.cpp. Meanwhile: item 10, the smallest remaining files.
+Item 10 (remaining files). Done so far in item 10: sysinc.cpp, Help.cpp,
+Inventory.cpp, MainFrm.cpp. Settled but not reconstructed: SurfaceDX.cpp
+range 0x4eae70-0x4ed19f, MainWindow.cpp gap 0x4ac010-0x4ac20d.
+
+Plan (order changed on purpose, see decisions.md "Order of the GUI files"):
+GUI.cpp next (it defines TWindow and the base classes that MainWindow,
+DialogWindow, DialogElements, Dialogs, ContentWindows, ConsoleWindow,
+ContextMenus and MapWindow derive from), as a delegate when a slot is free;
+then MainWindow.cpp; then the derived files smallest first. In parallel,
+the non-GUI files: SurfaceGL.cpp, surfaceDX9.cpp, SurfaceDX.cpp, graphics.cpp.
 
 ## Delegates (running)
 
