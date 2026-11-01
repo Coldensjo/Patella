@@ -15,14 +15,15 @@ Read this and `git log` first when resuming.
 7a. MainWindow.cpp and the MainFrm/MainWindow gap — **done** (issue #2, Claude Opus 5.5).
 7b. DialogWindow.cpp and the Dialogs/DialogWindow gap — **done** (issue #3, Claude Opus 5.5).
 7c. ContextMenus.cpp and the ContentWindows/ContextMenus gap — **done** (issue #4, Claude Opus 5.5).
+7d. ConsoleWindow.cpp and the gaps on both sides — **done** (issue #5, Claude Opus 5.5; the second gap is ContentWindows.obj).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-ContextMenus.cpp done (issue #4, November 1, 2026). Next: the other window files smallest first
-(ConsoleWindow, ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
+ConsoleWindow.cpp done (issue #5, November 1, 2026). Next: the other window files smallest first
+(ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
 surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
 
 ## Delegates (running)
@@ -35,7 +36,7 @@ None.
 
 ## Last difftest
 
-12,423,234 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,456,041 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -81,8 +82,8 @@ None.
 - MainWindow.cpp: the windows it creates from DialogWindow.cpp, ContentWindows.cpp, ConsoleWindow.cpp
   and DialogElements.cpp are sketches in external.h (TSubWindowBody, TConsoleWindow, TBorder,
   TTextButton, TLabel, TObjectIcon, TSideWindow3/4/5, the FUN_ creators; TDialogWindow and
-  TSubWindow are real since issue #3); replace them with the real classes and check
-  MainWindow.cpp's calls (notes/decisions.md).
+  TSubWindow are real since issue #3, TConsoleWindow since issue #5); replace them with the real
+  classes and check MainWindow.cpp's calls (notes/decisions.md).
 - mainwindowtest.cpp makes the not-reconstructed windows fakes for both sides: the image's
   constructors jump to fastcall wrappers that placement-new the fake, whose constructor then sets
   the vtable of a test subclass (extra overrides, same layout). Reuse it for the window files; when
@@ -104,8 +105,8 @@ None.
   (and write such scripts with the Write tool: the Bash tool expands backslash escapes in them).
 - ContextMenus.cpp (issue #4): ContextMenus.h needs Map.h (TMark, TCoordinate), which includes
   external.h, so external.h cannot include it; its users include it directly (Control.cpp).
-  ConsoleWindow.cpp's text view is the TTextWindow sketch (TextBuffer at +0x24, FUN_00419030 gets a
-  line); TConsoleData34::Data2C is one. When ConsoleWindow.cpp, DialogElements.cpp (TEditLine,
+  (The console's classes are real since issue #5; contextmenustest.cpp fakes their methods on both
+  sides.) When DialogElements.cpp (TEditLine,
   TFormattedText 0x465e60, TSeparator 0x452cb0) or ContentWindows.cpp (TSkillsWindowBody) are
   reconstructed, contextmenustest.cpp's definitions of their methods and constructors must go
   (duplicates), and its fakes must move to the real classes. DIFFTEST_ONLY=ContextMenus runs the test
@@ -115,3 +116,23 @@ None.
   image's address for such functions (contextmenustest.cpp's Send* and IsClipboardEmpty).
 - A menu's Show shrinks the last entry each time it runs; tests must not call it again once the last
   entry would drop below one pixel (both versions fail).
+- ConsoleWindow.cpp (issue #5): ConsoleWindow.h is included by external.h (it needs only GUI.h and Talk.h;
+  the DialogElements classes it points to are forward declarations). consolewindowtest.cpp defines the shared
+  fakes of the DialogElements classes the console creates (TEditLine, TScrollBar/TScrollBarRange,
+  TSkinButton's constructor, TToggleButton, TMultiStateButton); they log only while that test runs, and
+  contextmenustest.cpp and dialogwindowtest.cpp link them. When DialogElements.cpp is reconstructed, those
+  definitions must go (duplicates) and the three tests need the real classes or new fakes. The
+  ContentWindows functions of the ConsoleWindow/ContentWindows gap (0x425a10-0x425e6d) still have FUN_ names.
+- mainwindowtest.cpp reaches our TConsoleWindow constructor through its decorated name
+  (#pragma comment(linker, "/alternatename:...")): a constructor has no address in C++. The same works for
+  any constructor a fake must replace.
+- Test files must not define classes (with inline members or vtables) of the same name: the linker keeps one
+  COMDAT, and an object of the other file's class gets the wrong vtable (consolewindowtest.cpp's first buffer
+  class called contextmenustest.cpp's TTestBuffer methods).
+- Talk.cpp's TTalkBuffer::Remove(int) only finds line 0 (the binary never increments its counter); tests that
+  remove other lines use Remove(TTalkLine *).
+- Our DrawSkin is inlined into TComponent::Draw (GUI.cpp): patching DrawSkin does not reach the drawing lists;
+  fake DrawPicturePart instead and let DrawSkin run on both sides (consolewindowtest.cpp).
+- tools/callcheck.py splits functions at every comment line that starts with "// 0x"; write continuation lines
+  so that they do not.
+- tools/triage.py lets header evidence win over file-ranges.tsv (as assertion evidence does).

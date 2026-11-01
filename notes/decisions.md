@@ -1526,3 +1526,186 @@ Reconstructed by Claude Opus 5.5 (issue #4), November 1, 2026.
   Not exercised: the error paths, and inputs the original fails on as well
   (a second Show that shrinks the last entry below 1 pixel, a separator as
   the last child).
+
+## ConsoleWindow.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
+
+- **Range** (high for the first gap, medium for the second). The
+  Communication/ConsoleWindow gap 0x4174d0-0x41864c is ConsoleWindow.obj:
+  Communication.cpp's last catch block ends at 0x4174b6; 0x4174d0-0x41851f is
+  one run of out-of-line inline copies (common.h's In, graphics.h's
+  TRGBColor(), GUI.h's TDrawing() and the TComponent/TElement/TWindow slots
+  of the console's five vtables, which Communication.obj does not use;
+  DialogElements.h's TEditLine::HasSelection 0x417520; ConsoleWindow.h's
+  TTextWindow::HasSelection 0x417590, the inline destructors of TTabBar and
+  TTextWindow with their deleting forms, TLineFormat's constructor (lines
+  47-54 of ConsoleWindow.h) and Container.h's vector<TLineFormat>), then
+  TTextWindow's constructor 0x418520 and MouseMove 0x4185b0 (line 165, whose
+  PROGRAM_ERROR catch 0x418639 was the gap's last entry). In and TRGBColor()
+  are assigned with the run (low: nothing ties them to ConsoleWindow.obj
+  except their place). The ConsoleWindow/ContentWindows gap 0x425920-0x425e6f
+  is ContentWindows.obj: ConsoleWindow.cpp's last catch block ends at
+  0x425918; 0x425a10/0x425a40 are slots of a ContentWindows vtable,
+  0x425a70/0x425ad0/0x425e00 destructors of ContentWindows classes (vtables
+  0x55e710, 0x55e7c8, 0x55e880, whose constructors are ContentWindows.cpp's)
+  with their deleting forms; the inline copies before them (the clamp 0x425920
+  called only by DialogElements.cpp, TRGBColor(int) 0x425950, TElement's
+  MouseMove 0x4259f0 and the folded true-returning slots 0x425a00) belong to
+  the same run, and ConsoleWindow.obj needs no TElement::MouseMove (both its
+  TElement classes override it). 0x425b10 is vector<TMark>'s destructor
+  (names.tsv). The ContentWindows functions keep their FUN_ names for its
+  issue. ConsoleWindow.obj's vtables are 0x55dcd8-0x55e1a0; its data are its
+  copy of DefaultFontColor (0x5c066c) and of the text table
+  (0x5c044c-0x5c0664, external.h; names ours). tools/triage.py now lets
+  header evidence win over file-ranges.tsv as assertion evidence does (the
+  three header functions of the first gap stay header code; four Container.h
+  functions of older ranges changed from "range" to "header", same file).
+- **Classes** (high for layouts and vtables, low-medium for names).
+  TConsoleWindow (0x6c bytes, vtable 0x55e1a0; Data30 is never used),
+  TTabBar (0x40, 0x55dcd8, a new slot +0xa0 Rearrange), TTab (0x58,
+  0x55e098), TConsole (0x38, 0x55dfc0; the implicit destructor, its deleting
+  form folded into 0x4adc40), TTextWindow (0x94, 0x55dd80, new slots +0x84
+  FormatLines and +0x88 GetPosition) and the struct TLineFormat (0x28). The
+  class names are ours: the variables CurrentConsole, CurrentTab, DefaultTab
+  and NewTab gave TConsole and TTab; TTextWindow keeps the name of
+  ContextMenus.cpp's sketch ("console text window" in TConsole::Arrange's
+  error message). Member names from the binary: LineText, InvisibleLines,
+  Input, TextBuffer (and getFirstLineNumber, getLastLineNumber,
+  getTextBuffer, getCaption); the rest are ours. Ghidra missed four slots:
+  0x417700 (GetMinimumHeight of TTab and TTabBar, folded: the tab height),
+  0x417a50 and 0x41acc0 (the ReleaseCapture of TTextWindow and TTab: they
+  clear Selecting/Dragging first) and 0x41de70
+  (TConsoleWindow::GetMinimumHeight); they and the destructors of TTabBar and
+  TTextWindow are written inline in ConsoleWindow.h, TTextWindow's
+  constructor (no line, no try block) at the top of the .cpp, where the
+  binary has it (DialogWindow.cpp's precedent).
+- **Function names** (ours, low-medium unless the binary gives them):
+  SetTextBuffer, FormatLines, GetTalkLine, GetLineFormat,
+  GetSelectionStart/End, SelectAll, GetSelectedText, GetPosition,
+  HasSelection; TTab's SetActive (parameter _Active from the catch block);
+  TTabBar's SetCurrentTab, GetContainer ("failed to get composite",
+  "Container"), FindTab, ShowTab, StoreOpenChannels, Rearrange;
+  TConsoleWindow's SetActive (MainWindow.cpp's SetConsoleActive,
+  "Active?1:0"), UpdateButtons, OpenDefaultChannel, OpenChannel (RecvMode,
+  SendMode from the catch block), AddChannel, CloseChannel,
+  ReportRuleViolation (Question), Get/SetServerMessages, GetTextBuffer,
+  SendInput, AddToHistory, ParseInput, SaveChannel. Events are written in
+  decimal (201-213, 403), AddMessage's numbers in hex.
+- **Source order** (medium). Line order. The binary moves TTextWindow's Draw
+  (84), Arrange (148), LeftButtonDoubleClick, RightButtonUp and
+  HandleEvent, TConsole::Arrange, TTab's LeftButtonDown and RightButtonUp,
+  TTabBar's constructor, SetCurrentTab, DeleteChild and RemoveChild and most
+  of TConsoleWindow behind the rest: each calls a function defined further
+  down (Creatures.cpp's pattern).
+- **Exception tables and switches** (high), checked with ehinfo.py (every
+  catch is the standard trio): no try block in TLineFormat's constructor (25
+  states, five assertions), SetCurrentLineNumber, GetServerMessages and
+  GetTextBuffer (0x4193d0 and 0x41f7f0 share one FuncInfo) and TTextWindow's
+  constructor (the base class only); assertions before TBEGIN in TTab's
+  constructor (11-11) and Draw (10-10), SetCurrentTab (5-10),
+  SetServerMessages (10-10) and AddChannel (5-11); the constructors' try
+  blocks start at state 1. TTextWindow::Arrange has five states without code
+  (0-5): the folded assertion of an inlined SetCurrentLineNumber(-1), written
+  as that call (medium; the binary stores CurrentLineNumber directly).
+  TConsole::Arrange's error builds a std::stringstream (states 0-7). Jump
+  tables checked: ParseInput 0x420048/0x420070 ('A'-'Y'),
+  TTextWindow::HandleEvent 0x421430 (16-20), SendInput 0x4241c8/0x4241e4
+  (talk modes 0-15; 6 and 12 go to the default), KeyPress 0x424ad4
+  (0x100-0x10b), TConsoleWindow::HandleEvent 0x424f68/0x424fa0 (201-403;
+  209 is the default).
+- **Odd behaviour kept**: FormatLines does not reset LineEnd between the
+  parts of a talk line and loops for ever in a width without room for a
+  character; TTextWindow::Arrange loops for ever on a line without a format;
+  a buffer whose lines were removed is neither drawn nor formatted by Draw
+  until the next Arrange (its LinesChanged is dropped); GetSelectedText does
+  not test a missing format in a one-line selection; GetPosition asks for the
+  bottom line's height twice; LeftButtonDoubleClick tests the character
+  before the length; TTabBar's constructor runs Arrange before Busy is set
+  and never sets Changed; a dragged tab can be pushed out of the bar by a
+  later layout (the next move then fails its assertion); TConsole::Arrange
+  places the scroll bar with the skin 173 width added and taken away;
+  TTab::~TTab leaves the player's own private channel only when the server
+  closed it; ReportRuleViolation shows an open request without event 201;
+  AddChannel asserts NewTab after using it; the ignore button's skin shows
+  the talk throttle; SendInput cuts the addressee inside the edit line's
+  text after clearing the line; ParseInput's "unknown message separator"
+  cannot happen.
+- **Names changed elsewhere** (binary evidence): Talk.h's
+  TTalkBuffer::IsDefault is isDefault (the assertions
+  "CurrentConsole->getTextBuffer()->isDefault()==false", lines 2061 and
+  2072); Talk.cpp's HasUnreadConsoleText (0x502880) is HasOwnPrivateChannel:
+  SendInput sends "#I"/"#X" invitations only when it is true, and the
+  function looks for a selected private channel (the one Control.cpp's
+  message 0x31 marks as the player's); ContextMenus.cpp and the tests are
+  renamed. Talk.h gained the inline TTalkBuffer::GetFirst/GetLast (cursor =
+  first/last, returned; FormatLines and AddToHistory have the pattern
+  inlined).
+- **SkinProperties.Style9E8 retyped** (high for the offsets; the types are
+  guesses, its constructor 0x495b70 zeroes +0x04-+0xa7): five TRects (the tab
+  bar, an unused one, the edit line, an unused one, the current channel),
+  seven TGUIPoints (the button positions), a TRect (the text window in
+  TConsole), a TRGBColor (the selection) and the font; GUI.cpp's stores are
+  rewritten with the same values and offsets (guitest.cpp compares them byte
+  by byte).
+- **DialogElements.cpp sketches** (external.h, low): TEditLine is a TWindow
+  (vtable 0x560e98, 0x68 bytes, constructor 0x467b50 with an area, 255 and
+  0; SetActive 0x45bc80; the inline HasSelection; slots +0xa0 SetText, +0xa4
+  Clear, +0xb8 SetReadOnly, +0xc0 SetFont; Text at +0x2c); TSkinButton got
+  its constructor 0x466860 and members; new: TToggleButton (0x4671e0),
+  TMultiStateButton (0x4672d0, a varargs constructor: __cdecl with this
+  pushed first; Reset 0x452790), TScrollBar (0x469a80) with its
+  TScrollBarRange (SetRange 0x460450, Value at +0x30). All have
+  low-confidence names.tsv rows.
+- **Callers** changed in names only: MainWindow.cpp (SetActive,
+  OpenDefaultChannel), Control.cpp (OpenChannel with the name and caption as
+  strings, AddChannel, ReportRuleViolation, CurrentConsole->TextWindow),
+  ContextMenus.cpp (GetTalkLine, HasSelection (inline now; the binary calls
+  its out-of-line copy), GetSelectedText, SelectAll, the console's methods,
+  CurrentConsole->TextWindow); each call checked against decomp/clean.
+- **callcheck** (55 of 76 functions differ, all explained): base class
+  constructors and destructors, new-expressions (TTab, TTextWindow, the
+  DialogElements objects, TTalkBuffer, TTalkLine), TLineFormat and TCallback
+  temporaries are not lexical calls; Container.h's operator() (Lines(i)) is
+  not seen; virtual calls (GetPosition, ReleaseCapture, Arrange,
+  FormatLines, Rearrange, the TTabBar child functions, SetChildPosition,
+  SetChildArea, SetSize, GetParent, GetPrevious, HandleEvent and the
+  TTalkBuffer inline virtuals) are indirect in the binary; ambiguous member
+  names (SetActive, InsertChild, IsChild, SetSize, GetNext, Clear,
+  GetTextBuffer) are not resolved or resolved to another class; HasSelection
+  is inlined in the selection functions and SetCurrentLineNumber in
+  TTextWindow::Arrange; the compiler merged call sites (GetTextPartWidth in
+  Draw, SendLeaveChannel in ~TTab, AddMessage and SetCurrentTab in
+  HandleEvent); the pseudocode of SendInput and ReportRuleViolation counts
+  the assertion texts "GetCreature(GetPlayerID())". (A comment line starting
+  with "// 0x" splits a function for the tool; ConsoleWindow.cpp avoids
+  them.)
+- **Tests** (consolewindowtest.cpp, 30,928 checks over 300 rounds of 20-60
+  random operations): two consoles from the image's and our constructors in
+  memory with the same contents, sized and given the default channel; then
+  sizes, drawing, keys (typing, sending every kind of command, the selection
+  keys, hotkeys, the history), events, opening, adding and closing channels,
+  the report, the server message switch, saving a channel (the files are
+  compared), mouse presses, drags, double and right clicks and the wheel in
+  the tab bar and the text, the tab bar's events, the fake buttons'
+  callbacks and Talk.cpp changes; logs and dumps of both trees (every member,
+  the formatted lines with their talk lines, the hidden tabs) compared after
+  each step, then the destructors. The DialogElements classes are fakes on
+  both sides (also the definitions that contextmenustest.cpp and
+  dialogwindowtest.cpp link); the text buffers are test subclasses of
+  TTalkBuffer, one set per side with the same lines; the image's clock,
+  localtime, ctime and fprintf and our CRT's _time32 are patched; DrawSkin is
+  real on both sides (ours is inlined into TComponent::Draw) and the picture
+  parts are logged. A mutation check (eight changes, one at a time) failed
+  each run. DIFFTEST_ONLY=ConsoleWindow runs it alone; it restores every
+  patch. mainwindowtest.cpp keeps a fake console on both sides: the image's
+  constructor and ours (reached through its decorated name with
+  /alternatename) build a TWindow of the same size, SetActive and
+  OpenDefaultChannel log. contextmenustest.cpp's console methods are fastcall
+  fakes of the real methods on both sides (TTextWindow::HasSelection runs on
+  the test's selection). Lesson: two test files must not define classes of
+  the same name (the console test's first buffer class got
+  contextmenustest.cpp's TTestBuffer vtable: the linker keeps one COMDAT).
+  Not exercised: the error paths and inputs the original fails on as well (a
+  width without room for a character, a dragged tab pushed out of the bar,
+  a talk mode without its addressee or channel).
