@@ -21,6 +21,7 @@
 // close. Arrange then fills the space below the last child with nine skins.
 
 #include "DialogWindow.h"
+#include "ContentWindows.h"
 #include "Preferences.h"
 #include "Skins.h"
 #include "Surface.h"
@@ -668,7 +669,7 @@ void TSubWindow::Arrange()
 	TContentWindow::Arrange();
 	if (Identifier >= 0x40) {
 		TASSERT(Body!=NULL);
-		Body->FUN_0042e4e0();
+		((TContainerWindowBody *)Body)->UpdateUpButton();
 	}
 	DrawingList[0] = TDrawing(128, 0, 0, 0, 0, 0, 0);
 	DrawingList[1] = TDrawing(132, Skins[128].width, 0, Width - Skins[129].width - Skins[128].width,
@@ -753,7 +754,7 @@ void TSubWindow::Minimize()
 	TBEGIN
 	IsMinimized = true;
 	RestoreHeight = Height;
-	Body->UnknownA0();
+	Body->Minimize();
 	if (Resizer1 != NULL)
 		RemoveChild(Resizer1);
 	if (Resizer2 != NULL)
@@ -772,7 +773,7 @@ void TSubWindow::Maximize()
 	TASSERT(IsMinimized==true);
 	TBEGIN
 	IsMinimized = false;
-	Body->UnknownA4();
+	Body->Maximize();
 	if (Body != NULL)
 		AppendChild(Body);
 	if (Resizer1 != NULL)

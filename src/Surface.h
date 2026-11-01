@@ -33,10 +33,10 @@ public:
 	virtual ~TSurface();                                              // +0x00
 	virtual void Unknown04(int Value);                                // +0x04, empty
 	virtual void Unknown08(int Value);                                // +0x08, empty
-	virtual void Unknown0C() = 0;
-	virtual void Unknown10() = 0;
+	virtual void SetPixel(int Surface, int x, int y, TRGBColor Color) = 0; // +0x0c, ContentWindows.cpp's automap cross
+	virtual void FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, TRect Clip) = 0; // +0x10, ContentWindows.cpp's bars
 	virtual void FillRectangle(int Surface, TRect Rect, TRGBColor Color) = 0; // +0x14
-	virtual void Unknown18() = 0;
+	virtual void DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBColor Color) = 0; // +0x18, ContentWindows.cpp's separator line
 	virtual void Unknown1C() = 0;
 	virtual void DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color,
 		TRect Clip) = 0;                                              // +0x20

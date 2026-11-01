@@ -19,6 +19,7 @@
 // release or Escape ends the action state, and Control.cpp deletes the menu.
 
 #include "ContextMenus.h"
+#include "ContentWindows.h"
 #include "Communication.h"
 #include "Creatures.h"
 #include "Help.h"

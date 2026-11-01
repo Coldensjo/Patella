@@ -30,6 +30,24 @@ inline bool In(int Value, int Min, int Max)
 	return Value >= Min && Value <= Max;
 }
 
+// Keeps *Value between Min and Max, in either order. The name is ours. The
+// out-of-line copy 0x425920 is ContentWindows.obj's (TTradeWindowBody::SetSize
+// inlines it); DialogElements.cpp calls it (0x45d8a3 and four more).
+inline void Limit(int *Value, int Min, int Max)
+{
+	if (Min > Max) {
+		if (*Value < Max)
+			*Value = Max;
+		if (*Value > Min)
+			*Value = Min;
+	} else {
+		if (*Value < Min)
+			*Value = Min;
+		if (*Value > Max)
+			*Value = Max;
+	}
+}
+
 // Thrown by value (ThrowInfo at 0x57b3b4).
 #include "TMyException.h"
 

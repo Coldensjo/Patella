@@ -228,7 +228,7 @@ struct TGUIPoint {
 // members are named by their offset. The block boundaries are those of the
 // out-of-line block constructors; blocks whose constructor was inlined are
 // not visible and their members are direct members here (for example
-// PlayerStates, whose NumberOfIcons is Data490). The member types of the
+// those of the inventory, which ContentWindows.cpp reads as arrays). The member types of the
 // zero-initialised members (TGUIPoint, TRGBColor or TRect) are guesses from
 // the values InitSkinProperties stores.
 
@@ -274,31 +274,9 @@ struct TSkinProperties288 {
 	int Data00; // +0x00
 	int Data04; // +0x04
 	TGUIPoint Data08; // +0x08
-	TRect Data10; // +0x10
-	TRect Data20; // +0x20
-	TRect Data30; // +0x30
-	TRect Data40; // +0x40
-	TRect Data50; // +0x50
-	TRect Data60; // +0x60
-	TRect Data70; // +0x70
-	TRect Data80; // +0x80
-	TRect Data90; // +0x90
-	TRect DataA0; // +0xa0
-	TRect DataB0; // +0xb0
-	TRect DataC0; // +0xc0
-	TRect DataD0; // +0xd0
-	TRect DataE0; // +0xe0
-	TRect DataF0; // +0xf0
-	int Data100; // +0x100
-	int Data104; // +0x104
-	int Data108; // +0x108
-	int Data10C; // +0x10c
-	int Data110; // +0x110
-	int Data114; // +0x114
-	int Data118; // +0x118
-	int Data11C; // +0x11c
-	int Data120; // +0x120
-	int Data124; // +0x124
+	TGUIPoint Data10[10]; // +0x10, the objects of the ten body slots (ContentWindows.cpp)
+	TRect Data60[10]; // +0x60, the ten slot areas
+	int Data100[10]; // +0x100, the skins of the empty slots
 	TRect Data128; // +0x128
 	TRect Data138; // +0x138
 	TRect Data148; // +0x148
@@ -373,9 +351,9 @@ struct TBuddylistWindowProperties {
 	TRect Logo; // +0x08
 	TRect Data18; // +0x18
 	TFont Data28; // +0x28
-	TGUIPoint Data3C; // +0x3c
-	TRect Data44; // +0x44
-	TRGBColor Data54; // +0x54
+	TRGBColor Data3C; // +0x3c, an online buddy
+	TRGBColor Data48; // +0x48, an offline buddy
+	TRGBColor Data54; // +0x54, a buddy who just came online
 };
 
 // GUIStyle+0x88c (0x5cd854); compiler-generated constructor 0x4958e0.
@@ -613,6 +591,29 @@ struct TSkinProperties1394 {
 	TGUIPoint Data70; // +0x70
 };
 
+// GUIStyle+0x470 (0x5cd438), PlayerStates in ContentWindows.cpp's assertion
+// ("SkinProperties.PlayerStates.NumberOfIcons"); its constructor is inlined
+// into SkinProperties' (the extent of the block is a guess: the members
+// TPlayerStates reads). Data00 and Data10 hold the first icon's position in
+// the large and the small row, Data24 the distance between the icons.
+struct TPlayerStatesProperties {
+	TRect Data00; // +0x00
+	TRect Data10; // +0x10
+	int NumberOfIcons; // +0x20
+	int Data24; // +0x24
+};
+
+// GUIStyle+0x4ac and +0x4fc (0x5cd474, 0x5cd4c4): the layout of the large and
+// the small combat controls (ContentWindows.cpp copies a whole block by
+// value): their height and width and the positions of the offensive,
+// balanced, defensive, stand, chase, secure, stop, options and help buttons.
+// The type and member names are ours.
+struct TCombatControlsProperties {
+	int Height; // +0x00
+	int Width; // +0x04
+	TGUIPoint Buttons[9]; // +0x08
+};
+
 struct TSkinProperties {
 	TGUIPoint CursorHotspot1; // +0x000
 	TGUIPoint CursorHotspot2; // +0x008
@@ -667,30 +668,10 @@ struct TSkinProperties {
 	TSkinProperties288 Style288; // +0x288, 0x158 bytes
 	TSkinProperties3E0 Style3E0; // +0x3e0, 0x48 bytes
 	TSkinProperties3E0 Style428; // +0x428, 0x48 bytes
-	TRect Data470; // +0x470
-	TRect Data480; // +0x480
-	int Data490; // +0x490, SkinProperties.PlayerStates.NumberOfIcons (ContentWindows.cpp line 1036)
-	int Data494; // +0x494
+	TPlayerStatesProperties PlayerStates; // +0x470, 0x28 bytes
 	TFont Data498; // +0x498
-	int Data4AC; // +0x4ac
-	int Data4B0; // +0x4b0
-	TGUIPoint Data4B4; // +0x4b4
-	TGUIPoint Data4BC; // +0x4bc
-	TGUIPoint Data4C4; // +0x4c4
-	TGUIPoint Data4CC; // +0x4cc
-	TRect Data4D4; // +0x4d4
-	TGUIPoint Data4E4; // +0x4e4
-	TGUIPoint Data4EC; // +0x4ec
-	TGUIPoint Data4F4; // +0x4f4
-	int Data4FC; // +0x4fc
-	int Data500; // +0x500
-	TGUIPoint Data504; // +0x504
-	TGUIPoint Data50C; // +0x50c
-	TGUIPoint Data514; // +0x514
-	TGUIPoint Data51C; // +0x51c
-	TRect Data524; // +0x524
-	TGUIPoint Data534; // +0x534
-	TRect Data53C; // +0x53c
+	TCombatControlsProperties Style4AC; // +0x4ac, the large combat controls (ContentWindows.cpp)
+	TCombatControlsProperties Style4FC; // +0x4fc, the small ones
 	int Data54C; // +0x54c
 	TRect Data550; // +0x550
 	TRect Data560; // +0x560
@@ -710,9 +691,8 @@ struct TSkinProperties {
 	TFont Data654; // +0x654
 	int Data668; // +0x668
 	int Data66C; // +0x66c
-	TGUIPoint Data670; // +0x670
-	TGUIPoint Data678; // +0x678
-	TGUIPoint Data680; // +0x680
+	TRGBColor Data670; // +0x670, the bars of the first seven skill lines (ContentWindows.cpp)
+	TRGBColor Data67C; // +0x67c, the bars of the skills
 	TSkinProperties688 Style688; // +0x688, 0x74 bytes
 	TSkinProperties6FC Style6FC; // +0x6fc, 0x10c bytes
 	TBuddylistWindowProperties BuddylistWindow; // +0x808, 0x60 bytes

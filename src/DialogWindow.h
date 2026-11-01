@@ -28,12 +28,12 @@
 #include "common.h"
 #include "GUI.h"
 
-class TSubWindowBody; // external.h (ContentWindows.cpp)
+class TSubWindowBody; // ContentWindows.h
 class TResizer;       // external.h (DialogElements.cpp)
 class TSkinButton;    // external.h (DialogElements.cpp)
 
 // A window in a TDialogWindow. Identifier: 1 and 2 the two inventory
-// windows, 3-5 the other side-bar windows, 6 skills, 7 battle, TRADE_WINDOW
+// windows, 3 the automap, 4 the status bars, 5 the buttons, 6 skills, 7 battle, TRADE_WINDOW
 // (8, MainWindow.h), 9 VIP, 0x40 plus the number of a container.
 class TContentWindow : public TWindow {
 public:

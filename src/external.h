@@ -53,21 +53,6 @@ struct TFullscreenMode; // Preferences.h
 // parts are below.
 #include "ConsoleWindow.h"
 
-// ContentWindows.cpp: the body of a TSubWindow (DialogWindow.h), the content
-// of a container, the skills, the battle list, the VIP list or the trade.
-// The class name is ours; size and vtable not known yet.
-class TSubWindowBody : public TWindow {
-public:
-	virtual void UnknownA0();                         // +0xa0, TSubWindow::Minimize
-	virtual void UnknownA4();                         // +0xa4, TSubWindow::Maximize
-	virtual bool UnknownA8();                         // +0xa8, MainWindow.cpp's OpenContainer
-	virtual void UnknownAC(); virtual void UnknownB0(); virtual void UnknownB4();
-	virtual void UnknownB8();                         // +0xb8, MainWindow.cpp's OpenContainer
-	// 0x42e4e0: a container body shows or hides its window's "up" button
-	// (TSubWindow::Arrange calls it for the containers).
-	void FUN_0042e4e0();
-};
-
 // DialogElements.cpp: the two resizers of a TSubWindow (vtable 0x5612b0,
 // 0x38 bytes); parameter name _ToResize from the assertion (line 74), the
 // other three are flags (+0x34-+0x36). The class name is ours.
@@ -80,15 +65,34 @@ public:
 // DialogElements.cpp: a button drawn with two skins (pressed and released)
 // that sends its callback (0x44 bytes, constructor 0x466860; vtable not
 // known yet), TSubWindow's minimize button and the console's buttons. The
-// class name is ours; the last parameter is 0 in ConsoleWindow.cpp.
+// class name is ours; the last parameter is 0 in ConsoleWindow.cpp and
+// ContentWindows.cpp. A button of a radio group ("RadioButtonGroup==NULL",
+// DialogElements.cpp line 1239) shows as pressed while it is the group's
+// selection.
+struct TRadioButtonGroup;
 class TSkinButton : public TElement {
 public:
 	TSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, TCallback Callback, const char *Tooltip,
 		int Param);                                  // 0x466860
 	void SetSkins(int _ButtonUp, int _ButtonDown);   // 0x458b20, lines 1228-1229
+	void SetRadioButtonGroup(TRadioButtonGroup *Group); // 0x458de0, line 1239
 	int ButtonUp;    // +0x24
 	int ButtonDown;  // +0x28
-	uint8 Data2C[0x44 - 0x2c];
+	uint8 Data2C[0x38 - 0x2c];
+	TRadioButtonGroup *RadioButtonGroup; // +0x38
+	const char *Tooltip; // +0x3c
+	uint8 Data40[0x44 - 0x40];
+};
+
+// DialogElements.h: the buttons of a radio group (0x28 bytes; the type name
+// is ours). The constructor and the destructor are inline (ContentWindows.cpp's
+// TCombatControls; the out-of-line vector constructor is 0x425e70); Selected
+// is left uninitialised.
+struct TRadioButtonGroup {
+	TRadioButtonGroup() : Buttons(0, 0, 10, NULL) { Count = 0; }
+	TSkinButton *Selected;         // +0x00
+	vector<TSkinButton *> Buttons; // +0x04
+	int Count;                     // +0x24
 };
 
 // DialogElements.cpp: a button with two states (vtable 0x561cd0, 0x50
@@ -123,12 +127,15 @@ public:
 class TScrollBarRange {
 public:
 	void SetRange(int Minimum, int Maximum, int Value, int Visible); // 0x460450
+	void SetValue(int _Value);       // 0x460710, kept within the range
 	uint8 Data00[0x30];
 	int Value;       // +0x30
 };
+// The last parameter is the step of a click (1 in ConsoleWindow.cpp, 10 or a
+// part of a line or row in ContentWindows.cpp).
 class TScrollBar : public TWindow {
 public:
-	TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, bool Param6); // 0x469a80
+	TScrollBar(TRect Area, int Param2, int Param3, int Param4, int Param5, int Step); // 0x469a80
 	TScrollBarRange *Range; // +0x2c
 	uint8 Data30[0x38 - 0x30];
 };
@@ -165,8 +172,10 @@ extern const char *TextReportRuleViolation; // 0x5c0664, "Report Rule Violation"
 class TSurfaceGL : public TSurface {       // 0x498 bytes
 public:
 	TSurfaceGL();                          // 0x4fb670
-	void Unknown0C(); void Unknown10(); void FillRectangle(int Surface, TRect Rect, TRGBColor Color);
-	void Unknown18(); void Unknown1C();
+	void SetPixel(int Surface, int x, int y, TRGBColor Color);
+	void FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, TRect Clip);
+	void FillRectangle(int Surface, TRect Rect, TRGBColor Color);
+	void DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBColor Color); void Unknown1C();
 	void DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color, TRect Clip);
 	void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color);
 	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data);
@@ -226,32 +235,47 @@ public:
 	uint8 Data2C[0x68 - 0x2c];
 };
 // DialogElements.cpp: a button with a text (vtable 0x561c40, 0x78 bytes).
+// The second constructor uses the skins 12 and 13 (ContentWindows.cpp).
 class TTextButton : public TElement {
 public:
 	TTextButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
 		int Param);                                   // 0x466bc0, lines 1378-1379
+	TTextButton(int x, int y, const char *_Text, TCallback Callback, const char *Tooltip); // 0x466ed0, lines 1390-1391
 	uint8 Data24[0x78 - 0x24];
 };
-// DialogElements.cpp: a text (vtable 0x560bb8, 0x4c bytes).
+// DialogElements.cpp: a text button that shows whether its window is open
+// (vtable 0x561d58, 0x84 bytes; class name ours): ContentWindows.cpp's
+// TButtonsWindow sets State while it draws; the tooltips are those of
+// the two states.
+class TTextToggleButton : public TTextButton {
+public:
+	TTextToggleButton(int x, int y, const char *_Text, int Skin1, int Skin2, TCallback Callback,
+		const char *Tooltip1, const char *Tooltip2, bool _State); // 0x467230
+	bool State;               // +0x78
+	const char *Tooltip1;     // +0x7c
+	const char *Tooltip2;     // +0x80
+};
+// DialogElements.cpp: a text (vtable 0x560bb8, 0x4c bytes). The second
+// constructor takes an area; SetText (+0x84, 0x455e40) changes the text.
 class TLabel : public TElement {
 public:
 	TLabel(TFont Font, const char *_Text);            // 0x465b40, line 376
+	TLabel(int x, int y, int Width, int Height, TFont Font, const char *_Text, bool Param); // 0x465510, line 337
+	virtual void SetText(const char *_Text, bool Param); // +0x84, 0x455e40
 	uint8 Data24[0x4c - 0x24];
+};
+// DialogElements.cpp: one skin (vtable 0x5614f8, 0x28 bytes, sized to it;
+// class name ours), the icons of ContentWindows.cpp's sub-windows.
+class TSkinIcon : public TElement {
+public:
+	TSkinIcon(int Skin);                              // 0x457710, line 1002
+	int Skin;        // +0x24
 };
 // DialogElements.cpp: an object (vtable 0x560d88, 0x50 bytes).
 class TObjectIcon : public TElement {
 public:
 	TObjectIcon(TObject Obj, const TRGBColor *Color, int Param); // 0x4526c0
 	uint8 Data24[0x50 - 0x24];
-};
-
-// ContentWindows.cpp: the body of the skill window (class name ours); it
-// opens TSkillContextMenu and points to it while the menu is open.
-class TSkillContextMenu;
-class TSkillsWindowBody : public TSubWindowBody {
-public:
-	int Data2C;                     // +0x2c
-	TSkillContextMenu *ContextMenu; // +0x30
 };
 
 // DialogElements.cpp: an edit line (vtable 0x560e98, 0x68 bytes, class name
@@ -296,32 +320,55 @@ public:
 	bool Horizontal;                      // +0x24
 };
 
-// ContentWindows.cpp: the content windows of a TDialogWindow. The first ones
-// create and return them; the classes below are the side-bar windows MainWindow.cpp
-// creates itself.
-TWindow *FUN_004362b0(TMainWindow *Receiver);  // 0x4362b0, the inventory window (identifier 1)
-TWindow *FUN_00436510(TMainWindow *Receiver);  // 0x436510, the small inventory window (identifier 2)
-TWindow *FUN_0043c520(int Container);          // 0x43c520, a container's window
-TWindow *FUN_0043c920();                       // 0x43c920, identifier 6, "Skills" (Ctrl+S)
-TWindow *FUN_0043cc90();                       // 0x43cc90, identifier 7, "Battle" (Ctrl+B)
-TWindow *FUN_0043d000();                       // 0x43d000, TRADE_WINDOW, "Trade"
-TWindow *FUN_0043d390();                       // 0x43d390, identifier 9 (Ctrl+P)
-// Their constructors call TContentWindow's (0x4854c0).
-class TSideWindow3 : public TContentWindow {   // identifier 3 (vtable 0x55ea08, 0x80 bytes)
-public:
-	TSideWindow3();                            // 0x4368c0
-	uint8 Data44[0x80 - 0x44];
-};
-class TSideWindow4 : public TContentWindow {   // identifier 4 (vtable 0x55f500, 0x4c bytes)
-public:
-	TSideWindow4();                            // 0x438310
-	uint8 Data44[0x4c - 0x44];
-};
-class TSideWindow5 : public TContentWindow {   // identifier 5, the buttons "Skills", ... (vtable 0x55e968, 0x58 bytes)
-public:
-	TSideWindow5(TDialogWindow *_CheckObject, TMainWindow *Receiver); // 0x426480, line 292
-	uint8 Data44[0x58 - 0x44];
-};
+// ContentWindows.obj's copy of the text table (0x5c0678-0x5c08c3; names
+// ours). ContentWindows.cpp itself is in ContentWindows.h, which its users
+// include directly (it needs Map.h, which includes this header).
+extern const char *TextPoisoned;              // 0x5c0678, "You are poisoned"
+extern const char *TextOnFire;                // 0x5c067c, "You are on fire"
+extern const char *TextMagicShield;           // 0x5c0680, "You are protected by a magic shield"
+extern const char *TextParalysed;             // 0x5c0684, "You are paralysed"
+extern const char *TextHasted;                // 0x5c0688, "You are hasted"
+extern const char *TextNoLogoutInFight;       // 0x5c068c, "You may not logout during a fight"
+extern const char *TextDrunk;                 // 0x5c0690, "You are drunk"
+extern const char *TextStruckByEnergy;        // 0x5c0694, "You are struck by magical energy"
+extern const char *TextMayBeAttacked;         // 0x5c0698, "You may be attacked by other players"
+extern const char *TextPartyMember;           // 0x5c069c, "You are a member of a party"
+extern const char *TextAttackedUnmarked;      // 0x5c06a0, "You have attacked an unmarked player"
+extern const char *TextKilledTooMany;         // 0x5c06a4, "You have killed too many unmarked players"
+extern const char *TextMaximiseInventory;     // 0x5c06c8, "Maximise inventory"
+extern const char *TextMinimiseInventory;     // 0x5c06cc, "Minimise inventory"
+extern const char *TextCloseWindow;           // 0x5c06d0, "Close this window"
+extern const char *TextMaximiseOrMinimise;    // 0x5c06d4, "Maximise or minimise window"
+extern const char *TextShowHigherContainer;   // 0x5c06d8, "Show higher container"
+extern const char *TextOpenSkillsWindow;      // 0x5c06dc, "Open skills window (Ctrl+S)"
+extern const char *TextCloseSkillsWindow;     // 0x5c06e0, "Close skills window (Ctrl+S)"
+extern const char *TextOpenBattleWindow;      // 0x5c06e4, "Open battle window (Ctrl+B)"
+extern const char *TextCloseBattleWindow;     // 0x5c06e8, "Close battle window (Ctrl+B)"
+extern const char *TextOpenVIPWindow;         // 0x5c06ec, "Open VIP window (Ctrl+P)"
+extern const char *TextCloseVIPWindow;        // 0x5c06f0, "Close VIP window (Ctrl+P)"
+extern const char *TextLeaveGame;             // 0x5c06f4, "Leave the game (Ctrl+Q or Ctrl+L)"
+extern const char *TextCentreAroundPlayer;    // 0x5c06f8, "Centre around player"
+extern const char *TextShowHigherFloor;       // 0x5c06fc, "Show higher floor (Alt+PageUp)"
+extern const char *TextShowLowerFloor;        // 0x5c0700, "Show lower floor (Alt+PageDown)"
+extern const char *TextZoomIn;                // 0x5c0704, "Zoom in (Alt+End)"
+extern const char *TextZoomOut;               // 0x5c0708, "Zoom out (Alt+Home)"
+extern const char *TextScrollAutomap;         // 0x5c070c, "Scroll automap (Alt+Cursor)"
+extern const char *TextOffensiveFighting;     // 0x5c0710, "Offensive fighting"
+extern const char *TextBalancedFighting;      // 0x5c0714, "Balanced fighting"
+extern const char *TextDefensiveFighting;     // 0x5c0718, "Defensive fighting"
+extern const char *TextStandWhileFighting;    // 0x5c071c, "Stand while fighting"
+extern const char *TextChaseOpponent;         // 0x5c0720, "Chase opponent"
+extern const char *TextCannotAttackUnmarked;  // 0x5c0724, "You cannot attack unmarked characters"
+extern const char *TextCanAttackAny;          // 0x5c0728, "You can attack any character"
+extern const char *TextStopCurrentAction;     // 0x5c072c, "Stop current action (ESC)"
+extern const char *TextOpenOptions;           // 0x5c0730, "Open options"
+extern const char *TextOpenHelpMenu;          // 0x5c0734, "Open help menu"
+extern const char *TextCancelOffer;           // 0x5c0738, "Cancel offer"
+extern const char *TextRejectOffer;           // 0x5c073c, "Reject offer"
+extern const char *TextAcceptOffer;           // 0x5c0740, "Accept offer"
+extern const char *TextPercentToGo;           // 0x5c0748, "You have %d percent to go"
+extern const char *TextWaitForCounterOffer;   // 0x5c0758, "Please wait for a\ncounteroffer"
+extern const char *TextWaitForPartner;        // 0x5c075c, "Please wait for \nyour partner to accept."
 
 // DialogElements.cpp: a button that blinks until it is pressed (vtable
 // 0x561b90, 0x5c bytes; base constructor 0x466860). MapWindow.cpp's hint

@@ -19,6 +19,7 @@
 // them again.
 
 #include "MainWindow.h"
+#include "ContentWindows.h"
 #include "Communication.h"
 #include "Control.h"
 #include "Creatures.h"
@@ -221,7 +222,7 @@ void TMainWindow::HandleEvent(int Event)
 	case 0x17: {
 		TContentWindow *OldWindow = SidePanel->GetContentWindow(1);
 		TASSERT(OldWindow!=NULL);
-		SidePanel->InsertChildAfter(OldWindow, FUN_00436510(this));
+		SidePanel->InsertChildAfter(OldWindow, CreateSmallInventoryWindow(this));
 		SidePanel->DeleteChild(OldWindow);
 		SidePanel->Rearrange(32, NULL);
 		SideBar->SetSize(SkinProperties.Data184, SidePanel->GetMinimumHeight() + SideBar->GetMinimumHeight());
@@ -231,7 +232,7 @@ void TMainWindow::HandleEvent(int Event)
 	case 0x18: {
 		TContentWindow *OldWindow = SidePanel->GetContentWindow(2);
 		TASSERT(OldWindow!=NULL);
-		SidePanel->InsertChildAfter(OldWindow, FUN_004362b0(this));
+		SidePanel->InsertChildAfter(OldWindow, CreateInventoryWindow(this));
 		SidePanel->DeleteChild(OldWindow);
 		SidePanel->Rearrange(32, NULL);
 		SideBar->SetSize(SkinProperties.Data184, SidePanel->GetMinimumHeight() + SideBar->GetMinimumHeight());
@@ -353,42 +354,42 @@ void TMainWindow::ChangeMode(bool InGame)
 		DialogWindow = new TDialogWindow;
 		int *Dialogs;
 		int Count = GetOpenDialogs(&Dialogs);
-		bool HaveWindow3 = false;
-		bool HaveWindow4 = false;
+		bool HaveAutomap = false;
+		bool HaveStatus = false;
 		bool HaveInventory = false;
-		bool HaveWindow5 = false;
+		bool HaveButtons = false;
 		for (int i = Count - 1; i >= 0; i--) {
 			switch (Dialogs[i]) {
 			case 1:
-				SidePanel->InsertChild(FUN_004362b0(this));
+				SidePanel->InsertChild(CreateInventoryWindow(this));
 				HaveInventory = true;
 				break;
 			case 2:
-				SidePanel->InsertChild(FUN_00436510(this));
+				SidePanel->InsertChild(CreateSmallInventoryWindow(this));
 				HaveInventory = true;
 				break;
 			case 3:
-				SidePanel->InsertChild(new TSideWindow3);
-				HaveWindow3 = true;
+				SidePanel->InsertChild(new TAutomapWindow);
+				HaveAutomap = true;
 				break;
 			case 4:
-				SidePanel->InsertChild(new TSideWindow4);
-				HaveWindow4 = true;
+				SidePanel->InsertChild(new TStatusWindow);
+				HaveStatus = true;
 				break;
 			case 5:
-				SidePanel->InsertChild(new TSideWindow5(DialogWindow, this));
-				HaveWindow5 = true;
+				SidePanel->InsertChild(new TButtonsWindow(DialogWindow, this));
+				HaveButtons = true;
 				break;
 			}
 		}
-		if (!HaveWindow5)
-			SidePanel->InsertChild(new TSideWindow5(DialogWindow, this));
+		if (!HaveButtons)
+			SidePanel->InsertChild(new TButtonsWindow(DialogWindow, this));
 		if (!HaveInventory)
-			SidePanel->InsertChild(FUN_004362b0(this));
-		if (!HaveWindow4)
-			SidePanel->InsertChild(new TSideWindow4);
-		if (!HaveWindow3)
-			SidePanel->InsertChild(new TSideWindow3);
+			SidePanel->InsertChild(CreateInventoryWindow(this));
+		if (!HaveStatus)
+			SidePanel->InsertChild(new TStatusWindow);
+		if (!HaveAutomap)
+			SidePanel->InsertChild(new TAutomapWindow);
 		SideBar = new TBorder(SidePanel, 0);
 		InsertChild(MapFrame);
 		InsertChild(Splitter);
@@ -507,22 +508,23 @@ void TMainWindow::Walk(int dx, int dy, bool Diagonal)
 }
 
 // 0x4ac9e0, lines 511-539. The assertion comes before the try block. An
-// open container window is filled again: the body is cleared and, when the
-// body allows it (+0xa8), gets the name and the object of the container and
-// the "up" state of a container that has a parent.
+// open container window is filled again: the body is updated (scrolled to
+// the top, its counts, icon, title and "up" button; ContentWindows.cpp) and,
+// while it is minimized, the window gets the name and the object of the
+// container and the "up" state of a container that has a parent here.
 void TMainWindow::OpenContainer(int Container)
 {
 	TASSERT(DialogWindow!=NULL);
 	TBEGIN
 	TSubWindow *Window = (TSubWindow *)DialogWindow->GetContentWindow(Container + 0x40);
 	if (Window == NULL) {
-		DialogWindow->Rearrange(16, FUN_0043c520(Container));
+		DialogWindow->Rearrange(16, CreateContainerWindow(Container));
 		return;
 	}
 	Window->Arrange();
-	TSubWindowBody *Body = Window->Body;
-	Body->UnknownB8();
-	if (Body->UnknownA8()) {
+	TContainerWindowBody *Body = (TContainerWindowBody *)Window->Body;
+	Body->Update();
+	if (Body->IsMinimized()) {
 		Window->SetTitle(new TLabel(SkinProperties.Style194.Data38, GetContainerName(Container)));
 		Window->SetIcon(new TObjectIcon(GetContainerObject(Container), &SkinProperties.Style194.Data80, 0));
 		if (GetContainerHasParent(Container))
@@ -584,16 +586,16 @@ void TMainWindow::OpenContentWindow(int Identifier)
 		TWindow *Window;
 		switch (Identifier) {
 		case 6:
-			Window = FUN_0043c920();
+			Window = CreateSkillsWindow();
 			break;
 		case 7:
-			Window = FUN_0043cc90();
+			Window = CreateBattleWindow();
 			break;
 		case TRADE_WINDOW:
-			Window = FUN_0043d000();
+			Window = CreateTradeWindow();
 			break;
 		case 9:
-			Window = FUN_0043d390();
+			Window = CreateBuddylistWindow();
 			break;
 		default:
 			TERROR1("unknown identifier", Identifier);

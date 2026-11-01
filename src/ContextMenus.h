@@ -35,7 +35,8 @@ class TConsoleWindow;    // external.h (ConsoleWindow.cpp)
 class TTextWindow;       // external.h (ConsoleWindow.cpp)
 class TEditLine;         // external.h (DialogElements.cpp)
 class TFormattedText;    // external.h (DialogElements.cpp)
-class TSkillsWindowBody; // external.h (ContentWindows.cpp)
+class TSkillsWindowBody; // ContentWindows.h
+class TAutomapWindow;    // ContentWindows.h
 
 // The help bubble: a formatted text in a frame of skins 52-60.
 class THelpBubble : public TWindow {
@@ -169,7 +170,7 @@ public:
 };
 
 // The point of the automap a mark menu is opened for (0x80 bytes). The
-// automap window (ContentWindows.cpp 0x42e8e0) makes it with new and the
+// automap view (ContentWindows.cpp, TAutomapView::RightButtonUp) makes it with new and the
 // menu's constructor deletes it; its constructor (inlined there and in the
 // menu's) clears the coordinate and the mark.
 struct TMarkMenuData {
@@ -182,7 +183,7 @@ struct TMarkMenuData {
 
 	TCoordinate Coordinate; // +0x00, the field
 	TMark Mark;             // +0x0c, the mark there; x and y 0 without one
-	void *Window;           // +0x7c, the automap window (not used here)
+	TAutomapWindow *Window; // +0x7c, the automap window (not used here)
 };
 
 // The menu of a point of the automap.
