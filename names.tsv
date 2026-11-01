@@ -481,3 +481,43 @@ address	name	kind	confidence	note
 0x448c50	InitWindow	game	medium	stores the frame window and its callbacks (Control.cpp line 1585)
 0x44b510	InitControl	game	medium	initialises all modules and the network; shuts down on PROGRAM_ERROR (Control.cpp line 1633)
 0x448e30	ExitControl	game	medium	shuts down all modules (Control.cpp line 1661)
+0x4df550	TReadScriptFile_ctor	game	high	Script.h inline, out-of-line copy kept from Preferences.obj; File, Filename, Line, String cleared, Bytes=String, Special='#'
+0x4df5b0	TReadScriptFile_dtor	game	high	Script.h inline: fclose if open
+0x4df5d0	TReadScriptFile_close	game	medium	Script.h inline: fclose and reset all fields like the constructor
+0x4df640	TWriteScriptFile_ctor	game	high	Script.h inline
+0x4df660	TWriteScriptFile_close	game	medium	Script.h inline; also the destructor (identical code)
+0x4df690	TReadBinaryFile_ctor	game	medium	Script.h inline; folded with TWriteBinaryFile's constructor
+0x4df6b0	TReadBinaryFile_close	game	medium	Script.h inline; folded with TWriteBinaryFile::close and both destructors
+0x4df6d0	TReadScriptFile_open	game	high	Script.cpp lines 48-50; method names follow CipSoft's game server
+0x4df9b0	TReadScriptFile_error	game	high	Script.cpp line 84: closes the file, throws "error in script file '%s' in line %d"
+0x4dfb60	TReadScriptFile_nextToken	game	high	Script.cpp lines 93-230, tokenizer state machine (State)
+0x4e0420	TReadScriptFile_getIdentifier	game	high	Script.cpp, lower-cases the identifier
+0x4e0450	TReadScriptFile_getNumber	game	high	Script.cpp
+0x4e0470	TReadScriptFile_getString	game	high	Script.cpp
+0x4e0490	TReadScriptFile_getSpecial	game	high	Script.cpp
+0x4e04b0	TWriteScriptFile_open	game	high	Script.cpp lines 403-405
+0x4e0790	TWriteScriptFile_writeLn	game	high	Script.cpp line 441, CR LF
+0x4e08f0	TWriteScriptFile_writeText	game	high	Script.cpp lines 451-452
+0x4e0bb0	TWriteScriptFile_writeString	game	high	Script.cpp lines 462-463, quoted with escapes
+0x4e0ec0	TWriteScriptFile_writeNumber	game	high	Script.cpp line 481
+0x4e1040	TReadBinaryFile_open	game	high	Script.cpp lines 552-554
+0x4e1320	TReadBinaryFile_seek	game	high	Script.cpp lines 572-573 (Offset)
+0x4e15e0	TReadBinaryFile_eof	game	high	Script.cpp line 582
+0x4e1740	TReadBinaryFile_readByte	game	high	Script.cpp lines 603-605
+0x4e1a00	TReadBinaryFile_readWord	game	high	Script.cpp line 619
+0x4e1ba0	TReadBinaryFile_readQuad	game	high	Script.cpp lines 627-635
+0x4e1e50	TReadBinaryFile_readBytes	game	high	Script.cpp lines 661-664 (Count)
+0x4e21a0	TWriteBinaryFile_open	game	high	Script.cpp lines 706-708
+0x4e2480	TWriteBinaryFile_writeByte	game	high	Script.cpp lines 727-729
+0x4e2750	TWriteBinaryFile_writeWord	game	high	Script.cpp lines 737-742
+0x4e29e0	TWriteBinaryFile_writeQuad	game	high	Script.cpp lines 750-757
+0x4e2c80	TWriteBinaryFile_writeBytes	game	high	Script.cpp lines 765-766 (Count)
+0x4e2f50	TWriteBinaryFile_writeString	game	high	Script.cpp line 779, word length + characters
+0x4e3100	ApplyPatch	game	low	Script.cpp: difference patch of a data file into <name>_ / Tibia.bak; name ours
+0x4e3500	ApplyFullPatch	game	low	Script.cpp: writes a complete new file as <name>_ / Tibia.bak; name ours
+0x4e3610	InstallPatch	game	low	Script.cpp lines 879-883: replaces a file by its <name>_ copy; name ours
+0x4e3920	TReadScriptFile_readIdentifier	game	high	Script.cpp, nextToken + getIdentifier
+0x4e3950	TReadScriptFile_readNumber	game	high	Script.cpp, with optional '-' token
+0x4e39a0	TReadScriptFile_readString	game	high	Script.cpp
+0x4e39d0	TReadScriptFile_readSymbol	game	high	Script.cpp
+0x4e3a10	TReadBinaryFile_readString	game	high	Script.cpp lines 644-653, new[]'d string

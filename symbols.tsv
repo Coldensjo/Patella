@@ -4865,13 +4865,13 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4de890	3182	FUN_004de890	game	Preferences.cpp|Script.cpp	gap			
 0x4df50b	6	Catch@004df50b	catch	Preferences.cpp|Script.cpp	gap		0x4de890	
 0x4df520	33	FUN_004df520	game	Preferences.cpp|Script.cpp	gap			
-0x4df550	86	FUN_004df550	game	Preferences.cpp|Script.cpp	gap			
-0x4df5b0	28	FUN_004df5b0	game	Preferences.cpp|Script.cpp	gap			
-0x4df5d0	100	FUN_004df5d0	game	Preferences.cpp|Script.cpp	gap			
-0x4df640	31	FUN_004df640	game	Preferences.cpp|Script.cpp	gap			
-0x4df660	46	FUN_004df660	game	Preferences.cpp|Script.cpp	gap			
-0x4df690	25	FUN_004df690	game	Preferences.cpp|Script.cpp	gap			
-0x4df6b0	26	FUN_004df6b0	game	Preferences.cpp|Script.cpp	gap			
+0x4df550	86	FUN_004df550	game	Script.h	range			
+0x4df5b0	28	FUN_004df5b0	game	Script.h	range			
+0x4df5d0	100	FUN_004df5d0	game	Script.h	range			
+0x4df640	31	FUN_004df640	game	Script.h	range			
+0x4df660	46	FUN_004df660	game	Script.h	range			
+0x4df690	25	FUN_004df690	game	Script.h	range			
+0x4df6b0	26	FUN_004df6b0	game	Script.h	range			
 0x4df6d0	732	FUN_004df6d0	game	Script.cpp	assert	48,50		
 0x4df9b0	428	FUN_004df9b0	game	Script.cpp	assert	84		
 0x4dfb60	2123	FUN_004dfb60	game	Script.cpp	assert	93,230		

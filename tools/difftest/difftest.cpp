@@ -374,6 +374,7 @@ int main(int argc, char **argv)
 	TestSkins();
 	TestStatus();
 	TestPreferences();
+	TestScript();
 	printf("%d checks, %d failures\n", Checks, Failures);
 	return Failures == 0 ? 0 : 1;
 }

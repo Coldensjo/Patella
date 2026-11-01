@@ -32,3 +32,4 @@ void PatchImage();
 void TestSkins();
 void TestStatus();
 void TestPreferences();
+void TestScript();

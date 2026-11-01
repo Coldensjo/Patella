@@ -152,8 +152,6 @@ void FUN_004bdd70(int rx, int ry, int rz); // 0x4bdd70, Map.cpp
 void FUN_004beb90(int rx, int ry); // 0x4beb90, Map.cpp
 bool FUN_004d1c40(int ObjectType, int Flag); // 0x4d1c40, Objects.cpp
 int FUN_004d1f30(int ObjectType); // 0x4d1f30, Objects.cpp
-bool FUN_004e3100(const char *Name, const uint8 *Data, int Size, uint32 Signature); // 0x4e3100, Script.cpp
-bool FUN_004e3500(const char *Name, const uint8 *Data, int Size); // 0x4e3500, Script.cpp
 void FUN_004fd4c0(); // 0x4fd4c0, sysinc.cpp|Talk.cpp
 void FUN_004fd540(); // 0x4fd540, sysinc.cpp|Talk.cpp
 void FUN_004fd590(); // 0x4fd590, sysinc.cpp|Talk.cpp
@@ -552,7 +550,6 @@ void FUN_004de890();                   // 0x4de890
 void FUN_004df520();                   // 0x4df520
 
 // Script.cpp
-void FUN_004e3610(const char *FileName); // 0x4e3610, lines 879-883
 
 // Status.cpp. Action state: 0 idle, 1 left button down, 2 right button down,
 // 3 both down, 4 and 5 one of both released, 7 and 8 set by events 0x2c and

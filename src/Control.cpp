@@ -22,6 +22,7 @@
 #include "Communication.h"
 #include "Preferences.h"
 #include "Skins.h"
+#include "Script.h"
 #include "Status.h"
 #include "external.h"
 
@@ -1060,16 +1061,16 @@ void ProcessEvents()
 			}
 			break;
 		case 0x41:
-			FUN_004e3610("Tibia.dat");
+			InstallPatch("Tibia.dat");
 			break;
 		case 0x42:
-			FUN_004e3610("Tibia.spr");
+			InstallPatch("Tibia.spr");
 			break;
 		case 0x43:
-			FUN_004e3610("Tibia.pic");
+			InstallPatch("Tibia.pic");
 			break;
 		case 0x44:
-			FUN_004e3610("Patch.exe");
+			InstallPatch("Patch.exe");
 			break;
 		case 0x45:
 			FUN_004d7b40();

@@ -9,6 +9,7 @@
 #include "Utils.h"
 #include "TRSA.h"
 #include "Preferences.h"
+#include "Script.h"
 #include "Status.h"
 #include "external.h"
 #include <cstddef>
@@ -918,9 +919,9 @@ void ReceivePatchBlock()
 	}
 	bool Success;
 	if (!PatchWholeFile)
-		Success = FUN_004e3100(Name, PatchData, PatchDataSize, Signature);
+		Success = ApplyPatch(Name, PatchData, PatchDataSize, Signature);
 	else
-		Success = FUN_004e3500(Name, PatchData, PatchDataSize);
+		Success = ApplyFullPatch(Name, PatchData, PatchDataSize);
 	delete[] PatchData;
 	PatchData = NULL;
 	if (!Success) {

@@ -72,7 +72,10 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
   original functions next to the reconstructed ones on the same inputs. Only functions that do
   not touch imports can be called this way. `statustest.cpp` patches the image's `malloc` and
   `free` (and a few helpers that would reach Windows) to jump to the test's own code, so
-  allocating functions can be compared too; reuse its `PatchImage`. A crash in the child prints its address and the stack. `vlongtest.cpp` and
+  allocating functions can be compared too; reuse its `PatchImage`. A crash in the child prints its address and the stack; an uncaught exception of our side (an error
+path hit by a test input) ends the child with 0xc0000409 and no message. `scripttest.cpp` also
+redirects the image's stdio functions (fopen, getc, fputc, fread, ...) to the test's CRT, so
+file-based code can be compared on real files. `vlongtest.cpp` and
   `vlongcheck.py` check the big-number code and RSA against Python's exact integers. Add a test
   for every new pure function.
 - Before finishing a file, compare each function against its pseudocode once more: every
@@ -93,7 +96,8 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
 | Preferences.cpp | Reconstructed with the Player/Preferences gap (its catch funclet 0x4db286 goes to Player.cpp); every function differentially tested except the assertion-failure paths (malloc/free and atol redirected). The Tibia.cfg loader/saver after it (Preferences/Script gap) is not settled yet. |
 | Communication.cpp | Reconstructed (first version by ChatGPT gpt-6.1-sol, reviewed); includes SendLogout from the gap before it. EH tables checked for every function; calls cross-checked against the pseudocode with `tools/callcheck.py`. Not differentially tested (no function is pure). The STL and compiler-generated code in its range is not part of the source. Details: notes/Communication.md. |
 | Control.cpp | Reconstructed (first version by Claude Opus 5.5, reviewed): input handling, the event loop (ProcessEvents) and the packet dispatcher (ReceivePackets). EH tables checked for every function; the ReceivePackets and ProcessEvents switch tables checked against the binary's jump tables. Not differentially tested (no function is pure). 0x4459b0 (catch at Control.cpp line 93) and 0x445900 in the gap before it are probably this file but not settled yet. |
+| Script.cpp | Reconstructed: the script tokenizer and writer (TReadScriptFile, TWriteScriptFile), binary files, and the file patching; class and member names from CipSoft's game server (notes/decisions.md). The inline constructors, destructors and close() functions are in Script.h; their out-of-line copies are in the Preferences/Script gap (0x4df550-0x4df6c9). EH tables checked for every function; nextToken's jump table checked. Every function differentially tested with the image's stdio redirected to the test's CRT (scripttest.cpp), except the error paths. |
 | Container.h | Partial: `vector<T>` constructors and `operator()`, from the Status.cpp and Preferences.cpp instantiations; tested through them. |
 
-Last differential run: 811,429 checks against the original code and 3,201 against exact
+Last differential run: 1,268,040 checks against the original code and 3,201 against exact
 arithmetic, no differences.
