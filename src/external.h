@@ -71,44 +71,39 @@ public:
 	int Data38[(0x6c - 0x38) / 4];
 };
 
-// DialogWindow.cpp: the window of a container, the skills, the battle list,
-// the VIP list, the trade or one of the side-bar windows, as held by a
-// TDialogWindow (MainWindow.cpp's "Window->getBody()"). The class name is
-// ours (Preferences.h has a TContentWindow already); size and vtable not
-// known yet.
+// ContentWindows.cpp: the body of a TSubWindow (DialogWindow.h), the content
+// of a container, the skills, the battle list, the VIP list or the trade.
+// The class name is ours; size and vtable not known yet.
 class TSubWindowBody : public TWindow {
 public:
-	virtual void UnknownA0(); virtual void UnknownA4();
+	virtual void UnknownA0();                         // +0xa0, TSubWindow::Minimize
+	virtual void UnknownA4();                         // +0xa4, TSubWindow::Maximize
 	virtual bool UnknownA8();                         // +0xa8, MainWindow.cpp's OpenContainer
 	virtual void UnknownAC(); virtual void UnknownB0(); virtual void UnknownB4();
 	virtual void UnknownB8();                         // +0xb8, MainWindow.cpp's OpenContainer
+	// 0x42e4e0: a container body shows or hides its window's "up" button
+	// (TSubWindow::Arrange calls it for the containers).
+	void FUN_0042e4e0();
 };
-class TSubWindow : public TWindow {
-public:
-	TSubWindowBody *getBody() { return Body; }        // inlined ("Window->getBody()!=NULL")
-	void FUN_004897d0();                              // 0x4897d0
-	void FUN_00489970();                              // 0x489970
-	void FUN_0048a0b0(TComponent *Element);           // 0x48a0b0
-	void FUN_0048a2a0(TComponent *Element);           // 0x48a2a0
 
-	int Data2C[(0x44 - 0x2c) / 4];
-	TSubWindowBody *Body;   // +0x44
-};
-// A column of sub-windows (vtable 0x563f80, 0x4c bytes; constructor in the
-// Dialogs/DialogWindow gap). Identifier: 1 and 2 the two inventory windows,
-// 3-5 the other side-bar windows, 6, 7, 9 and TRADE_WINDOW (MainWindow.h),
-// 0x40 plus a container number.
-class TDialogWindow : public TWindow {
+// DialogElements.cpp: the two resizers of a TSubWindow (vtable 0x5612b0,
+// 0x38 bytes); parameter name _ToResize from the assertion (line 74), the
+// other three are flags (+0x34-+0x36). The class name is ours.
+class TResizer : public TElement {
 public:
-	TDialogWindow();                                  // 0x4856c0
-	TSubWindow *FUN_00486400(int Identifier);         // 0x486400, the sub-window with the identifier or NULL
-	void FUN_004865b0();                              // 0x4865b0, adds the open sub-windows to Preferences.cpp's open dialogs
-	// Inline ("!DialogWindow->hasContentWindow(TRADE_WINDOW)", MainWindow.cpp).
-	bool hasContentWindow(int Identifier) { return FUN_00486400(Identifier) != NULL; }
-	virtual void UnknownA0(int Value, TWindow *Window); // +0xa0, MainWindow.cpp adds windows with (16, Window), rearranges with (32, NULL)
-
-	int Data2C[(0x4c - 0x2c) / 4];
+	TResizer(TComponent *_ToResize, bool Param2, bool Param3, bool Param4); // 0x453be0, line 74
+	uint8 Data24[0x38 - 0x24];
 };
+
+// DialogElements.cpp: a button drawn with two skins (pressed and released),
+// TSubWindow's minimize button. The class name is ours.
+class TSkinButton : public TElement {
+public:
+	void SetSkins(int _ButtonUp, int _ButtonDown);   // 0x458b20, lines 1228-1229
+};
+
+// DialogWindow.cpp: TDialogWindow, TContentWindow and TSubWindow.
+#include "DialogWindow.h"
 
 // MainWindow.cpp: the main game window, the modal window (MainWindow.h).
 #include "MainWindow.h"
@@ -249,8 +244,8 @@ public:
 	uint8 Data24[0x50 - 0x24];
 };
 
-// ContentWindows.cpp: the windows of a TDialogWindow. The first ones create
-// and return them; the classes below are the side-bar windows MainWindow.cpp
+// ContentWindows.cpp: the content windows of a TDialogWindow. The first ones
+// create and return them; the classes below are the side-bar windows MainWindow.cpp
 // creates itself.
 TWindow *FUN_004362b0(TMainWindow *Receiver);  // 0x4362b0, the inventory window (identifier 1)
 TWindow *FUN_00436510(TMainWindow *Receiver);  // 0x436510, the small inventory window (identifier 2)
@@ -259,20 +254,21 @@ TWindow *FUN_0043c920();                       // 0x43c920, identifier 6, "Skill
 TWindow *FUN_0043cc90();                       // 0x43cc90, identifier 7, "Battle" (Ctrl+B)
 TWindow *FUN_0043d000();                       // 0x43d000, TRADE_WINDOW, "Trade"
 TWindow *FUN_0043d390();                       // 0x43d390, identifier 9 (Ctrl+P)
-class TSideWindow3 : public TWindow {          // identifier 3 (vtable 0x55ea08, 0x80 bytes)
+// Their constructors call TContentWindow's (0x4854c0).
+class TSideWindow3 : public TContentWindow {   // identifier 3 (vtable 0x55ea08, 0x80 bytes)
 public:
 	TSideWindow3();                            // 0x4368c0
-	uint8 Data2C[0x80 - 0x2c];
+	uint8 Data44[0x80 - 0x44];
 };
-class TSideWindow4 : public TWindow {          // identifier 4 (vtable 0x55f500, 0x4c bytes)
+class TSideWindow4 : public TContentWindow {   // identifier 4 (vtable 0x55f500, 0x4c bytes)
 public:
 	TSideWindow4();                            // 0x438310
-	uint8 Data2C[0x4c - 0x2c];
+	uint8 Data44[0x4c - 0x44];
 };
-class TSideWindow5 : public TWindow {          // identifier 5, the buttons "Skills", ... (vtable 0x55e968, 0x58 bytes)
+class TSideWindow5 : public TContentWindow {   // identifier 5, the buttons "Skills", ... (vtable 0x55e968, 0x58 bytes)
 public:
 	TSideWindow5(TDialogWindow *_CheckObject, TMainWindow *Receiver); // 0x426480, line 292
-	uint8 Data2C[0x58 - 0x2c];
+	uint8 Data44[0x58 - 0x44];
 };
 
 // DialogElements.cpp: a button that blinks until it is pressed (vtable

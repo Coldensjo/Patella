@@ -26,7 +26,7 @@
 
 class TMapFrame;      // MapWindow.h
 class TBorder;        // external.h (DialogElements.cpp)
-class TDialogWindow;  // external.h (DialogWindow.cpp)
+class TDialogWindow;  // DialogWindow.h
 class TConsoleWindow; // external.h (ConsoleWindow.cpp)
 class TStartWindow;
 class TSplitter;

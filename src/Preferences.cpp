@@ -61,7 +61,7 @@ static bool TestServerLogin;                  // 0x71c318, "TestServer = yes"
 static bool PreferencesLoaded;               // 0x71c319, set by InitPreferences; SavePreferences writes only then
 static int WindowedX;                         // 0x71c31c
 static int WindowedY;                         // 0x71c320
-static vector<TContentWindow> ContentWindows(0, 9, 10); // 0x71c324, initialiser at 0x55a050
+static vector<TContentWindowSize> ContentWindows(0, 9, 10); // 0x71c324, initialiser at 0x55a050
 static vector<int> OpenDialogs(0, 9, 10, -1);  // 0x71c348, initialiser at 0x55a070
 static vector<int> OpenChannels(0, 9, 10);     // 0x71c368, initialiser at 0x55a090
 static vector<TBuddy> Buddies(0, 9, 10);       // 0x71c388, initialiser at 0x55a0b0
@@ -491,7 +491,7 @@ void SetDefaultPreferences()
 	ClearIgnoreList();
 }
 
-// 0x4db880: vector<TContentWindow>::operator() (Container.h).
+// 0x4db880: vector<TContentWindowSize>::operator() (Container.h).
 // 0x4dba60: vector<TBuddy>::operator() (Container.h).
 
 // 0x4dbcd0. Updates the entry for ID or appends one.
@@ -558,7 +558,7 @@ bool IsKnownHint(int Hint)
 	return false;
 }
 
-// 0x4dbe90: vector<TContentWindow>::vector(min, max, block) (Container.h).
+// 0x4dbe90: vector<TContentWindowSize>::vector(min, max, block) (Container.h).
 // 0x4dc170: vector<TBuddy>::vector(min, max, block) (Container.h).
 
 // 0x4dc450, lines 223-225

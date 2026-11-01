@@ -288,7 +288,7 @@ address	name	kind	confidence	note
 0x4db700	SetLevelBar	game	high	Preferences.cpp
 0x4db710	SetMagLevelBar	game	high	Preferences.cpp
 0x4db720	SetDefaultPreferences	game	medium	Preferences.cpp: default values of all options
-0x4db880	vector_TContentWindow_at	game	high	Container.h vector<TContentWindow>::operator(), instantiated in Preferences.cpp
+0x4db880	vector_TContentWindowSize_at	game	high	Container.h vector<TContentWindowSize>::operator(), instantiated in Preferences.cpp
 0x4dba60	vector_TBuddy_at	game	high	Container.h vector<TBuddy>::operator(), instantiated in Preferences.cpp
 0x4dbcd0	SetContentWindowSize	game	medium	Preferences.cpp: option "ContentWindow = (ID,Size)"
 0x4dbd50	GetContentWindowSize	game	medium	Preferences.cpp
@@ -296,7 +296,7 @@ address	name	kind	confidence	note
 0x4dbde0	GetOpenChannels	game	medium	Preferences.cpp: new array and count
 0x4dbe30	AddKnownHint	game	medium	Preferences.cpp: option "KnownHints"
 0x4dbe50	IsKnownHint	game	medium	Preferences.cpp
-0x4dbe90	vector_TContentWindow_ctor	game	high	Container.h vector<TContentWindow>::vector(min, max, block), lines 369-370; not found by Ghidra
+0x4dbe90	vector_TContentWindowSize_ctor	game	high	Container.h vector<TContentWindowSize>::vector(min, max, block), lines 369-370; not found by Ghidra
 0x4dc170	vector_TBuddy_ctor	game	high	Container.h vector<TBuddy>::vector(min, max, block), lines 369-370; not found by Ghidra
 0x4dc450	SetHotkey	game	high	Preferences.cpp lines 223-225, HOTKEYS/HOTKEY_LENGTH
 0x4dc7e0	GetHotkey	game	high	Preferences.cpp line 235

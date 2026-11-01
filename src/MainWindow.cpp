@@ -67,9 +67,9 @@ TMainWindow::~TMainWindow()
 	if (FirstChild != NULL && InGame) {
 		ClearOpenDialogs();
 		if (SidePanel != NULL)
-			SidePanel->FUN_004865b0();
+			SidePanel->StoreOpenDialogs();
 		if (DialogWindow != NULL)
-			DialogWindow->FUN_004865b0();
+			DialogWindow->StoreOpenDialogs();
 	}
 }
 
@@ -201,39 +201,39 @@ void TMainWindow::HandleEvent(int Event)
 		SetSize(Width, Height);
 		break;
 	case 0xe:
-		if (DialogWindow->FUN_00486400(6) != NULL)
+		if (DialogWindow->GetContentWindow(6) != NULL)
 			CloseContentWindow(6);
 		else
 			OpenContentWindow(6);
 		break;
 	case 0xf:
-		if (DialogWindow->FUN_00486400(7) != NULL)
+		if (DialogWindow->GetContentWindow(7) != NULL)
 			CloseContentWindow(7);
 		else
 			OpenContentWindow(7);
 		break;
 	case 0x16:
-		if (DialogWindow->FUN_00486400(9) != NULL)
+		if (DialogWindow->GetContentWindow(9) != NULL)
 			CloseContentWindow(9);
 		else
 			OpenContentWindow(9);
 		break;
 	case 0x17: {
-		TSubWindow *OldWindow = SidePanel->FUN_00486400(1);
+		TContentWindow *OldWindow = SidePanel->GetContentWindow(1);
 		TASSERT(OldWindow!=NULL);
 		SidePanel->InsertChildAfter(OldWindow, FUN_00436510(this));
 		SidePanel->DeleteChild(OldWindow);
-		SidePanel->UnknownA0(32, NULL);
+		SidePanel->Rearrange(32, NULL);
 		SideBar->SetSize(SkinProperties.Data184, SidePanel->GetMinimumHeight() + SideBar->GetMinimumHeight());
 		SetSize(Width, Height);
 		break;
 	}
 	case 0x18: {
-		TSubWindow *OldWindow = SidePanel->FUN_00486400(2);
+		TContentWindow *OldWindow = SidePanel->GetContentWindow(2);
 		TASSERT(OldWindow!=NULL);
 		SidePanel->InsertChildAfter(OldWindow, FUN_004362b0(this));
 		SidePanel->DeleteChild(OldWindow);
-		SidePanel->UnknownA0(32, NULL);
+		SidePanel->Rearrange(32, NULL);
 		SideBar->SetSize(SkinProperties.Data184, SidePanel->GetMinimumHeight() + SideBar->GetMinimumHeight());
 		SetSize(Width, Height);
 		break;
@@ -332,9 +332,9 @@ void TMainWindow::ChangeMode(bool InGame)
 	if (FirstChild != NULL && this->InGame) {
 		ClearOpenDialogs();
 		if (SidePanel != NULL)
-			SidePanel->FUN_004865b0();
+			SidePanel->StoreOpenDialogs();
 		if (DialogWindow != NULL)
-			DialogWindow->FUN_004865b0();
+			DialogWindow->StoreOpenDialogs();
 	}
 	while (FirstChild != NULL)
 		DeleteChild(FirstChild);
@@ -514,21 +514,21 @@ void TMainWindow::OpenContainer(int Container)
 {
 	TASSERT(DialogWindow!=NULL);
 	TBEGIN
-	TSubWindow *Window = DialogWindow->FUN_00486400(Container + 0x40);
+	TSubWindow *Window = (TSubWindow *)DialogWindow->GetContentWindow(Container + 0x40);
 	if (Window == NULL) {
-		DialogWindow->UnknownA0(16, FUN_0043c520(Container));
+		DialogWindow->Rearrange(16, FUN_0043c520(Container));
 		return;
 	}
 	Window->Arrange();
 	TSubWindowBody *Body = Window->Body;
 	Body->UnknownB8();
 	if (Body->UnknownA8()) {
-		Window->FUN_0048a2a0(new TLabel(SkinProperties.Style194.Data38, GetContainerName(Container)));
-		Window->FUN_0048a0b0(new TObjectIcon(GetContainerObject(Container), &SkinProperties.Style194.Data80, 0));
+		Window->SetTitle(new TLabel(SkinProperties.Style194.Data38, GetContainerName(Container)));
+		Window->SetIcon(new TObjectIcon(GetContainerObject(Container), &SkinProperties.Style194.Data80, 0));
 		if (GetContainerHasParent(Container))
-			Window->FUN_004897d0();
+			Window->ShowUpButton();
 		else
-			Window->FUN_00489970();
+			Window->HideUpButton();
 	}
 	TEND1(Container)
 }
@@ -538,7 +538,7 @@ void TMainWindow::CloseContainer(int Container)
 {
 	TBEGIN
 	if (DialogWindow != NULL) {
-		TSubWindow *Window = DialogWindow->FUN_00486400(Container + 0x40);
+		TContentWindow *Window = DialogWindow->GetContentWindow(Container + 0x40);
 		if (Window != NULL)
 			DialogWindow->DeleteChild(Window);
 	}
@@ -560,7 +560,7 @@ void TMainWindow::OpenTrade()
 void TMainWindow::UpdateTrade()
 {
 	TBEGIN
-	TSubWindow *Window = DialogWindow->FUN_00486400(TRADE_WINDOW);
+	TSubWindow *Window = (TSubWindow *)DialogWindow->GetContentWindow(TRADE_WINDOW);
 	if (Window != NULL) {
 		TASSERT(Window->getBody()!=NULL);
 		Window->getBody()->HandleEvent(0x15);
@@ -580,7 +580,7 @@ void TMainWindow::CloseTrade()
 void TMainWindow::OpenContentWindow(int Identifier)
 {
 	TBEGIN
-	if (DialogWindow->FUN_00486400(Identifier) == NULL) {
+	if (DialogWindow->GetContentWindow(Identifier) == NULL) {
 		TWindow *Window;
 		switch (Identifier) {
 		case 6:
@@ -598,7 +598,7 @@ void TMainWindow::OpenContentWindow(int Identifier)
 		default:
 			TERROR1("unknown identifier", Identifier);
 		}
-		DialogWindow->UnknownA0(16, Window);
+		DialogWindow->Rearrange(16, Window);
 	}
 	TEND1(Identifier)
 }
@@ -607,7 +607,7 @@ void TMainWindow::OpenContentWindow(int Identifier)
 void TMainWindow::CloseContentWindow(int Identifier)
 {
 	TBEGIN
-	TSubWindow *Window = DialogWindow->FUN_00486400(Identifier);
+	TContentWindow *Window = DialogWindow->GetContentWindow(Identifier);
 	if (Window != NULL)
 		DialogWindow->DeleteChild(Window);
 	TEND1(Identifier)

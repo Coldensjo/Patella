@@ -24,7 +24,7 @@ struct TFullscreenMode {
 };
 
 // "ContentWindow = (ID,Size)": the stored size of a side-bar window.
-struct TContentWindow {
+struct TContentWindowSize {
 	int ID;
 	int Size;
 };
