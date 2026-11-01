@@ -238,9 +238,9 @@ bool TTextWindow::LeftButtonDoubleClick(int x, int y, int Flags)
 	TEND2(x, y)
 }
 
-// 0x420f90, line 240. Opens the line's context menu (Control.cpp's message
-// 0x37), in the rule violation channel the request menu (0x39) for lines
-// with a speaker.
+// 0x420f90, line 240. Opens the line's context menu (Control.cpp's
+// message 0x37); in the rule violation channel a line with a speaker
+// opens the request menu (message 0x39).
 bool TTextWindow::RightButtonUp(int x, int y, int Flags)
 {
 	TBEGIN

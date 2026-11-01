@@ -626,21 +626,21 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x417373	20	Catch@00417373	catch	Communication.cpp	between		0x417270	
 0x417387	143	Catch@00417387	catch	Communication.cpp	assert	2749	0x417270	
 0x417416	160	Catch@00417416	catch	Communication.cpp	assert	2749	0x417270	
-0x4174d0	25	FUN_004174d0	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x417520	22	FUN_00417520	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x417590	75	FUN_00417590	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x4175e0	48	FUN_004175e0	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x417610	100	FUN_00417610	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x417710	723	FUN_00417710	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x4179f0	48	FUN_004179f0	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x417a60	30	FUN_00417a60	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x417a80	30	FUN_00417a80	game	Communication.cpp|ConsoleWindow.cpp	gap			
+0x4174d0	25	FUN_004174d0	game	ConsoleWindow.cpp	range			
+0x417520	22	FUN_00417520	game	ConsoleWindow.cpp	range			
+0x417590	75	FUN_00417590	game	ConsoleWindow.cpp	range			
+0x4175e0	48	FUN_004175e0	game	ConsoleWindow.cpp	range			
+0x417610	100	FUN_00417610	game	ConsoleWindow.cpp	range			
+0x417710	723	FUN_00417710	game	ConsoleWindow.cpp	range			
+0x4179f0	48	FUN_004179f0	game	ConsoleWindow.cpp	range			
+0x417a60	30	FUN_00417a60	game	ConsoleWindow.cpp	range			
+0x417a80	30	FUN_00417a80	game	ConsoleWindow.cpp	range			
 0x417aa0	832	FUN_00417aa0	game	Container.h	header	369,370		
 0x417de0	286	FUN_00417de0	game	GUI.h	header	681		
 0x418020	1279	FUN_00418020	game	ConsoleWindow.h	header	47,48,49,53,54		
-0x418520	130	FUN_00418520	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x4185b0	137	FUN_004185b0	game	Communication.cpp|ConsoleWindow.cpp	gap			
-0x418639	20	Catch@00418639	catch	Communication.cpp|ConsoleWindow.cpp	gap		0x4185b0	
+0x418520	130	FUN_00418520	game	ConsoleWindow.cpp	range			
+0x4185b0	137	FUN_004185b0	game	ConsoleWindow.cpp	range			
+0x418639	20	Catch@00418639	catch	ConsoleWindow.cpp	range		0x4185b0	
 0x41864d	147	Catch@0041864d	catch	ConsoleWindow.cpp	assert	165	0x4185b0	
 0x4186e0	164	Catch@004186e0	catch	ConsoleWindow.cpp	assert	165	0x4185b0	
 0x418790	90	FUN_00418790	game	ConsoleWindow.cpp	between			
@@ -929,16 +929,16 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4257cf	29	Catch@004257cf	catch	ConsoleWindow.cpp	between		0x425330	
 0x4257ec	128	Catch@004257ec	catch	ConsoleWindow.cpp	assert	2051	0x425330	
 0x42586c	172	Catch@0042586c	catch	ConsoleWindow.cpp	assert	2051	0x425330	
-0x425920	47	FUN_00425920	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425950	67	FUN_00425950	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425a70	84	FUN_00425a70	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425ad0	40	FUN_00425ad0	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425b10	14	FUN_00425b10	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425b20	667	FUN_00425b20	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425dc0	30	FUN_00425dc0	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425de0	30	FUN_00425de0	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425e00	69	FUN_00425e00	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
-0x425e50	30	FUN_00425e50	game	ConsoleWindow.cpp|ContentWindows.cpp	gap			
+0x425920	47	FUN_00425920	game	ContentWindows.cpp	range			
+0x425950	67	FUN_00425950	game	ContentWindows.cpp	range			
+0x425a70	84	FUN_00425a70	game	ContentWindows.cpp	range			
+0x425ad0	40	FUN_00425ad0	game	ContentWindows.cpp	range			
+0x425b10	14	FUN_00425b10	game	ContentWindows.cpp	range			
+0x425b20	667	FUN_00425b20	game	ContentWindows.cpp	range			
+0x425dc0	30	FUN_00425dc0	game	ContentWindows.cpp	range			
+0x425de0	30	FUN_00425de0	game	ContentWindows.cpp	range			
+0x425e00	69	FUN_00425e00	game	ContentWindows.cpp	range			
+0x425e50	30	FUN_00425e50	game	ContentWindows.cpp	range			
 0x425e70	764	FUN_00425e70	game	Container.h	header	355,356		
 0x426170	782	FUN_00426170	game	Container.h	header	369,370		
 0x426480	772	FUN_00426480	game	ContentWindows.cpp	assert	292		
@@ -1962,8 +1962,8 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x453230	30	FUN_00453230	game	DialogElements.cpp	range			
 0x453250	139	FUN_00453250	game	DialogElements.cpp	range			
 0x4532e0	30	FUN_004532e0	game	DialogElements.cpp	range			
-0x453300	764	FUN_00453300	game	Container.h	range	355,356		
-0x453600	816	FUN_00453600	game	Container.h	range	369,370		
+0x453300	764	FUN_00453300	game	Container.h	header	355,356		
+0x453600	816	FUN_00453600	game	Container.h	header	369,370		
 0x453930	86	FUN_00453930	game	DialogElements.cpp	range			Width,Height
 0x453986	20	Catch@00453986	catch	DialogElements.cpp	range		0x453930	
 0x45399a	144	Catch@0045399a	catch	DialogElements.cpp	assert	42	0x453930	Width,Height
@@ -3455,7 +3455,7 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x496550	30	FUN_00496550	game	GUI.cpp	range			
 0x496570	652	FUN_00496570	game	Container.h	range			
 0x496800	3045	FUN_00496800	game	GUI.cpp	range			
-0x4973f0	764	FUN_004973f0	game	Container.h	range	355,356		
+0x4973f0	764	FUN_004973f0	game	Container.h	header	355,356		
 0x497a00	1540	FUN_00497a00	game	GUI.cpp	assert	42,43,44,45,46,47,48		
 0x497ff2	29	Catch@00497ff2	catch	GUI.cpp	between		0x497a00	
 0x49800f	133	Catch@0049800f	catch	GUI.cpp	assert	86	0x497a00	
@@ -5148,7 +5148,7 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4fd590	8	FUN_004fd590	game	Talk.cpp	range			
 0x4fd5a0	65	FUN_004fd5a0	game	Talk.h	range			
 0x4fd6c0	21	FUN_004fd6c0	game	Talk.h	range			
-0x4fd6e0	764	FUN_004fd6e0	game	Container.h	range	355,356		
+0x4fd6e0	764	FUN_004fd6e0	game	Container.h	header	355,356		
 0x4fd9e0	853	FUN_004fd9e0	game	Talk.cpp	assert	81,107		
 0x4fdd80	384	FUN_004fdd80	game	Talk.cpp	assert	142		
 0x4fdf10	75	FUN_004fdf10	game	Talk.cpp	between			Number

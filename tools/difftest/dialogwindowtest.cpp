@@ -183,6 +183,7 @@ public:
 
 class TTestSkinButton : public TSkinButton {
 public:
+	TTestSkinButton() : TSkinButton(0, 0, 0, 0, TCallback(), NULL, 0) {}
 	void Draw(int Surface, int x, int y) { Logf("DSkin%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 	bool LeftButtonDown(int x, int y, int Flags)
 	{

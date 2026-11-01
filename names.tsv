@@ -583,7 +583,7 @@ address	name	kind	confidence	note
 0x5025c0	GetTextBuffer	game	medium	Looks up the console text buffer matching receive mode, addressee and channel; inferred spelling, binary-verified role
 0x507bc0	CreateTextBuffer	game	medium	Creates the matching concrete buffer and registers its filter; send mode is an integer; inferred spelling, binary-verified role
 0x507fa0	DeleteTextBuffer	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
-0x502880	HasUnreadConsoleText	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
+0x502880	HasOwnPrivateChannel	game	medium	Talk.cpp line 1411: some buffer of the console filters is selected and a private channel, i.e. the player owns one (ConsoleWindow.cpp sends "#I"/"#X" invitations only then, ContextMenus.cpp offers "Invite to private chat"); was HasUnreadConsoleText
 0x506920	TTalkBuffer_dtor	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x502a60	TTalkBuffer_Clear	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
 0x506930	TTalkBuffer_AddText	game	medium	Talk.cpp reconstruction; names inferred except assertion identifiers; source order from catch lines
@@ -612,7 +612,7 @@ address	name	kind	confidence	note
 0x4fd5f0	TTalkBuffer_GetChanged	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd600	TTalkBuffer_Close	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd610	TTalkBuffer_SetWriteEnabled	game	medium	Talk.h inline, confirmed by vtable references and disassembly
-0x4fd620	TTalkBuffer_IsDefault	game	medium	Talk.h inline, confirmed by vtable references and disassembly
+0x4fd620	TTalkBuffer_isDefault	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd630	TTalkBuffer_AcceptMessages	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd640	TTalkBuffer_IsRuleViolation	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd650	TTalkBuffer_GetSelected	game	medium	Talk.h inline, confirmed by vtable references and disassembly
@@ -1476,3 +1476,105 @@ address	name	kind	confidence	note
 0x465e60	TFormattedText_ctor	game	low	DialogElements.cpp line 508: text window with formatting tokens (vtable 0x560c40, 0x38 bytes), the help bubble's text; class name ours
 0x452cb0	TSeparator_ctor	game	low	DialogElements.cpp: line element (vtable 0x5610b0, 0x28 bytes, bool at +0x24); context menu separators; class name ours
 0x417500	TDrawing_ctor	game	high	GUI.h inline TDrawing(): out-of-line copy (kept in an earlier object) that THelpBubble's constructor passes to vector_constructor_iterator; missed by Ghidra
+0x4174d0	In	game	high	common.h inline In(Value, Min, Max), out-of-line copy kept in ConsoleWindow.obj (the first object with an out-of-line use); called by ContentWindows.cpp, DialogElements.cpp and Objects.cpp
+0x417520	TEditLine_HasSelection	game	low	DialogElements.h inline: +0x5c != -1 && +0x60 != 0 (a selection); out-of-line copy kept in ConsoleWindow.obj, called by DialogElements.cpp; inlined into ConsoleWindow.cpp's KeyPress; name ours
+0x417590	TTextWindow_HasSelection	game	medium	ConsoleWindow.h inline: the buffer is formatted (else LinesChanged=false) and both selection ends are set and differ; called by TTextWindow::Draw and ContextMenus.cpp's text menu, inlined elsewhere; name ours
+0x417610	TTabBar_dtor	game	medium	ConsoleWindow.h inline ~TTabBar (vtable 0x55dcd8): deletes LeftTabs and RightTabs
+0x417700	TTab_GetMinimumHeight	game	medium	ConsoleWindow.h inline, SkinProperties.StyleAA4.Data04 (the tab height); vtable +0x40 of TTab and TTabBar (folded); missed by Ghidra
+0x417710	vector_TLineFormat_at	game	high	Container.h vector<TLineFormat>::operator() (0x28-byte entries), ConsoleWindow.cpp's TTextWindow::Lines
+0x4179f0	TTextWindow_dtor	game	medium	ConsoleWindow.h inline ~TTextWindow (vtable 0x55dd80): deletes SelectedText, the inlined ~vector frees Lines' entries
+0x417a50	TTextWindow_ReleaseCapture	game	medium	ConsoleWindow.h inline, vtable 0x55dd80 +0x7c: Selecting=false, then TElement::ReleaseCapture; missed by Ghidra
+0x417a60	TTabBar_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TTabBar (vtable 0x55dcd8 slot 0), calls 0x417610
+0x417a80	TTextWindow_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TTextWindow (vtable 0x55dd80 slot 0), calls 0x4179f0
+0x417aa0	vector_TLineFormat_ctor	game	high	Container.h vector<TLineFormat>::vector(min, max, block), lines 369-370; TLineFormat's default constructor inlined
+0x418020	TLineFormat_ctor	game	high	ConsoleWindow.h lines 47-54 (_TextLine, _LineText, _LineLength>0, _Indent>=0, _OriginalOffset>=0): one formatted part of a talk line; out of line, no try block; struct name ours
+0x418520	TTextWindow_ctor	game	medium	ConsoleWindow.cpp: TElement, vtable 0x55dd80, Lines(0, 0, 100), no selection, AtEnd; no try block
+0x4185b0	TTextWindow_MouseMove	game	high	ConsoleWindow.cpp line 165 (x, y), vtable +0x4c: moves the selection end while Selecting
+0x418790	TTextWindow_LeftButtonUp	game	high	ConsoleWindow.cpp line 179, vtable +0x54: ReleaseCapture
+0x418930	TTextWindow_LeftButtonDown	game	high	ConsoleWindow.cpp line 195 (x, y), vtable +0x50: starts a selection at GetPosition
+0x418b10	TTextWindow_SetTextBuffer	game	medium	ConsoleWindow.cpp line 277: TextBuffer=, Arrange(); name ours
+0x418ca0	TTextWindow_FormatLines	game	medium	ConsoleWindow.cpp line 379, vtable +0x84: breaks the buffer's talk lines into TLineFormats of the width (font 4); name ours
+0x419030	TTextWindow_GetTalkLine	game	medium	ConsoleWindow.cpp line 411 (LineNumber): the TTalkLine of a line or NULL; ContextMenus.cpp's text and request menus; name ours
+0x419200	TTextWindow_GetLineFormat	game	medium	ConsoleWindow.cpp line 425 (LineNumber): &Lines(LineNumber) in range or NULL; name ours
+0x4193d0	TTextWindow_SetCurrentLineNumber	game	high	ConsoleWindow.cpp line 432 (_CurrentLineNumber, "In(_CurrentLineNumber, getFirstLineNumber(), getLastLineNumber())"), no try block
+0x419560	TTextWindow_GetSelectionStart	game	medium	ConsoleWindow.cpp line 481: the earlier selection end; drops a selection beyond its line; name ours
+0x4197a0	TTextWindow_GetSelectionEnd	game	medium	ConsoleWindow.cpp line 510: the later selection end; name ours
+0x4199e0	TTextWindow_SelectAll	game	medium	ConsoleWindow.cpp line 526: selects every line (event 20); name ours
+0x419bd0	TTextWindow_GetSelectedText	game	medium	ConsoleWindow.cpp line 626: the selected text (kept in SelectedText, "\n" after LineEnd lines); name ours
+0x419fc0	TTextWindow_GetPosition	game	medium	ConsoleWindow.cpp line 674 (x, y), vtable +0x88: line, character and line length under a point; name ours
+0x41a280	TConsole_ctor	game	medium	ConsoleWindow.cpp line 695: TWindow, vtable 0x55dfc0, 0x38 bytes, a TTextWindow and a TScrollBar; class name ours ("CurrentConsole")
+0x41a4d0	TConsole_GetMinimumHeight	game	medium	ConsoleWindow.cpp, vtable 0x55dfc0 +0x40: the larger of the scroll bar's and the text's; no frame
+0x41a4f0	TConsole_Draw	game	high	ConsoleWindow.cpp line 706 (Surface), vtable +0x44: the text follows the scroll bar, TWindow::Draw
+0x41a6a0	TConsole_MouseWheel	game	high	ConsoleWindow.cpp line 717 (Code), vtable +0x60: codes 1 and 2 go to the scroll bar
+0x41a870	TTab_ctor	game	high	ConsoleWindow.cpp lines 806-831 (_Caption, _TextBuffer): TElement, vtable 0x55e098, 0x58 bytes; trimmed and shortened caption; class name ours ("CurrentTab", "NewTab")
+0x41acc0	TTab_ReleaseCapture	game	medium	ConsoleWindow.h inline, vtable 0x55e098 +0x7c: Dragging=0, then TElement::ReleaseCapture; missed by Ghidra
+0x41acd0	TTab_dtor	game	high	ConsoleWindow.cpp lines 849-866 (PlayerName!=NULL): leaves the channel (cancel/close request, leave channel), DeleteTextBuffer
+0x41afe0	TTab_SetActive	game	high	ConsoleWindow.cpp line 880 ("_Active?1:0"): Active, clears Unread, Arrange when active
+0x41b190	TTab_MouseMove	game	high	ConsoleWindow.cpp line 898 (x), vtable +0x4c: drags the tab inside the bar, Rearrange(this)
+0x41b370	TTab_LeftButtonUp	game	high	ConsoleWindow.cpp line 931, vtable +0x54: ends a drag, Rearrange(NULL)
+0x41b520	TTab_MouseHover	game	high	ConsoleWindow.cpp line 956, vtable +0x64: the full caption of a shortened one as mouse-over text
+0x41b6c0	TTab_Arrange	game	medium	ConsoleWindow.cpp line 974, vtable +0x48: the buffer's GetChanged/GetClosed light the tab up (blink 10 actions) or out
+0x41b890	TTab_Draw	game	high	ConsoleWindow.cpp lines 981-996 (x>=0, y>=0, Surface), vtable +0x44: skin 186/187 and the caption in one of StyleAA4's fonts
+0x41bd40	TTabBar_Draw	game	high	ConsoleWindow.cpp line 1043 (Surface), vtable 0x55dcd8 +0x44: the dragged tab last
+0x41bf40	TTabBar_SetSize	game	high	ConsoleWindow.cpp line 1055 (Width, Height), vtable +0x34
+0x41c0f0	TTabBar_Arrange	game	high	ConsoleWindow.cpp line 1068, vtable +0x48: both hidden windows and Rearrange(NULL)
+0x41c2a0	TTabBar_InsertChild	game	high	ConsoleWindow.cpp line 1098, vtable +0x04
+0x41c450	TTabBar_AppendChild	game	high	ConsoleWindow.cpp line 1111, vtable +0x08
+0x41c600	TTabBar_InsertChildAfter	game	high	ConsoleWindow.cpp line 1139, vtable +0x14
+0x41c7b0	TTabBar_SwapChildren	game	high	ConsoleWindow.cpp line 1163, vtable +0x18
+0x41c950	TTabBar_IsChild	game	high	ConsoleWindow.cpp line 1191, vtable +0x1c: shown or hidden
+0x41cb20	TTabBar_GetContainer	game	medium	ConsoleWindow.cpp lines 1203-1205 ("failed to get composite"): the bar or the hidden window holding a tab; name ours (variable "Container")
+0x41cda0	TTabBar_HelpMouseMove	game	high	ConsoleWindow.cpp lines 1215-1220 (Parent!=NULL), vtable +0x68: help handle 23 over the parent
+0x41d040	TTabBar_HandleEvent	game	high	ConsoleWindow.cpp line 1258 (Event), vtable +0x70: 5/6 scroll the hidden tabs by one, 25/26 completely
+0x41d270	TTabBar_FindTab	game	medium	ConsoleWindow.cpp line 1290: the tab of a text buffer; name ours
+0x41d450	TTabBar_ShowTab	game	medium	ConsoleWindow.cpp line 1309: a hidden tab becomes the last but one shown; name ours
+0x41d620	TTabBar_StoreOpenChannels	game	medium	ConsoleWindow.cpp line 1344: ClearOpenChannels, AddOpenChannel for the public channels of all tabs; name ours
+0x41d810	TTabBar_Rearrange	game	medium	ConsoleWindow.cpp lines 1372-1427 (Search!=NULL), vtable +0xa0 (new slot): swaps a dragged tab with a neighbour, lays the tabs out, moves the ones that do not fit; name ours
+0x41dbe0	TConsoleWindow_dtor	game	high	ConsoleWindow.cpp line 1543, vtable 0x55e1a0: StoreOpenChannels, SetConsoleHeight, deletes the buttons that are not children, removes the hotkeys
+0x41de70	TConsoleWindow_GetMinimumHeight	game	medium	ConsoleWindow.h inline, vtable 0x55e1a0 +0x40: SkinProperties.Style9E8.Data00 (106); missed by Ghidra
+0x41de80	TConsoleWindow_SetSize	game	high	ConsoleWindow.cpp line 1571 (Width, Height), vtable +0x34: the areas and button positions of Style9E8
+0x41e1e0	TConsoleWindow_Arrange	game	high	ConsoleWindow.cpp line 1647, vtable +0x48: the frame, skins 177-185
+0x41e5e0	TConsoleWindow_LeftButtonDown	game	high	ConsoleWindow.cpp line 1659 (x, y), vtable +0x50: clears both selections
+0x41e7a0	TConsoleWindow_HelpMouseMove	game	high	ConsoleWindow.cpp line 1673 (x, y), vtable +0x68: help handle 22
+0x41e960	TConsoleWindow_SetActive	game	medium	ConsoleWindow.cpp lines 1869-1875 ("Active?1:0", TextBuffer!=NULL, Input!=NULL): activates the edit line where the player may write; MainWindow.cpp's SetConsoleActive
+0x41ed00	TConsoleWindow_UpdateButtons	game	medium	ConsoleWindow.cpp lines 1888-1938 (TextBuffer!=NULL): arrows, close, server messages and volume buttons, the edit line's font; name ours
+0x41f1c0	TConsoleWindow_GetServerMessages	game	medium	ConsoleWindow.cpp lines 2060-2061 ("CurrentConsole->getTextBuffer()->isDefault()==false"), no try block: the server message button's state; ContextMenus.cpp's channel menu; name ours
+0x41f470	TConsoleWindow_SetServerMessages	game	medium	ConsoleWindow.cpp lines 2071-2077: sets the button's state, HandleEvent(203); name ours
+0x41f7f0	TConsoleWindow_GetTextBuffer	game	medium	ConsoleWindow.cpp line 2085 ("CurrentConsole->getTextBuffer()!=NULL"), no try block
+0x41f940	TConsoleWindow_AddToHistory	game	medium	ConsoleWindow.cpp line 2207: appends the edit line to History unless it repeats the last; name ours
+0x41fb60	TConsoleWindow_ParseInput	game	medium	ConsoleWindow.cpp lines 2258-2304 ("unknown message separator", "(Word) MessageSeparator"): "#X" commands, "*name*", "@name@", "$name$", the account data warning; name ours
+0x420090	TConsoleWindow_SaveChannel	game	medium	ConsoleWindow.cpp lines 2316-2335 (CurrentTab!=NULL, CurrentTab->getCaption()!=NULL, TextBuffer!=NULL): appends the channel to "<caption>.txt"; ContextMenus.cpp's "Save Window"; name ours
+0x420550	TTextWindow_Draw	game	high	ConsoleWindow.cpp lines 84-119 (Format!=NULL, Format->LineText!=NULL, CurrentLine, Surface), vtable +0x44: lines upwards from CurrentLineNumber with the selection
+0x420b80	TTextWindow_Arrange	game	high	ConsoleWindow.cpp line 148, vtable +0x48: FormatLines and InvisibleLines (SetCurrentLineNumber(-1) inlined, its assertion folded)
+0x420d70	TTextWindow_LeftButtonDoubleClick	game	high	ConsoleWindow.cpp line 218 (x, y), vtable +0x58: selects a word
+0x420f90	TTextWindow_RightButtonUp	game	high	ConsoleWindow.cpp line 240 (x, y), vtable +0x5c: AddMessage 0x37 (text menu) or 0x39 (request menu)
+0x421190	TTextWindow_HandleEvent	game	high	ConsoleWindow.cpp lines 262-265 (Event), vtable +0x70: 16 copy, 17-19 nothing, 20 select all
+0x421450	TConsole_Arrange	game	high	ConsoleWindow.cpp lines 753-794 ("invalid range for console text window scroll bar"), vtable +0x48: scroll bar range, frame skins 169-176
+0x421b10	TTab_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TTab (vtable 0x55e098 slot 0), calls 0x41acd0
+0x421b30	TTabBar_ctor	game	medium	ConsoleWindow.cpp line 1016: TWindow, vtable 0x55dcd8, 0x40 bytes, two hidden windows; class name ours
+0x421d10	TTabBar_SetCurrentTab	game	medium	ConsoleWindow.cpp lines 1075-1085 (Tab!=NULL, Container!=NULL): deactivates the current tab, activates and shows the new one; name ours
+0x422090	TTabBar_DeleteChild	game	high	ConsoleWindow.cpp line 1125, vtable +0x10: in the window that holds the tab
+0x422250	TTabBar_RemoveChild	game	high	ConsoleWindow.cpp line 1177, vtable +0x0c
+0x422410	TConsoleWindow_ctor	game	high	ConsoleWindow.cpp line 1516: TWindow, vtable 0x55e1a0, 0x6c bytes (MainWindow.cpp's Console): edit line, tab bar, console, buttons, hotkeys, joins the stored channels
+0x422aa0	TConsoleWindow_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TConsoleWindow (vtable 0x55e1a0 slot 0), calls 0x41dbe0
+0x422ac0	TConsoleWindow_Draw	game	high	ConsoleWindow.cpp lines 1583-1601 (CurrentConsole!=NULL, TextBuffer!=NULL, Surface), vtable +0x44: GetConsoleChanged, the ignore button's throttle skin, UpdateButtons
+0x422e70	TConsoleWindow_OpenDefaultChannel	game	medium	ConsoleWindow.cpp line 1953: the default tab (MainWindow.cpp passes DefaultTextBuffer, "Default"); name ours
+0x423060	TConsoleWindow_AddChannel	game	medium	ConsoleWindow.cpp lines 1977-1998 (TextBuffer!=NULL, NewTab!=NULL): a tab for a buffer (help channel 7 gets its welcome text), current from action SwitchTime on; Control.cpp's message 0x32; name ours
+0x4234b0	TConsoleWindow_CloseChannel	game	medium	ConsoleWindow.cpp lines 2009-2020 (DefaultTab!=NULL, NewTab!=NULL): closes the current tab; name ours
+0x423830	TConsoleWindow_SendInput	game	medium	ConsoleWindow.cpp lines 2145-2184 (Addressee!=NULL, ChannelID!=-1, "unknown talk mode", TalkMode): sends the edit line in its talk mode; name ours
+0x424200	TTab_LeftButtonDown	game	high	ConsoleWindow.cpp line 916 (x, y), vtable +0x50: makes the tab current and starts dragging it
+0x4243d0	TTab_RightButtonUp	game	high	ConsoleWindow.cpp line 945, vtable +0x5c: makes the tab current, AddMessage 0x38 (channel menu)
+0x424580	TConsoleWindow_KeyPress	game	high	ConsoleWindow.cpp lines 1718-1773 (Key, TextBuffer!=NULL), vtable +0x6c: channel switching, selection keys, the edit line, hotkeys F1-F12, history
+0x424b10	TConsoleWindow_HandleEvent	game	high	ConsoleWindow.cpp lines 1856-1859 (Event), vtable +0x70: events 201-213 and 403
+0x425070	TConsoleWindow_OpenChannel	game	medium	ConsoleWindow.cpp lines 1965-1969 (RecvMode, SendMode, TextBuffer!=NULL): CreateTextBuffer or GetTextBuffer, AddChannel; Control.cpp's messages 0x2f-0x31; name ours
+0x425330	TConsoleWindow_ReportRuleViolation	game	medium	ConsoleWindow.cpp lines 2033-2051 (NewTab!=NULL, Question!=NULL, strlen(Question)>0, TextBuffer!=NULL): opens the player's request channel; Control.cpp's message 0x33; name ours
+0x425b10	vector_TMark_dtor	game	medium	Container.h ~vector<TMark> (delete[] entry at +0x88), out-of-line copy kept in ContentWindows.obj next to 0x425b20; atexit thunks 0x536e26, 0x536f86 jump to it
+0x452790	TMultiStateButton_Reset	game	low	DialogElements.cpp: state 0 and its skins (+0x44 = +0x48 + 1, then 0 because it is not below +0x48); ConsoleWindow.cpp's volume button after every message; names ours
+0x45bc80	TEditLine_SetActive	game	low	DialogElements.cpp: +0x58 = Active; false clears the selection length +0x60; ConsoleWindow.cpp's SetActive; names ours
+0x460450	TScrollBarRange_SetRange	game	low	DialogElements.cpp: (Minimum, Maximum, Value, Visible) of the part at TScrollBar+0x2c, whose +0x30 is the value; ConsoleWindow.cpp's TConsole::Arrange; names ours
+0x466860	TSkinButton_ctor	game	low	DialogElements.cpp: (x, y, _ButtonUp, _ButtonDown, TCallback, tooltip, 0), 0x44 bytes; base of TBlinkingButton, TToggleButton, TMultiStateButton; the console's buttons; names ours
+0x4671e0	TToggleButton_ctor	game	low	DialogElements.cpp: TSkinButton with a state (+0x44) and two tooltips, vtable 0x561cd0, 0x50 bytes; the console's server message button; names ours
+0x4672d0	TMultiStateButton_ctor	game	low	DialogElements.cpp: varargs constructor (__cdecl, this pushed): (x, y, tooltip, States, then skin pair and TCallback per state), vtable 0x560e10, 0x58 bytes; the console's volume; names ours
+0x467b50	TEditLine_ctor	game	low	DialogElements.cpp: TWindow, vtable 0x560e98, 0x68 bytes, (TRect area, maximum length, flag); the console's Input; names ours
+0x469a80	TScrollBar_ctor	game	low	DialogElements.cpp: TWindow, vtable 0x561f70, 0x38 bytes, (TRect area, 0, 0, 0, 0, true) in ConsoleWindow.cpp; names ours
+0x512050	strstr	stl	high	CRT strstr (ConsoleWindow.cpp's account data check)

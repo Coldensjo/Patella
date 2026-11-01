@@ -127,7 +127,7 @@ def classify(funcs):
 
 
 def apply_ranges(funcs):
-	"""Assign settled gaps from file-ranges.tsv; assertion evidence still wins."""
+	"""Assign settled gaps from file-ranges.tsv; assertion and header evidence still win."""
 	path = ROOT / 'file-ranges.tsv'
 	if not path.exists():
 		return
@@ -137,7 +137,7 @@ def apply_ranges(funcs):
 		if len(cols) >= 3:
 			ranges.append((int(cols[0], 16), int(cols[1], 16), cols[2]))
 	for fn in funcs:
-		if fn['kind'] not in GAME_KINDS or fn['how'] == 'assert':
+		if fn['kind'] not in GAME_KINDS or fn['how'] in ('assert', 'header'):
 			continue
 		for lo, hi, file in ranges:
 			if lo <= fn['addr'] <= hi:

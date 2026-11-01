@@ -389,7 +389,7 @@ static void TestLinesAndBuffers()
 		CheckBuffer(Ours, Original);
 		CHECK(Ours->GetChanged() == At<ThisBoolFn>(0x4fd5f0)(Original, NULL), "buffer changed latch");
 		CHECK(Ours->GetClosed() == At<ThisBoolFn>(0x4fd6b0)(Original, NULL), "buffer closed latch");
-		CHECK(Ours->IsDefault() == At<ThisBoolFn>(0x4fd620)(Original, NULL), "IsDefault");
+		CHECK(Ours->isDefault() == At<ThisBoolFn>(0x4fd620)(Original, NULL), "isDefault");
 		CHECK(Ours->AcceptMessages() == At<ThisBoolFn>(0x4fd630)(Original, NULL), "AcceptMessages");
 		CHECK(Ours->IsRuleViolation() == At<ThisBoolFn>(0x4fd640)(Original, NULL), "base predicate");
 		bool Value = (Random() & 1) != 0;
@@ -460,7 +460,7 @@ static void TestRouting()
 			bool OurValue = false;
 			switch (Offset) {
 			case 0x0c: OurValue = OurBuffer->CanWrite(); break;
-			case 0x28: OurValue = OurBuffer->IsDefault(); break;
+			case 0x28: OurValue = OurBuffer->isDefault(); break;
 			case 0x2c: OurValue = OurBuffer->AcceptMessages(); break;
 			case 0x30: OurValue = OurBuffer->IsRuleViolation(); break;
 			case 0x34: OurValue = OurBuffer->IsRuleViolationChannel(); break;
@@ -514,7 +514,7 @@ static void TestRouting()
 			Ours[Index]->SetLocked(Locked); Virtual<ThisSetBoolFn>(Original[Index], 0x44)(Original[Index], NULL, Locked);
 		}
 		CheckBuffer(DefaultTextBuffer, Global<TTalkBuffer *>(0x71ef68));
-		CHECK(HasUnreadConsoleText() == At<BoolFn>(0x502880)(), "unread console text");
+		CHECK(HasOwnPrivateChannel() == At<BoolFn>(0x502880)(), "own private channel");
 		if (Round % 5 == 0) {
 			ClearTextBuffer(Ours[0]); At<void (__cdecl *)(TTalkBuffer *)>(0x502340)(Original[0]);
 			ClearDefaultTextBuffer(); At<VoidFn>(0x5021a0)();
@@ -556,7 +556,7 @@ static void TestRouting()
 		DeleteTextBuffer(RuleChannel); At<DeleteFn>(0x507fa0)(RuleChannelOriginal);
 	}
 	DeleteTextBuffer(DefaultTextBuffer); At<DeleteFn>(0x507fa0)(Global<TTalkBuffer *>(0x71ef68));
-	CHECK(!HasUnreadConsoleText() && !At<BoolFn>(0x502880)(), "deleted console buffers");
+	CHECK(!HasOwnPrivateChannel() && !At<BoolFn>(0x502880)(), "deleted console buffers");
 	ResetTalk(); At<VoidFn>(0x504d70)();
 	CheckBuffer(DefaultTextBuffer, Global<TTalkBuffer *>(0x71ef68));
 }

@@ -50,7 +50,6 @@ static_assert(offsetof(TMainWindow, MapFrame) == 0x2c, "TMainWindow::MapFrame at
 static_assert(offsetof(TMainWindow, InGame) == 0x48, "TMainWindow::InGame at +0x48");
 static_assert(offsetof(TSplitter, DragY) == 0x2c, "TSplitter::DragY at +0x2c");
 static_assert(sizeof(TConsoleWindow) == 0x6c, "TConsoleWindow is 0x6c bytes");
-static_assert(offsetof(TConsoleWindow, Data34) == 0x34, "TConsoleWindow::Data34 at +0x34");
 static_assert(sizeof(TBorder) == 0x68, "TBorder is 0x68 bytes");
 static_assert(sizeof(TTextButton) == 0x78, "TTextButton is 0x78 bytes");
 static_assert(sizeof(TLabel) == 0x4c, "TLabel is 0x4c bytes");
@@ -150,13 +149,19 @@ static std::string Name(const void *Object) { return NameOf(Side, Object); }
 // test subclass at the end (same layout, more overrides).
 static int ConsoleMinHeight, BodyMinHeight, BorderMinHeight, FrameMinHeight;
 
-class TFakeConsole : public TConsoleWindow {
+// The console (ConsoleWindow.cpp) is a fake of the same size on both sides:
+// the image's constructor and ours (found through its decorated name) build
+// it, the image's and our SetActive and OpenDefaultChannel log.
+class TFakeConsole : public TWindow {
 public:
+	TFakeConsole();
 	int GetMinimumHeight() { return ConsoleMinHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DCons%d,%d,%d;", Surface, x, y); }
 	void Arrange() { Logf("ACons;"); }
 	void KeyPress(int Key) { Logf("KCons%d;", Key); }
+	uint8 Data2C[0x6c - 0x2c];
 };
+static_assert(sizeof(TFakeConsole) == sizeof(TConsoleWindow), "the fake console has the console's size");
 class TFakeBorder : public TBorder {
 public:
 	TFakeBorder(TWindow *Window) : TBorder(Window, 0) {}
@@ -186,20 +191,21 @@ public:
 
 static void *FakeConsoleVtable, *FakeBorderVtable, *FakeButtonVtable, *FakeMapFrameVtable;
 
-TConsoleWindow::TConsoleWindow()
+TFakeConsole::TFakeConsole()
 {
 	Register(this, "Console");
 	Logf("NCons;");
 	memset(Data2C, 0, sizeof(Data2C));
-	Data34 = NULL;
-	if (FakeConsoleVtable != NULL)
-		SetVtable(this, FakeConsoleVtable);
 }
-void TConsoleWindow::FUN_0041e960(bool Active) { Logf("CActive%d;", Active ? 1 : 0); }
-void TConsoleWindow::FUN_00422e70(TTalkBuffer *TextBuffer, const char *Title)
+static void *__fastcall FakeConsoleNew(void *This, void *) { return new (This) TFakeConsole; }
+static void __fastcall FakeConsoleActive(void *, void *, bool Active) { Logf("CActive%d;", Active ? 1 : 0); }
+static void __fastcall FakeConsoleOpen(void *, void *, TTalkBuffer *TextBuffer, const char *Caption)
 {
-	Logf("COpen%p,%s;", (void *)TextBuffer, Title);
+	Logf("COpen%p,%s;", (void *)TextBuffer, Caption);
 }
+// Our TConsoleWindow::TConsoleWindow() (a constructor has no address in C++).
+extern "C" void OurConsoleConstructor();
+#pragma comment(linker, "/alternatename:_OurConsoleConstructor=??0TConsoleWindow@@QAE@XZ")
 
 // The open dialogs of the preferences, per side (ClearOpenDialogs,
 // GetOpenDialogs and AddOpenDialog).
@@ -330,7 +336,6 @@ TObjectIcon::TObjectIcon(TObject Obj, const TRGBColor *Color, int Param)
 }
 
 // The image's constructors build the same fakes.
-static void *__fastcall ImageConsole(void *This, void *) { return new (This) TConsoleWindow; }
 static void *__fastcall ImageBorder1(void *This, void *, TWindow *W, int P) { return new (This) TBorder(W, P); }
 static void *__fastcall ImageBorder2(void *This, void *, TWindow *W, int S1, int S2, int S3, int S4, int S5, int S6,
 	int S7, int S8, int S9, int B)
@@ -534,8 +539,7 @@ static void PatchCallees()
 		{0x404730, (void *)SendTurnNorth}, {0x4048d0, (void *)SendTurnEast}, {0x404a70, (void *)SendTurnSouth},
 		{0x404c10, (void *)SendTurnWest}, {0x409140, (void *)SendCancel}, {0x404350, (void *)SendLogout},
 		{0x4074a0, (void *)SendJoinChannel}, {0x445c20, (void *)ChangeEngine},
-		{0x422410, (void *)ImageConsole}, {0x41e960, Member(&TConsoleWindow::FUN_0041e960)},
-		{0x422e70, Member(&TConsoleWindow::FUN_00422e70)},
+		{0x422410, (void *)FakeConsoleNew}, {0x41e960, (void *)FakeConsoleActive}, {0x422e70, (void *)FakeConsoleOpen},
 		{0x42e4e0, Member(&TSubWindowBody::FUN_0042e4e0)}, {0x458b20, Member(&TSkinButton::SetSkins)},
 		{0x4547f0, (void *)ImageBorder1}, {0x454e30, (void *)ImageBorder2},
 		{0x455500, Member(&TBorder::FUN_00455500)},
@@ -547,6 +551,9 @@ static void PatchCallees()
 	};
 	for (auto &I : Images)
 		PatchJump(I.Image, I.Ours);
+	PatchOwn((void *)OurConsoleConstructor, (void *)FakeConsoleNew);
+	PatchOwn(Member(&TConsoleWindow::SetActive), (void *)FakeConsoleActive);
+	PatchOwn(Member(&TConsoleWindow::OpenDefaultChannel), (void *)FakeConsoleOpen);
 }
 
 // The vtables of the fakes, from instances made quietly.

@@ -271,7 +271,7 @@ public:
 	TTestBuffer() : TTalkBuffer(1) {}
 	void Clear() { Logf("BufClear;"); }
 	bool SetWriteEnabled(bool Value) { Logf("BufWrite%d;", Value ? 1 : 0); return true; }
-	bool IsDefault() { Logf("BufDef;"); return World.Default; }
+	bool isDefault() { Logf("BufDef;"); return World.Default; }
 	bool IsRuleViolation() { Logf("BufRV;"); return World.RuleViolation; }
 	bool IsRuleViolationChannel() { Logf("BufRVC;"); return World.RuleViolationChannel; }
 	bool IsPrivateChannel() { Logf("BufPriv;"); return World.PrivateChannel; }
@@ -279,29 +279,39 @@ public:
 };
 
 // ConsoleWindow.cpp's text window and console (memory only: the menus read
-// Data34 and TextBuffer and call the methods below).
+// CurrentConsole, TextWindow and TextBuffer and call the methods below,
+// which are fakes on both sides; TTextWindow::HasSelection, inlined in our
+// code, runs on the text window's selection on both sides).
 static TTextWindow *TextWindow;
+static TConsole *ConsoleView;
 static TConsoleWindow *Console;
-static TConsoleData34 ConsoleData;
 
-TTalkLine *TTextWindow::FUN_00419030(int LineNumber)
+static TTalkLine *__fastcall FakeGetTalkLine(void *, void *, int LineNumber)
 {
 	Logf("GetLine%d;", LineNumber);
 	return LineNumber >= 0 && LineNumber < NLINES ? World.Lines[LineNumber] : NULL;
 }
-bool TTextWindow::FUN_00417590() { Logf("HasSel;"); return World.HasSelection; }
-const char *TTextWindow::FUN_00419bd0() { Logf("GetSel;"); return World.Selection; }
-void TTextWindow::FUN_004199e0() { Logf("SelAll;"); }
+static const char *__fastcall FakeGetSelectedText(void *, void *) { Logf("GetSel;"); return World.Selection; }
+static bool __fastcall FakeSelectAll(void *, void *) { Logf("SelAll;"); return true; }
 
-bool TConsoleWindow::FUN_0041f1c0() { Logf("ServerMsgs;"); return World.ServerMessages; }
-void TConsoleWindow::FUN_0041f470(bool Show) { Logf("ShowServerMsgs%d;", Show ? 1 : 0); }
-TTalkBuffer *TConsoleWindow::FUN_0041f7f0() { Logf("CurBuf;"); return Buffer; }
-void TConsoleWindow::FUN_00420090() { Logf("SaveWin;"); }
-void TConsoleWindow::FUN_004234b0() { Logf("CloseChan;"); }
-TTalkBuffer *TConsoleWindow::FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
-	INT_PTR Param5)
+// The world's selection on the text window (TTextWindow::HasSelection reads it).
+static void SetSelection()
 {
-	Logf("OpenChan%d,%d,%s,%d,%s;", RecvMode, SendMode, (const char *)Param3, (int)Param4, (const char *)Param5);
+	TextWindow->SelectionStartLine = World.HasSelection ? 0 : -1;
+	TextWindow->SelectionStartOffset = World.HasSelection ? 1 : -1;
+	TextWindow->SelectionEndLine = World.HasSelection ? 1 : -1;
+	TextWindow->SelectionEndOffset = World.HasSelection ? 2 : -1;
+}
+
+static bool __fastcall FakeGetServerMessages(void *, void *) { Logf("ServerMsgs;"); return World.ServerMessages; }
+static void __fastcall FakeSetServerMessages(void *, void *, bool Show) { Logf("ShowServerMsgs%d;", Show ? 1 : 0); }
+static TTalkBuffer *__fastcall FakeConsoleTextBuffer(void *, void *) { Logf("CurBuf;"); return Buffer; }
+static bool __fastcall FakeSaveChannel(void *, void *) { Logf("SaveWin;"); return true; }
+static void __fastcall FakeCloseChannel(void *, void *) { Logf("CloseChan;"); }
+static TTalkBuffer *__fastcall FakeOpenChannel(void *, void *, int RecvMode, int SendMode, const char *Name,
+	int Channel, const char *Caption)
+{
+	Logf("OpenChan%d,%d,%s,%d,%s;", RecvMode, SendMode, Name, Channel, Caption);
 	return NULL;
 }
 
@@ -359,6 +369,7 @@ static void *__fastcall ImageSeparator(void *This, void *, bool Horizontal)
 // The edit line and the skill window's body, one per side.
 class TTestEdit : public TEditLine {
 public:
+	TTestEdit() : TEditLine(TRect(0, 0, 0, 0), 0, 0) {}
 	void HandleEvent(int Event) { Logf("EditEvent%d;", Event); }
 };
 class TTestSkills : public TSkillsWindowBody {
@@ -472,7 +483,7 @@ static void __cdecl FakeSetLevelBar(bool Value) { Logf("SLB%d;", Value ? 1 : 0);
 static void __cdecl FakeSetMagLevelBar(bool Value) { Logf("SMB%d;", Value ? 1 : 0); }
 static void __cdecl FakeSetSkillBar(int Skill, bool Value) { Logf("SSB%d,%d;", Skill, Value ? 1 : 0); }
 static bool __cdecl FakeGetTimeStamps() { return World.TimeStamps; }
-static bool __cdecl FakeHasUnreadConsoleText() { Logf("Unread;"); return World.Unread; }
+static bool __cdecl FakeHasOwnPrivateChannel() { Logf("Unread;"); return World.Unread; }
 static bool __cdecl FakeIsTalkIgnored(int Mode, const char *Name, int Channel)
 {
 	Logf("Ign%d,%s,%d;", Mode, Name, Channel);
@@ -692,7 +703,7 @@ static void PatchCallees()
 		{0x4db710, (void *)SetMagLevelBar, (void *)FakeSetMagLevelBar},
 		{0x4ddaa0, (void *)SetSkillBar, (void *)FakeSetSkillBar},
 		{0x4db5f0, (void *)GetTimeStamps, (void *)FakeGetTimeStamps},
-		{0x502880, (void *)HasUnreadConsoleText, (void *)FakeHasUnreadConsoleText},
+		{0x502880, (void *)HasOwnPrivateChannel, (void *)FakeHasOwnPrivateChannel},
 		{0x500060, (void *)IsTalkIgnored, (void *)FakeIsTalkIgnored},
 		{0x501940, (void *)IgnoreName, (void *)FakeIgnoreName},
 		{0x502010, (void *)UnignoreName, (void *)FakeUnignoreName},
@@ -744,16 +755,22 @@ static void PatchCallees()
 	}
 	Redirect((void *)(uintptr_t)0x465e60, (void *)ImageFormattedText);
 	Redirect((void *)(uintptr_t)0x452cb0, (void *)ImageSeparator);
-	Redirect((void *)(uintptr_t)0x419030, Member(&TTextWindow::FUN_00419030));
-	Redirect((void *)(uintptr_t)0x417590, Member(&TTextWindow::FUN_00417590));
-	Redirect((void *)(uintptr_t)0x419bd0, Member(&TTextWindow::FUN_00419bd0));
-	Redirect((void *)(uintptr_t)0x4199e0, Member(&TTextWindow::FUN_004199e0));
-	Redirect((void *)(uintptr_t)0x41f1c0, Member(&TConsoleWindow::FUN_0041f1c0));
-	Redirect((void *)(uintptr_t)0x41f470, Member(&TConsoleWindow::FUN_0041f470));
-	Redirect((void *)(uintptr_t)0x41f7f0, Member(&TConsoleWindow::FUN_0041f7f0));
-	Redirect((void *)(uintptr_t)0x420090, Member(&TConsoleWindow::FUN_00420090));
-	Redirect((void *)(uintptr_t)0x4234b0, Member(&TConsoleWindow::FUN_004234b0));
-	Redirect((void *)(uintptr_t)0x425070, Member(&TConsoleWindow::FUN_00425070));
+	// ConsoleWindow.cpp's methods: the image's and ours.
+	struct { uint32 Image; void *Ours; void *Fake; } Console[] = {
+		{0x419030, Member(&TTextWindow::GetTalkLine), (void *)FakeGetTalkLine},
+		{0x419bd0, Member(&TTextWindow::GetSelectedText), (void *)FakeGetSelectedText},
+		{0x4199e0, Member(&TTextWindow::SelectAll), (void *)FakeSelectAll},
+		{0x41f1c0, Member(&TConsoleWindow::GetServerMessages), (void *)FakeGetServerMessages},
+		{0x41f470, Member(&TConsoleWindow::SetServerMessages), (void *)FakeSetServerMessages},
+		{0x41f7f0, Member(&TConsoleWindow::GetTextBuffer), (void *)FakeConsoleTextBuffer},
+		{0x420090, Member(&TConsoleWindow::SaveChannel), (void *)FakeSaveChannel},
+		{0x4234b0, Member(&TConsoleWindow::CloseChannel), (void *)FakeCloseChannel},
+		{0x425070, Member(&TConsoleWindow::OpenChannel), (void *)FakeOpenChannel},
+	};
+	for (auto &T : Console) {
+		Redirect((void *)(uintptr_t)T.Image, T.Fake);
+		Redirect(T.Ours, T.Fake);
+	}
 	Redirect((void *)(uintptr_t)0x5121ea, (void *)ImageTime);
 	Redirect((void *)(uintptr_t)0x513eb1, (void *)ImageLocaltime);
 	Redirect((void *)(uintptr_t)0x511d6b, (void *)ImageSprintf);
@@ -1061,7 +1078,7 @@ static TArguments RandomArguments(int K)
 
 static void RandomEdit()
 {
-	memset(Edit->Data24, 0, sizeof(Edit->Data24));
+	memset(Edit->Data30, 0, sizeof(Edit->Data30));
 	Edit->Data5C = Random() % 3 == 0 ? -1 : Random() % 20;
 	Edit->Data60 = Random() % 3 == 0 ? 0 : Random() % 20;
 	Edit->Data66 = Random() % 3 == 0;
@@ -1324,9 +1341,10 @@ void TestContextMenus()
 	Buffer = new TTestBuffer;
 	TextWindow = (TTextWindow *)calloc(1, sizeof(TTextWindow));
 	TextWindow->TextBuffer = Buffer;
-	ConsoleData.Data2C = TextWindow;
+	ConsoleView = (TConsole *)calloc(1, sizeof(TConsole));
+	ConsoleView->TextWindow = TextWindow;
 	Console = (TConsoleWindow *)calloc(1, sizeof(TConsoleWindow));
-	Console->Data34 = &ConsoleData;
+	Console->CurrentConsole = ConsoleView;
 	Edit = new TTestEdit;
 	for (int s = 0; s < 2; s++) {
 		SkillsWindow[s] = new TTestSkills;
@@ -1354,6 +1372,7 @@ void TestContextMenus()
 	for (int Round = 0; Round < 3000; Round++) {
 		RandomSkinProperties();
 		RandomWorld();
+		SetSelection();
 		RandomEdit();
 		Kind = Random() % KINDS;
 		KindCount[Kind]++;
@@ -1379,6 +1398,7 @@ void TestContextMenus()
 	delete Surface;
 	delete Buffer;
 	free(TextWindow);
+	free(ConsoleView);
 	free(Console);
 	delete Edit;
 	for (int s = 0; s < 2; s++)

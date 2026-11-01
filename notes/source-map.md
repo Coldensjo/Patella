@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 597 | 82802 |
-| header | 18 | 11957 |
-| gap | 115 | 36813 |
+| range | 615 | 82160 |
+| header | 22 | 15065 |
+| gap | 93 | 34347 |
 
 ## Source files
 
@@ -30,13 +30,13 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | File | Functions | Catch | Bytes | First | Last | Assert lines |
 |---|---:|---:|---:|---|---|---|
 | Communication.cpp | 224 | 403 | 87062 | `0x401000` | `0x417416` | 41-2811 |
-| ConsoleWindow.cpp | 76 | 212 | 52806 | `0x41864d` | `0x42586c` | 84-2335 |
-| ContentWindows.cpp | 144 | 405 | 93309 | `0x426480` | `0x43d640` | 106-3389 |
+| ConsoleWindow.cpp | 87 | 213 | 54194 | `0x4174d0` | `0x42586c` | 84-2335 |
+| ContentWindows.cpp | 154 | 405 | 94387 | `0x425920` | `0x43d640` | 106-3389 |
 | ContextMenus.cpp | 38 | 99 | 32193 | `0x43d6f0` | `0x44585c` | 106-1530 |
 | Control.cpp | 27 | 94 | 22840 | `0x445900` | `0x44b699` | 93-1661 |
 | Creatures.cpp | 96 | 87 | 27135 | `0x44b740` | `0x45243e` | 108-1414 |
 | DialogElements.cpp | 190 | 384 | 97128 | `0x4524e0` | `0x46b6d7` | 42-4301 |
-| Container.h | 10 | 0 | 5080 | `0x452ac0` | `0x4fd6e0` | 355-370 |
+| Container.h | 6 | 0 | 1972 | `0x452ac0` | `0x4b0b20` |  |
 | Dialogs.cpp | 139 | 408 | 101452 | `0x46c3e0` | `0x48540d` | 48-4084 |
 | DialogWindow.cpp | 45 | 120 | 23783 | `0x4854c0` | `0x48b287` | 63-1127 |
 | graphics.h | 2 | 0 | 96 | `0x48b380` | `0x48b3b0` |  |
@@ -75,8 +75,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 | Between | Functions | Bytes | Range |
 |---|---:|---:|---|
-| Communication.cpp / ConsoleWindow.cpp | 12 | 1388 | `0x4174d0`-`0x41864d` |
-| ConsoleWindow.cpp / ContentWindows.cpp | 10 | 1078 | `0x425920`-`0x425e6e` |
 | DialogElements.cpp / Dialogs.cpp | 30 | 2206 | `0x46b790`-`0x46c0ce` |
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |
@@ -85,7 +83,7 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 | Header | Functions |
 |---|---:|
-| Container.h | 13 |
+| Container.h | 17 |
 | GUI.h | 1 |
 | ConsoleWindow.h | 1 |
 | Utils.h | 1 |
