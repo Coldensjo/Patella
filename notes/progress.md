@@ -18,15 +18,13 @@ Read this and `git log` first when resuming.
 
 ## Current item
 
-6: Map.cpp and the gaps on both sides (both delegate attempts failed on
-rate/usage limits; doing it myself). Then 7 MapWindow.cpp. Item 8
-(Creatures.cpp) is with a Claude delegate.
+6 (Map.cpp) and 8 (Creatures.cpp) are with delegates; 7 (MapWindow.cpp)
+waits for Map.cpp. Meanwhile: item 10, the smallest remaining files.
 
 ## Delegates (running)
 
-- Map.cpp (item 6): not running. The Claude delegate hit an API rate limit,
-  the gpt-6.1-sol retry hit the ChatGPT subscription usage limit. Do it
-  myself or retry a delegate later.
+- Map.cpp (item 6): third attempt, Claude Opus 5.5 delegate (the first hit
+  a Claude rate limit, the gpt-6.1-sol retry the ChatGPT usage limit).
 - Creatures.cpp + Control/Creatures and Creatures/DialogElements gaps
   (item 8): Claude Opus 5.5, own worktree.
 Both told: real names only, no shims, replace their external.h views and
