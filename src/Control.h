@@ -8,6 +8,10 @@
 #pragma once
 
 #include "common.h"
+#include <iosfwd>
+
+void OutputControlErrorInformations(std::ostream &Out);
+void Resize(int Width, int Height);
 
 void CheckSurface(bool Force);
 void ChangeEngine(int engine);

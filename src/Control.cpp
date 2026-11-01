@@ -1,4 +1,4 @@
-// Control.cpp: reconstructed from Tibia.exe 7.72 (0x445c20-0x44b738).
+// Control.cpp: reconstructed from Tibia.exe 7.72 (0x445900-0x44b738).
 //
 // Functions are in original source order, which comes from the assertion and
 // catch line numbers; the comment before each gives its address and those
@@ -7,10 +7,9 @@
 // others. Every function has the TBEGIN/TEND handlers, starting at try state
 // 0 (tools/ehinfo.py), except where noted.
 //
-// Not reconstructed here: the two functions before 0x445aec. 0x4459b0 has
-// TEND2(Width, Height) at Control.cpp line 93 and 0x445900 prints
-// LastPacketTypes, so both are probably the start of this file; they are
-// still listed as the gap to ContextMenus.cpp.
+// The file starts at 0x445900 (OutputControlErrorInformations, which prints
+// LastPacketTypes) and 0x4459b0 (Resize, TEND2(Width, Height) at line 93),
+// once the gap to ContextMenus.cpp.
 //
 // The event queue (Status.cpp, AddMessage and FetchMessage) carries a type
 // and two parameters; ProcessEvents turns each event into a dialog, a context
@@ -27,6 +26,7 @@
 #include "Status.h"
 #include "Talk.h"
 #include "external.h"
+#include <ostream>
 
 // Data, in .data/.bss order. 0x5c4540-0x5c4553 is not used by any code.
 static int LastPacketType = -1;               // 0x5c0d8c, only written (ReceivePackets)
@@ -41,6 +41,52 @@ static void (*CloseCallback)();               // 0x5c4534, called by event 0x48
 static void (*ExitCallback)();                // 0x5c4538, stored but not used here
 static HWND WindowHandle;                     // 0x5c453c
 static bool ShowFPS;                          // 0x5c4554, toggled by key 0x907
+
+// 0x445900. For error.txt (Player.cpp's HandleException): the last ten
+// packet types, newest first.
+void OutputControlErrorInformations(std::ostream &Out)
+{
+	Out << "Last Packet Types:";
+	for (int i = 9; i >= 0; i--) {
+		int Index = LastPacketIndex + i;
+		if (Index > 9)
+			Index -= 10;
+		char Help[8];
+		sprintf(Help, " %03u", (unsigned int)LastPacketTypes[Index]);
+		Out << Help;
+	}
+	Out << std::endl;
+}
+
+// 0x4459b0, line 93. The client area changed size (MainFrm.cpp); in
+// fullscreen mode (view mode 2) the screen size counts. An open context
+// menu (action state 11) is closed, a dialog (10) is centred again and a
+// help bubble (9) follows the main window.
+void Resize(int Width, int Height)
+{
+	TBEGIN
+	SetMouseCursor(1);
+	if (GetViewMode() == 2) {
+		TFullscreenMode *Mode = GetFullscreenMode();
+		Width = Mode->Width;
+		Height = Mode->Height;
+	}
+	MainWindow->SetSize(Width, Height);
+	if (ModalWindow != NULL) {
+		if (GetActionState() == 11) {
+			delete ModalWindow;
+			ModalWindow = NULL;
+			SetActionState(0);
+			MainWindow->FUN_004ad650(1);
+		}
+		if (ModalWindow != NULL && GetActionState() == 10)
+			ModalWindow->SetPosition(MainWindow->Width / 2 - ModalWindow->Width / 2,
+				MainWindow->Height / 2 - ModalWindow->Height / 2);
+		if (ModalWindow != NULL && GetActionState() == 9)
+			((TContextMenu *)ModalWindow)->FUN_00442110(MainWindow);
+	}
+	TEND2(Width, Height)
+}
 
 // 0x449010, line 124. Lets the surface check the window and display mode;
 // falls back to DirectX 5 when that fails.

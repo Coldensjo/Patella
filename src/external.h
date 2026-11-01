@@ -511,9 +511,6 @@ void FUN_004a88f0();                    // 0x4a88f0, MainFrm.cpp; called before 
 void FUN_004a8af0(int Value);           // 0x4a8af0, MainFrm.cpp; FatalError calls it with 1 outside view mode 1
 void FUN_004aa1d0();                    // 0x4aa1d0, MainFrm.cpp; called when the mouse cursor changes
 
-// Between ContextMenus.cpp and Control.cpp; name from Player.cpp's catch text.
-void OutputControlErrorInformations(std::ostream &Out); // 0x445900
-
 // graphics.cpp
 void FUN_0048da50();                    // 0x48da50, after the surfaces are created
 

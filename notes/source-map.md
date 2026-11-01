@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 269 | 45752 |
+| range | 272 | 46243 |
 | header | 21 | 14301 |
-| gap | 440 | 71519 |
+| gap | 437 | 71028 |
 
 ## Source files
 
@@ -33,7 +33,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | ConsoleWindow.cpp | 76 | 212 | 52806 | `0x41864d` | `0x42586c` | 84-2335 |
 | ContentWindows.cpp | 144 | 405 | 93309 | `0x426480` | `0x43d640` | 106-3389 |
 | ContextMenus.cpp | 35 | 98 | 31822 | `0x43d86c` | `0x44585c` | 106-1530 |
-| Control.cpp | 25 | 93 | 22349 | `0x445aec` | `0x44b699` | 93-1661 |
+| Control.cpp | 27 | 94 | 22840 | `0x445900` | `0x44b699` | 93-1661 |
 | Creatures.cpp | 48 | 86 | 25820 | `0x44bde1` | `0x45243e` | 108-1414 |
 | DialogElements.cpp | 162 | 383 | 95506 | `0x45399a` | `0x46b6d7` | 42-4301 |
 | Dialogs.cpp | 139 | 408 | 101452 | `0x46c3e0` | `0x48540d` | 48-4084 |
@@ -77,7 +77,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | Communication.cpp / ConsoleWindow.cpp | 12 | 1388 | `0x4174d0`-`0x41864d` |
 | ConsoleWindow.cpp / ContentWindows.cpp | 10 | 1078 | `0x425920`-`0x425e6e` |
 | ContentWindows.cpp / ContextMenus.cpp | 4 | 371 | `0x43d6f0`-`0x43d86c` |
-| ContextMenus.cpp / Control.cpp | 3 | 491 | `0x445900`-`0x445aec` |
 | Control.cpp / Creatures.cpp | 49 | 1315 | `0x44b740`-`0x44bde1` |
 | Creatures.cpp / DialogElements.cpp | 33 | 2931 | `0x4524e0`-`0x45399a` |
 | DialogElements.cpp / Dialogs.cpp | 30 | 2206 | `0x46b790`-`0x46c0ce` |

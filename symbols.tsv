@@ -1627,9 +1627,9 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4457be	20	Catch@004457be	catch	ContextMenus.cpp	between		0x4454f0	
 0x4457d2	138	Catch@004457d2	catch	ContextMenus.cpp	assert	1465	0x4454f0	
 0x44585c	158	Catch@0044585c	catch	ContextMenus.cpp	assert	1465	0x4454f0	
-0x445900	175	FUN_00445900	game	ContextMenus.cpp|Control.cpp	gap			
-0x4459b0	296	FUN_004459b0	game	ContextMenus.cpp|Control.cpp	gap			Width,Height
-0x445ad8	20	Catch@00445ad8	catch	ContextMenus.cpp|Control.cpp	gap		0x4459b0	
+0x445900	175	FUN_00445900	game	Control.cpp	range			
+0x4459b0	296	FUN_004459b0	game	Control.cpp	range			Width,Height
+0x445ad8	20	Catch@00445ad8	catch	Control.cpp	range		0x4459b0	
 0x445aec	144	Catch@00445aec	catch	Control.cpp	assert	93	0x4459b0	Width,Height
 0x445b7c	161	Catch@00445b7c	catch	Control.cpp	assert	93	0x4459b0	
 0x445c20	199	FUN_00445c20	game	Control.cpp	between			engine

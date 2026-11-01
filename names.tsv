@@ -758,3 +758,4 @@ address	name	kind	confidence	note
 0x4dae60	CPlayerApp_Run	game	high	Player.cpp lines 383-408; starts patch.exe when RunPatch is set
 0x445900	OutputControlErrorInformations	game	medium	between ContextMenus.cpp and Control.cpp; name from Player.cpp's catch text
 0x4a8360	CMainFrame_OutputErrorInformations	game	medium	MainFrm.cpp; name from Player.cpp's catch text
+0x4459b0	Resize	game	medium	Control.cpp line 93 (Width, Height): client area resized (MainFrm.cpp)

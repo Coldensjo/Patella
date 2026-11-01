@@ -340,3 +340,15 @@ callcheck differences, caller integration and differential coverage.
   it is already set.
 - **Tests**: only the two decoders are pure. Player.cpp is linked into the
   difftest against stubs for MFC and its callees (playertest.cpp).
+
+## ContextMenus/Control gap (0x445900-0x445aeb)
+
+- **Both functions are Control.cpp** (high): 0x445900 prints Control.cpp's
+  LastPacketTypes ring (0x5c4510/0x5c4514) and is named by Player.cpp's
+  catch text "OutputControlErrorInformations"; the catch blocks of 0x4459b0
+  start Control.cpp's assigned range (0x445aec) and name line 93 with
+  Width and Height.
+- **Resize** (low): our name; MainFrm.cpp calls it with the new client size
+  (and with 0,0 after switching to DirectX 9 fullscreen).
+- Not differentially tested: OutputControlErrorInformations writes through
+  the original's iostream code, and Resize needs the window objects.
