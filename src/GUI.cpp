@@ -271,8 +271,8 @@ void InitSkinProperties()
 	SkinProperties.Data09C = 40;
 	SkinProperties.Data0A0.x = 4;
 	SkinProperties.Data0A0.y = 4;
-	SkinProperties.Data0A8.x = -4;
-	SkinProperties.Data0A8.y = -4;
+	SkinProperties.Data0A0.Width = -4;
+	SkinProperties.Data0A0.Height = -4;
 	SkinProperties.Data0B0.FontNumber = 2;
 	SkinProperties.Data0B0.Color.R = 224;
 	SkinProperties.Data0B0.Color.G = 224;
@@ -343,8 +343,8 @@ void InitSkinProperties()
 	SkinProperties.Style194.Data4C = 19;
 	SkinProperties.Style194.Data50.x = 4;
 	SkinProperties.Style194.Data50.y = 15;
-	SkinProperties.Style194.Data58.x = -4;
-	SkinProperties.Style194.Data58.y = -4;
+	SkinProperties.Style194.Data50.Width = -4;
+	SkinProperties.Style194.Data50.Height = -4;
 	SkinProperties.Style194.Data60.x = 3;
 	SkinProperties.Style194.Data60.y = -16;
 	SkinProperties.Style194.Data68.x = 13;
@@ -2137,17 +2137,18 @@ void TWindow::SetChildPosition(TComponent *Child, int x, int y)
 }
 
 // 0x49fe70, lines 1724-1738. Sizes the window to the child placed at
-// (x, y), with negative width and height as margins after it, and not below
-// the minimum size. Notify chooses the virtual SetSize; otherwise only the
-// size fields change. The assertions are before the try block.
-void TWindow::FitToChild(TComponent *Child, int x, int y, int width, int height, bool Notify)
+// (Area.x, Area.y), with a negative Area.Width and Area.Height as margins
+// after it, and not below the minimum size. Notify chooses the virtual
+// SetSize; otherwise only the size fields change. The assertions are before
+// the try block.
+void TWindow::FitToChild(TComponent *Child, TRect Area, bool Notify)
 {
 	TASSERT(Child!=NULL);
 	TASSERT1(Child->getWidth()>0, Child->getWidth());
 	TASSERT1(Child->getHeight()>0, Child->getHeight());
 	TBEGIN
-	int NewWidth = Child->Width + (x > 0 ? x : 0) + (width < 0 ? -width : 0);
-	int NewHeight = (y > 0 ? y : 0) + Child->Height + (height < 0 ? -height : 0);
+	int NewWidth = Child->Width + (Area.x > 0 ? Area.x : 0) + (Area.Width < 0 ? -Area.Width : 0);
+	int NewHeight = (Area.y > 0 ? Area.y : 0) + Child->Height + (Area.Height < 0 ? -Area.Height : 0);
 	int MinimumWidth = GetMinimumWidth();
 	if (NewWidth < MinimumWidth)
 		NewWidth = MinimumWidth;
@@ -2162,9 +2163,10 @@ void TWindow::FitToChild(TComponent *Child, int x, int y, int width, int height,
 }
 
 // 0x4a0300, lines 1772-1794. Moves the children so that their bounding box
-// starts at (|Left|, |Top|) and sizes the window to it plus |Right| and
-// |Bottom|, not below the minimum size. Nothing happens without children.
-void TWindow::FitToChildren(int Left, int Top, int Right, int Bottom, bool Notify)
+// starts at (|left margin|, |top margin|) and sizes the window to it plus
+// the right and bottom margins (also taken as absolute values), not below
+// the minimum size. Nothing happens without children.
+void TWindow::FitToChildren(TRect Margin, bool Notify)
 {
 	TBEGIN
 	if (FirstChild == NULL)
@@ -2188,10 +2190,10 @@ void TWindow::FitToChildren(int Left, int Top, int Right, int Bottom, bool Notif
 	TASSERT1(Height>0, Height);
 	TASSERT1(LeastX<INT_MAX, LeastX);
 	TASSERT1(LeastY<INT_MAX, LeastY);
-	int dx = abs(Left) - LeastX;
-	int dy = abs(Top) - LeastY;
-	Width = Width + abs(Right) + abs(Left);
-	Height = Height + abs(Bottom) + abs(Top);
+	int dx = abs(Margin.x) - LeastX;
+	int dy = abs(Margin.y) - LeastY;
+	Width = Width + abs(Margin.Width) + abs(Margin.x);
+	Height = Height + abs(Margin.Height) + abs(Margin.y);
 	for (Child = FirstChild; Child != NULL; Child = Child->GetNext())
 		Child->SetPosition(Child->OffsetX + dx, Child->OffsetY + dy);
 	int MinimumWidth = GetMinimumWidth();

@@ -861,7 +861,7 @@ address	name	kind	confidence	note
 0x4fce50	ResizeClipboardBuffer	game	medium	sysinc.cpp line 63 (help)
 0x4fcff0	GetClipboardText	game	medium	sysinc.cpp line 104; 0x4fd02c is its interior, not a function
 0x4fd02c	GetClipboardText_interior	game	high	interior block of 0x4fcff0 (Ghidra split), not a separate function
-0x4a29e0	GUI_scalar_deleting_dtor	stl	medium	compiler-generated deleting destructor of a GUI.cpp class (calls 0x4a2590), kept in GUI.obj
+0x4a29e0	TWindow_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TWindow (vtable 0x564528 slot 0; calls ~TWindow 0x4a2590)
 0x4a2a00	SetHelpPosition	game	medium	Help.cpp: position of the help bubble's window
 0x4a2a20	MoveHelpPosition	game	medium	Help.cpp
 0x4a2a50	SetHelpSize	game	medium	Help.cpp

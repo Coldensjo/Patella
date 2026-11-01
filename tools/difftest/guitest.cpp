@@ -572,7 +572,7 @@ static void TreeOperation()
 		int Width = (int)(Random() % 60) - 30, Height = (int)(Random() % 60) - 30;
 		bool Notify = Random() % 2 == 0;
 		for (int s = 0; s < 2; s++)
-			W[s]->FitToChild(Nodes[c].Side[s], x, y, Width, Height, Notify);
+			W[s]->FitToChild(Nodes[c].Side[s], TRect(x, y, Width, Height), Notify);
 		break;
 	}
 	case 11: case 12: { // FitToChildren, Fit
@@ -583,7 +583,7 @@ static void TreeOperation()
 		bool Notify = Random() % 2 == 0;
 		for (int s = 0; s < 2; s++) {
 			if (Op == 11)
-				W[s]->FitToChildren(B[0], B[1], B[2], B[3], Notify);
+				W[s]->FitToChildren(TRect(B[0], B[1], B[2], B[3]), Notify);
 			else
 				W[s]->Fit(Notify);
 		}
@@ -935,26 +935,18 @@ void TestGUI()
 	PatchJump(0x490c60, (void *)ImagePicture);
 	PatchJump(0x4910e0, (void *)ImageClippedPicture);
 	PrepareSkins();
-	int Before = Failures;
+	int Before = Checks, BeforeFailures = Failures;
 	TestSkinProperties();
-	if (getenv("GUITEST_TRACE")) printf("GUI: %s done, %d failures\n", "TestSkinProperties", Failures);
 	TestDrawSkin();
-	if (getenv("GUITEST_TRACE")) printf("GUI: %s done, %d failures\n", "TestDrawSkin", Failures);
 	TestComponentDraw();
-	if (getenv("GUITEST_TRACE")) printf("GUI: %s done, %d failures\n", "TestComponentDraw", Failures);
 	TestWindows();
-	if (getenv("GUITEST_TRACE")) printf("GUI: %s done, %d failures\n", "TestWindows", Failures);
-	if (getenv("GUITEST_TRACE")) {
-		for (int i = 0; i < 30; i++)
-			printf("%d:%d ", i, Executed[i]);
-		printf("\n");
-	}
 	TestTimers();
-	if (getenv("GUITEST_TRACE")) printf("GUI: %s done, %d failures\n", "TestTimers", Failures);
 	TestHotkeys();
-	if (getenv("GUITEST_TRACE")) printf("GUI: %s done, %d failures\n", "TestHotkeys", Failures);
-	if (Failures != Before)
-		printf("GUI: %d failures\n", Failures - Before);
+	int Least = Executed[0];
+	for (int i = 1; i < 30; i++)
+		Least = Executed[i] < Least ? Executed[i] : Least;
+	printf("GUI: %d checks, %d failures (each of the 30 window operations at least %d times)\n", Checks - Before,
+		Failures - BeforeFailures, Least);
 	ExitSkins();
 	Global<TSkin *>(0x71c454) = NULL;
 }

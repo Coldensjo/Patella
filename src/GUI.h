@@ -196,11 +196,13 @@ public:
 	virtual TComponent *GetCapture() { return Capture; }           // +0x84, 0x4176b0
 	virtual void SetChildPosition(TComponent *Child, int x, int y); // +0x88, 0x49fa40, lines 1700-1708
 	virtual void SetChildArea(TComponent *Child, int x, int y, int width, int height); // +0x8c, 0x49f5d0, lines 1679-1690
-	// +0x90, 0x4176c0. The binary passes the four zeros as one 16-byte block
-	// (same stack layout as four ints).
-	virtual void Fit(bool Notify) { FitToChildren(0, 0, 0, 0, Notify); }
-	virtual void FitToChildren(int Left, int Top, int Right, int Bottom, bool Notify); // +0x94, 0x4a0300, lines 1772-1794
-	virtual void FitToChild(TComponent *Child, int x, int y, int width, int height, bool Notify); // +0x98, 0x49fe70, lines 1724-1738
+	virtual void Fit(bool Notify) { FitToChildren(TRect(0, 0, 0, 0), Notify); } // +0x90, 0x4176c0
+	// The margins are one 16-byte block passed by value (the callers, Fit and
+	// ContextMenus.cpp, build it with sub esp,0x10): a TRect whose x, y,
+	// Width and Height are the left, top, right and bottom margins.
+	virtual void FitToChildren(TRect Margin, bool Notify); // +0x94, 0x4a0300, lines 1772-1794
+	// The area is a 16-byte block passed by value as well (0x4882c0).
+	virtual void FitToChild(TComponent *Child, TRect Area, bool Notify); // +0x98, 0x49fe70, lines 1724-1738
 	virtual void ClipChildren(bool Strict);                        // +0x9c, 0x4a0920, line 1860
 
 	TComponent *FirstChild; // +0x24
@@ -285,8 +287,7 @@ struct TSkinProperties194 {
 	TGUIPoint Data30; // +0x30
 	TFont Data38; // +0x38
 	int Data4C; // +0x4c
-	TGUIPoint Data50; // +0x50
-	TGUIPoint Data58; // +0x58
+	TRect Data50; // +0x50, the area passed to FitToChild (0x4882c0)
 	TGUIPoint Data60; // +0x60
 	TGUIPoint Data68; // +0x68
 	TGUIPoint Data70; // +0x70
@@ -656,8 +657,7 @@ struct TSkinProperties {
 	TRect Data07C; // +0x07c
 	TRect Data08C; // +0x08c
 	int Data09C; // +0x09c
-	TGUIPoint Data0A0; // +0x0a0
-	TGUIPoint Data0A8; // +0x0a8
+	TRect Data0A0; // +0x0a0, the margins passed to FitToChildren by ContextMenus.cpp (0x442f4e)
 	TFont Data0B0; // +0x0b0
 	int Data0C4; // +0x0c4
 	TRGBColor Data0C8; // +0x0c8

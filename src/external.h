@@ -226,6 +226,9 @@ void FUN_00493f60(int Surface, int x, int y, TFont Font, const char *Text); // 0
 int FUN_00494570(int FontNumber, const char *Text); // 0x494570, lines 1373-1374; text width
 void FUN_00494900();                   // 0x494900
 void FUN_00494af0(int MemoryCacheBytes); // 0x494af0
+
+// graphics.cpp, added for GUI.cpp's DrawSkinClipped (kept apart from the
+// lines above, which the graphics.cpp reconstruction replaces)
 void FUN_004910e0(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
 	int Height, int ClipX, int ClipY, int ClipWidth, int ClipHeight); // 0x4910e0, lines 1191-1193; clipped
 
