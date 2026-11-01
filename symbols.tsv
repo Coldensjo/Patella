@@ -3682,11 +3682,11 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4a7dc5	143	Catch@004a7dc5	catch	Inventory.cpp	assert	400	0x4a7d70	
 0x4a7e54	160	Catch@004a7e54	catch	Inventory.cpp	assert	400	0x4a7d70	
 0x4a7f00	748	FUN_004a7f00	game	Inventory.cpp	assert	139,140		
-0x4a8210	245	FUN_004a8210	game	Inventory.cpp|MainFrm.cpp	gap			
-0x4a8360	441	FUN_004a8360	game	Inventory.cpp|MainFrm.cpp	gap			
-0x4a8519	6	Catch@004a8519	catch	Inventory.cpp|MainFrm.cpp	gap		0x4a8360	
-0x4a8520	275	FUN_004a8520	game	Inventory.cpp|MainFrm.cpp	gap			
-0x4a8633	20	Catch@004a8633	catch	Inventory.cpp|MainFrm.cpp	gap		0x4a8520	
+0x4a8210	245	FUN_004a8210	game	MainFrm.cpp	range			
+0x4a8360	441	FUN_004a8360	game	MainFrm.cpp	range			
+0x4a8519	6	Catch@004a8519	catch	MainFrm.cpp	range		0x4a8360	
+0x4a8520	275	FUN_004a8520	game	MainFrm.cpp	range			
+0x4a8633	20	Catch@004a8633	catch	MainFrm.cpp	range		0x4a8520	
 0x4a8647	128	Catch@004a8647	catch	MainFrm.cpp	assert	112	0x4a8520	
 0x4a86c7	151	Catch@004a86c7	catch	MainFrm.cpp	assert	112	0x4a8520	
 0x4a8760	94	FUN_004a8760	game	MainFrm.cpp	between			

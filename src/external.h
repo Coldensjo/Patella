@@ -94,20 +94,6 @@ void FUN_004516e0(); // 0x4516e0, Creatures.cpp
 bool FUN_004518b0(int Direction); // 0x4518b0, Creatures.cpp
 void FUN_00451db0(TCommunicationCreature *Creature); // 0x451db0, Creatures.cpp
 void FUN_00452320(int x, int y, int z); // 0x452320, Creatures.cpp
-void FUN_004a4520(); // 0x4a4520, Help.cpp|Inventory.cpp
-void FUN_004a4550(int Position, TCommunicationObject Object); // 0x4a4550, Inventory.cpp
-void FUN_004a46d0(int Position); // 0x4a46d0, Inventory.cpp
-void FUN_004a4b00(int Container, TCommunicationObject Object, const char *Name, int Capacity, bool HasParent); // 0x4a4b00, Inventory.cpp
-void FUN_004a4f70(int Container); // 0x4a4f70, Inventory.cpp
-bool FUN_004a5220(int Container); // 0x4a5220, Inventory.cpp
-void FUN_004a5380(int Container, TCommunicationObject Object); // 0x4a5380, Inventory.cpp
-void FUN_004a5630(int Container, int Position, TCommunicationObject Object); // 0x4a5630, Inventory.cpp
-bool FUN_004a58e0(int Container, int Position); // 0x4a58e0, Inventory.cpp
-void FUN_004a6eb0(const char *Name); // 0x4a6eb0, Inventory.cpp
-bool FUN_004a7230(const char *Name); // 0x4a7230, Inventory.cpp
-void FUN_004a7460(TCommunicationObject Object); // 0x4a7460, Inventory.cpp
-void FUN_004a75e0(TCommunicationObject Object); // 0x4a75e0, Inventory.cpp
-void FUN_004a7f00(int Container, TCommunicationObject Object); // 0x4a7f00, Inventory.cpp
 void FUN_004b08a0(int x, int y, int z); // 0x4b08a0, MainWindow.cpp|Map.cpp
 void FUN_004b08c0(int *x, int *y, int *z); // 0x4b08c0, MainWindow.cpp|Map.cpp
 int FUN_004b08f0(); // 0x4b08f0, MainWindow.cpp|Map.cpp
@@ -416,12 +402,6 @@ void FUN_00496160();                   // 0x496160, an empty function; ExitContr
 void FUN_00498160();                   // 0x498160, initialises GUIStyle among others
 bool FUN_004a1480(int Key);            // 0x4a1480
 void FUN_004a27c0();                   // 0x4a27c0
-
-// Help.cpp
-
-// Inventory.cpp
-void FUN_004a7d20();                   // 0x4a7d20
-void FUN_004a7d70();                   // 0x4a7d70
 
 // Between MainFrm.cpp and MainWindow.cpp, and MainWindow.cpp and Map.cpp
 void FUN_004ac090();                   // 0x4ac090

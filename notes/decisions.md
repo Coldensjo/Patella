@@ -446,3 +446,25 @@ callcheck differences, caller integration and differential coverage.
   compared byte for byte.
 - **The vector<int> destructor** (atexit 0x55a2b0 frees entry) is not in
   Container.h yet; behaviour at process exit only.
+
+## Inventory.cpp and the Inventory/MainFrm gap
+
+- **Struct and field names** (low unless from the assertions): TContainer
+  (IsOpen and Count are in the assertions), Object, Name, Capacity,
+  HasParent, Objects; TOffer (OwnOffer.Count and CounterOffer.Count are in
+  the assertions) with Name and Objects. CONTAINER_OBJECTS = 36 is our name
+  (the binary's limit 0x24); BODY_POSITIONS, OPEN_CONTAINERS and
+  OBJECTS_PER_OFFER are from the assertions. Layouts from the offsets
+  (container 0x1ec bytes; offer 0x4d4, CounterOffer is 0x4d8 after OwnOffer).
+- **Function names** (medium/low): ours, after their callers in
+  Communication.cpp; GetContainerObject is the container itself,
+  GetContainerContent an object in it.
+- **The gap after Help.cpp (0x4a4460-0x4a4546) is Inventory.cpp** (high):
+  only Inventory data. Placed first, in binary order.
+- **The Inventory/MainFrm gap (0x4a8210-0x4a8646) is MainFrm.cpp** (high):
+  CMainFrame members (the key translation reads the frame at +0x200; the
+  constructor and OutputErrorInformations are called on the main window by
+  Player.cpp). Not reconstructed yet.
+- **Callers** now pass TObject (Type, Data1, Data2) where Communication.cpp
+  built TCommunicationObject literals for Inventory functions; the layout
+  is the same.

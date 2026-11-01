@@ -381,6 +381,7 @@ int main(int argc, char **argv)
 	TestPreferencesFile();
 	TestPlayer();
 	TestHelp();
+	TestInventory();
 	TestTalk();
 	TestObjects(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 #endif

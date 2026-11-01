@@ -6,6 +6,7 @@
 
 #include "Communication.h"
 #include "Help.h"
+#include "Inventory.h"
 #include "Network.h"
 #include "Objects.h"
 #include "Utils.h"
@@ -1610,14 +1611,14 @@ void ReceiveOpenContainer(int &Container)
 {
 	TBEGIN
 	Container = GetByte();
-	if (FUN_004a5220(Container))
-		FUN_004a4f70(Container);
+	if (IsContainerOpen(Container))
+		CloseContainer(Container);
 	int Type = GetWord();
 	char Name[40];
 	GetString(Name, 30);
 	int Capacity = GetByte();
 	bool HasParent = GetByte() != 0;
-	FUN_004a4b00(Container, TCommunicationObject{Type, 0, 0}, Name, Capacity, HasParent);
+	OpenContainer(Container, TObject{Type, 0, 0}, Name, Capacity, HasParent);
 	int Count = GetByte();
 	for (int i = 0; i < Count; i++) {
 		int Type = GetWord();
@@ -1628,7 +1629,7 @@ void ReceiveOpenContainer(int &Container)
 			Data = GetByte();
 		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
-		FUN_004a5380(Container, TCommunicationObject{Type, (uint32)Data, 0});
+		AppendContainerObject(Container, TObject{Type, (int)Data, 0});
 	}
 	TEND1(Container)
 }
@@ -1638,8 +1639,8 @@ void ReceiveCloseContainer(int &Container)
 {
 	TBEGIN
 	Container = GetByte();
-	if (FUN_004a5220(Container))
-		FUN_004a4f70(Container);
+	if (IsContainerOpen(Container))
+		CloseContainer(Container);
 	TEND1(Container)
 }
 
@@ -1658,8 +1659,8 @@ void ReceiveContainerAddObject()
 		Data = GetByte();
 	if (GetObjectFlag(Type, 10))
 		Data = GetByte();
-	if (FUN_004a5220(Container))
-		FUN_004a7f00(Container, TCommunicationObject{Type, (uint32)Data, 0});
+	if (IsContainerOpen(Container))
+		InsertContainerObject(Container, TObject{Type, (int)Data, 0});
 	TEND2(Container, Type)
 }
 
@@ -1679,8 +1680,8 @@ void ReceiveContainerChangeObject()
 		Data = GetByte();
 	if (GetObjectFlag(Type, 10))
 		Data = GetByte();
-	if (FUN_004a5220(Container))
-		FUN_004a5630(Container, Position, TCommunicationObject{Type, (uint32)Data, 0});
+	if (IsContainerOpen(Container))
+		ChangeContainerObject(Container, Position, TObject{Type, (int)Data, 0});
 	TEND2(Container, Type)
 }
 
@@ -1692,8 +1693,8 @@ void ReceiveContainerDeleteObject()
 	TBEGIN
 	Container = GetByte();
 	Position = GetByte();
-	if (FUN_004a5220(Container)) {
-		if (FUN_004a58e0(Container, Position))
+	if (IsContainerOpen(Container)) {
+		if (DeleteContainerObject(Container, Position))
 			SendRefreshContainer(Container);
 	}
 	TEND2(Container, Position)
@@ -1714,7 +1715,7 @@ void ReceiveInventoryObject()
 		Data = GetByte();
 	if (GetObjectFlag(Type, 10))
 		Data = GetByte();
-	FUN_004a4550(Position, TCommunicationObject{Type, (uint32)Data, 0});
+	SetBodyObject(Position, TObject{Type, (int)Data, 0});
 	TEND2(Position, Type)
 }
 
@@ -1724,7 +1725,7 @@ void ReceiveDeleteInventoryObject()
 	int Position;
 	TBEGIN
 	Position = GetByte();
-	FUN_004a46d0(Position);
+	DeleteBodyObject(Position);
 	TEND1(Position)
 }
 
@@ -1734,7 +1735,7 @@ void ReceiveOwnTrade()
 	TBEGIN
 	char Name[40];
 	GetString(Name, 30);
-	FUN_004a6eb0(Name);
+	SetOwnOffer(Name);
 	int Count = GetByte();
 	for (int i = 0; i < Count; i++) {
 		int Type = GetWord();
@@ -1745,7 +1746,7 @@ void ReceiveOwnTrade()
 			Data = GetByte();
 		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
-		FUN_004a7460(TCommunicationObject{Type, (uint32)Data, 0});
+		AddOwnOfferObject(TObject{Type, (int)Data, 0});
 	}
 	TEND
 }
@@ -1756,7 +1757,7 @@ void ReceiveCounterTrade()
 	TBEGIN
 	char Name[40];
 	GetString(Name, 30);
-	bool Open = FUN_004a7230(Name);
+	bool Open = SetCounterOffer(Name);
 	int Count = GetByte();
 	for (int i = 0; i < Count; i++) {
 		int Type = GetWord();
@@ -1768,7 +1769,7 @@ void ReceiveCounterTrade()
 		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
 		if (Open)
-			FUN_004a75e0(TCommunicationObject{Type, (uint32)Data, 0});
+			AddCounterOfferObject(TObject{Type, (int)Data, 0});
 	}
 	TEND
 }
@@ -1777,7 +1778,7 @@ void ReceiveCounterTrade()
 void ReceiveCloseTrade()
 {
 	TBEGIN
-	FUN_004a4520();
+	ClearOffers();
 	TEND
 }
 

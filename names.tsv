@@ -879,3 +879,36 @@ address	name	kind	confidence	note
 0x4a3b60	GetEventHelpTitle	game	high	Help.cpp lines 571-602
 0x4a3fd0	GetEventHelpText	game	high	Help.cpp lines 610-691
 0x4a4440	GetCurrentHelpText	game	medium	Help.cpp: GetHelpText(HelpHandle)
+0x4a4460	ClearBody	game	medium	Inventory.cpp: every body slot becomes NoObject
+0x4a4520	ClearOffers	game	medium	Inventory.cpp
+0x4a4530	GetOwnOfferCount	game	medium	Inventory.cpp
+0x4a4540	GetCounterOfferCount	game	medium	Inventory.cpp
+0x4a4550	SetBodyObject	game	high	Inventory.cpp line 55 (Pos = Position-1)
+0x4a46d0	DeleteBodyObject	game	medium	Inventory.cpp line 67 (Position)
+0x4a4880	GetBodyObject	game	high	Inventory.cpp lines 77-80
+0x4a4b00	OpenContainer	game	high	Inventory.cpp lines 102-105
+0x4a4f70	CloseContainer	game	high	Inventory.cpp lines 120-121
+0x4a5220	IsContainerOpen	game	high	Inventory.cpp line 130
+0x4a5380	AppendContainerObject	game	medium	Inventory.cpp lines 153-154
+0x4a5630	ChangeContainerObject	game	medium	Inventory.cpp lines 165-166
+0x4a58e0	DeleteContainerObject	game	medium	Inventory.cpp lines 177-178; true when the container was full
+0x4a5bd0	GetContainerObjectCount	game	high	Inventory.cpp lines 191-192
+0x4a5e80	GetContainerObject	game	medium	Inventory.cpp lines 201-202: the container itself
+0x4a6150	GetContainerContent	game	medium	Inventory.cpp lines 211-213
+0x4a64e0	GetContainerName	game	high	Inventory.cpp lines 222-223
+0x4a6790	GetContainerCapacity	game	medium	Inventory.cpp lines 232-233
+0x4a6a40	GetContainerHasParent	game	medium	Inventory.cpp lines 242-243
+0x4a6cf0	GetFreeContainer	game	medium	Inventory.cpp line 258 (i)
+0x4a6eb0	SetOwnOffer	game	medium	Inventory.cpp lines 281-283
+0x4a7230	SetCounterOffer	game	medium	Inventory.cpp lines 296-297
+0x4a7460	AddOwnOfferObject	game	high	Inventory.cpp line 307
+0x4a75e0	AddCounterOfferObject	game	high	Inventory.cpp line 317
+0x4a7760	GetOwnOfferName	game	medium	Inventory.cpp line 327
+0x4a78b0	GetCounterOfferName	game	medium	Inventory.cpp line 336
+0x4a7a00	GetOwnOfferObject	game	high	Inventory.cpp line 361
+0x4a7b90	GetCounterOfferObject	game	high	Inventory.cpp line 370
+0x4a7d20	InitInventory	game	medium	Inventory.cpp
+0x4a7d70	ResetInventory	game	low	Inventory.cpp line 400, TBEGIN around InitInventory
+0x4a7f00	InsertContainerObject	game	medium	Inventory.cpp lines 139-140
+0x4a8210	CMainFrame_TranslateKey	game	low	MainFrm.cpp: virtual key and flags to the client key code
+0x4a8520	CMainFrame_ctor	game	medium	MainFrm.cpp (Gamemaster); Player.cpp creates the frame with it

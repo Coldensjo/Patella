@@ -29,3 +29,4 @@ start	end	file	evidence
 0x4a29e0	0x4a2b8f	Help.cpp	0x4a2a00-0x4a2b88 use only Help.cpp's data (0x5ce520-0x5ce538 and the vector 0x5ce53c with its initialiser 0x559e80 after GUI.cpp's 0x559e60; GUI.cpp's data ends at 0x5ce51c); 0x4a29e0 is a compiler-generated deleting destructor of a GUI.cpp class (names.tsv kind stl)
 0x4a4440	0x4a444f	Help.cpp	GetCurrentHelpText: GetHelpText(HelpHandle) with Help.cpp's data
 0x4a4460	0x4a4546	Inventory.cpp	use only Inventory.cpp's data (0x5ced60-0x5cedd8, 0x5d0cb8, 0x5d1190); not reconstructed yet
+0x4a8210	0x4a8646	MainFrm.cpp	CMainFrame members: the key translation 0x4a8210 reads the frame (+0x200), OutputErrorInformations 0x4a8360 and the constructor 0x4a8520 (Player.cpp calls them on the main window); not reconstructed yet

@@ -18,6 +18,7 @@
 
 #include "Control.h"
 #include "Help.h"
+#include "Inventory.h"
 #include "Network.h"
 #include "Objects.h"
 #include "Communication.h"
@@ -304,7 +305,7 @@ void EnterGame()
 		MainWindow->FUN_004ad650(1);
 	}
 	FUN_004bccb0();
-	FUN_004a7d20();
+	InitInventory();
 	FUN_004509e0();
 	ResetTalk();
 	ShowPermanentIgnoreWarning();
@@ -1181,7 +1182,7 @@ void InitControl(bool Gamemaster)
 		InitSysinc();
 		InitObjects();
 		FUN_004bf620(FUN_0044c8c0);
-		FUN_004a7d70();
+		ResetInventory();
 		FUN_00452190();
 		InitStatus(Gamemaster, LinkCopyWarning);
 		InitHelp();
