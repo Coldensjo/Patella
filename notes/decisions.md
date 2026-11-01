@@ -45,3 +45,79 @@ with the evidence, for review. Confidence: high, medium, low.
   body; the binary jumps straight into the switch on the first pass. The
   error calls are noreturn for the compiler, so the code after them does not
   show the original loop shape.
+
+## Objects.cpp
+
+- **The whole Objects/Player gap (0x4d7cd0-0x4d913e) is Player.obj** (high).
+  It starts at 0x4d7cd0 (not found by Ghidra), `mov eax, 0x56dde4; ret`:
+  the GetMessageMap of BEGIN_MESSAGE_MAP, slot 10 of the vtable 0x56de08
+  whose overrides 0x4d94c0, 0x4da3e0 and 0x4dae60 are Player.cpp functions.
+  The application object it belongs to is at 0x719dc0, among Player.cpp's
+  data (0x719db0-0x719e6c), and its static initialiser (0x55a030) comes
+  right after Network.cpp's (0x55a010). Everything after it is either the
+  class's constructor (0x4d7cf0), compiler-generated destructors, the MFC
+  inline AfxGetMainWnd, or <fstream>/<string> code (filebuf, codecvt,
+  getline, string::compare) called only from Player.cpp (0x4d9700,
+  0x4d9bd0, 0x4da140); FatalError (0x4d7d80) is called only from Player.cpp.
+  Nothing in the gap belongs to Objects.cpp. 0x4d9110 is TMyException.h's
+  GetOrigin, kept in Player.obj. The STL/MFC functions got names.tsv rows of
+  kind stl; the three Player.cpp functions (0x4d7cd0, 0x4d7cf0, 0x4d7d80) got
+  game rows and are left for Player.cpp.
+- **Application class name CPlayerApp, FatalError** (low). MFC's wizard names
+  the class after the project; the project folder is c:\mud\tibiaplayer and
+  the file Player.cpp. FatalError is ours: it shuts the connection down,
+  leaves fullscreen, hides the main window, shows a message box and calls
+  exit(1), each step in its own try/catch(...).
+- **NoObject at 0x719da0 is Objects.cpp's** (low). A 12-byte TObject in .bss
+  that is never written and is read by Communication, Inventory and Map as
+  the empty object. It lies between Objects.cpp's last global (0x719d9c) and
+  Player.cpp's first (0x719db0); the object system is the likelier owner.
+  The name is ours.
+- **Container.h array<T>** (class name low, members high). The four tables
+  are 12-byte objects {min, d, entry} with a constructor at line 152
+  ("d>0") and operator() at line 178 ("index out of range (original i: ...,
+  i: ..., min: ..., d: ...)"); "ObjectProperties->low()" and "->high()"
+  name the bounds. Written as operator() returning T&, like vector<T>
+  (Container.h already has it so). The destructor `delete[] entry` is
+  inferred from ReleaseObjects, which frees entry right before the array.
+  Put before vector<T> in Container.h, as in the original line order.
+- **TProperties and field names** (low for the struct name, high for Width,
+  Height, Layers, PatternWidth, PatternHeight, PatternDepth, Phases and
+  Flags, which are in the assertions). ExactSize, Sprites, Waypoints,
+  MaxLength, Brightness, LightColor, ShiftX/Y, Elevation, AutomapColor and
+  LensHelp are ours; Waypoints and MaxLength follow the game server.
+- **Flag names** (medium for 1-20, low for 22, 23, 26, 27). BANK,
+  CUMULATIVE, LIQUIDCONTAINER, LIQUIDPOOL, HANG, LIGHT, SHIFT, HEIGHT,
+  AUTOMAP and LENSHELP are in the assertions; their bit numbers come from
+  the loader's switch and the accessors. The others follow the game server
+  and the usual 7.x .dat flag order. CREATURE (99) is from MapWindow.cpp.
+- **Function names** (medium): GetObject*/GetOutfit*/GetEffect*/GetMissile*
+  after GetObjectFlag (in the assertions); the tables follow the loader's
+  order (objects from 100, outfits, effects, missiles), checked by which
+  global each accessor passes in ECX. GetEntry* are static: only this file
+  calls them. ReleaseObjects (low), LoadObjects, InitObjects, ExitObjects and
+  ReloadObjects (from their callers in Control.cpp: InitControl,
+  ExitControl, event 0x45 after patching Tibia.dat).
+- **Parameter passing** (low). Entry is a reference ("Entry.Flags"); the
+  pattern functions take `TObject &Obj` (the callers pass an address, and
+  "GetObjectFlag(Obj,CUMULATIVE)" needs an overload for objects, written as
+  an inline in Objects.h); LoadProperties takes pointers. The outfit
+  sprite's 5th parameter is called Direction (PatternX = Direction + 1).
+- **Obj.Data2 holds the hook flag** (medium): GetHangPattern compares the
+  third TObject field with 18 and 19 (HOOKSOUTH, HOOKEAST).
+- **Source order**: line order. LoadProperties (line 939) is placed by the
+  compiler after GetEntrySpriteNumber, and ExitObjects (1023) before
+  ReloadObjects (1012). The line gaps 70-91 and 281-303 fit one more accessor
+  each (probably of MaxLength, the only field without one); they are not in
+  the binary (removed by the linker) and not reconstructed.
+- **TReadBinaryFile::readWord returns a 16-bit type in the original** (high
+  for the observation). Every caller in Objects.cpp zero-extends AX
+  (`movzx`), so the original returns uint16; Script.h declares `int`. The
+  value is the same (at most 0xffff). Resolved at the merge: Script.h's
+  readWord now returns uint16.
+- **InitObjects' catch (TMyException &)**: the binary's handler has a catch
+  object, so the original named the reference without using it; it is
+  unnamed here because modern MSVC warns (C4101). PROGRAM_ERROR 1 has no
+  enumerator (name unknown); common.h is unchanged.
+- **TObject stays in external.h** (Status.h uses it); Objects.h includes
+  external.h for it.

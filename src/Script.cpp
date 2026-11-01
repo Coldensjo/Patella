@@ -482,13 +482,14 @@ uint8 TReadBinaryFile::readByte()
 	return Byte;
 }
 
-// 0x4e1a00, line 619. Little-endian.
-int TReadBinaryFile::readWord()
+// 0x4e1a00, line 619. Little-endian. Returns a 16-bit value: every caller
+// zero-extends AX.
+uint16 TReadBinaryFile::readWord()
 {
 	TBEGIN
 	uint8 Low = readByte();
 	uint8 High = readByte();
-	return Low | (High << 8);
+	return (uint16)(Low | (High << 8));
 	TEND
 }
 

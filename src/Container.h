@@ -20,6 +20,52 @@
 #pragma once
 
 #include "common.h"
+#include <sstream>
+
+// array<T> is a fixed array indexed from min to min+d-1 (lines 152-178;
+// it comes before vector in the original file). The class name is ours;
+// min, d, i, low() and high() are named in the assertions and in the
+// error message of operator(). Instantiations reconstructed so far:
+//   array<TProperties>  constructor 0x4cfa30, operator() 0x4d1a10 (Objects.cpp)
+// Map.cpp has another one (element size 0xac): constructor 0x4b0bc0,
+// operator() 0x4b5900.
+template <class T> class array {
+public:
+	array(int min, int max);
+	// Inlined into Objects.cpp's ReleaseObjects (delete[] entry, then
+	// operator delete on the array itself).
+	~array() { delete[] entry; }
+	T &operator()(int i);
+	int low() { return min; }
+	int high() { return min + d - 1; }
+
+	int min;  // +0x00
+	int d;    // +0x04, number of entries
+	T *entry; // +0x08
+};
+
+// Line 152. No try block; the assertion is the only EH state.
+template <class T> array<T>::array(int min, int max)
+{
+	this->min = min;
+	d = max - min + 1;
+	TASSERT1(d>0, d);
+	entry = new T[d];
+}
+
+// Line 178. The error has no try block either; its message is built in a
+// stringstream.
+template <class T> T &array<T>::operator()(int i)
+{
+	i -= min;
+	if (i < 0 || i >= d) {
+		std::stringstream s;
+		s << "index out of range (" << "original i: " << i + min << ", i: " << i << ", min: " << min
+			<< ", d: " << d << ")";
+		TERROR(s.str().c_str());
+	}
+	return entry[i];
+}
 
 template <class T> class vector {
 public:

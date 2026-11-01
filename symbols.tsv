@@ -4695,41 +4695,41 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4d7b86	20	Catch@004d7b86	catch	Objects.cpp	between		0x4d7b40	
 0x4d7b9a	143	Catch@004d7b9a	catch	Objects.cpp	assert	1012	0x4d7b40	
 0x4d7c29	160	Catch@004d7c29	catch	Objects.cpp	assert	1012	0x4d7b40	
-0x4d7ce0	5	CWinApp::~CWinApp	game	Objects.cpp|Player.cpp	gap			
-0x4d7cf0	34	FUN_004d7cf0	game	Objects.cpp|Player.cpp	gap			
-0x4d7d20	19	AfxGetMainWnd	game	Objects.cpp|Player.cpp	gap			
-0x4d7d60	30	FUN_004d7d60	game	Objects.cpp|Player.cpp	gap			
-0x4d7d80	138	FUN_004d7d80	game	Objects.cpp|Player.cpp	gap			
-0x4d7de8	6	Catch@004d7de8	catch	Objects.cpp|Player.cpp	gap		0x4d7d80	
-0x4d7dee	6	Catch@004d7dee	catch	Objects.cpp|Player.cpp	gap		0x4d7d80	
-0x4d7e16	6	Catch@004d7e16	catch	Objects.cpp|Player.cpp	gap		0x4d7d80	
-0x4d7e20	62	FUN_004d7e20	game	Objects.cpp|Player.cpp	gap			
-0x4d7e60	114	FUN_004d7e60	game	Objects.cpp|Player.cpp	gap			
-0x4d7ee0	104	FUN_004d7ee0	game	Objects.cpp|Player.cpp	gap			
-0x4d7fa0	30	FUN_004d7fa0	game	Objects.cpp|Player.cpp	gap			
-0x4d8010	148	FUN_004d8010	game	Objects.cpp|Player.cpp	gap			
-0x4d80b0	16	FUN_004d80b0	game	Objects.cpp|Player.cpp	gap			
-0x4d80c0	65	FUN_004d80c0	game	Objects.cpp|Player.cpp	gap			
-0x4d8110	47	FUN_004d8110	game	Objects.cpp|Player.cpp	gap			
-0x4d8140	97	FUN_004d8140	game	Objects.cpp|Player.cpp	gap			
-0x4d81b0	24	FUN_004d81b0	game	Objects.cpp|Player.cpp	gap			
-0x4d81d0	98	FUN_004d81d0	game	Objects.cpp|Player.cpp	gap			
-0x4d8240	324	FUN_004d8240	game	Objects.cpp|Player.cpp	gap			
-0x4d8384	41	Catch@004d8384	catch	Objects.cpp|Player.cpp	gap		0x4d8240	
-0x4d83b0	88	FUN_004d83b0	game	Objects.cpp|Player.cpp	gap			
-0x4d8410	98	FUN_004d8410	game	Objects.cpp|Player.cpp	gap			
-0x4d8480	270	FUN_004d8480	game	Objects.cpp|Player.cpp	gap			
-0x4d8590	99	FUN_004d8590	game	Objects.cpp|Player.cpp	gap			
-0x4d8620	291	FUN_004d8620	game	Objects.cpp|Player.cpp	gap			
-0x4d8750	440	FUN_004d8750	game	Objects.cpp|Player.cpp	gap			
-0x4d8910	332	FUN_004d8910	game	Objects.cpp|Player.cpp	gap			
-0x4d8a60	247	FUN_004d8a60	game	Objects.cpp|Player.cpp	gap			
-0x4d8b57	41	Catch@004d8b57	catch	Objects.cpp|Player.cpp	gap		0x4d8a60	
-0x4d8b86	101	FUN_004d8b86	game	Objects.cpp|Player.cpp	gap			
-0x4d8e60	318	FUN_004d8e60	game	Objects.cpp|Player.cpp	gap			
-0x4d8fa0	260	FUN_004d8fa0	game	Objects.cpp|Player.cpp	gap			
-0x4d90b0	85	FUN_004d90b0	game	Objects.cpp|Player.cpp	gap			
-0x4d9110	46	FUN_004d9110	game	Objects.cpp|Player.cpp	gap			
+0x4d7ce0	5	CWinApp::~CWinApp	game	Player.cpp	range			
+0x4d7cf0	34	FUN_004d7cf0	game	Player.cpp	range			
+0x4d7d20	19	AfxGetMainWnd	game	Player.cpp	range			
+0x4d7d60	30	FUN_004d7d60	game	Player.cpp	range			
+0x4d7d80	138	FUN_004d7d80	game	Player.cpp	range			
+0x4d7de8	6	Catch@004d7de8	catch	Player.cpp	range		0x4d7d80	
+0x4d7dee	6	Catch@004d7dee	catch	Player.cpp	range		0x4d7d80	
+0x4d7e16	6	Catch@004d7e16	catch	Player.cpp	range		0x4d7d80	
+0x4d7e20	62	FUN_004d7e20	game	Player.cpp	range			
+0x4d7e60	114	FUN_004d7e60	game	Player.cpp	range			
+0x4d7ee0	104	FUN_004d7ee0	game	Player.cpp	range			
+0x4d7fa0	30	FUN_004d7fa0	game	Player.cpp	range			
+0x4d8010	148	FUN_004d8010	game	Player.cpp	range			
+0x4d80b0	16	FUN_004d80b0	game	Player.cpp	range			
+0x4d80c0	65	FUN_004d80c0	game	Player.cpp	range			
+0x4d8110	47	FUN_004d8110	game	Player.cpp	range			
+0x4d8140	97	FUN_004d8140	game	Player.cpp	range			
+0x4d81b0	24	FUN_004d81b0	game	Player.cpp	range			
+0x4d81d0	98	FUN_004d81d0	game	Player.cpp	range			
+0x4d8240	324	FUN_004d8240	game	Player.cpp	range			
+0x4d8384	41	Catch@004d8384	catch	Player.cpp	range		0x4d8240	
+0x4d83b0	88	FUN_004d83b0	game	Player.cpp	range			
+0x4d8410	98	FUN_004d8410	game	Player.cpp	range			
+0x4d8480	270	FUN_004d8480	game	Player.cpp	range			
+0x4d8590	99	FUN_004d8590	game	Player.cpp	range			
+0x4d8620	291	FUN_004d8620	game	Player.cpp	range			
+0x4d8750	440	FUN_004d8750	game	Player.cpp	range			
+0x4d8910	332	FUN_004d8910	game	Player.cpp	range			
+0x4d8a60	247	FUN_004d8a60	game	Player.cpp	range			
+0x4d8b57	41	Catch@004d8b57	catch	Player.cpp	range		0x4d8a60	
+0x4d8b86	101	FUN_004d8b86	game	Player.cpp	range			
+0x4d8e60	318	FUN_004d8e60	game	Player.cpp	range			
+0x4d8fa0	260	FUN_004d8fa0	game	Player.cpp	range			
+0x4d90b0	85	FUN_004d90b0	game	Player.cpp	range			
+0x4d9110	46	FUN_004d9110	game	Player.cpp	range			
 0x4d9140	353	FUN_004d9140	game	Player.cpp	assert	62		
 0x4d92b0	353	FUN_004d92b0	game	Player.cpp	assert	75		
 0x4d94c0	197	FUN_004d94c0	game	Player.cpp	between			
