@@ -14,6 +14,7 @@ how:   assert      the function names exactly one source file in an assertion
        gap         it lies between two different files; file lists both candidates
        named       Ghidra identified it as library code by name
        region      it lies in the library region after the last game file
+       range       file-ranges.tsv assigns its address range to a file (settled gaps)
 
 The linker placed the game objects in case-insensitive alphabetical order of
 their file names, so a gap between files A and B can also hold a file whose
@@ -125,6 +126,24 @@ def classify(funcs):
 	return funcs[lib_start]['addr']
 
 
+def apply_ranges(funcs):
+	"""Assign settled gaps from file-ranges.tsv; assertion evidence still wins."""
+	path = ROOT / 'file-ranges.tsv'
+	if not path.exists():
+		return
+	ranges = []
+	for line in path.read_text(encoding='utf-8').splitlines()[1:]:
+		cols = line.split('\t')
+		if len(cols) >= 3:
+			ranges.append((int(cols[0], 16), int(cols[1], 16), cols[2]))
+	for fn in funcs:
+		if fn['kind'] not in GAME_KINDS or fn['how'] == 'assert':
+			continue
+		for lo, hi, file in ranges:
+			if lo <= fn['addr'] <= hi:
+				fn['file'], fn['how'] = file, 'range'
+
+
 def write_symbols(funcs):
 	with (ROOT / 'symbols.tsv').open('w', encoding='utf-8', newline='\n') as w:
 		w.write('address\tsize\tname\tkind\tfile\thow\tassert_lines\tparent\tparams\n')
@@ -152,7 +171,7 @@ def write_report(funcs, lib_start):
 
 	per, gaps = defaultdict(list), defaultdict(list)
 	for fn in game:
-		if fn['how'] in ('assert', 'between') and '|' not in fn['file']:
+		if fn['how'] in ('assert', 'between', 'range') and '|' not in fn['file']:
 			per[fn['file']].append(fn)
 		elif fn['how'] == 'gap':
 			gaps[fn['file']].append(fn)
@@ -168,7 +187,7 @@ def write_report(funcs, lib_start):
 		'functions (`Unwind@`) are exception cleanup code that the compiler regenerates from the source.', '',
 		'Game and catch functions by assignment method:', '']
 	out += table([(h, sum(1 for fn in game if fn['how'] == h), sum(fn['size'] for fn in game if fn['how'] == h))
-		for h in ('assert', 'between', 'header', 'gap')], ('How', 'Functions', 'Bytes'))
+		for h in ('assert', 'between', 'range', 'header', 'gap')], ('How', 'Functions', 'Bytes'))
 
 	out += ['## Source files', '', 'In link order. First and last are the outermost assigned functions. '
 		'Assert lines show which part of the original file the assertions cover.', '']
@@ -201,6 +220,7 @@ def write_report(funcs, lib_start):
 def main():
 	funcs = load()
 	lib_start = classify(funcs)
+	apply_ranges(funcs)
 	write_symbols(funcs)
 	write_report(funcs, lib_start)
 

@@ -21,6 +21,33 @@ the file offset is the address minus `0x400000` in `.text`, `.rdata` and `.data`
 3. Writes: protocol byte `1`, OS `2` (u16), version `0x304` = 772 (u16), then three u32 values
    from `0x719d9c`, `0x5ccb64` and `0x5cc758` (inferred: dat, spr, pic signatures), then the RSA block.
 
+The RSA block is written through a local buffer as: byte `0`, the 16-byte XTEA key,
+AccountID (u32), Password (string) (observed from the `this` pointers in the assembly).
+
+## Packet framing (observed, see `src/Network.cpp`)
+
+- Sending: `BeginCommand` reserves 4 bytes; `SendCommand(Encrypt)` fills them.
+  Unencrypted: `[u16 length][payload]`. Encrypted: `[u16 total][XTEA([u16 length][payload][padding])]`,
+  padded with `rand()` bytes to a multiple of 8.
+- Receiving: `TSocket::OnReceive` buffers up to 16 KB and calls the receive handler when a complete
+  packet is in; `PrepareNextPacket` decrypts it in place; `GetNextCommand` returns -1 when no packet is left.
+- Login servers are tried in turn; a failure marks a server unavailable and moves to the next one.
+  Connection timeout is 150 calls of `CheckConnectionTimeout`.
+
+## Base layer (reconstructed in `src/`)
+
+- `TMyException` (the only game class with RTTI) keeps a message,
+  `"<file> <line>: <kind> (<name> = <value>), reason:
+<detail>"`, and an origin `"<file> <line>"`.
+  Wrapping keeps the innermost origin. The second exception type is `enum PROGRAM_ERROR`.
+- RSA is George Barwood's public-domain `vlong` library (Montgomery exponentiation) with CipSoft's
+  byte and decimal conversions. Public exponent 65537 (static `vlong` at `0x71f004`), 128-byte blocks,
+  errors thrown as `const char*`.
+- `Utils.cpp`: Latin-1 helpers (German umlauts count as letters), the 133-colour outfit palette
+  (7 rows of 19 HSV colours, column 0 grey), and the packet buffers.
+- The linker order is case-insensitive alphabetical by file name; this placed `TMyException`, `TRSA`
+  and `TXTEA` (names inferred) between `Talk.cpp` and `Utils.cpp`, and `vlong.cpp` after `Utils.cpp`.
+
 ## XTEA (observed)
 
 - `0x508cd0`: encrypt one 8-byte block, delta `0x9e3779b9`, 32 cycles (unrolled 4 per loop, 8 loops).

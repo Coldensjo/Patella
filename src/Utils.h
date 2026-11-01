@@ -1,0 +1,61 @@
+// Utils.cpp: Latin-1 character and string helpers, outfit colours, and the
+// packet buffers. Member and parameter names come from the assertion strings
+// ("data", "size", "Position", "Size", "NewSize", "s", "s1", "Destination",
+// "Source", "Text", "Buffer", "Number"); function and class names are ours.
+
+#pragma once
+
+#include "common.h"
+
+// Characters are Latin-1; the letter tests include the German umlauts and ß.
+int IsSpace(int c);                                     // 0x508fa0
+int IsAlpha(int c);                                     // 0x508fd0
+int IsDigit(int c);                                     // 0x509020
+int ToLower(int c);                                     // 0x509040
+int ToUpper(int c);                                     // 0x509060
+void HSVToRGB(double H, double S, double V, int *R, int *G, int *B); // 0x509080
+void GetOutfitColor(int Color, int *R, int *G, int *B); // 0x509280, Color 0..132
+
+void LowerString(char *s);                              // 0x5093d0
+void CapitalizeString(char *s);                         // 0x509540
+int CompareStrings(const char *s1, const char *s2, int Count); // 0x509710, caseless
+void CopyString(char *Destination, const char *Source, int Size); // 0x509a60
+void TrimString(char *Destination, const char *Source); // 0x509d10
+bool ShortenString(char *Text, int MaxLength);          // 0x50a040
+void FormatNumber(int Number, char *Buffer);            // 0x50bce0, "1,234,567"
+
+class TBuffer {
+public:
+	// Utils.h line 50 (inline, emitted at 0x4ca300).
+	void SetSize(int NewSize)
+	{
+		TASSERT1(NewSize>=0, NewSize);
+		Size = NewSize;
+	}
+
+	uint8 *Data;  // +0x0
+	int Size;     // +0x4
+	int Position; // +0x8
+};
+
+// Little-endian reads; strings are a u16 length followed by the characters.
+class TReadBuffer : public TBuffer {
+public:
+	TReadBuffer(uint8 *data, int size);          // 0x50a200
+	uint8 GetByte();                             // 0x50a4b0
+	uint16 GetWord();                            // 0x50a610
+	uint32 GetQuad();                            // 0x50a780
+	void GetString(char *Buffer, int MaxLength); // 0x50a900, MaxLength < 0: no limit
+	char *GetString();                           // 0x50abb0, returns a new[] copy
+	void GetBytes(uint8 *Buffer, int Count);     // 0x50ad50
+};
+
+class TWriteBuffer : public TBuffer {
+public:
+	TWriteBuffer(uint8 *data, int size);         // 0x50b030
+	void PutByte(uint8 Data);                    // 0x50b2e0
+	void PutWord(uint16 Data);                   // 0x50b450
+	void PutQuad(uint32 Data);                   // 0x50b5e0
+	void PutString(const char *s);               // 0x50b780
+	void PutBytes(const uint8 *Buffer, int Count); // 0x50ba00
+};

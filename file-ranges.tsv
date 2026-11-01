@@ -1,0 +1,6 @@
+start	end	file	evidence
+0x508270	0x50896f	TMyException.cpp	TMyException methods and their STL helpers; name inferred from the class and the link order
+0x508970	0x508c6f	TRSA.cpp	TRSA methods (vtable 0x573dec); name inferred
+0x508c70	0x508f9f	TXTEA.cpp	TXTEA methods (vtable 0x573efc); name inferred
+0x508fa0	0x50bfef	Utils.cpp	helpers before line 66 run straight up to the first assertion and are inlined into later Utils functions
+0x50bff0	0x50eae7	vlong.cpp	George Barwood's vlong library; sorts right after Utils

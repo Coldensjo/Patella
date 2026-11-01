@@ -1,0 +1,144 @@
+address	name	kind	confidence	note
+0x4039d0	std_string_ctor_cstr	stl	high	std::string::basic_string(const char*): sets capacity 15, size 0, then assign
+0x402e10	std_string_assign	stl	high	std::string::assign(const char*, size_t); string layout: +4 buffer, +0x14 size, +0x18 capacity
+0x402d20	std_string_assign_substr	stl	medium	std::string::assign(const string&, pos, count), called by assign for self-overlap
+0x402630	std_ostream_put_cstr	stl	high	std::operator<<(std::ostream&, const char*)
+0x402f00	std_ostream_put_int	stl	medium	std::ostream::operator<<(integer), uses the num_put facet
+0x403a10	std_stringstream_ctor	stl	medium	std::basic_stringstream constructor, openmode 3 (in|out)
+0x508400	TMyException_ctor_assert	game	high	TMyException(file, line, kind, name1, value1, name2, value2, expr); thrown by assertions
+0x5086a0	TMyException_ctor_rethrow	game	high	TMyException(file, line, kind, name1, value1, name2, value2, inner); thrown at the end of catch blocks
+0x413780	SendLogin	game	medium	builds the login packet: RSA block (0, XTEA key, AccountID, Password), version 772, file signatures (Communication.cpp line 41)
+0x44a900	ReceivePackets	game	medium	reads opcodes and dispatches login and game packets (Control.cpp)
+0x4ca0e0	InitServerList	game	high	fills the 4 login servers, port 7171, picks rand()&3 as CurrentServer
+0x4ce210	SetSymmetricKey	game	medium	stores the 16-byte session key in the cipher object
+0x508ca0	TXTEA_SetKey	game	medium	copies 4 key words to this+4..this+0x10
+0x508cd0	XTEA_EncryptBlock	game	high	XTEA encrypt one 8-byte block, 32 cycles, delta 0x9e3779b9
+0x508e00	XTEA_DecryptBlock	game	medium	same constant; matching decrypt (not decompiled yet)
+0x4ca260	SetTestServerPort	game	medium	Network.cpp
+0x4ca270	ResetServerAvailability	game	medium	Network.cpp
+0x4ca290	SetConnectionTimeout	game	medium	Network.cpp
+0x4ca2b0	SetNetworkWindow	game	medium	Network.cpp; HWND for WSAAsyncGetHostByName
+0x4ca2d0	TSocket_scalar_deleting_dtor	game	high	Network.cpp, compiler-generated
+0x4ca300	TBuffer_SetSize	game	high	Utils.h line 50, inline
+0x4ca450	SetTestServerAddress	game	high	Network.cpp line 132
+0x4ca730	SetServerError	game	high	Network.cpp line 152
+0x4ca9f0	SetServerIPAddress	game	high	Network.cpp line 182
+0x4cadb0	GetCurrentServer	game	high	Network.cpp line 202
+0x4cb0d0	GetServerErrorCode	game	medium	Network.cpp line 255
+0x4cb2a0	BeginCommand	game	high	Network.cpp line 268
+0x4cb540	SendByte	game	high	Network.cpp line 286
+0x4cb6e0	SendWord	game	high	Network.cpp line 297
+0x4cb880	SendQuad	game	high	Network.cpp line 308
+0x4cba20	SendString	game	high	Network.cpp line 316
+0x4cbca0	SendBytes	game	high	Network.cpp line 328
+0x4cbe00	SendCommand	game	high	Network.cpp line 355; arg: encrypt
+0x4cc130	PrepareNextPacket	game	high	Network.cpp line 391
+0x4cc550	GetNextCommand	game	high	Network.cpp line 423; -1 when no packet
+0x4cc720	GetByte	game	high	Network.cpp line 434
+0x4cc8b0	GetWord	game	high	Network.cpp line 445
+0x4cca40	GetQuad	game	high	Network.cpp line 456
+0x4ccbd0	GetString	game	high	Network.cpp line 466 (Buffer, MaxLength)
+0x4cce50	GetStringNew	game	high	Network.cpp line 482; returns new[] copy
+0x4ccfe0	GetBytes	game	high	Network.cpp line 493
+0x4cd180	GetErrorMessage	game	high	Network.cpp line 544
+0x4cd9a0	ResolveHostname	game	high	Network.cpp line 611
+0x4cdca0	GetResolvedIPAddress	game	high	Network.cpp line 634
+0x4cdf20	ConnectSocket	game	high	Network.cpp line 671
+0x4ce300	Disconnect	game	high	Network.cpp line 727; arg: force
+0x4ce530	TSocket_OnReceive	game	high	Network.cpp line 885; vtable 0x56d388+0x1c
+0x4ce750	TSocket_OnClose	game	high	Network.cpp line 897; vtable +0x30
+0x4ce8f0	ShutdownConnection	game	medium	Network.cpp
+0x4ce930	InitNetwork	game	high	Network.cpp line 932
+0x4cec70	ExitNetwork	game	high	Network.cpp line 961
+0x4cee30	CreateSocket	game	high	Network.cpp line 661
+0x4cf050	ConnectToLoginServer	game	high	Network.cpp line 739
+0x4cf390	ConnectToGameServer	game	high	Network.cpp line 802
+0x4cf5e0	TSocket_OnConnect	game	high	Network.cpp line 835; vtable +0x2c
+0x4cf850	CheckConnectionTimeout	game	high	Network.cpp line 518
+0x4db2a0	GetTestServerLogin	game	medium	returns 0x71c318
+0x4e71e0	SetConnectionState	game	medium	0x71c588
+0x4e71f0	GetConnectionState	game	medium	0x71c588
+0x4e72c0	GetActiveCharacter	game	high	name from an assertion string
+0x4ea090	GetCharacterIPAddress	game	medium	Status.cpp line 740
+0x4ea200	GetCharacterPort	game	medium	Status.cpp line 749
+0x508c70	TXTEA_ctor	game	medium	static instance at 0x719d74
+0x508f60	TXTEA_EncryptBlock	game	high	wraps XTEA_EncryptBlock with this+4
+0x508f80	TXTEA_DecryptBlock	game	high	wraps XTEA_DecryptBlock with this+4
+0x5089a0	TRSA_ctor	game	medium	used by SendLogin
+0x5089c0	TRSA_dtor	game	medium	
+0x5089f0	TRSA_SetPublicKey	game	medium	decimal modulus string
+0x508aa0	TRSA_Encrypt	game	medium	128-byte block
+0x50a200	TReadBuffer_ctor	game	high	Utils.cpp line 286
+0x50a4b0	TReadBuffer_GetByte	game	high	Utils.cpp
+0x50a610	TReadBuffer_GetWord	game	high	Utils.cpp
+0x50a780	TReadBuffer_GetQuad	game	high	Utils.cpp
+0x50a900	TReadBuffer_GetString	game	high	Utils.cpp line 334
+0x50abb0	TReadBuffer_GetStringNew	game	high	Utils.cpp line 359
+0x50ad50	TReadBuffer_GetBytes	game	high	Utils.cpp line 371
+0x50b030	TWriteBuffer_ctor	game	high	Utils.cpp line 387
+0x50b2e0	TWriteBuffer_PutByte	game	high	Utils.cpp
+0x50b450	TWriteBuffer_PutWord	game	high	Utils.cpp
+0x50b5e0	TWriteBuffer_PutQuad	game	high	Utils.cpp
+0x50b780	TWriteBuffer_PutString	game	high	Utils.cpp
+0x50ba00	TWriteBuffer_PutBytes	game	high	Utils.cpp line 451
+0x4042f0	TMyException_GetMessage	game	high	TMyException.h, inline accessor
+0x404570	TMyException_scalar_deleting_dtor	game	high	compiler-generated, emitted in the first object
+0x4d9110	TMyException_GetOrigin	game	high	TMyException.h, inline accessor
+0x508270	std_string_find_last_of	stl	high	instantiated in TMyException.cpp
+0x508300	TMyException_dtor	game	high	TMyException.cpp
+0x508350	std_string_substr_ctor	stl	high	instantiated in TMyException.cpp
+0x508390	GetFileName	game	medium	TMyException.cpp, static
+0x508970	vlong_operator_ge	game	high	vlong.h inline, emitted in TRSA.cpp
+0x5089d0	TRSA_scalar_deleting_dtor	game	high	compiler-generated
+0x508f40	TXTEA_scalar_deleting_dtor	game	high	compiler-generated; not found by Ghidra (vtable 0x573efc)
+0x508fa0	IsSpace	game	medium	Utils.cpp
+0x508fd0	IsAlpha	game	medium	Utils.cpp, Latin-1 with umlauts
+0x509020	IsDigit	game	medium	Utils.cpp
+0x509040	ToLower	game	medium	Utils.cpp, Latin-1
+0x509060	ToUpper	game	medium	Utils.cpp, Latin-1
+0x509080	HSVToRGB	game	medium	Utils.cpp
+0x509280	GetOutfitColor	game	medium	Utils.cpp, 133-colour outfit palette
+0x5093d0	LowerString	game	medium	Utils.cpp line 66
+0x509540	CapitalizeString	game	medium	Utils.cpp line 88
+0x509710	CompareStrings	game	medium	Utils.cpp line 106, caseless
+0x509a60	CopyString	game	medium	Utils.cpp line 124
+0x509d10	TrimString	game	medium	Utils.cpp line 158
+0x50a040	ShortenString	game	medium	Utils.cpp line 179
+0x50bce0	FormatNumber	game	medium	Utils.cpp line 467
+0x50bff0	flex_unit_reserve	game	high	vlong.cpp (Barwood)
+0x50c050	flex_unit_set	game	high	vlong.cpp
+0x50c0d0	flex_unit_fast_mul	game	high	vlong.cpp
+0x50c2b0	vlong_value_bits	game	high	vlong.cpp
+0x50c300	vlong_value_cf	game	high	vlong.cpp
+0x50c390	vlong_value_shr	game	high	vlong.cpp, shr(unsigned)
+0x50c420	vlong_value_add	game	high	vlong.cpp
+0x50c490	vlong_value_subtract	game	high	vlong.cpp
+0x50c4f0	vlong_value_copy	game	high	vlong.cpp
+0x50c530	flex_unit_dtor	game	high	vlong.cpp
+0x50c560	vlong_ctor	game	high	vlong.cpp, vlong(unsigned)
+0x50c5b0	vlong_copy_ctor	game	high	vlong.cpp
+0x50c5d0	vlong_docopy	game	high	vlong.cpp
+0x50c610	vlong_assign	game	high	vlong.cpp
+0x50c660	ByteArrayToVlong	game	medium	vlong.cpp, CipSoft addition
+0x50c720	vlong_value_divide	game	high	vlong.cpp
+0x50c9a0	vlong_dtor	game	high	vlong.cpp
+0x50c9d0	vlong_cf	game	high	vlong.cpp
+0x50cb50	vlong_add_assign	game	high	vlong.cpp
+0x50cc80	vlong_sub_assign	game	high	vlong.cpp
+0x50cdc0	vlong_add	game	high	vlong.cpp
+0x50ceb0	vlong_sub	game	high	vlong.cpp
+0x50cfa0	vlong_mul	game	high	vlong.cpp
+0x50d0c0	vlong_div	game	high	vlong.cpp
+0x50d200	vlong_mod	game	high	vlong.cpp
+0x50d330	monty_dtor	game	high	vlong.cpp, implicit
+0x50d530	VlongToByteArray	game	medium	vlong.cpp, CipSoft addition
+0x50d660	vlong_add_long	game	medium	vlong.h, CipSoft addition
+0x50d750	vlong_mul_long	game	medium	vlong.h, CipSoft addition
+0x50d840	vlong_lt_long	game	medium	vlong.h, CipSoft addition
+0x50d8a0	monty_mul	game	high	vlong.cpp
+0x50d930	monty_exp	game	high	vlong.cpp
+0x50db70	vlong_scalar_deleting_dtor	game	high	compiler-generated
+0x50dbc0	modinv	game	high	vlong.cpp
+0x50e360	DecimalToVlong	game	medium	vlong.cpp, CipSoft addition
+0x50e5e0	monty_ctor	game	high	vlong.cpp
+0x50ea70	modexp	game	high	vlong.cpp

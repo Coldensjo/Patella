@@ -5419,34 +5419,34 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x50811e	20	Catch@0050811e	catch	Talk.cpp	between		0x507fa0	
 0x508132	131	Catch@00508132	catch	Talk.cpp	assert	1383	0x507fa0	
 0x5081b5	172	Catch@005081b5	catch	Talk.cpp	assert	1383	0x507fa0	
-0x508270	141	FUN_00508270	game	Talk.cpp|Utils.cpp	gap			
-0x508300	77	FUN_00508300	game	Talk.cpp|Utils.cpp	gap			
-0x508350	50	FUN_00508350	game	Talk.cpp|Utils.cpp	gap			
-0x508390	108	FUN_00508390	game	Talk.cpp|Utils.cpp	gap			
-0x508400	665	FUN_00508400	game	Talk.cpp|Utils.cpp	gap			
-0x5086a0	712	FUN_005086a0	game	Talk.cpp|Utils.cpp	gap			
-0x508970	40	FUN_00508970	game	Talk.cpp|Utils.cpp	gap			
-0x5089a0	23	FUN_005089a0	game	Talk.cpp|Utils.cpp	gap			
-0x5089c0	14	FUN_005089c0	game	Talk.cpp|Utils.cpp	gap			
-0x5089d0	30	FUN_005089d0	game	Talk.cpp|Utils.cpp	gap			
-0x5089f0	100	FUN_005089f0	game	Talk.cpp|Utils.cpp	gap			
-0x508a54	63	Catch@00508a54	catch	Talk.cpp|Utils.cpp	gap		0x5089f0	
-0x508aa0	326	FUN_00508aa0	game	Talk.cpp|Utils.cpp	gap			
-0x508be6	63	Catch@00508be6	catch	Talk.cpp|Utils.cpp	gap		0x508aa0	
-0x508c25	63	Catch@00508c25	catch	Talk.cpp|Utils.cpp	gap		0x508aa0	
-0x508c70	25	FUN_00508c70	game	Talk.cpp|Utils.cpp	gap			
-0x508ca0	36	FUN_00508ca0	game	Talk.cpp|Utils.cpp	gap			
-0x508cd0	301	FUN_00508cd0	game	Talk.cpp|Utils.cpp	gap			
-0x508e00	306	FUN_00508e00	game	Talk.cpp|Utils.cpp	gap			
-0x508f60	24	FUN_00508f60	game	Talk.cpp|Utils.cpp	gap			
-0x508f80	24	FUN_00508f80	game	Talk.cpp|Utils.cpp	gap			
-0x508fa0	43	FUN_00508fa0	game	Talk.cpp|Utils.cpp	gap			
-0x508fd0	68	FUN_00508fd0	game	Talk.cpp|Utils.cpp	gap			
-0x509020	23	FUN_00509020	game	Talk.cpp|Utils.cpp	gap			
-0x509040	26	FUN_00509040	game	Talk.cpp|Utils.cpp	gap			
-0x509060	26	FUN_00509060	game	Talk.cpp|Utils.cpp	gap			
-0x509080	512	FUN_00509080	game	Talk.cpp|Utils.cpp	gap			
-0x509280	305	FUN_00509280	game	Talk.cpp|Utils.cpp	gap			
+0x508270	141	FUN_00508270	game	TMyException.cpp	range			
+0x508300	77	FUN_00508300	game	TMyException.cpp	range			
+0x508350	50	FUN_00508350	game	TMyException.cpp	range			
+0x508390	108	FUN_00508390	game	TMyException.cpp	range			
+0x508400	665	FUN_00508400	game	TMyException.cpp	range			
+0x5086a0	712	FUN_005086a0	game	TMyException.cpp	range			
+0x508970	40	FUN_00508970	game	TRSA.cpp	range			
+0x5089a0	23	FUN_005089a0	game	TRSA.cpp	range			
+0x5089c0	14	FUN_005089c0	game	TRSA.cpp	range			
+0x5089d0	30	FUN_005089d0	game	TRSA.cpp	range			
+0x5089f0	100	FUN_005089f0	game	TRSA.cpp	range			
+0x508a54	63	Catch@00508a54	catch	TRSA.cpp	range		0x5089f0	
+0x508aa0	326	FUN_00508aa0	game	TRSA.cpp	range			
+0x508be6	63	Catch@00508be6	catch	TRSA.cpp	range		0x508aa0	
+0x508c25	63	Catch@00508c25	catch	TRSA.cpp	range		0x508aa0	
+0x508c70	25	FUN_00508c70	game	TXTEA.cpp	range			
+0x508ca0	36	FUN_00508ca0	game	TXTEA.cpp	range			
+0x508cd0	301	FUN_00508cd0	game	TXTEA.cpp	range			
+0x508e00	306	FUN_00508e00	game	TXTEA.cpp	range			
+0x508f60	24	FUN_00508f60	game	TXTEA.cpp	range			
+0x508f80	24	FUN_00508f80	game	TXTEA.cpp	range			
+0x508fa0	43	FUN_00508fa0	game	Utils.cpp	range			
+0x508fd0	68	FUN_00508fd0	game	Utils.cpp	range			
+0x509020	23	FUN_00509020	game	Utils.cpp	range			
+0x509040	26	FUN_00509040	game	Utils.cpp	range			
+0x509060	26	FUN_00509060	game	Utils.cpp	range			
+0x509080	512	FUN_00509080	game	Utils.cpp	range			
+0x509280	305	FUN_00509280	game	Utils.cpp	range			
 0x5093d0	361	FUN_005093d0	game	Utils.cpp	assert	66		
 0x509540	460	FUN_00509540	game	Utils.cpp	assert	88		
 0x509710	841	FUN_00509710	game	Utils.cpp	assert	106,107		
@@ -5467,43 +5467,43 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x50b780	628	FUN_0050b780	game	Utils.cpp	assert	437,441		
 0x50ba00	726	FUN_0050ba00	game	Utils.cpp	assert	451,452		
 0x50bce0	776	FUN_0050bce0	game	Utils.cpp	assert	467,468		
-0x50bff0	82	FUN_0050bff0	game	Utils.cpp|?	gap			
-0x50c050	115	FUN_0050c050	game	Utils.cpp|?	gap			
-0x50c0d0	457	FUN_0050c0d0	game	Utils.cpp|?	gap			
-0x50c2b0	66	FUN_0050c2b0	game	Utils.cpp|?	gap			
-0x50c300	142	FUN_0050c300	game	Utils.cpp|?	gap			
-0x50c390	129	FUN_0050c390	game	Utils.cpp|?	gap			
-0x50c420	108	FUN_0050c420	game	Utils.cpp|?	gap			
-0x50c490	85	FUN_0050c490	game	Utils.cpp|?	gap			
-0x50c4f0	57	FUN_0050c4f0	game	Utils.cpp|?	gap			
-0x50c530	33	FUN_0050c530	game	Utils.cpp|?	gap			
-0x50c560	67	FUN_0050c560	game	Utils.cpp|?	gap			
-0x50c5b0	30	FUN_0050c5b0	game	Utils.cpp|?	gap			
-0x50c5d0	64	FUN_0050c5d0	game	Utils.cpp|?	gap			
-0x50c610	66	FUN_0050c610	game	Utils.cpp|?	gap			
-0x50c660	183	FUN_0050c660	game	Utils.cpp|?	gap			
-0x50c720	618	FUN_0050c720	game	Utils.cpp|?	gap			
-0x50c9a0	45	FUN_0050c9a0	game	Utils.cpp|?	gap			
-0x50c9d0	367	FUN_0050c9d0	game	Utils.cpp|?	gap			
-0x50cb50	294	FUN_0050cb50	game	Utils.cpp|?	gap			
-0x50cc80	310	FUN_0050cc80	game	Utils.cpp|?	gap			
-0x50cdc0	225	FUN_0050cdc0	game	Utils.cpp|?	gap			
-0x50ceb0	225	FUN_0050ceb0	game	Utils.cpp|?	gap			
-0x50cfa0	274	FUN_0050cfa0	game	Utils.cpp|?	gap			
-0x50d0c0	319	FUN_0050d0c0	game	Utils.cpp|?	gap			
-0x50d200	303	FUN_0050d200	game	Utils.cpp|?	gap			
-0x50d330	481	FUN_0050d330	game	Utils.cpp|?	gap			
-0x50d530	295	FUN_0050d530	game	Utils.cpp|?	gap			
-0x50d660	225	FUN_0050d660	game	Utils.cpp|?	gap			
-0x50d750	225	FUN_0050d750	game	Utils.cpp|?	gap			
-0x50d840	94	FUN_0050d840	game	Utils.cpp|?	gap			
-0x50d8a0	129	FUN_0050d8a0	game	Utils.cpp|?	gap			
-0x50d930	556	FUN_0050d930	game	Utils.cpp|?	gap			
-0x50db70	69	FUN_0050db70	game	Utils.cpp|?	gap			
-0x50dbc0	1947	FUN_0050dbc0	game	Utils.cpp|?	gap			
-0x50e360	636	FUN_0050e360	game	Utils.cpp|?	gap			
-0x50e5e0	1153	FUN_0050e5e0	game	Utils.cpp|?	gap			
-0x50ea70	119	FUN_0050ea70	game	Utils.cpp|?	gap			
+0x50bff0	82	FUN_0050bff0	game	vlong.cpp	range			
+0x50c050	115	FUN_0050c050	game	vlong.cpp	range			
+0x50c0d0	457	FUN_0050c0d0	game	vlong.cpp	range			
+0x50c2b0	66	FUN_0050c2b0	game	vlong.cpp	range			
+0x50c300	142	FUN_0050c300	game	vlong.cpp	range			
+0x50c390	129	FUN_0050c390	game	vlong.cpp	range			
+0x50c420	108	FUN_0050c420	game	vlong.cpp	range			
+0x50c490	85	FUN_0050c490	game	vlong.cpp	range			
+0x50c4f0	57	FUN_0050c4f0	game	vlong.cpp	range			
+0x50c530	33	FUN_0050c530	game	vlong.cpp	range			
+0x50c560	67	FUN_0050c560	game	vlong.cpp	range			
+0x50c5b0	30	FUN_0050c5b0	game	vlong.cpp	range			
+0x50c5d0	64	FUN_0050c5d0	game	vlong.cpp	range			
+0x50c610	66	FUN_0050c610	game	vlong.cpp	range			
+0x50c660	183	FUN_0050c660	game	vlong.cpp	range			
+0x50c720	618	FUN_0050c720	game	vlong.cpp	range			
+0x50c9a0	45	FUN_0050c9a0	game	vlong.cpp	range			
+0x50c9d0	367	FUN_0050c9d0	game	vlong.cpp	range			
+0x50cb50	294	FUN_0050cb50	game	vlong.cpp	range			
+0x50cc80	310	FUN_0050cc80	game	vlong.cpp	range			
+0x50cdc0	225	FUN_0050cdc0	game	vlong.cpp	range			
+0x50ceb0	225	FUN_0050ceb0	game	vlong.cpp	range			
+0x50cfa0	274	FUN_0050cfa0	game	vlong.cpp	range			
+0x50d0c0	319	FUN_0050d0c0	game	vlong.cpp	range			
+0x50d200	303	FUN_0050d200	game	vlong.cpp	range			
+0x50d330	481	FUN_0050d330	game	vlong.cpp	range			
+0x50d530	295	FUN_0050d530	game	vlong.cpp	range			
+0x50d660	225	FUN_0050d660	game	vlong.cpp	range			
+0x50d750	225	FUN_0050d750	game	vlong.cpp	range			
+0x50d840	94	FUN_0050d840	game	vlong.cpp	range			
+0x50d8a0	129	FUN_0050d8a0	game	vlong.cpp	range			
+0x50d930	556	FUN_0050d930	game	vlong.cpp	range			
+0x50db70	69	FUN_0050db70	game	vlong.cpp	range			
+0x50dbc0	1947	FUN_0050dbc0	game	vlong.cpp	range			
+0x50e360	636	FUN_0050e360	game	vlong.cpp	range			
+0x50e5e0	1153	FUN_0050e5e0	game	vlong.cpp	range			
+0x50ea70	119	FUN_0050ea70	game	vlong.cpp	range			
 0x50eae8	6	GLU32.DLL::gluOrtho2D	library		named			
 0x50eaee	6	DDRAW.DLL::DirectDrawCreate	library		named			
 0x50eb00	44	FUN_0050eb00	library		region			

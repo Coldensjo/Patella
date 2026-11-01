@@ -16,3 +16,6 @@ rea-out/*.snapshot
 decomp/raw/
 decomp/*.json
 decomp/*.err
+decomp/work/
+build/
+decomp/clean/

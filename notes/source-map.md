@@ -19,8 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2030 | 236072 |
+| range | 65 | 14787 |
 | header | 22 | 15065 |
-| gap | 707 | 116503 |
+| gap | 642 | 101716 |
 
 ## Source files
 
@@ -56,7 +57,11 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | SurfaceGL.cpp | 3 | 0 | 3187 | `0x4fb7f0` | `0x4fc130` | 767-1023 |
 | sysinc.cpp | 4 | 0 | 1510 | `0x4fce50` | `0x4fd1b0` | 63-143 |
 | Talk.cpp | 77 | 192 | 42058 | `0x4fd9e0` | `0x5081b5` | 81-1952 |
-| Utils.cpp | 20 | 0 | 11137 | `0x5093d0` | `0x50bce0` | 66-468 |
+| TMyException.cpp | 6 | 0 | 1753 | `0x508270` | `0x5086a0` |  |
+| TRSA.cpp | 6 | 3 | 722 | `0x508970` | `0x508c25` |  |
+| TXTEA.cpp | 6 | 0 | 716 | `0x508c70` | `0x508f80` |  |
+| Utils.cpp | 27 | 0 | 12140 | `0x508fa0` | `0x50bce0` | 66-468 |
+| vlong.cpp | 37 | 0 | 10593 | `0x50bff0` | `0x50ea70` |  |
 
 ## Unresolved gaps
 
@@ -91,8 +96,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |
 | SurfaceGL.cpp / sysinc.cpp | 12 | 498 | `0x4fcb90`-`0x4fce4f` |
 | sysinc.cpp / Talk.cpp | 16 | 346 | `0x4fd440`-`0x4fd6d5` |
-| Talk.cpp / Utils.cpp | 28 | 4194 | `0x508270`-`0x5093b1` |
-| Utils.cpp / ? | 37 | 10593 | `0x50bff0`-`0x50eae7` |
 
 ## Header code
 
