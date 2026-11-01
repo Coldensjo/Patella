@@ -14,14 +14,15 @@ Read this and `git log` first when resuming.
 7. MapWindow.cpp and the MapWindow/Network gap — **done** (issue #1, Claude Opus 5.5; the gap is Network.cpp).
 7a. MainWindow.cpp and the MainFrm/MainWindow gap — **done** (issue #2, Claude Opus 5.5).
 7b. DialogWindow.cpp and the Dialogs/DialogWindow gap — **done** (issue #3, Claude Opus 5.5).
+7c. ContextMenus.cpp and the ContentWindows/ContextMenus gap — **done** (issue #4, Claude Opus 5.5).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-DialogWindow.cpp done (issue #3, November 1, 2026). Next: the other window files smallest first
-(ContextMenus, ConsoleWindow, ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
+ContextMenus.cpp done (issue #4, November 1, 2026). Next: the other window files smallest first
+(ConsoleWindow, ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
 surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
 
 ## Delegates (running)
@@ -34,7 +35,7 @@ None.
 
 ## Last difftest
 
-12,394,089 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,423,234 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -101,3 +102,16 @@ None.
   `x->Name(` to a free function; differences counted in older notes were made without that.
 - Python on Windows writes CRLF in text mode: pass newline='\n' when an edit script rewrites a file
   (and write such scripts with the Write tool: the Bash tool expands backslash escapes in them).
+- ContextMenus.cpp (issue #4): ContextMenus.h needs Map.h (TMark, TCoordinate), which includes
+  external.h, so external.h cannot include it; its users include it directly (Control.cpp).
+  ConsoleWindow.cpp's text view is the TTextWindow sketch (TextBuffer at +0x24, FUN_00419030 gets a
+  line); TConsoleData34::Data2C is one. When ConsoleWindow.cpp, DialogElements.cpp (TEditLine,
+  TFormattedText 0x465e60, TSeparator 0x452cb0) or ContentWindows.cpp (TSkillsWindowBody) are
+  reconstructed, contextmenustest.cpp's definitions of their methods and constructors must go
+  (duplicates), and its fakes must move to the real classes. DIFFTEST_ONLY=ContextMenus runs the test
+  alone; it restores every patch it makes.
+- Redirecting "our" copy of a function that a test file defines itself can patch the fake into a jump
+  to itself: the linker folds a definition that only calls the fake with the fake. Redirect only the
+  image's address for such functions (contextmenustest.cpp's Send* and IsClipboardEmpty).
+- A menu's Show shrinks the last entry each time it runs; tests must not call it again once the last
+  entry would drop below one pixel (both versions fail).

@@ -1418,3 +1418,111 @@ Reconstructed by Claude Opus 5.5 (issue #3), November 1, 2026.
   dialogwindowtest.cpp with hooks (difftest.h's TDialogFakes).
   DIFFTEST_ONLY=DialogWindow runs the test alone. Not exercised: the error
   paths.
+
+## ContextMenus.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #4), November 1, 2026.
+
+- **Range** (high). The ContentWindows/ContextMenus gap 0x43d6f0-0x43d86b is
+  ContextMenus.cpp: 0x43d6f0 (no frame, no line) and its deleting form
+  0x43d710 are the skill menu's destructor (they store the vtable 0x55f5f0
+  whose constructor 0x4454f0 is line 1442 and clear the skill window's +0x30),
+  0x43d730 is THelpBubble::SetSize (catch blocks at 0x43d86c name line 142);
+  every caller of the gap's functions is in ContextMenus.cpp. The object ends
+  at 0x4458ff (Control.cpp's 0x445900 follows, already settled). No data of
+  its own (all texts are string literals).
+- **Classes** (high for layouts and vtables, low-medium for names).
+  THelpBubble (vtable 0x55f8b8, 0x30 bytes) is a TWindow, not a
+  TContextMenu as Control.cpp's sketch had it: its constructor calls TWindow's
+  directly and Control.cpp places it only in action state 9 (help).
+  Control.cpp's FUN_00442110 is THelpBubble::Place. TContextMenu (0x55f730,
+  0x34 bytes: EntryWidth, Separator, Empty), TContextMenuEntry (0x55f6a8, 0x74
+  bytes: Text[50], Shortcut[20], TCallback) and nine subclasses, sizes from
+  Control.cpp's new-expressions and the constructors. All vtables have 40
+  slots (no new virtuals). Only the skill menu has a destructor of its own;
+  the others use the folded 0x4adc40, the entry the folded 0x429590 (kept in
+  ContentWindows.obj, names.tsv kind stl). Class names are Control.cpp's
+  sketches (ours) plus TContextMenuEntry; member names from the assertions
+  (LookedObject, LookedObjectX, UsedObjectX, UsedObjectY, LastEntry) and the
+  catch-block parameters (_CharacterID, _TextWindow, _LineNumber,
+  _ConsoleWindow, _Edit, _Data, _SkillsWindow); the rest is ours. The menus'
+  last two constructor parameters (MainWindow's width and height) are named
+  ParentWidth/ParentHeight (ours).
+- **Inline header functions** (medium). THelpBubble's GetMinimumWidth and
+  GetMinimumHeight (0x4420f0, 0x442100, missed by Ghidra) sit right after its
+  constructor, TContextMenu::HandleEvent (0x43e9f0, missed as well; it only
+  calls SetActionState(0)) right after TContextMenu's: inline virtuals are
+  emitted with the vtable, which comes with the constructor. They are written
+  in ContextMenus.h. The two Arrange functions (no frame, no line) are in the
+  .cpp where the binary has them (after SetSize and after TContextMenu's
+  constructor), ~TSkillContextMenu at the top of the file.
+- **Source order** (medium). Line order. The binary moves the help bubble's
+  constructor (106) and Place (257), AddEntry (506) and Show (486) behind the
+  event handlers, followed by all menu constructors: each calls a function
+  defined further down (Creatures.cpp's pattern).
+- **Exception tables and switches** (high), checked with ehinfo.py: the
+  assertions before TBEGIN in the help bubble's constructor (6-8), AddEntry
+  (15-16), the text menu (11-11: 1056 and 1057), the request, edit, mark and
+  skill menus (6-6) and the channel menu (6-11, its second assertion inside);
+  the constructors' try blocks start at state 1 (the base class). Place has
+  states 0-30: six assertions, the second of the left-corner case (line 263,
+  newY, the same register as newX) was removed by the compiler, which also
+  skips 267/268 on that path; written as in the source. KeyPress's catch
+  prints Key as the constant 27 (constant propagation). Jump tables checked:
+  0x43fd98/0x43fdfc (object events), 0x440350/0x44038c (creature),
+  0x4408d8 (VIP, inside a compare tree), 0x44163c (edit), 0x4419ec (mark),
+  0x441d34/0x441d48 (skill), 0x443940 and 0x443df8 (party flags 0-4).
+- **Event numbers** (high for the values): written in decimal (10001 Look,
+  ..., 10100 message, 10200 paste, 10300 VIP, 10400 marks, 10500 skill bars);
+  the ranges are clearly decimal. No enumerator names are known, so none are
+  invented. The case order follows the binary's code order.
+- **Odd behaviour kept**: Show adds an empty entry to a menu without entries
+  after the layout loop (it keeps its own width and 0,0); every Show shrinks
+  the last entry again; the rotate entry tests the flags of the used object
+  even without one; "Invite to Party" is formatted with an unused name
+  argument (left out in our sprintf: the compiler warns about it, the output
+  is the same); the text and request menus test the addressee array against
+  NULL; THelpBubble::SetSize keeps the larger of minimum and maximum when the
+  minimum is above it; the help bubble's frame uses skins 52-60, the menu's
+  207-215 with the middle 207; the channel menu leaves ShowServerMessages
+  unset for the default channel; event 10402 (walk to a mark) has a case but
+  no entry; unknown events do nothing in the text and request menus and are
+  errors elsewhere. Callees whose names do not fit their use here are kept
+  (Talk.cpp's HasUnreadConsoleText decides "Invite to private chat", i.e.
+  whether the player has a private channel; worth a review there).
+- **Text buffers** (low). Char buffers of the menus are 50 bytes (the entry
+  text limit), 200 for the ignore message (_snprintf's limit) and 220 for the
+  report title; the binary's frames are not exact enough to give more.
+- **Data types changed elsewhere**: SkinProperties.Data160/Data168 (two
+  TGUIPoints) are one TRect Data160 (the help bubble's text margins, passed
+  by value as one 16-byte block like Data0A0); GUI.cpp's InitSkinProperties
+  writes .Width/.Height, byte-identical. Map.cpp's DeleteAutomapMark takes
+  TMark &Deleted (its only caller passes the menu's mark; it was a
+  low-confidence TCoordinate &). New external.h sketches: TTextWindow (the
+  console's text view with TextBuffer at +0x24 and four FUN_ methods),
+  TConsoleWindow's five FUN_ methods used here, TSkillsWindowBody (ContextMenu
+  at +0x30), TEditLine (+0x5c, +0x60, +0x66), TFormattedText (0x465e60),
+  TSeparator (0x452cb0); TConsoleData34::Data2C is a TTextWindow *. All
+  names low confidence. external.h no longer includes a ContextMenus header:
+  ContextMenus.h needs Map.h, which includes external.h (Control.cpp includes
+  it directly).
+- **callcheck** (24 of 36 functions differ, all explained): base class
+  constructors and ~TWindow, new-expressions (entries, separators, the
+  formatted text, TTalkLine) and member initialisers (TCallback) are not
+  lexical calls; virtual calls (GetMinimumWidth/Height, Arrange, SetChildArea,
+  FitToChildren, SetSize, the TTalkBuffer queries and Clear) are indirect in
+  the binary or resolved to the own class by the tool; the compiler merged
+  call sites (AddEntry in the constructors, SendAttack, AddMessage,
+  CopyToClipboard); the text menu's assertion strings contain
+  "GetCreature(GetPlayerID())".
+- **Tests** (contextmenustest.cpp, 32,980 checks over 3,000 windows):
+  every window kind built from the image's and our constructors in memory
+  with the same contents, then random draws, clicks, right clicks, keys,
+  events, Arrange, SetSize/Place/FitsIn (help bubble) and Show/AddEntry/
+  AddSeparator; logs of every callee (logging fakes on both sides answering
+  from a random world) and dumps of both windows compared after each step,
+  then the destructors. A mutation check (six changes, one at a time) failed
+  each run. DIFFTEST_ONLY=ContextMenus runs it alone; it restores every patch.
+  Not exercised: the error paths, and inputs the original fails on as well
+  (a second Show that shrinks the last entry below 1 pixel, a separator as
+  the last child).
