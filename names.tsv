@@ -1050,3 +1050,107 @@ address	name	kind	confidence	note
 0x452320	TCreature_SetPosition	game	medium	Creatures.cpp line 108, TEND1(CreatureID)
 0x452eb0	vector_TDialogText_at	game	low	Container.h vector<T>::operator() for a 0x18-byte element (char* + 20-byte font/colour), instantiated in DialogElements.cpp; element type name ours
 0x453600	vector_TDialogText_ctor	game	low	Container.h vector<T>::vector(min, max, block), lines 369-370, same 0x18-byte element, DialogElements.cpp; element type name ours
+0x4b0880	TPathNode_ctor	game	medium	Map.h inline constructor of FindPath's node (Cost and Estimate -1, links NULL); passed to the eh vector constructor iterator by matrix<TPathNode>'s constructor 0x4b1100; not found by Ghidra
+0x4b08a0	SetMapPosition	game	medium	Map.cpp (MainWindow/Map gap): stores the world position of the map's centre (0x5d16f0/ec/e8, Map data); name ours
+0x4b08c0	GetMapPosition	game	medium	Map.cpp (gap): returns the map centre; name ours
+0x4b08f0	GetMapLevel	game	medium	Map.cpp (gap): rz of the centre's floor, 7-z above ground, 2 below; name ours
+0x4b0910	RelativeToAbsolute	game	medium	Map.cpp (gap): map to world coordinates; name ours
+0x4b0960	AbsoluteToRelative	game	medium	Map.cpp (gap): world to map coordinates; name ours
+0x4b09d0	GetAutomapChanged	game	medium	Map.cpp (gap): returns and clears the automap changed flag 0x5d16cc; name ours
+0x4b09e0	SetAmbientLight	game	medium	Map.cpp (gap): target brightness 0x5d16c8 and palette colour 0x7152d0; -1 makes the next call immediate; name ours
+0x4b0a70	UpdateAmbientLight	game	medium	Map.cpp (gap): one fade step of AmbienteActualBrightness (0x5d16c4) and colour 0x7152dc; name ours
+0x4b0af0	GetAmbientColor	game	medium	Map.cpp (gap): returns the current ambient colour by value; name ours
+0x4b0b20	matrix_TPathNode_dtor	game	high	Container.h matrix<TPathNode>::~matrix (delete[] entry); out-of-line copy called from FindPath's unwind funclet 0x52fb5f; class name ours
+0x4b0b30	TAutomapBlock_dtor	stl	high	compiler-generated destructor of Map.cpp's TAutomapBlock (frees Marks.entry); atexit iterator 0x55a2e0; not found by Ghidra
+0x4b0b40	TMapPoint_ctor	stl	high	compiler-generated constructor of Map.cpp's TMapPoint: TObject() for the ten objects; passed by array<TMapPoint>'s constructor to the eh vector constructor iterator; not found by Ghidra
+0x4b0bc0	array_TMapPoint_ctor	game	high	Container.h array<TMapPoint>::array(min, max), line 152; static initialiser 0x559f40 (Map.cpp's Fields, 0x5d4c18)
+0x4b0d70	matrix3d_int_ctor	game	high	Container.h matrix3d<int>::matrix3d(xmin, xmax, ymin, ymax, zmin, zmax), lines 282-284 (dx>0, dy>0, dz>0); static initialiser 0x559f60 (FieldNumber, 0x5d4c24); class name ours
+0x4b1100	matrix_TPathNode_ctor	game	high	Container.h matrix<TPathNode>::matrix(xmin, xmax, ymin, ymax), lines 217-218 (dx>0, dy>0); class name ours
+0x4b1410	TAutomapBlock_ctor	game	medium	Map.h inline constructor: Marks(0, 0, 10), MarkCount 0; static initialiser 0x559f90 (AutomapBlocks, 0x5d4c40); not found by Ghidra
+0x4b1440	GetEffectStatus	game	medium	Map.cpp line 556
+0x4b15a0	GetGraphicalEffectType	game	medium	Map.cpp lines 565-566 (Status==1)
+0x4b1860	GetGraphicalEffectPhase	game	medium	Map.cpp lines 575-576 (Status==1)
+0x4b1b20	GetTextualEffectColor	game	medium	Map.cpp lines 585-586 (Status==2)
+0x4b1de0	GetTextualEffectText	game	medium	Map.cpp lines 595-596 (Status==2)
+0x4b20a0	GetTextualEffectPhase	game	medium	Map.cpp lines 605-606 (Status==2)
+0x4b2360	GetMissileEffectType	game	medium	Map.cpp lines 615-616 (Status==3)
+0x4b2620	GetMissileEffectDirection	game	medium	Map.cpp lines 625-626 (Status==3)
+0x4b28e0	GetMissileEffectX	game	medium	Map.cpp lines 635-636: pixel offset from the linked field
+0x4b2bb0	GetMissileEffectY	game	medium	Map.cpp lines 645-646
+0x4b2e80	LoadAutomapBlock	game	medium	Map.cpp lines 1199-1304: reads <bx><by><bz>.map into cache entry Position
+0x4b3242	LoadAutomapBlock_part	game	high	not a function: the code after LoadAutomapBlock's first catch block (Ghidra split)
+0x4b36e0	SaveAutomapBlock	game	medium	Map.cpp lines 1317-1411
+0x4b3988	SaveAutomapBlock_part	game	high	not a function: the code after SaveAutomapBlock's first catch block (Ghidra split)
+0x4b3e80	GetAutomapBlock	game	medium	Map.cpp lines 1420-1446: block cache with LRU list (0x5d16d4 head, 0x5d16d0 tail)
+0x4b4370	GetAutomapColor	game	medium	Map.cpp lines 1473-1479: TRGBColor by value
+0x4b4680	GetAutomapMarks	game	medium	Map.cpp lines 1485-1493: x, y are block coordinates
+0x4b4960	IsAutomapBlocked	game	medium	Map.cpp lines 1500-1506: speed 255
+0x4b4c60	GetAutomapSpeed	game	medium	Map.cpp lines 1514-1520
+0x4b4f60	AddAutomapMark	game	medium	Map.cpp lines 1538-1557 (Text!=NULL, Coordinate.x>0, Coordinate.y>0)
+0x4b5410	DeleteAutomapMark	game	medium	Map.cpp line 1578: marks at the position move to 0,0
+0x4b5610	GetAmbientBrightness	game	medium	Map.cpp line 1784 (AmbienteActualBrightness>=0)
+0x4b5760	ExitMap	game	medium	Map.cpp line 1842: saves the ten cached automap blocks; called by ExitControl
+0x4b5900	array_TMapPoint_at	game	high	Container.h array<TMapPoint>::operator(), line 178
+0x4b5b40	matrix3d_int_at	game	high	Container.h matrix3d<int>::operator(), line 328; the error's expression is "[bug0000013]"
+0x4b5e90	matrix_TPathNode_at	game	high	Container.h matrix<TPathNode>::operator(), line 253
+0x4b6140	GetFirstObject	game	medium	Map.cpp lines 169-171: starts the drawing-order iteration
+0x4b6510	GetNextObject	game	medium	Map.cpp, between lines 171 and 197
+0x4b6580	GetMapObject	game	medium	Map.cpp lines 197-202: object at a stack position
+0x4b6a00	GetTopMoveObject	game	low	Map.cpp lines 213-228; called by MapWindow.cpp
+0x4b6ee0	GetTopLookObject	game	low	Map.cpp lines 237-250; called by MapWindow.cpp
+0x4b73a0	GetTopUseObject	game	low	Map.cpp lines 259-275 (FORCEUSE, LIQUIDPOOL)
+0x4b78d0	GetTopMultiUseObject	game	low	Map.cpp lines 284-299 (FORCEUSE, LIQUIDPOOL)
+0x4b7de0	SortObjects	game	medium	Map.cpp lines 314-341: drawing order and hook side of hanging objects
+0x4b8310	InsertObject	game	medium	Map.cpp lines 351-366
+0x4b88f0	AddObject	game	medium	Map.cpp lines 376-401: inserts by layer
+0x4b8ec0	AppendObject	game	medium	Map.cpp lines 410-431 ("too many objects on map point")
+0x4b9420	DeleteObject	game	medium	Map.cpp lines 441-454: true when the point was full
+0x4b9940	ChangeObject	game	medium	Map.cpp lines 463-473
+0x4b9e30	GetEffectIteratorNumber	game	low	Map.cpp lines 508-516 (EffectIteratorField)
+0x4ba100	GetFirstEffect	game	medium	Map.cpp lines 524-534
+0x4ba540	GetNextEffect	game	medium	Map.cpp line 548 (EffectIteratorCount)
+0x4ba6e0	NewEffect	game	medium	Map.cpp lines 678-688
+0x4bab40	AddGraphicalEffect	game	medium	Map.cpp line 703
+0x4bad00	AddTextualEffect	game	medium	Map.cpp lines 712-721 (strlen(Text)<10)
+0x4bb0c0	AddMissileEffect	game	medium	Map.cpp lines 730-768
+0x4bb520	DeleteEffect	game	medium	Map.cpp lines 776-789
+0x4bba70	ProcessEffects	game	medium	Map.cpp lines 807-817: phases of effects and texts; called by Control.cpp every frame
+0x4bbd40	ProcessMissileEffects	game	medium	Map.cpp lines 841-878; called by MapWindow.cpp
+0x4bc720	ClearField	game	medium	Map.cpp lines 891-913
+0x4bccb0	ClearMap	game	medium	Map.cpp, between lines 913 and 945: empties all points and effects
+0x4bcd20	ShiftMapWest	game	medium	Map.cpp line 945: points move west, x=17 cleared
+0x4bcd50	ShiftMapWest_loop	game	high	not a function: ShiftMapWest's loop (Ghidra split)
+0x4bcf30	ShiftMapEast	game	medium	Map.cpp line 964
+0x4bcf60	ShiftMapEast_loop	game	high	not a function: ShiftMapEast's loop (Ghidra split)
+0x4bd140	ShiftMapNorth	game	medium	Map.cpp line 983
+0x4bd170	ShiftMapNorth_loop	game	high	not a function: ShiftMapNorth's loop (Ghidra split)
+0x4bd350	ShiftMapSouth	game	medium	Map.cpp line 1002
+0x4bd380	ShiftMapSouth_loop	game	high	not a function: ShiftMapSouth's loop (Ghidra split)
+0x4bd560	ShiftMap	game	medium	Map.cpp line 1018 (dx, dy)
+0x4bd750	ShiftMapUp	game	medium	Map.cpp line 1037: points move to rz+1, rz 0 cleared
+0x4bd780	ShiftMapUp_loop	game	high	not a function: ShiftMapUp's loop (Ghidra split)
+0x4bd960	ShiftMapDown	game	medium	Map.cpp line 1056
+0x4bd990	ShiftMapDown_loop	game	high	not a function: ShiftMapDown's loop (Ghidra split)
+0x4bdb70	ShiftMapLevel	game	medium	Map.cpp line 1074 (dz)
+0x4bdbd0	ShiftMapLevel_loop	game	high	not a function: ShiftMapLevel's clearing loop (Ghidra split)
+0x4bdbe0	ShiftMapLevel_loop2	game	high	not a function: ShiftMapLevel's clearing loop (Ghidra split)
+0x4bdd70	RequestFieldRefresh	game	medium	Map.cpp line 1085
+0x4bdf30	GetFieldHeight	game	low	Map.cpp line 1104: number of HEIGHT objects
+0x4be130	IsFieldPassable	game	low	Map.cpp line 1127 (UNPASS, HEIGHT piles)
+0x4be390	IsFieldThrowable	game	low	Map.cpp line 1141 (UNTHROW)
+0x4be570	IsFieldTranslucent	game	low	Map.cpp line 1153 (flag 23)
+0x4be750	FieldRefreshRequested	game	medium	Map.cpp line 1164
+0x4be910	GetFieldAutomapInfo	game	medium	Map.cpp line 1191: colour and speed of a point
+0x4beb90	UpdateAutomap	game	medium	Map.cpp line 1465
+0x4bee00	FindPath	game	high	Map.cpp line 1738; name and parameter names from its error message ("Something failed StartX: ...")
+0x4bf620	InitMap	game	medium	Map.cpp line 1830; called by InitControl with the creature callback
+0x4bf860	TMapWindow_dtor	game	low	MapWindow.cpp (Map/MapWindow gap): vtable 0x56cf38, frees the buffers 0x44e and 0x457 (0x4a12a0), base destructor 0x4a2590; class name ours
+0x4bf8d0	TMapWindow_GetMinimumWidth	game	low	MapWindow.cpp: vtable 0x56cf38 +0x3c, returns 240; not found by Ghidra
+0x4bf8e0	TMapWindow_GetMinimumHeight	game	low	MapWindow.cpp: vtable +0x40, returns 176; not found by Ghidra
+0x4bf8f0	TMapWindow_CheckBrightness	game	low	MapWindow.cpp: x 0-17, y 0-13, member array +0x25dc [18][14] <= Value
+0x4bf930	TMapWindow_SetLightColor	game	low	MapWindow.cpp: member colours +0x19fc [18][14] = GetAmbientColor() * Brightness / 255 (0-255)
+0x4bf9e0	TMapWindow_scalar_deleting_dtor	stl	high	compiler-generated, vtable 0x56cf38 slot 0
+0x4bfa00	TMapWindow_ctor	game	low	MapWindow.cpp: base constructor 0x496080, vtable 0x56cf38; its catch 0x4bfb0c names MapWindow.cpp line 130
+0x425950	TRGBColor_ctor_palette	game	medium	inline TRGBColor(int Color) of a header (6x6x6 palette, steps of 51), out-of-line copy between ConsoleWindow.cpp and ContentWindows.cpp; inlined in SetAmbientLight; returns this
+0x426170	vector_TMark_ctor	game	high	Container.h vector<TMark>::vector(min, max, block); copy kept from an object before Map.obj; used by TAutomapBlock's constructor
+0x425b20	vector_TMark_at	game	high	Container.h vector<TMark>::operator(); copy kept from an object before Map.obj; used by Map.cpp

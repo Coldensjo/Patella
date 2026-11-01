@@ -17,6 +17,7 @@
 
 #include "Creatures.h"
 #include "Help.h"
+#include "Map.h"
 #include "Objects.h"
 #include "Preferences.h"
 #include "Status.h"
@@ -131,11 +132,11 @@ int GetNumberOfPlayerSteps()
 	return NumberOfPlayerSteps;
 }
 
-// 0x44b880. The map centre (FUN_004b08c0) plus the step that the server
+// 0x44b880. The map centre (GetMapPosition) plus the step that the server
 // has not confirmed yet.
 void GetPlayerPosition(int *x, int *y, int *z)
 {
-	FUN_004b08c0(x, y, z);
+	GetMapPosition(x, y, z);
 	*x += PlayerStepDX;
 	*y += PlayerStepDY;
 }
@@ -547,13 +548,13 @@ void DoPlayerStep()
 	case 7: dx = 0; dy = 1; break;
 	case 8: dx = 1; dy = 1; break;
 	}
-	TCommunicationObject Bank = FUN_004b6140(dx + 8, dy + 6, FUN_004b08f0());
+	TObject Bank = GetFirstObject(dx + 8, dy + 6, GetMapLevel());
 	if (Bank.Type == 0 || !GetObjectFlag(Bank.Type, BANK))
 		return;
-	if (!FUN_004be130(dx + 8, dy + 6, FUN_004b08f0(), false))
+	if (!IsFieldPassable(dx + 8, dy + 6, GetMapLevel(), false))
 		return;
-	int Height = FUN_004bdf30(8, 6, FUN_004b08f0());
-	if (FUN_004bdf30(dx + 8, dy + 6, FUN_004b08f0()) > Height + 1)
+	int Height = GetFieldHeight(8, 6, GetMapLevel());
+	if (GetFieldHeight(dx + 8, dy + 6, GetMapLevel()) > Height + 1)
 		return;
 	Player->StartMovement(dx, dy, GetObjectWaypoints(Bank.Type));
 	PlayerStepDX = dx;
@@ -571,7 +572,7 @@ void DoPlayerStep()
 
 // 0x4510f0, line 347. Computes the path to the destination and starts its
 // first step; 1 if there is a path. A result of 2 from the path finder
-// (FUN_004bee00) keeps the destination.
+// (FindPath) keeps the destination.
 int FindPlayerPath()
 {
 	TBEGIN
@@ -586,10 +587,10 @@ int FindPlayerPath()
 		return 0;
 	}
 	int x, y, z;
-	FUN_004b08c0(&x, &y, &z);
+	GetMapPosition(&x, &y, &z);
 	x += PlayerStepDX;
 	y += PlayerStepDY;
-	int Result = FUN_004bee00(x, y, z, DestinationX, DestinationY, DestinationZ, DestinationExact,
+	int Result = FindPath(x, y, z, DestinationX, DestinationY, DestinationZ, DestinationExact,
 		&NumberOfPlayerSteps, PlayerSteps, DestinationDiagonal);
 	if (Result != 2)
 		DestinationX = 0;
@@ -634,9 +635,9 @@ int SetPlayerDestination(int x, int y, int z, bool Exact, bool Diagonal)
 	DestinationZ = z;
 	DestinationExact = Exact;
 	DestinationDiagonal = Diagonal;
-	FUN_004b0960(&x, &y, &z);
-	if (In(x,1,15) && In(y,1,11) && z == FUN_004b08f0() && (x != 8 || y != 6)) {
-		if (!FUN_004be130(x, y, z, true)) {
+	AbsoluteToRelative(&x, &y, &z);
+	if (In(x,1,15) && In(y,1,11) && z == GetMapLevel() && (x != 8 || y != 6)) {
+		if (!IsFieldPassable(x, y, z, true)) {
 			SetStatusMessage("Sorry, not possible.", false);
 			DestinationX = 0;
 			return 0;

@@ -38,3 +38,8 @@ start	end	file	evidence
 0x452c50	0x452c6f	Container.h	vector<int> and vector<TDialogText> destructors (delete[] entry at +0x1c / +0x30), called from unwind funclets; the static initialisers' atexit handlers (0x55a320...) inline the same code
 0x452eb0	0x45322f	Container.h	vector<TDialogText>::operator() (0x18-byte element, element constructor 0x452c70), DialogElements.cpp
 0x453300	0x45392f	Container.h	vector<int>(min,max,block,init) 0x453300 lines 355-356 and vector<TDialogText>(min,max,block) 0x453600 lines 369-370, both first used by DialogElements.cpp
+0x4b0880	0x4b0b1f	Map.cpp	MainWindow/Map gap: the inline TPathNode constructor 0x4b0880 (Ghidra missed it; called only by matrix<TPathNode> of FindPath) and the position, coordinate and ambient-light functions, which use only Map.cpp data (0x5d16c4-0x5d16f0, 0x7152d0-0x7152e4; Map data spans 0x5d16c0-0x7152e7 between MainWindow 0x5d16b0 and MapWindow 0x7152e8); line 1784 asserts AmbienteActualBrightness (0x5d16c4)
+0x4b0b20	0x4b0b2f	Container.h	matrix<TPathNode>::~matrix, called only from the unwind funclet of FindPath
+0x4b0b30	0x4b0bbf	Map.cpp	compiler-generated TAutomapBlock destructor (atexit iterator 0x55a2e0 for 0x5d4c40) and TMapPoint constructor (passed by array<TMapPoint>::array); both missed by Ghidra
+0x4b1410	0x4b143f	Map.cpp	inline TAutomapBlock constructor (static initialiser 0x559f90); missed by Ghidra
+0x4bf860	0x4bfb0b	MapWindow.cpp	Map/MapWindow gap: destructor, constructor and members of the class with vtable 0x56cf38, whose constructor 0x4bfa00 has the catch blocks of MapWindow.cpp line 130 (0x4bfb0c); 0x4bf930 calls Map.cpp GetAmbientColor

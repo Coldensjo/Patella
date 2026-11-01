@@ -12,11 +12,14 @@ extern uint8 PacketHeader[16];
 
 // Objects.cpp: a reference to an object (12 bytes, passed by value). Type
 // is named in MapWindow.cpp's "SrcObj.Type!=CREATURE" (CREATURE is 99);
-// the other field names are ours.
+// the other field names are ours. The default constructor clears the object:
+// Map.cpp's TMapPoint, ten TObjects and plain ints, has a compiler-generated
+// constructor (0x4b0b40) that zeroes exactly the ten objects. Written with
+// default member initializers so that the type stays an aggregate.
 struct TObject {
-	int Type;
-	int Data1;
-	int Data2;
+	int Type = 0;
+	int Data1 = 0;
+	int Data2 = 0;
 };
 
 // sysinc.cpp
@@ -28,45 +31,6 @@ regexp *regcomp(char *exp);                     // 0x50fa40, the result is mallo
 int regexec(regexp *prog, char *string);        // 0x50f360, 1 on a match
 
 // --- added for Communication.cpp ---
-
-// Temporary binary-layout view, to be moved into the Map.cpp header. The
-// creature view is now TCreature (Creatures.h).
-struct TCommunicationObject {
-	int Type;
-	uint32 Data;
-	uint32 Extra;
-};
-
-void FUN_004b08a0(int x, int y, int z); // 0x4b08a0, MainWindow.cpp|Map.cpp
-void FUN_004b08c0(int *x, int *y, int *z); // 0x4b08c0, MainWindow.cpp|Map.cpp
-int FUN_004b08f0(); // 0x4b08f0, MainWindow.cpp|Map.cpp
-void FUN_004b0910(int *x, int *y, int *z); // 0x4b0910, MainWindow.cpp|Map.cpp
-void FUN_004b0960(int *x, int *y, int *z); // 0x4b0960, MainWindow.cpp|Map.cpp
-void FUN_004b09e0(int Brightness, int Color); // 0x4b09e0, MainWindow.cpp|Map.cpp
-TCommunicationObject FUN_004b6140(int rx, int ry, int rz); // 0x4b6140, Map.cpp
-TCommunicationObject FUN_004b6510(); // 0x4b6510, Map.cpp
-TCommunicationObject FUN_004b6580(int rx, int ry, int rz, int Position); // 0x4b6580, Map.cpp
-void FUN_004b88f0(int rx, int ry, int rz, TCommunicationObject Object); // 0x4b88f0, Map.cpp
-void FUN_004b8ec0(int rx, int ry, int rz, TCommunicationObject Object); // 0x4b8ec0, Map.cpp
-bool FUN_004b9420(int rx, int ry, int rz, int Position); // 0x4b9420, Map.cpp
-void FUN_004b9940(int rx, int ry, int rz, int Position, TCommunicationObject Object); // 0x4b9940, Map.cpp
-void FUN_004bab40(int rx, int ry, int rz, int Effect); // 0x4bab40, Map.cpp
-void FUN_004bad00(int rx, int ry, int rz, int Color, const char *Text); // 0x4bad00, Map.cpp
-void FUN_004bb0c0(int sx, int sy, int sz, int dx, int dy, int dz, int Effect); // 0x4bb0c0, Map.cpp
-void FUN_004bc720(int rx, int ry, int rz, bool KeepCreatures); // 0x4bc720, Map.cpp
-void FUN_004bccb0(); // 0x4bccb0, Map.cpp
-void FUN_004bd560(int dx, int dy); // 0x4bd560, Map.cpp
-void FUN_004bdb70(int dz); // 0x4bdb70, Map.cpp
-void FUN_004bdd70(int rx, int ry, int rz); // 0x4bdd70, Map.cpp
-void FUN_004beb90(int rx, int ry); // 0x4beb90, Map.cpp
-
-bool FieldRefreshRequested(int rx, int ry, int rz); // 0x4be750, Map.cpp
-
-// --- added for Creatures.cpp ---
-bool FUN_004be130(int x, int y, int z, bool Param4); // 0x4be130, Map.cpp; screen coordinates, the field can be entered
-int FUN_004bdf30(int x, int y, int z); // 0x4bdf30, Map.cpp; screen coordinates, height of the field
-int FUN_004bee00(int x, int y, int z, int DestX, int DestY, int DestZ, bool Exact, int *Steps,
-	int *Directions, bool Diagonal);   // 0x4bee00, Map.cpp; path finder, at most 10 steps; 1 or 2 found, -1..-4 errors
 
 extern uint32 DAT_005cc758; // 0x5cc758, graphics.cpp; Tibia.pic signature
 extern uint32 DAT_005ccb64; // 0x5ccb64, graphics.cpp; Tibia.spr signature
@@ -87,6 +51,17 @@ struct TRect {     // passed by value (16 bytes)
 };
 
 struct TRGBColor { // passed by value (12 bytes)
+	TRGBColor() {}
+	TRGBColor(int r, int g, int b) : R(r), G(g), B(b) {}
+	// 0x425950 (out-of-line copy between ConsoleWindow.cpp and
+	// ContentWindows.cpp; inlined in Map.cpp's SetAmbientLight): a colour of
+	// the 6x6x6 palette, Color = R*36 + G*6 + B with steps of 51.
+	TRGBColor(int Color)
+	{
+		R = Color / 36 * 51;
+		B = Color % 6 * 51;
+		G = Color / 6 % 6 * 51;
+	}
 	int R, G, B;
 };
 
@@ -346,16 +321,10 @@ void FUN_00498160();                   // 0x498160, initialises GUIStyle among o
 bool FUN_004a1480(int Key);            // 0x4a1480
 void FUN_004a27c0();                   // 0x4a27c0
 
-// Between MainFrm.cpp and MainWindow.cpp, and MainWindow.cpp and Map.cpp
+// Between MainFrm.cpp and MainWindow.cpp
 void FUN_004ac090();                   // 0x4ac090
-void FUN_004b09e0(int Param1, int Param2); // 0x4b09e0
-void FUN_004b0a70();                   // 0x4b0a70
 
 // Map.cpp
-void FUN_004b5760();                   // 0x4b5760
-void FUN_004bba70();                   // 0x4bba70, line 807
-void FUN_004bccb0();                   // 0x4bccb0
-void FUN_004bf620(void (*Callback)(int CreatureID)); // 0x4bf620
 
 // Objects.cpp
 

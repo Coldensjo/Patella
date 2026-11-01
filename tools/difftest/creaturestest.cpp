@@ -16,6 +16,7 @@
 
 #include "difftest.h"
 #include "../../src/Help.h"
+#include "../../src/Map.h"
 #include "../../src/Creatures.h"
 #include "../../src/Objects.h"
 #include "../../src/Preferences.h"
@@ -30,12 +31,12 @@ enum { OURS = 0, ORIGINAL = 1 };
 
 // --- Shared fake world -----------------------------------------------------
 
-static int CenterX = 1000, CenterY = 1000, CenterZ = 7; // FUN_004b08c0
-static int FakeLevel = 3;                                // FUN_004b08f0
-static int FieldType[16][16];                            // FUN_004b6140, by screen x/y
-static bool FieldFree[16][16];                           // FUN_004be130
-static int FieldHeight[16][16];                          // FUN_004bdf30
-static int PathResult, PathCount, PathDirections[10];    // FUN_004bee00
+static int CenterX = 1000, CenterY = 1000, CenterZ = 7; // GetMapPosition
+static int FakeLevel = 3;                                // GetMapLevel
+static int FieldType[16][16];                            // GetFirstObject, by screen x/y
+static bool FieldFree[16][16];                           // IsFieldPassable
+static int FieldHeight[16][16];                          // GetFieldHeight
+static int PathResult, PathCount, PathDirections[10];    // FindPath
 struct TPathCall {
 	int Args[6];
 	bool Exact, Diagonal;
@@ -46,12 +47,12 @@ static std::vector<std::string> MonsterHints[2];
 static __time32_t FixedTime = 1700000000;
 
 static void GetCenter(int *x, int *y, int *z) { *x = CenterX; *y = CenterY; *z = CenterZ; }
-static TCommunicationObject Field(int x, int y)
+static TObject Field(int x, int y)
 {
-	TCommunicationObject Object;
+	TObject Object;
 	Object.Type = FieldType[x & 15][y & 15];
-	Object.Data = 0;
-	Object.Extra = 0;
+	Object.Data1 = 0;
+	Object.Data2 = 0;
 	return Object;
 }
 static void ToScreen(int *x, int *y, int *z)
@@ -73,14 +74,16 @@ static int Path(int Side, int x, int y, int z, int DestX, int DestY, int DestZ, 
 	return PathResult;
 }
 
-// The reconstructed side's external functions.
-void FUN_004b08c0(int *x, int *y, int *z) { GetCenter(x, y, z); }
-int FUN_004b08f0() { return FakeLevel; }
-TCommunicationObject FUN_004b6140(int rx, int ry, int rz) { (void)rz; return Field(rx, ry); }
-bool FUN_004be130(int x, int y, int z, bool Param4) { (void)z; (void)Param4; return FieldFree[x & 15][y & 15]; }
-int FUN_004bdf30(int x, int y, int z) { (void)z; return FieldHeight[x & 15][y & 15]; }
-void FUN_004b0960(int *x, int *y, int *z) { ToScreen(x, y, z); }
-int FUN_004bee00(int x, int y, int z, int DestX, int DestY, int DestZ, bool Exact, int *Steps,
+// Our side's Map.cpp functions are redirected to these fakes (PatchOwn) in
+// PatchCreatures; maptest.cpp runs before this test, so nothing needs them
+// afterwards.
+static void __cdecl FakeGetMapPosition(int *x, int *y, int *z) { GetCenter(x, y, z); }
+static int __cdecl FakeGetMapLevel() { return FakeLevel; }
+static TObject __cdecl FakeGetFirstObject(int rx, int ry, int rz) { (void)rz; return Field(rx, ry); }
+static bool __cdecl FakeIsFieldPassable(int x, int y, int z, bool Param4) { (void)z; (void)Param4; return FieldFree[x & 15][y & 15]; }
+static int __cdecl FakeGetFieldHeight(int x, int y, int z) { (void)z; return FieldHeight[x & 15][y & 15]; }
+static void __cdecl FakeAbsoluteToRelative(int *x, int *y, int *z) { ToScreen(x, y, z); }
+static int __cdecl FakeFindPath(int x, int y, int z, int DestX, int DestY, int DestZ, bool Exact, int *Steps,
 	int *Directions, bool Diagonal)
 {
 	return Path(OURS, x, y, z, DestX, DestY, DestZ, Exact, Steps, Directions, Diagonal);
@@ -103,7 +106,7 @@ static void PatchOwn(void *Function, void *Target)
 // Replacements patched into the image.
 static void __cdecl ImageGetCenter(int *x, int *y, int *z) { GetCenter(x, y, z); }
 static int __cdecl ImageGetLevel() { return FakeLevel; }
-static TCommunicationObject __cdecl ImageField(int x, int y, int z) { (void)z; return Field(x, y); }
+static TObject __cdecl ImageField(int x, int y, int z) { (void)z; return Field(x, y); }
 static bool __cdecl ImageFieldFree(int x, int y, int z, bool Param4) { (void)z; (void)Param4; return FieldFree[x & 15][y & 15]; }
 static int __cdecl ImageFieldHeight(int x, int y, int z) { (void)z; return FieldHeight[x & 15][y & 15]; }
 static void __cdecl ImageToScreen(int *x, int *y, int *z) { ToScreen(x, y, z); }
@@ -163,6 +166,13 @@ static void PatchCreatures()
 	PatchJump(0x4a3460, (void *)ImageMonsterHint);
 	PatchOwn((void *)AddEventHelp, (void *)OurHint);
 	PatchOwn((void *)CheckEventHelpName, (void *)OurMonsterHint);
+	PatchOwn((void *)GetMapPosition, (void *)FakeGetMapPosition);
+	PatchOwn((void *)GetMapLevel, (void *)FakeGetMapLevel);
+	PatchOwn((void *)GetFirstObject, (void *)FakeGetFirstObject);
+	PatchOwn((void *)IsFieldPassable, (void *)FakeIsFieldPassable);
+	PatchOwn((void *)GetFieldHeight, (void *)FakeGetFieldHeight);
+	PatchOwn((void *)AbsoluteToRelative, (void *)FakeAbsoluteToRelative);
+	PatchOwn((void *)FindPath, (void *)FakeFindPath);
 	PatchJump(0x5121ea, (void *)ImageTime);
 	PatchJump(0x511d6b, (void *)ImageSprintf);
 	PatchJump(0x512539, (void *)ImageStricmp);
