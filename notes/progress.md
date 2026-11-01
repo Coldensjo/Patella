@@ -14,28 +14,20 @@ Read this and `git log` first when resuming.
 7. MapWindow.cpp and the MapWindow/Network gap.
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
-10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp (delegates, merged).
+10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-Item 10 (remaining files). Done so far in item 10: sysinc.cpp, Help.cpp,
-Inventory.cpp, MainFrm.cpp. Settled but not reconstructed: SurfaceDX.cpp
-range 0x4eae70-0x4ed19f, MainWindow.cpp gap 0x4ac010-0x4ac20d.
-
-Plan (order changed on purpose, see decisions.md "Order of the GUI files"):
-GUI.cpp next (it defines TWindow and the base classes that MainWindow,
-DialogWindow, DialogElements, Dialogs, ContentWindows, ConsoleWindow,
-ContextMenus and MapWindow derive from), as a delegate when a slot is free;
-then MainWindow.cpp; then the derived files smallest first. In parallel,
-the non-GUI files: SurfaceGL.cpp, surfaceDX9.cpp, SurfaceDX.cpp, graphics.cpp.
+Stopped at the user's request after merging GUI.cpp and graphics.cpp
+(November 1, 2026). Next when resuming: MapWindow.cpp (item 7, derives from
+GUI.cpp), then MainWindow.cpp and the other window files smallest first
+(DialogWindow, ContextMenus, ConsoleWindow, ContentWindows, DialogElements,
+Dialogs), and the surface files (SurfaceDX.cpp with its settled range
+0x4eae70-0x4ed19f, surfaceDX9.cpp, SurfaceGL.cpp) with their gaps.
 
 ## Delegates (running)
 
-- graphics.cpp + DialogWindow/graphics gap: same story; WIP f867cba on
-  t3/reconstruct-graphics-cpp, continued on t3/graphics-cpp-finish.
-Both told: real names only, no shims, replace their external.h views and
-rename the callers. Review each against decomp/clean and the binary before
-merging.
+None.
 
 ## Open questions
 
@@ -43,7 +35,7 @@ merging.
 
 ## Last difftest
 
-11,245,343 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,238,330 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -63,3 +55,7 @@ merging.
   the original (e.g. opening a missing file).
 - tools\difftestuild.cmd can fail once without a message (a difftest.exe
   still locked from the previous run); kill difftest.exe and run it again.
+- Run tools\difftest\build.cmd from PowerShell (cmd /c ...). Launched from the
+  Git Bash tool it sometimes ends with exit 1 and no output, while the same
+  build passes from PowerShell; build.cmd sets a private TEMP per checkout
+  because the tests write to fixed folders under %TEMP%.
