@@ -55,7 +55,7 @@ address	name	kind	confidence	note
 0x4cf390	ConnectToGameServer	game	high	Network.cpp line 802
 0x4cf5e0	TSocket_OnConnect	game	high	Network.cpp line 835; vtable +0x2c
 0x4cf850	CheckConnectionTimeout	game	high	Network.cpp line 518
-0x4db2a0	GetTestServerLogin	game	medium	returns 0x71c318
+0x4db2a0	GetTestServerLogin	game	high	Preferences.cpp: option "TestServer" (0x71c318)
 0x4e71e0	SetConnectionState	game	medium	Status.cpp: 0x71c588
 0x4e71f0	GetConnectionState	game	medium	Status.cpp: 0x71c588
 0x4e72c0	GetActiveCharacter	game	high	Status.cpp: name from an assertion string
@@ -228,3 +228,92 @@ address	name	kind	confidence	note
 0x4fd1b0	SetClipboardText	game	medium	sysinc.cpp lines 139-143, "textdata!=NULL"
 0x50fa40	regcomp	library	high	Henry Spencer regexp
 0x50f360	regexec	library	high	Henry Spencer regexp
+0x4db2b0	SetTestServerLogin	game	high	Preferences.cpp
+0x4db2c0	SetViewMode	game	high	Preferences.cpp: "ViewMode" in a MainFrm.cpp catch block
+0x4db2d0	SetFullscreenMode	game	medium	Preferences.cpp: option "FullscreenMode", 4 ints
+0x4db300	SetWindowsMousepointer	game	high	Preferences.cpp: option "WindowsMousepointer"
+0x4db310	SetLightEffects	game	high	Preferences.cpp: option "LightEffects"
+0x4db320	SetTextualEffects	game	high	Preferences.cpp: option "TextualEffects"
+0x4db330	SetCreatureInfo	game	high	Preferences.cpp: option "CreatureInfo"
+0x4db340	SetNoStretching	game	high	Preferences.cpp: option "NoStretching" (2 = not set)
+0x4db360	SetDefaultNoStretching	game	medium	Preferences.cpp: sets NoStretching only while it is 2
+0x4db380	SetConfineFramerate	game	high	Preferences.cpp: option "ConfineFramerate"
+0x4db390	SetEngine	game	high	Preferences.cpp: option "Engine"
+0x4db3a0	GetViewMode	game	high	Preferences.cpp
+0x4db3b0	GetFullscreenMode	game	medium	Preferences.cpp
+0x4db3c0	GetWindowsMousepointer	game	high	Preferences.cpp
+0x4db3d0	GetLightEffects	game	high	Preferences.cpp
+0x4db3e0	GetTextualEffects	game	high	Preferences.cpp
+0x4db3f0	GetCreatureInfo	game	high	Preferences.cpp
+0x4db400	GetNoStretching	game	high	Preferences.cpp
+0x4db410	GetConfineFramerate	game	high	Preferences.cpp
+0x4db420	GetEngine	game	high	Preferences.cpp
+0x4db430	SetWindowedMode	game	high	Preferences.cpp: option "WindowedMode" (x, y, width, height, maximized)
+0x4db470	GetWindowedMode	game	high	Preferences.cpp
+0x4db4b0	SetConsoleHeight	game	high	Preferences.cpp: option "ConsoleHeight"
+0x4db4c0	GetConsoleHeight	game	high	Preferences.cpp
+0x4db4d0	SetAutomapZoom	game	high	Preferences.cpp: option "AutomapZoom"
+0x4db4e0	GetAutomapZoom	game	high	Preferences.cpp
+0x4db4f0	SetBuddySortmethods	game	high	Preferences.cpp: option "BuddySortmethods", 3 ints
+0x4db510	GetBuddySortmethods	game	high	Preferences.cpp
+0x4db530	SetBuddyHideOffline	game	high	Preferences.cpp: option "BuddyHideOffline"
+0x4db540	GetBuddyHideOffline	game	high	Preferences.cpp
+0x4db550	ClearOpenDialogs	game	medium	Preferences.cpp: "OpenDialogs" count = 0
+0x4db560	GetMotD	game	medium	Preferences.cpp: "No current information." when none
+0x4db570	SetInfoMessages	game	high	Preferences.cpp: option "InfoMessages"
+0x4db580	SetEventMessages	game	high	Preferences.cpp: option "EventMessages"
+0x4db590	SetStatusMessages	game	high	Preferences.cpp: option "StatusMessages"
+0x4db5a0	SetTimeStamps	game	high	Preferences.cpp: option "TimeStamps"
+0x4db5b0	SetPrivateMessages	game	high	Preferences.cpp: option "PrivateMessages"
+0x4db5c0	GetInfoMessages	game	high	Preferences.cpp
+0x4db5d0	GetEventMessages	game	high	Preferences.cpp
+0x4db5e0	GetStatusMessages	game	high	Preferences.cpp
+0x4db5f0	GetTimeStamps	game	high	Preferences.cpp
+0x4db600	GetPrivateMessages	game	high	Preferences.cpp
+0x4db610	ClearOpenChannels	game	medium	Preferences.cpp: "OpenChannel" count = 0
+0x4db620	SetClassicControl	game	high	Preferences.cpp: option "ClassicControl"
+0x4db630	SetAutoChaseOff	game	high	Preferences.cpp: option "AutoChaseOff"
+0x4db640	GetClassicControl	game	high	Preferences.cpp
+0x4db650	GetAutoChaseOff	game	high	Preferences.cpp
+0x4db660	SetAttackMode	game	high	Preferences.cpp: option "AttackMode"
+0x4db670	SetChaseMode	game	high	Preferences.cpp: option "ChaseMode"
+0x4db680	SetSecureMode	game	high	Preferences.cpp: option "SecureMode" (a byte)
+0x4db690	GetAttackMode	game	high	Preferences.cpp
+0x4db6a0	GetChaseMode	game	high	Preferences.cpp
+0x4db6b0	GetSecureMode	game	high	Preferences.cpp
+0x4db6c0	SetShowNewHints	game	high	Preferences.cpp: option "ShowNewHints"
+0x4db6d0	GetShowNewHints	game	high	Preferences.cpp
+0x4db6e0	GetLevelBar	game	high	Preferences.cpp: option "LevelBar"
+0x4db6f0	GetMagLevelBar	game	high	Preferences.cpp: option "MagLevelBar"
+0x4db700	SetLevelBar	game	high	Preferences.cpp
+0x4db710	SetMagLevelBar	game	high	Preferences.cpp
+0x4db720	SetDefaultPreferences	game	medium	Preferences.cpp: default values of all options
+0x4db880	vector_TContentWindow_at	game	high	Container.h vector<TContentWindow>::operator(), instantiated in Preferences.cpp
+0x4dba60	vector_TBuddy_at	game	high	Container.h vector<TBuddy>::operator(), instantiated in Preferences.cpp
+0x4dbcd0	SetContentWindowSize	game	medium	Preferences.cpp: option "ContentWindow = (ID,Size)"
+0x4dbd50	GetContentWindowSize	game	medium	Preferences.cpp
+0x4dbd90	GetOpenDialogs	game	medium	Preferences.cpp: new array and count
+0x4dbde0	GetOpenChannels	game	medium	Preferences.cpp: new array and count
+0x4dbe30	AddKnownHint	game	medium	Preferences.cpp: option "KnownHints"
+0x4dbe50	IsKnownHint	game	medium	Preferences.cpp
+0x4dbe90	vector_TContentWindow_ctor	game	high	Container.h vector<TContentWindow>::vector(min, max, block), lines 369-370; not found by Ghidra
+0x4dc170	vector_TBuddy_ctor	game	high	Container.h vector<TBuddy>::vector(min, max, block), lines 369-370; not found by Ghidra
+0x4dc450	SetHotkey	game	high	Preferences.cpp lines 223-225, HOTKEYS/HOTKEY_LENGTH
+0x4dc7e0	GetHotkey	game	high	Preferences.cpp line 235
+0x4dc950	AddOpenDialog	game	medium	Preferences.cpp line 393, Identifier
+0x4dcac0	SetMotD	game	medium	Preferences.cpp line 425: "<number>\n<text>", true when the number is new
+0x4dccb0	AddOpenChannel	game	medium	Preferences.cpp line 551, Identifier
+0x4dce20	FindBuddy	game	medium	Preferences.cpp line 680, CharacterID
+0x4dcfb0	SetBuddy	game	medium	Preferences.cpp lines 691-693, BUDDYDESCRIPTION_LENGTH
+0x4dd360	DeleteBuddy	game	medium	Preferences.cpp line 711
+0x4dd4c0	GetBuddyIcon	game	low	Preferences.cpp line 722; the int of "Buddy = (...)", meaning guessed
+0x4dd640	GetBuddyDescription	game	high	Preferences.cpp line 733
+0x4dd7c0	GetBuddyNotify	game	medium	Preferences.cpp line 744; enables "%s has logged in."
+0x4dd940	GetSkillBar	game	high	Preferences.cpp line 825, "In(SkillNumber,0,SKILLS-1)"; option "SkillBars"
+0x4ddaa0	SetSkillBar	game	high	Preferences.cpp line 850
+0x453300	vector_int_ctor_init	game	high	Container.h vector<int>::vector(min, max, block, init), lines 355-356
+0x4a2b90	vector_int_ctor	game	high	Container.h vector<int>::vector(min, max, block), lines 369-370; not found by Ghidra
+0x452ac0	vector_int_at	game	high	Container.h vector<int>::operator()
+0x501400	FUN_00501400	game	low	Talk.cpp line 982: frees the strings of a list; called by SetDefaultPreferences
+0x51262a	atol	library	high	CRT atol
+0x513620	strchr	library	high	CRT strchr

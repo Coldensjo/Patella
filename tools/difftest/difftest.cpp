@@ -279,7 +279,7 @@ static int RunChild(int argc, char **argv)
 	char CommandLine[2 * MAX_PATH];
 	char Self[MAX_PATH];
 	GetModuleFileNameA(NULL, Self, sizeof(Self));
-	snprintf(CommandLine, sizeof(CommandLine), "\"%s\" --child \"%s\"", Self, argc > 1 ? argv[1] : "C:\Tibia\Tibia.exe");
+	snprintf(CommandLine, sizeof(CommandLine), "\"%s\" --child \"%s\"", Self, argc > 1 ? argv[1] : "C:\\Tibia\\Tibia.exe");
 	STARTUPINFOA Startup = {sizeof(Startup)};
 	Startup.dwFlags = STARTF_USESTDHANDLES;
 	Startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -337,11 +337,33 @@ static bool MapImage(const char *Path)
 	return true;
 }
 
+// Reports where a crash happened; the original code has no symbols.
+static LONG CALLBACK ReportCrash(EXCEPTION_POINTERS *Info)
+{
+	DWORD Code = Info->ExceptionRecord->ExceptionCode;
+	if (Code == EXCEPTION_ACCESS_VIOLATION || Code == EXCEPTION_ILLEGAL_INSTRUCTION
+	 || Code == EXCEPTION_STACK_OVERFLOW || Code == EXCEPTION_INT_DIVIDE_BY_ZERO) {
+		printf("crash: exception 0x%08lx at 0x%p, eip 0x%08lx esp 0x%08lx\n", Code,
+			Info->ExceptionRecord->ExceptionAddress, (unsigned long)Info->ContextRecord->Eip,
+			(unsigned long)Info->ContextRecord->Esp);
+		if (Code == EXCEPTION_ACCESS_VIOLATION)
+			printf("crash: %s 0x%08lx\n", Info->ExceptionRecord->ExceptionInformation[0] ? "writing" : "reading",
+				(unsigned long)Info->ExceptionRecord->ExceptionInformation[1]);
+		uint32 *Stack = (uint32 *)(uintptr_t)Info->ContextRecord->Esp;
+		for (int i = 0; i < 12; i++) // return addresses show the caller
+			printf("crash: [esp%+d] 0x%08x\n", i * 4, Stack[i]);
+		printf("crash: ebp 0x%08lx\n", (unsigned long)Info->ContextRecord->Ebp);
+	}
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
 int main(int argc, char **argv)
 {
 	if (argc < 2 || strcmp(argv[1], "--child") != 0)
 		return RunChild(argc, argv);
-	if (!MapImage(argc > 2 ? argv[2] : "C:\Tibia\Tibia.exe"))
+	setvbuf(stdout, NULL, _IONBF, 0); // keep the output of a crashed run
+	AddVectoredExceptionHandler(1, ReportCrash);
+	if (!MapImage(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe"))
 		return 2;
 	TestXTEA();
 	TestCharacters();
@@ -351,6 +373,7 @@ int main(int argc, char **argv)
 	TestBuffers();
 	TestSkins();
 	TestStatus();
+	TestPreferences();
 	printf("%d checks, %d failures\n", Checks, Failures);
 	return Failures == 0 ? 0 : 1;
 }

@@ -54,7 +54,7 @@ static int __cdecl ImageSetClipboardText(char *textdata)
 static void OurLinkWarning() { LinkWarnings[OURS]++; }
 static void OriginalLinkWarning() { LinkWarnings[ORIGINAL]++; }
 
-static void PatchImage()
+void PatchImage()
 {
 	static bool Done = false;
 	if (Done)

@@ -8,9 +8,14 @@
 // current range grows it by block entries at a time (by its current size
 // when block is 0) and, if initialized is set, fills new entries with init.
 //
-// Instantiations reconstructed so far (Status.cpp):
-//   vector<TMessage>      constructor 0x4e7f50, operator() 0x4e7390
-//   vector<TErrorReport>  constructor 0x4e8230, operator() 0x4e7860
+// Instantiations reconstructed so far:
+//   vector<TMessage>        constructor 0x4e7f50, operator() 0x4e7390 (Status.cpp)
+//   vector<TErrorReport>    constructor 0x4e8230, operator() 0x4e7860 (Status.cpp)
+//   vector<TContentWindow>  constructor 0x4dbe90, operator() 0x4db880 (Preferences.cpp)
+//   vector<TBuddy>          constructor 0x4dc170, operator() 0x4dba60 (Preferences.cpp)
+// Preferences.cpp also uses vector<int>, whose code the linker kept from an
+// earlier object: constructors 0x453300 (with init) and 0x4a2b90,
+// operator() 0x452ac0.
 
 #pragma once
 
@@ -18,6 +23,7 @@
 
 template <class T> class vector {
 public:
+	vector(int min, int max, int block, T init);
 	vector(int min, int max, int block);
 	T &operator()(int i);
 
@@ -30,6 +36,23 @@ public:
 	T init;           // +0x15 or the next aligned offset
 	T *entry;
 };
+
+// Lines 353-358 (vector<int> at 0x453300). Every entry starts as init.
+template <class T> vector<T>::vector(int min, int max, int block, T init)
+{
+	this->min = min;
+	this->max = max;
+	start = min;
+	space = max - min + 1;
+	this->block = block;
+	initialized = true;
+	this->init = init;
+	TASSERT1(space>0, space);
+	TASSERT1(block>=0, block);
+	entry = new T[space];
+	for (int i = 0; i < space; i++)
+		entry[i] = init;
+}
 
 // Lines 368-370. No try block; the two assertions are the only EH states.
 template <class T> vector<T>::vector(int min, int max, int block)

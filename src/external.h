@@ -6,9 +6,6 @@
 
 #include "common.h"
 
-// Between Player.cpp and Preferences.cpp. Returns the "Test Server Login" option (0x71c318).
-bool GetTestServerLogin();                      // 0x4db2a0
-
 // First 16 bytes of the last received packet, at 0x5d1644 (owner unknown).
 extern uint8 PacketHeader[16];
 
@@ -20,6 +17,9 @@ struct TObject {
 	int Data1;
 	int Data2;
 };
+
+// Talk.cpp, line 982: frees the strings of a list (called when the options are reset).
+void FUN_00501400();                            // 0x501400
 
 // sysinc.cpp and the gap before it.
 int GetMilliseconds();                          // 0x4fcb90, timeGetTime() minus the start time

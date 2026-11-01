@@ -12,6 +12,7 @@
 #include "Network.h"
 #include "Utils.h"
 #include "TXTEA.h"
+#include "Preferences.h"
 #include "Status.h"
 #include "external.h"
 
