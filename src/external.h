@@ -173,3 +173,404 @@ extern uint32 DAT_00719d9c; // 0x719d9c, Objects.cpp; Tibia.dat signature
 extern int DAT_00719da0; // 0x719da0, Map.cpp/Inventory.cpp shared empty-object type; owner uncertain
 extern const char *PTR_s_Your_request_has_been_closed__005c0348; // 0x5c0348, Talk.cpp
 extern const char *PTR_s_The_channel_has_been_closed__You_005c034c; // 0x5c034c, Talk.cpp
+
+// --- added for Control.cpp ---
+
+struct TFullscreenMode; // Preferences.h
+// Functions in Communication.cpp, Status.cpp and Preferences.cpp keep their
+// FUN_ names until those files are merged; so do the other callees whose
+// purpose is not certain. Names from the binary: curEngine, ModalWindow,
+// GetActionState and GetAccountCharacters (assertion and catch strings), the
+// TSurface methods ExitSurfaces, TestEngine and InitSurfaces and the function
+// SurfaceExitInstance (error messages in ChangeEngine). The other class,
+// member and variable names are ours; member offsets are from the reads.
+
+struct TRect {     // passed by value (16 bytes)
+	int x, y, Width, Height;
+};
+
+struct TRGBColor { // passed by value (12 bytes)
+	int R, G, B;
+};
+
+struct TFont {     // passed by value (20 bytes)
+	int FontNumber;
+	TRGBColor Color;
+	int Unknown10;
+};
+
+// GUI.cpp: window base class. Only the slots Control.cpp calls are named;
+// the others keep the binary's vtable offsets.
+class TWindow {
+public:
+	virtual ~TWindow();                                    // +0x00, scalar deleting destructor
+	virtual void Unknown04();
+	virtual void Unknown08();
+	virtual void Unknown0C();
+	virtual void Unknown10();
+	virtual void Unknown14();
+	virtual void Unknown18();
+	virtual void Unknown1C();
+	virtual void Unknown20();
+	virtual void Unknown24();
+	virtual void Unknown28();
+	virtual void Unknown2C();
+	virtual void Unknown30();
+	virtual void SetSize(int Width, int Height);           // +0x34
+	virtual void SetPosition(int x, int y);                // +0x38
+	virtual void Unknown3C();
+	virtual void Unknown40();
+	virtual void Draw(int Surface, int x, int y);          // +0x44
+	virtual void Unknown48();
+	virtual void MouseMove(int x, int y);                  // +0x4c
+	virtual void LeftButtonDown(int x, int y, int Flags);  // +0x50
+	virtual void LeftButtonUp(int x, int y, int Flags);    // +0x54, Flags 0x200: both buttons
+	virtual void LeftButtonDoubleClick(int x, int y, int Flags); // +0x58
+	virtual void RightButtonUp(int x, int y, int Flags);   // +0x5c
+	virtual void MouseWheel(int x, int y, int Direction);  // +0x60, 1 up, 2 down, 6 left button held
+	virtual void MouseHover(int x, int y);                 // +0x64
+	virtual void HelpMouseMove(int x, int y);              // +0x68, action state 9
+	virtual void KeyPress(int Key);                        // +0x6c
+	virtual void Unknown70();
+	virtual void Unknown74();
+	virtual void Unknown78();
+	virtual void Unknown7C();
+	virtual void StopDragging();                           // +0x80
+	virtual int IsDragging();                              // +0x84
+
+	int Data04[4];
+	int X;      // +0x14
+	int Y;      // +0x18
+	int Width;  // +0x1c
+	int Height; // +0x20
+};
+
+// ConsoleWindow.cpp. Not instantiated here; the arrays stand for the members
+// before the ones used.
+struct TConsoleData34 {
+	int Data00[11];
+	int Data2C; // +0x2c, passed to the console text context menu
+};
+
+class TTextBuffer;
+
+class TConsoleWindow {
+public:
+	void FUN_00423060(TTextBuffer *TextBuffer, const char *Title); // 0x423060, lines 1977-1988
+	TTextBuffer *FUN_00425070(int RecvMode, int SendMode, INT_PTR Param3, INT_PTR Param4,
+		INT_PTR Param5);                                            // 0x425070, line 1965
+	void FUN_00425330(INT_PTR Param);                               // 0x425330, lines 2033-2044
+
+	int Data00[13];
+	TConsoleData34 *Data34; // +0x34
+};
+
+// Talk.cpp: the text buffer of a channel, returned by FUN_00425070.
+class TTextBuffer {
+public:
+	virtual void Unknown00();
+	virtual void Unknown04();
+	virtual void Unknown08();
+	virtual void Unknown0C();
+	virtual void Unknown10();
+	virtual void Unknown14();
+	virtual void Unknown18();
+	virtual void Unknown1C();
+	virtual void Unknown20();
+	virtual void Unknown24();
+	virtual void Unknown28();
+	virtual void Unknown2C();
+	virtual void Unknown30();
+	virtual void Unknown34();
+	virtual void Unknown38();
+	virtual void Unknown3C();
+	virtual void Unknown40(int Value); // +0x40
+};
+
+// MainWindow.cpp: the main game window (0x5d16b0).
+class TMainWindow : public TWindow {
+public:
+	void FUN_004ac9e0(int Container);  // 0x4ac9e0, line 511
+	void FUN_004acdb0(int Container);  // 0x4acdb0
+	void FUN_004acf60();               // 0x4acf60, line 576
+	void FUN_004ad650(int Value);      // 0x4ad650
+	void FUN_004af5e0(int InGame);     // 0x4af5e0, 1 entering the game, 0 leaving it
+	void FUN_004afec0();               // 0x4afec0, lines 560-561
+	void FUN_004b0230();               // 0x4b0230
+
+	int Data24[6];
+	TConsoleWindow *Console;           // +0x3c
+};
+
+// Owner unknown (after Control.cpp's data); also used by GUI and MainWindow code.
+extern TWindow *ModalWindow;      // 0x5d16ac, name from an assertion string
+extern TMainWindow *MainWindow;   // 0x5d16b0
+
+// ContextMenus.cpp: the context menus and the help bubble, all modal windows.
+class TContextMenu : public TWindow {
+public:
+	void FUN_00442110(TWindow *Parent); // 0x442110, lines 257-268 ("newX>=0")
+};
+class THelpBubble : public TContextMenu {         // size 0x30
+public:
+	THelpBubble(const char *HelpText);             // 0x441d60, line 106
+};
+class TObjectContextMenu : public TContextMenu {  // size 0x70; "Attack", "Follow"
+public:
+	TObjectContextMenu(int x, int y, int Width, int Height); // 0x443130, lines 560-643
+};
+class TCreatureContextMenu : public TContextMenu { // size 0x38; battle list
+public:
+	TCreatureContextMenu(INT_PTR CreatureID, int x, int y, int Width, int Height); // 0x443960, line 845
+};
+class TBuddyContextMenu : public TContextMenu {   // size 0x38; VIP list
+public:
+	TBuddyContextMenu(INT_PTR _CharacterID, int x, int y, int Width, int Height); // 0x443e20
+};
+class TTextContextMenu : public TContextMenu {    // size 0x3c; console text
+public:
+	TTextContextMenu(int Unknown, INT_PTR _LineNumber, int x, int y, int Width,
+		int Height);                                 // 0x444160, lines 1056-1057
+};
+class TRequestContextMenu : public TContextMenu { // size 0x3c; "Process %s", "Remove %s"
+public:
+	TRequestContextMenu(TConsoleWindow *_ConsoleWindow, INT_PTR _LineNumber, int x, int y,
+		int Width, int Height);                      // 0x444720, line 1181
+};
+class TChannelContextMenu : public TContextMenu { // size 0x3c; "Clear Window", "Save Window"
+public:
+	TChannelContextMenu(TConsoleWindow *_ConsoleWindow, int x, int y, int Width,
+		int Height);                                 // 0x444a70, lines 1248-1253
+};
+class TEditContextMenu : public TContextMenu {    // size 0x38; "Paste", "Select All"
+public:
+	TEditContextMenu(INT_PTR _Edit, int x, int y, int Width, int Height); // 0x444eb0, line 1324
+};
+class TMarkContextMenu : public TContextMenu {    // size 0xb4; "Set Mark", "Edit Mark"
+public:
+	TMarkContextMenu(INT_PTR _Data, int x, int y, int Width, int Height); // 0x4451e0, line 1379
+};
+class TSkillContextMenu : public TContextMenu {   // size 0x38; "Hide Level", "Show Club Fighting"
+public:
+	TSkillContextMenu(INT_PTR Data, int x, int y, int Width, int Height); // 0x4454f0, line 1442
+};
+
+// Between Status.cpp and SurfaceDX.cpp: the graphics engine (0 DirectX 5,
+// 1 OpenGL, 2 DirectX 9) and its surface object (0x71d0cc).
+extern int curEngine;                 // 0x71d0c4, name from the catch strings
+
+class TSurface {
+public:
+	virtual ~TSurface();                                              // +0x00
+	virtual void Unknown04();
+	virtual void Unknown08();
+	virtual void Unknown0C();
+	virtual void Unknown10();
+	virtual void FillRectangle(int Surface, TRect Rect, TRGBColor Color); // +0x14
+	virtual void Unknown18();
+	virtual void Unknown1C();
+	virtual void Unknown20();
+	virtual void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color); // +0x24
+	virtual void Unknown28();
+	virtual void Unknown2C();
+	virtual void Unknown30();
+	virtual void Unknown34();
+	virtual void Unknown38();
+	virtual void Unknown3C();
+	virtual void Unknown40();
+	virtual void Unknown44();
+	virtual void Unknown48();
+	virtual void Unknown4C();
+	virtual void Unknown50();
+	virtual void Unknown54();
+	virtual void Unknown58();
+	virtual void Unknown5C();
+	virtual void Unknown60();
+	virtual void Unknown64();
+	virtual void Unknown68();
+	virtual void Unknown6C();
+	virtual void Unknown70();
+	virtual void Unknown74();
+	virtual void Unknown78();
+	virtual void Unknown7C();
+	virtual void Unknown80();
+	virtual void FinishFrame();                                       // +0x84
+	virtual bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force); // +0x88
+	virtual void Unknown8C();
+	virtual void Unknown90();
+	virtual void Unknown94();
+	virtual void Unknown98();
+	virtual bool Unknown9C(int Value);                                // +0x9c
+	virtual bool IsUnavailable();                                     // +0xa0
+	virtual void UnknownA4();
+	virtual void UnknownA8();
+	virtual void UnknownAC();
+	virtual double GetFPS();                                          // +0xb0
+	virtual void InitSurfaces();                                      // +0xb4
+	virtual void ExitSurfaces();                                      // +0xb8
+	virtual bool TestEngine();                                        // +0xbc
+};
+
+TSurface *FUN_004eaa90();             // 0x4eaa90, creates the surface for curEngine if there is none
+void SurfaceExitInstance();           // 0x4eab60, deletes the surface
+
+// GUI.cpp: style data at 0x5ccfc8 (constructor 0x496800, filled in by 0x498160).
+struct TGUIPoint {
+	int x, y;
+};
+struct TGUIStyle {
+	TGUIPoint CursorHotspot1;         // +0x00 (0x5ccfc8), mouse cursors 1-6
+	TGUIPoint CursorHotspot2;         // +0x08
+	TGUIPoint CursorHotspot3;         // +0x10
+	TGUIPoint CursorHotspot4;         // +0x18
+	TGUIPoint CursorHotspot5;         // +0x20
+	TGUIPoint CursorHotspot6;         // +0x28
+	TFont TooltipFont;                // +0x30 (0x5ccff8)
+	int TooltipBorder;                // +0x44 (0x5cd00c)
+	TRGBColor TooltipBackground;      // +0x48 (0x5cd010)
+	TRGBColor TooltipFrame;           // +0x54 (0x5cd01c)
+};
+extern TGUIStyle GUIStyle;            // 0x5ccfc8
+
+// Text table (owner unknown, .data 0x5c0c80-0x5c0d7c).
+extern const char *TextCharacterListLoading; // 0x5c0ce8
+extern const char *TextConnectingGameWorld;  // 0x5c0cec
+extern const char *TextWaitForCharacterList; // 0x5c0cf0
+extern const char *TextLinkCopyWarning;      // 0x5c0cfc
+extern const char *TextNeverGiveAccount;     // 0x5c0d00
+extern const char *TextRuleViolations;       // 0x5c0d78
+
+// Communication.cpp
+void FUN_00401000();                   // 0x401000, before Communication.cpp; clears 0x5c4344
+
+// Creatures.cpp
+void FUN_0044c860();                   // 0x44c860
+void FUN_0044c8c0(int CreatureID);     // 0x44c8c0, a callback for FUN_004bf620
+void FUN_004509e0();                   // 0x4509e0
+bool FUN_00451ab0();                   // 0x451ab0
+void FUN_00452190();                   // 0x452190
+
+// Dialogs.cpp: each creates a dialog and returns it as the new modal window.
+TWindow *FUN_0047f8a0(const char *Title, const char *Text);             // 0x47f8a0, message box
+TWindow *FUN_0047faf0(const char *Title, const char *Text);             // 0x47faf0
+TWindow *FUN_0047fd30(const char *Title, const char *Text, TWindow *Parent); // 0x47fd30, "Abort"
+TWindow *FUN_0047ff60(const char *Title, const char *Text, INT_PTR Param);   // 0x47ff60, "Abort"
+TWindow *FUN_004801c0(const char *Title, INT_PTR Param1, INT_PTR Param2);    // 0x4801c0, "Abort"
+TWindow *FUN_004803f0(const char *Title, const char *Text, TWindow *Parent, int Param4,
+	int Param5);                                                         // 0x4803f0
+TWindow *FUN_00480640(const char *Title, const char *Text, TWindow *Parent); // 0x480640, "Logout"
+TWindow *FUN_004808b0(void (*OpenURL)(const char *URL));                // 0x4808b0, "Official Website"
+TWindow *FUN_00480cd0();                                                // 0x480cd0, "Move Objects"
+TWindow *FUN_00480f40(void (*OpenURL)(const char *URL));                // 0x480f40, "Enter Game"
+TWindow *FUN_00481160(INT_PTR Timeout);                                 // 0x481160, "Select Character"
+TWindow *FUN_00481370(INT_PTR Param1, INT_PTR Param2, INT_PTR Param3);  // 0x481370
+TWindow *FUN_004817c0(INT_PTR Param1, INT_PTR Param2);                  // 0x4817c0, "Edit List"
+TWindow *FUN_004819f0(INT_PTR Param);                                   // 0x4819f0, "Select Outfit"
+TWindow *FUN_00481bf0();                                                // 0x481bf0, "Reporting"
+TWindow *FUN_00481e00(INT_PTR Param1, INT_PTR *Param2, INT_PTR Param3); // 0x481e00, "New Channel"
+TWindow *FUN_00482010();                // 0x482010, "Invite player to private chat channel"
+TWindow *FUN_00482210();                // 0x482210, "Exclude player from private chat channel"
+TWindow *FUN_00482410();                // 0x482410, "Edit Ignore List and White List"
+TWindow *FUN_00482640();                // 0x482640, "Report Rule Violation"
+TWindow *FUN_00482870();                // 0x482870, "Add to VIP list"
+TWindow *FUN_00482a70(INT_PTR CharacterID);                             // 0x482a70, "Change player in VIP list"
+TWindow *FUN_00482c80(INT_PTR Param1, INT_PTR DataSize);                // 0x482c80, "Updating ... Please wait"
+TWindow *FUN_00482ea0(void (*OpenURL)(const char *URL));                // 0x482ea0
+TWindow *FUN_004830c0();                                                // 0x4830c0, "Hints for Tibia"
+TWindow *FUN_004832e0(INT_PTR Param1, INT_PTR Param2);                  // 0x4832e0, "Edit Mark"
+TWindow *FUN_00483500();                                                // 0x483500, "Options"
+TWindow *FUN_00483730(void (*OpenURL)(const char *URL));                // 0x483730, "General Options"
+TWindow *FUN_00483950(void (*OpenURL)(const char *URL), void (*SetDisplayMode)(int Mode),
+	TWindow *Parent);                                                   // 0x483950, "Graphics Options"
+TWindow *FUN_00483b80(void (*OpenURL)(const char *URL), INT_PTR Param); // 0x483b80, "Advanced Graphics Options"
+TWindow *FUN_00483dc0(void (*OpenURL)(const char *URL));                // 0x483dc0, "Console Options"
+TWindow *FUN_00483fe0(void (*OpenURL)(const char *URL));                // 0x483fe0, "Network Options"
+TWindow *FUN_00484200(void (*OpenURL)(const char *URL));                // 0x484200, "Hotkey Options"
+TWindow *FUN_00484400();                                                // 0x484400, "Error Report"
+TWindow *FUN_00485290(INT_PTR Param1, INT_PTR Param2);                  // 0x485290, "Rule Violation"
+
+// Between DialogWindow.cpp and graphics.cpp
+void FUN_0048b4a0();                   // 0x48b4a0
+
+// graphics.cpp
+void FUN_00490c60(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY,
+	int Width, int Height);            // 0x490c60, line 1164
+int FUN_00491880(int FontNumber, const char *Text); // 0x491880, lines 1352-1353; text height
+void FUN_004922c0();                   // 0x4922c0
+void FUN_00492490();                   // 0x492490
+void FUN_00493af0(int Surface, int x, int y, int FontNumber, TRGBColor Color, const char *Text,
+	int Param7);                       // 0x493af0, lines 1282-1284
+void FUN_00493f60(int Surface, int x, int y, TFont Font, const char *Text); // 0x493f60, line 1295
+int FUN_00494570(int FontNumber, const char *Text); // 0x494570, lines 1373-1374; text width
+void FUN_00494900();                   // 0x494900
+void FUN_00494af0(int MemoryCacheBytes); // 0x494af0
+
+// Between graphics.cpp and GUI.cpp
+void FUN_00496150();                   // 0x496150, clears 0x5ccf98
+void FUN_00496160();                   // 0x496160, an empty function; ExitControl calls it five times
+
+// GUI.cpp and the gap to Help.cpp (help mode)
+void FUN_00498160();                   // 0x498160, initialises GUIStyle among others
+bool FUN_004a1480(int Key);            // 0x4a1480
+void FUN_004a27c0();                   // 0x4a27c0
+void FUN_004a2a00(int Param1, int Param2); // 0x4a2a00
+void FUN_004a2a50(int Param1, int Param2); // 0x4a2a50
+void FUN_004a2a70(int Value);          // 0x4a2a70, sets 0x5ce528 and a changed flag
+int FUN_004a2ac0();                    // 0x4a2ac0, returns 0x5ce528
+bool FUN_004a2ad0();                   // 0x4a2ad0, returns and clears the changed flag
+void FUN_004a2ae0();                   // 0x4a2ae0
+
+// Help.cpp
+void FUN_004a32e0(int Value);          // 0x4a32e0, line 369
+const char *FUN_004a4440();            // 0x4a4440, after Help.cpp; the current help text
+
+// Inventory.cpp
+void FUN_004a7d20();                   // 0x4a7d20
+void FUN_004a7d70();                   // 0x4a7d70
+
+// Between MainFrm.cpp and MainWindow.cpp, and MainWindow.cpp and Map.cpp
+void FUN_004ac090();                   // 0x4ac090
+void FUN_004b09e0(int Param1, int Param2); // 0x4b09e0
+void FUN_004b0a70();                   // 0x4b0a70
+
+// Map.cpp
+void FUN_004b5760();                   // 0x4b5760
+void FUN_004bba70();                   // 0x4bba70, line 807
+void FUN_004bccb0();                   // 0x4bccb0
+void FUN_004bf620(void (*Callback)(int CreatureID)); // 0x4bf620
+
+// Objects.cpp
+void FUN_004d77f0();                   // 0x4d77f0
+void FUN_004d79b0();                   // 0x4d79b0
+void FUN_004d7b40();                   // 0x4d7b40
+
+// Preferences.cpp
+
+// Between Preferences.cpp and Script.cpp
+void FUN_004ddc00();                   // 0x4ddc00
+void FUN_004de890();                   // 0x4de890
+void FUN_004df520();                   // 0x4df520
+
+// Script.cpp
+void FUN_004e3610(const char *FileName); // 0x4e3610, lines 879-883
+
+// Status.cpp. Action state: 0 idle, 1 left button down, 2 right button down,
+// 3 both down, 4 and 5 one of both released, 7 and 8 set by events 0x2c and
+// 0x2d, 9 help mode, 10 dialog open, 11 context menu open.
+
+// Between SurfaceGL.cpp and sysinc.cpp
+int FUN_004fcb90();                    // 0x4fcb90, milliseconds since the start
+bool FUN_004fcba0(const char *FileName); // 0x4fcba0, the file exists
+bool FUN_004fcbc0(const char *FileName); // 0x4fcbc0, deletes the file
+void FUN_004fcd00();                   // 0x4fcd00, seeds rand
+void FUN_004fcd30();                   // 0x4fcd30
+
+// Talk.cpp
+void FUN_004ff130();                   // 0x4ff130
+void FUN_004ff7d0();                   // 0x4ff7d0
+void FUN_00500c60(INT_PTR Param);      // 0x500c60
+void FUN_00500e40(INT_PTR Param);      // 0x500e40
+void FUN_00504d70();                   // 0x504d70
+void FUN_00504f30();                   // 0x504f30
+void FUN_005076e0();                   // 0x5076e0, line 1144
+void FUN_00507a00();                   // 0x507a00

@@ -1,0 +1,40 @@
+// Control.cpp: the client's main control flow. Graphics engine changes,
+// redrawing the screen, mouse and keyboard input, the timer, the event queue
+// that opens dialogs and starts connections, the network callbacks with the
+// packet dispatcher, and start-up and shutdown of all modules.
+// Function names are ours; parameter names come from the binary's catch
+// strings ("engine", "Force", "x", "y", "Key").
+
+#pragma once
+
+#include "common.h"
+
+void CheckSurface(bool Force);
+void ChangeEngine(int engine);
+void Redraw(bool Force);
+void SendErrorReports();
+void EnterGame();
+void LeaveGame();
+
+void MouseMove(int x, int y);
+void LeftButtonDown(int x, int y, int Flags);
+void LeftButtonUp(int x, int y, int Flags);
+void LeftButtonDoubleClick(int x, int y, int Flags);
+void RightButtonDown();
+void RightButtonUp(int x, int y, int Flags);
+void MouseWheel(int x, int y, int Direction);
+void KeyPress(int Key);
+bool CloseRequest();
+
+void HandleEvents();
+void LinkCopyWarning();
+void ConnectionEstablished();
+void ReceivePackets();
+void ConnectionClosed();
+void TimerEvent();
+void ProcessEvents();
+
+void InitWindow(HWND Window, void (*ExitProgram)(), void (*CloseProgram)(),
+	void (*SetDisplayMode)(int Mode), void (*OpenURL)(const char *URL));
+void InitControl(bool Gamemaster);
+void ExitControl();
