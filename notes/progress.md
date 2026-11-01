@@ -16,14 +16,15 @@ Read this and `git log` first when resuming.
 7b. DialogWindow.cpp and the Dialogs/DialogWindow gap — **done** (issue #3, Claude Opus 5.5).
 7c. ContextMenus.cpp and the ContentWindows/ContextMenus gap — **done** (issue #4, Claude Opus 5.5).
 7d. ConsoleWindow.cpp and the gaps on both sides — **done** (issue #5, Claude Opus 5.5; the second gap is ContentWindows.obj).
+7e. ContentWindows.cpp — **done** (issue #6, Claude Opus 5.5; the gap before it was settled in issue #5).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-ConsoleWindow.cpp done (issue #5, November 1, 2026). Next: the other window files smallest first
-(ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
+ContentWindows.cpp done (issue #6, November 1, 2026). Next: the other window files smallest first
+(DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
 surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
 
 ## Delegates (running)
@@ -36,7 +37,7 @@ None.
 
 ## Last difftest
 
-12,456,041 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,509,284 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -79,11 +80,10 @@ None.
   heap error that the memory layout hides: talktest.cpp had a double delete
   (fixed). _heapchk() between the tests finds the first one that breaks the
   heap.
-- MainWindow.cpp: the windows it creates from DialogWindow.cpp, ContentWindows.cpp, ConsoleWindow.cpp
-  and DialogElements.cpp are sketches in external.h (TSubWindowBody, TConsoleWindow, TBorder,
-  TTextButton, TLabel, TObjectIcon, TSideWindow3/4/5, the FUN_ creators; TDialogWindow and
-  TSubWindow are real since issue #3, TConsoleWindow since issue #5); replace them with the real
-  classes and check MainWindow.cpp's calls (notes/decisions.md).
+- MainWindow.cpp: the windows it creates from DialogElements.cpp are sketches in external.h
+  (TBorder, TTextButton, TLabel, TObjectIcon; TDialogWindow and TSubWindow are real since issue #3,
+  TConsoleWindow since issue #5, the ContentWindows.cpp windows and creators since issue #6);
+  replace them with the real classes and check MainWindow.cpp's calls (notes/decisions.md).
 - mainwindowtest.cpp makes the not-reconstructed windows fakes for both sides: the image's
   constructors jump to fastcall wrappers that placement-new the fake, whose constructor then sets
   the vtable of a test subclass (extra overrides, same layout). Reuse it for the window files; when
@@ -94,10 +94,11 @@ None.
   0x4854c0) and TSubWindow (with a body); ContentWindows.cpp's side-bar windows derive from
   TContentWindow and its creators size their windows before Rearrange(16) (MakeRoom calls
   Work->SetSize before Work is a child). Preferences.h's stored size is TContentWindowSize now.
-- The shared fakes of TSubWindowBody's members, TResizer and TSkinButton::SetSkins are in
-  dialogwindowtest.cpp, reporting through difftest.h's TDialogFakes hooks; when ContentWindows.cpp
-  or DialogElements.cpp is reconstructed, those definitions must go (duplicates) and the tests
-  that use them (dialogwindowtest.cpp, mainwindowtest.cpp) need the real classes or new fakes.
+- The shared fakes of TResizer, TSkinButton::SetSkins and the container body's UpdateUpButton
+  (FakeUpdateUpButton) are in dialogwindowtest.cpp, reporting through difftest.h's TDialogFakes
+  hooks; when DialogElements.cpp is reconstructed, those definitions must go (duplicates) and the
+  tests that use them (dialogwindowtest.cpp, mainwindowtest.cpp, contentwindowstest.cpp) need the
+  real classes or new fakes.
   DIFFTEST_ONLY=DialogWindow runs the dialog window test alone; it restores every patch it makes.
 - tools/callcheck.py resolves `Class::method(` (with TWindow -> TComponent) and does not match
   `x->Name(` to a free function; differences counted in older notes were made without that.
@@ -121,8 +122,7 @@ None.
   fakes of the DialogElements classes the console creates (TEditLine, TScrollBar/TScrollBarRange,
   TSkinButton's constructor, TToggleButton, TMultiStateButton); they log only while that test runs, and
   contextmenustest.cpp and dialogwindowtest.cpp link them. When DialogElements.cpp is reconstructed, those
-  definitions must go (duplicates) and the three tests need the real classes or new fakes. The
-  ContentWindows functions of the ConsoleWindow/ContentWindows gap (0x425a10-0x425e6d) still have FUN_ names.
+  definitions must go (duplicates) and the three tests need the real classes or new fakes.
 - mainwindowtest.cpp reaches our TConsoleWindow constructor through its decorated name
   (#pragma comment(linker, "/alternatename:...")): a constructor has no address in C++. The same works for
   any constructor a fake must replace.
@@ -136,3 +136,24 @@ None.
 - tools/callcheck.py splits functions at every comment line that starts with "// 0x"; write continuation lines
   so that they do not.
 - tools/triage.py lets header evidence win over file-ranges.tsv (as assertion evidence does).
+- ContentWindows.cpp (issue #6): ContentWindows.h needs Map.h (TMark), so its users include it directly
+  (MainWindow.cpp, DialogWindow.cpp, ContextMenus.cpp). TSubWindowBody's virtuals are inline in it
+  (Minimize, Maximize, IsMinimized, GetMaximumHeight, LeftButtonDoubleClick returning true); a test body
+  derived from it must implement GetInitialHeight and GetContentHeight, and a body that MainWindow.cpp's
+  OpenContainer gets needs a first new virtual at +0xb8 (the container body's Update).
+- The shared DialogElements fakes report every object they make through difftest.h's ElementCreated
+  (contentwindowstest.cpp sets it; "@%p" in the arguments is replaced by the object's name). New fakes
+  of the members ContentWindows.cpp uses are in contentwindowstest.cpp (TTextButton's second constructor,
+  TTextToggleButton, TLabel's area constructor and SetText, TSkinIcon, SetRadioButtonGroup,
+  TScrollBarRange::SetValue). mainwindowtest.cpp's and contextmenustest.cpp's fakes log and register only
+  while their tests run (Running). When DialogElements.cpp is reconstructed, all of them must go.
+- contentwindowstest.cpp makes the image's operator new and ours fill new memory with the same byte
+  pattern (members the original leaves uninitialised then agree, also in objects the creators make);
+  world values a window sets and reads in the same operation need one copy per side; never call
+  Random() inside Both (the sides would diverge), and decide test inputs before Both from our side's
+  state. Our printf is faked only while our side runs (CHECK prints with it).
+- SkinProperties: Style288 has arrays (Data10[10] points, Data60[10] rects, Data100[10] ints), PlayerStates
+  is a block at +0x470, Style4AC/Style4FC are TCombatControlsProperties, Data670/Data67C and
+  BuddylistWindow.Data3C/Data48 are colours (issue #6). TSurface's +0x0c, +0x10, +0x18 have names.
+- DIFFTEST_ONLY=ContentWindows runs contentwindowstest.cpp alone (CT_TRACE=1 traces rounds and actions,
+  CT_LOGS=<file> writes every compared log, for checking the coverage).

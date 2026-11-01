@@ -643,6 +643,12 @@ static void __cdecl FakeGetAutomapMarks(int BlockX, int BlockY, int z, vector<TM
 			M.y = 0;
 		M.Type = (int)(g % 20);
 		sprintf(M.Text, g % 3 == 0 ? "" : "Mark %u of block %d,%d", g % 1000, BlockX, BlockY);
+		// Next to the map's corner, the first mark lies on y 0 below the player.
+		if (i == 0 && World.PlayerY < 7) {
+			M.x = World.PlayerX;
+			M.y = 0;
+			strcpy(M.Text, "On the edge");
+		}
 	}
 	*Count = n;
 }
@@ -1492,6 +1498,11 @@ static void RandomWorld(bool Big)
 	World.PlayerX = 32000 + (int)(Random() % 600);
 	World.PlayerY = 31500 + (int)(Random() % 600);
 	World.PlayerZ = Random() % 16;
+	// Sometimes next to the map's corner, where marks with a coordinate 0 are in the view.
+	if (Random() % (Scenario == SC_AUTOMAP ? 3 : 8) == 0) {
+		World.PlayerX = 20 + (int)(Random() % 40);
+		World.PlayerY = (int)(Random() % 7);
+	}
 }
 
 // --- Operations -----------------------------------------------------------------------------
@@ -1723,6 +1734,22 @@ static void Queries()
 	}
 	// fall through: the inventories have player states
 	case SC_SMALL_INVENTORY: {
+		if (Scenario == SC_SMALL_INVENTORY && Random() % 2 == 0) {
+			// A drop on the small inventory's area (a pile asks for the count).
+			TComponent *W = Window[OURS];
+			int x = SkinProperties.Data590.x + (int)(Random() % (SkinProperties.Data590.Width + 2));
+			int y = SkinProperties.Data590.y + (int)(Random() % (SkinProperties.Data590.Height + 2));
+			int Flags = RandomFlags();
+			World.ActionState = 6;
+			if (Random() % 2 == 0) {
+				World.DragObject.Type = 2543;
+				World.DragObject.Data1 = 2 + Random() % 50;
+			}
+			if (x >= W->Width || y >= W->Height)
+				return;
+			Both([&](int s) { Logf("=%d;", Window[s]->LeftButtonUp(x, y, Flags) ? 1 : 0); });
+			return;
+		}
 		int x, y, What = Random() % 3, Position = Random() % 9;
 		TComponent *P = Find(OURS, "States");
 		RandomPoint(P, "States", x, y);
@@ -1750,6 +1777,12 @@ static void Queries()
 		}
 		int What = Random() % 3;
 		bool Mark = What == 0;
+		TAutomapWindow *Ours = (TAutomapWindow *)Window[OURS];
+		if (What == 2 && World.PlayerY < 7 && Ours->Centred && Random() % 2 == 0) {
+			// Over the mark on the edge (TAutomapWindow::MouseHover needs both coordinates).
+			x = 53 + (int)(Random() % 5) - 2;
+			y = 53 - World.PlayerY * Ours->Zoom / 2 + (int)(Random() % 5) - 2;
+		}
 		Both([&](int s) {
 			TAutomapWindow *W = (TAutomapWindow *)Window[s];
 			if (What == 2) {

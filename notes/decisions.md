@@ -1709,3 +1709,197 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   Not exercised: the error paths and inputs the original fails on as well (a
   width without room for a character, a dragged tab pushed out of the bar,
   a talk mode without its addressee or channel).
+
+## ContentWindows.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #6), November 1, 2026.
+
+- **Range** (high). ContentWindows.obj is 0x425920-0x43d6ef: the
+  ConsoleWindow/ContentWindows gap 0x425920-0x425e6f (settled in issue #5; its
+  file-ranges.tsv note now names every function), the assertion and between
+  functions up to CreateBuddylistWindow (0x43d390, line 280) and its catch
+  blocks; ContextMenus.cpp follows at 0x43d6f0. No header code at the end. The
+  run of inline copies at the start: common.h's Limit (0x425920, see below),
+  graphics.h's TRGBColor(int), Map.h's TMark() (0x4259a0, missed by Ghidra:
+  the constructor the eh vector constructor iterator of vector<TMark>'s
+  constructor 0x426170 takes), ContentWindows.h's inline virtuals (0x4259b0
+  TTradeWindowBody::Draw, 0x4259c0-0x4259e0 and 0x425b00 TSubWindowBody,
+  0x425a10/0x425a40 TContainerWindowBody, all missed by Ghidra and found
+  through the vtables), GUI.h's TElement slots, Container.h's vector<TMark>,
+  the inline destructors of TBattleWindowBody, TBuddylistWindowBody and
+  TCombatControls with their deleting forms, Container.h's
+  vector<TSkinButton *>(min, max, block, init) (0x425e70, TRadioButtonGroup's
+  inline constructor) and vector<TMark>(min, max, block). 0x434000 (missed by
+  Ghidra, no frame) is TTradeWindowBody::GetContentHeight, written in the
+  .cpp where the binary has it (between the destructor, line 3048, and
+  SetSize, line 3066). 0x427697 is a Ghidra split of Scroll's jump table
+  (names.tsv row).
+- **Data** (high). .bss 0x5c4398-0x5c4507: the automap's mouse-over buffer
+  (char[100]), the skill window's (char[256], "You have %d percent to go")
+  and the object's NoCallback (0x5c4500, static initialiser 0x559dd0 between
+  ConsoleWindow.obj's 0x559dc0 for 0x5c4390 and ContextMenus.obj's 0x559de0
+  for 0x5c4508), which TTradeButtons' constructor copies into its Callback.
+  The other two are unused and not in ConsoleWindow.cpp and ContextMenus.cpp
+  yet (issue #26). ContentWindows.obj's copy of the text table is 0x5c0678-0x5c08c3
+  (external.h, names ours; the regular expression pointer 0x5c08c4 and the
+  copy of DefaultFontColor 0x5c08c8 close it, as in ConsoleWindow.obj's copy
+  0x5c041c-0x5c0677), ContextMenus.obj's starts at 0x5c08d4.
+- **Classes** (high for layouts and vtables, low-medium for names). Nineteen
+  classes, sizes from the new-expressions and constructors, vtables from
+  vtscan.py: TButtonsWindow (identifier 5, 0x55e968, 0x58), TAutomapWindow (3,
+  0x55ea08, 0x80) with TAutomapView (0x55e688, 0x24, a new slot +0x84 GetMark
+  returning a TMark by value) and TCompassRose (0x55eaf0, 0x28),
+  TCapacityLabel (0x55e578) and TSoulLabel (0x55e600), TPlayerStates
+  (0x55eb98, 0x2c), TSmallInventoryWindow (2, 0x55ec98, 0x44), TInventoryView
+  (0x55ed38, 0x2c), TCombatControls (0x55e880, 0x44), TStatusWindow (4,
+  0x55f500, 0x4c), the bodies TContainerWindowBody (0x55eed0, 0x44, a new
+  slot +0xb8 Update), TSkillsWindowBody (0x55efa8, 0x3c), TBattleWindowBody
+  (0x55e710, 0x58), TBuddylistWindowBody (0x55e7c8, 0x3c), TTradeWindowBody
+  (0x55f370, 0x3c) with TTradeOffers (0x55f138, 0x34), TTradeNames (0x55f200,
+  0x38) and TTradeButtons (0x55f2a0, 0x4c). The identifier 1 window is a
+  plain TContentWindow made by CreateInventoryWindow. external.h's comments
+  on TSideWindow3/4/5 were right (sizes and vtables). Names from the binary:
+  TStatusWindow (SkinProperties.StatusWindow), TPlayerStates
+  (SkinProperties.PlayerStates), BuddylistWindow (TBuddylistWindowBody),
+  RadioButtonGroup (TRadioButtonGroup), the parameters _CheckObject,
+  _RoseSkin, islarge, _Container, EventComponent, NumberOfLine, Value,
+  Progress, Position, Direction, Code, the member Lines and the locals
+  ScrollbarX, destx/desty, DestX/DestY, ItemX/ItemY and skin; TSkillsWindowBody
+  keeps the name of the earlier sketch ("_SkillsWindow"). The other class,
+  member and function names (and the Create* creators) are ours.
+- **TSubWindowBody** (medium). The base of the bodies has no vtable of its
+  own: its constructor is inline (Minimized=false right after TWindow's
+  constructor; the subclasses' vtables are stored after it, the base one
+  was dropped). Its virtuals are inline: Minimize (+0xa0) and Maximize (+0xa4)
+  set Minimized, IsMinimized (+0xa8) returns it, GetMaximumHeight (+0xb0)
+  returns INT_MAX, and LeftButtonDoubleClick (+0x58) returns true (the folded
+  0x425a00 in every body vtable but the VIP list's: a double click on a body
+  does not minimize the window; found by the test). GetInitialHeight (+0xac,
+  the creators size the windows with it) and GetContentHeight (+0xb4) are
+  pure (every body overrides them). The sketch's UnknownA0-B8 and
+  FUN_0042e4e0 are gone: TSubWindow calls Minimize/Maximize, TSubWindow::Arrange
+  calls TContainerWindowBody::UpdateUpButton (cast, as the original must),
+  MainWindow.cpp's OpenContainer calls the container body's Update (+0xb8)
+  and IsMinimized (+0xa8, so far "the body allows it").
+- **Limit** (low for the name, medium for the header). 0x425920 clamps
+  *Value to Min..Max in either order. ContentWindows.cpp inlines it in
+  TTradeWindowBody::SetSize (with std::min/std::max of the maximum and
+  minimum heights, each read twice), DialogElements.cpp calls the
+  out-of-line copy. A header both include: common.h, next to In.
+- **Source order** (medium). Line order (the creators first, lines 106-280).
+  The binary moves the creators, the constructors of the bodies,
+  TAutomapWindow, TStatusWindow, TSmallInventoryWindow's neighbours and
+  TInventoryView's mouse handlers, TPlayerStates' Draw and MouseHover and
+  TAutomapWindow::HandleEvent to the end of the object (each calls functions
+  defined further down, Creatures.cpp's pattern). Functions without lines
+  where the binary has them: TInventoryView::GetSlotAt after HelpMouseMove
+  (1344), ~TSkillsWindowBody after its constructor (1980).
+- **Exception tables and switches** (high), checked with ehinfo.py: the
+  assertions before TBEGIN in TButtonsWindow's constructor (6-10),
+  TPlayerStates::GetIcon (5-10), TSkillsWindowBody::GetLine (5-15), both
+  Draws of the trade parts (10-10) and ShowAcceptButton (5-6); the
+  constructors' try blocks start at state 1; TCompassRose's constructor has
+  only the assertion's states; TInventoryView::GetSlotAt and
+  ~TSkillsWindowBody have TBEGIN/TEND frames without try blocks; the inline
+  ~TBattleWindowBody has the base class's state only. Catch blocks without
+  names are TEND (the HelpMouseMove functions, GetOpponentAt, ...); the
+  mouse wheels name Code. Jump tables checked: Scroll 0x4276e0 (1-4),
+  TPlayerStates::GetIcon 0x429e78 (0-9) and the skull 0x429ea0 (1-4),
+  TCombatControls::HandleEvent 0x42c1c8 (100-105), GetLine 0x42fc44 (1-15),
+  TAutomapWindow::HandleEvent 0x43716c with the byte table 0x437194 (3, 4,
+  106-112), TPlayerStates::MouseHover 0x4378f8 (skins 228-239), the battle
+  list's party shields 0x43adf8 and skulls 0x43ae08 (1-4).
+- **Odd behaviour kept**: the automap's MouseHover prints its buffer to
+  stdout and takes a mark only when both coordinates are not 0; at zoom 1 the
+  automap's centre is rounded inside the pixel loop; the container rows start
+  at Data630.x in GetInitialHeight/GetContentHeight; a container slot cut at
+  the top edge shows the top of its picture; TTradeOffers::GetContentHeight
+  adds Data68.x; the skill lines with a bar are 10 pixels taller in Draw but
+  9 in MouseHover and GetContentHeight; TBuddylistWindowBody::GetBuddyAt does
+  not test y; ShowAcceptButton and Wait delete the wait text or the accept
+  button without a NULL check; TCombatControls leaves a radio group without a
+  selection for an unknown mode (TRadioButtonGroup::Selected is uninitialised);
+  the party shield 248 is drawn only while the player is in no party;
+  TStatusWindow's Data44/Data48 (100) are never read; TTradeButtons' +0x2c,
+  +0x30 are never used.
+- **SkinProperties retyped** (medium; GUI.cpp's stores rewritten by offset,
+  guitest.cpp compares the bytes): Style288's Data10-Data50 are ten
+  TGUIPoints Data10[10] (the inventory's objects), Data60-DataF0 ten TRects
+  Data60[10] (the slot areas), Data100-Data124 ten ints Data100[10] (the empty
+  slots' skins); Data470-Data494 are the block PlayerStates (its constructor
+  is inlined; the assertion names PlayerStates.NumberOfIcons; the extent is
+  a guess: the members TPlayerStates reads); Data4AC-Data548 are two
+  TCombatControlsProperties blocks Style4AC/Style4FC (height, width, nine
+  button positions; TCombatControls' constructor copies a whole block by
+  value); Data670-Data687 are two TRGBColors (the skill bars) and
+  BuddylistWindow's Data3C/Data44 two TRGBColors Data3C/Data48 (online and
+  offline buddies; Data54 is a new buddy). The other blocks are used as
+  GUI.h has them (some TRects and TGUIPoints are used as other shapes;
+  comments in ContentWindows.cpp).
+- **Surface slots named** (medium): +0x0c SetPixel(Surface, x, y, Color), +0x10
+  FillRectangleClipped(Surface, Rect, Color, Clip), +0x18
+  DrawHorizontalLine(Surface, x, y, Width, Color), from the arguments pushed
+  here; external.h's TSurfaceGL and playertest.cpp's stubs follow.
+- **DialogElements.cpp sketches** (external.h, low): TSkinButton gained
+  RadioButtonGroup (+0x38), Tooltip (+0x3c) and SetRadioButtonGroup (0x458de0,
+  "RadioButtonGroup==NULL"); new: TRadioButtonGroup (0x28 bytes: Selected,
+  vector<TSkinButton *> Buttons, Count; inline constructor and destructor),
+  TTextButton's second constructor (0x466ed0, skins 12/13 and a tooltip),
+  TTextToggleButton (0x467230, vtable 0x561d58, 0x84 bytes, State +0x78; it
+  passes its own uninitialised Tooltip member to TTextButton, DialogElements.cpp's
+  business), TLabel's second constructor (0x465510, an area) and SetText
+  (+0x84, 0x455e40), TSkinIcon (0x457710), TScrollBarRange::SetValue
+  (0x460710); TScrollBar's last parameter is a step (int; 1 in
+  ConsoleWindow.cpp, which now passes 1 instead of true). All have
+  low-confidence names.tsv rows.
+- **Callers** changed in names and casts: MainWindow.cpp (the creators,
+  TAutomapWindow, TStatusWindow, TButtonsWindow, OpenContainer's Update and
+  IsMinimized), DialogWindow.cpp (Minimize, Maximize, UpdateUpButton),
+  ContextMenus.cpp/.h (includes ContentWindows.h; TMarkMenuData::Window is a
+  TAutomapWindow *), Control.cpp unchanged (TSkillsWindowBody is a forward
+  declaration there). ContentWindows.h needs Map.h (TMark), so like
+  ContextMenus.h it is included directly by its users.
+- **callcheck** (81 of 140 functions differ, all explained): constructors of
+  new-expressions and base classes, TCallback temporaries, the inline
+  TRadioButtonGroup and TRGBColor(int) and ~TWindow are not lexical calls;
+  members called without qualification in constructors (SetSize,
+  InsertChild, Arrange) are direct calls in the binary that the tool does
+  not resolve; virtual calls (GetParent, Arrange, GetMark, IsMinimized,
+  GetContentHeight, GetMaximumHeight, GetMinimumHeight, SetChildPosition,
+  SetChildArea, SetText, RightButtonUp, which the tool matches to Control.cpp's)
+  are indirect in the binary; hasContentWindow and Limit are inlined;
+  Offers->GetContentHeight is resolved to the body's own; the compiler merged
+  call sites (SendMoveObject, SetChaseMode, AddMessage, SendUseObject,
+  SetStatusMessage, Scroll); Ghidra dropped the GetMouseX/GetMouseY calls in
+  the container body's Draw.
+- **Tests** (contentwindowstest.cpp, 52,506 checks in the full run over 600 rounds of
+  20-60 operations): each round builds one of the ten kinds of windows from
+  the image's code and ours (the seven creators, the automap, status and
+  buttons windows' constructors) inside a real column (the image's and our
+  TDialogWindow), then random sizes, Arrange, drawing, mouse presses (with
+  drags), releases, double and right clicks with the modifier flags, the
+  wheel, hovering and help mode over random points and the slots, rows,
+  icons, marks and the compass rose, the windows' events, the classes'
+  members (Scroll, GetMark, GetSlotAt, GetIconAt, GetIcon, GetLine,
+  GetOpponentAt, GetBuddyAt, GetOfferAt, Update, UpdateUpButton, the trade
+  buttons, the bodies' heights) and changes of the world; logs of every
+  callee and dumps of both trees (every member, the DialogElements objects
+  with their arguments and state) are compared after each, the logs of the
+  destructors at the end. The DialogElements classes are the shared fakes on
+  both sides; they now report every object through difftest.h's
+  ElementCreated (consolewindowtest.cpp's scroll bar and buttons,
+  contextmenustest.cpp's separator, mainwindowtest.cpp's text button, label
+  and object icon, and this file's new fakes), and the test gives each a test
+  vtable. The image's operator new and ours fill memory with the same
+  pattern. The world values the windows set (attack target, modes) have one
+  copy per side. A mutation check (fourteen changes, one at a time) failed
+  each run. DIFFTEST_ONLY=ContentWindows runs it alone; it restores every
+  patch. Other tests: dialogwindowtest.cpp's body overrides the real inline
+  slots and redirects UpdateUpButton (both sides) to the shared
+  FakeUpdateUpButton; mainwindowtest.cpp redirects the creators and the three
+  side-bar constructors (decorated names) to its fakes, its body has a +0xb8
+  Update; contextmenustest.cpp uses a same-layout stand-in for the skill
+  window body and logs only while it runs; mainwindowtest.cpp's element fakes
+  register only while it runs. Not exercised: the error paths, the button
+  callbacks (dumped, not sent) and inputs the original fails on as well (the
+  counter offer twice, help mode over a hidden body).
