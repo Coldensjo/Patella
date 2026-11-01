@@ -12,15 +12,15 @@ Read this and `git log` first when resuming.
 5. Objects.cpp and the Objects/Player gap — **done** (Claude Opus 5.5 delegate, reviewed, merged). The gap is all Player.obj.
 6. Map.cpp and the gaps on both sides — **done** (Claude Opus 5.5 delegate, third attempt, reviewed, merged).
 7. MapWindow.cpp and the MapWindow/Network gap — **done** (issue #1, Claude Opus 5.5; the gap is Network.cpp).
+7a. MainWindow.cpp and the MainFrm/MainWindow gap — **done** (issue #2, Claude Opus 5.5).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-MapWindow.cpp done (issue #1, November 1, 2026). Next: MainWindow.cpp and the other window
-files smallest first (DialogWindow, ContextMenus, ConsoleWindow, ContentWindows, DialogElements,
-Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
+MainWindow.cpp done (issue #2, November 1, 2026). Next: the other window files smallest first
+(DialogWindow, ContextMenus, ConsoleWindow, ContentWindows, DialogElements, Dialogs), and the surface files (SurfaceDX.cpp with its settled range 0x4eae70-0x4ed19f,
 surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
 
 ## Delegates (running)
@@ -33,7 +33,7 @@ None.
 
 ## Last difftest
 
-12,354,624 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
+12,368,882 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 
@@ -65,7 +65,7 @@ None.
   TSurfaceGL methods (mapwindowtest.cpp), the others stay playertest.cpp's
   stubs.
 - MainWindow.cpp creates TMapFrame (MapWindow.h) with operator new(0x40); its
-  deleting destructor 0x4adc40 is in MainWindow.obj.
+  deleting destructor is folded into TStartWindow's 0x4adc40 (MainWindow.obj).
 - The text header's table is copied into every object that includes it; use
   the copy of the object at hand (external.h lists Control.obj's and
   MapWindow.obj's entries).
@@ -76,3 +76,15 @@ None.
   heap error that the memory layout hides: talktest.cpp had a double delete
   (fixed). _heapchk() between the tests finds the first one that breaks the
   heap.
+- MainWindow.cpp: the windows it creates from DialogWindow.cpp, ContentWindows.cpp, ConsoleWindow.cpp
+  and DialogElements.cpp are sketches in external.h (TDialogWindow, TSubWindow/TSubWindowBody,
+  TConsoleWindow, TBorder, TTextButton, TLabel, TObjectIcon, TSideWindow3/4/5, the FUN_ creators);
+  replace them with the real classes and check MainWindow.cpp's calls (notes/decisions.md).
+  The name TContentWindow is Preferences.h's stored size; rename that struct if the window class
+  turns out to be TContentWindow.
+- mainwindowtest.cpp makes the not-reconstructed windows fakes for both sides: the image's
+  constructors jump to fastcall wrappers that placement-new the fake, whose constructor then sets
+  the vtable of a test subclass (extra overrides, same layout). Reuse it for the window files; when
+  one of those files is reconstructed, its fakes in mainwindowtest.cpp must go (duplicate
+  definitions). DIFFTEST_ONLY=MainWindow runs that test alone.
+- SkinProperties.Style0D8 is now five TGUIPoints (+0x10-+0x37) and a TRect at +0x38.

@@ -1184,3 +1184,130 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
   again. The double delete corrupted the heap only with some memory layouts:
   with this file's test added, build.cmd's longer TEMP path made difftest
   end with 0xc0000374 and no output. The test now clears the pointer.
+
+## MainWindow.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #2), November 1, 2026.
+
+- **Range and data** (high). The MainFrm/MainWindow gap 0x4ac010-0x4ac20d is
+  MainWindow.cpp: TMainWindow's destructor (vtable 0x56c498), 0x4ac090 (it
+  deletes MainWindow 0x5d16b0 and ModalWindow 0x5d16ac: ExitMainWindow,
+  called by ExitControl), the deleting destructor and Draw, whose catch
+  blocks (line 127) end the range. The object's data is 0x5d16a0-0x5d16bb:
+  the three frame callbacks (OpenURL, SetDisplayMode, ExitProgram, written
+  only by InitMainWindow), ModalWindow and MainWindow (both names from
+  Control.cpp's assertions) and the unused TCallback 0x5d16b4, built by the
+  static initialiser 0x559f30 between MainFrm's 0x559f20 (0x5d1674) and
+  Map's 0x559f40, like MapWindow.cpp's (written as a static NoCallback;
+  medium). The two texts it uses are its copy of the text table (external.h:
+  TextNoBugReportRight 0x5c1ffc, TextAccountURL 0x5c2048; names ours).
+  Ghidra missed 0x4ae420 (TSplitter::ReleaseCapture, inline: Dragging=false,
+  jmp TElement::ReleaseCapture). 0x4adc40, so far TMapFrame's deleting
+  destructor, is TStartWindow's (vtable 0x56c5c0 slot 0); TMapFrame's was
+  folded into it. TSplitter's deleting destructor is the folded 0x429590
+  (ContentWindows.obj; it calls the jmp-to-~TComponent 0x4672c0).
+- **Three classes** (high for the layouts, low for the names). TMainWindow
+  (0x4c bytes; MapFrame +0x2c, SideBar +0x30, DialogWindow +0x34 (name from
+  "DialogWindow!=NULL"), SidePanel +0x38, Console +0x3c, Splitter +0x40,
+  StartWindow +0x44, InGame +0x48), TStartWindow (0x30, Frame +0x2c) and
+  TSplitter (a TElement, 0x30: Dragging +0x24, DragX +0x28, DragY +0x2c).
+  Slots from the vtables: TMainWindow overrides +0x34, +0x44, +0x6c, +0x70;
+  TStartWindow +0x34, +0x44, +0x70; TSplitter +0x48-+0x54 and +0x7c.
+- **Function names** (ours, low unless the binary gives them): ChangeMode
+  (0x4af5e0; its bool parameter is InGame), ResizeConsole (parameter
+  ConsoleHeight from the catch block), GetConsoleWindowHeight (not
+  GetConsoleHeight: Preferences.cpp has that name and ChangeMode calls it),
+  Walk (dx, dy from the catch block), OpenContainer/CloseContainer
+  (Container), OpenTrade/UpdateTrade/CloseTrade, OpenContentWindow and
+  CloseContentWindow (Identifier, "unknown identifier"), SetConsoleActive,
+  InitMainWindow, ExitMainWindow. TRADE_WINDOW (8) and ACTIONSTATE_NONE (0,
+  added to Status.h) are named in assertions; the other identifiers stay
+  numbers (6 "Skills" and 7 "Battle" from ContentWindows.cpp's titles, 9,
+  0x40 plus a container number; 1-5 the side-bar windows).
+- **Source order** (medium). Line order. The binary has a second ascending
+  run after the splitter (KeyPress 203, HandleEvent 308-339, ChangeMode 463,
+  OpenTrade 560, CloseTrade 590, the constructor 85, InitMainWindow 822),
+  which the lines put in between. The destructor and ExitMainWindow (no
+  lines) follow the constructor, before Draw, where the binary has them;
+  GetConsoleWindowHeight sits between 475 and 503 and TSplitter::Arrange
+  between 749 and 780, as in the binary.
+- **No try blocks left** (high). GetConsoleWindowHeight (0x4ac7c0) and
+  TSplitter::Arrange (0x4ae430) have exception frames with 11 states and no
+  try block, sharing FuncInfo 0x5a9d48: a TBEGIN/TEND whose body cannot
+  throw (the compiler dropped the try block and its catch blocks). Written
+  with TBEGIN ... TEND; the TEND variant is not visible.
+- **Exception tables** (high), checked with ehinfo.py: OpenContainer try
+  states 5-7 (TASSERT(DialogWindow!=NULL) before TBEGIN, two new-expressions
+  inside), OpenTrade 10-10 (both assertions before TBEGIN), the constructors
+  1-1 and TStartWindow's 1-8 (after the base constructor; seven
+  new-expressions), ChangeMode 0-13 (thirteen new-expressions), HandleEvent
+  0-10 (two assertions), InitMainWindow 0-6, Draw's inner try 1-1 with a
+  catch(...) that throws PROGRAM_ERROR 12. Jump tables checked against the
+  binary: 0x4ad48c (OpenContentWindow, 6-9), 0x4aecd4 (KeyPress,
+  0x10c-0x119), 0x4af424/0x4af458, 0x4af478/0x4af494 and 0x4af55c/0x4af574
+  (HandleEvent's three ranges, with byte tables), 0x4afea8 (ChangeMode, 1-5).
+- **Odd behaviour kept**: ChangeMode clears every child pointer except
+  SideBar (out of the game it points to the deleted frame); the member
+  pointers are uninitialised until the constructor's ChangeMode(false), which
+  is safe only because FirstChild is NULL; KeyPress ignores every key outside
+  connection state 8; HandleEvent and OpenContentWindow use DialogWindow
+  without a NULL check (the events that need it come only from the game);
+  TSplitter::MouseMove resizes the global MainWindow, not its parent; the
+  splitter's DragX/DragY stay uninitialised until the first press; x has no
+  name in TSplitter::MouseMove's catch block (TEND1(y)); event 0x21 falls
+  through into event 2 (CopyTaintedClipboardText, then SetActionState(0)).
+- **Evaluation order** (medium). SetSize reads Splitter->Height before the
+  two minimum heights (the load comes first in the binary; written as a
+  local). ChangeMode calls Preferences' GetConsoleHeight once (a local, not
+  a macro-style max). The quit question of event 0x1fb is a new INT_PTR[4]
+  (operator new[] 0x523817; Control.cpp's message 6 deletes it with
+  delete[]).
+- **SkinProperties.Style0D8 retyped** (medium). MainWindow.cpp reads
+  +0x10-+0x37 (0x5cd0b0-0x5cd0d4) as five x/y pairs, the positions of "Enter
+  Game", "Options", "Info", "Exit Game" and "Access Account"
+  (InitSkinProperties stores (0,0), (0,60), (0,90), (0,120), (0,30));
+  Data00/Data04 are the button panel's size, Data08 its position. The old
+  TRGBColor at +0x10 and the points at +0x1c-+0x34 were guesses; GUI.cpp's
+  stores are rewritten with the same offsets and values. +0x38-+0x47 is not
+  used here; guitest.cpp's constructor check showed it must be zeroed, so it
+  is a TRect (a guess: any type with a constructor would do). Data134 (the
+  frame border), Data138 (the splitter height) and Data184 (the side bar
+  width) got comments.
+- **External sketches** (low). TConsoleWindow now derives from TWindow (0x6c
+  bytes; Data34 kept for Control.cpp). New in external.h, for the files that
+  are not reconstructed: TDialogWindow (vtable 0x563f80, 0x4c bytes; slot
+  +0xa0 takes (16, window) to add one and (32, NULL) to rearrange; 0x486400
+  finds a sub-window by identifier, 0x4865b0 stores the open ones; the inline
+  hasContentWindow from the assertion text), TSubWindow and TSubWindowBody
+  (the name TContentWindow is taken by Preferences.h's stored sizes; getBody
+  is +0x44, the body's slots +0xa8 and +0xb8 are used), TBorder (vtable
+  0x561358, 0x68 bytes, constructors 0x4547f0 and 0x454e30, parameter
+  _Window), TTextButton (0x466bc0, _Text), TLabel (0x465b40), TObjectIcon
+  (0x4526c0), TSideWindow3/4/5 and the ContentWindows.cpp creators (FUN_
+  names kept). FUN_004362b0 and FUN_00436510 take the main window as their
+  argument (push esi; Ghidra dropped it).
+- **callcheck** (16 of 29 functions differ, all explained): the constructor
+  calls of new-expressions, base constructors and destructors and TCallback
+  temporaries are not lexical calls; TWindow::Draw, TWindow::SetSize and
+  TWindow::InsertChild are names.tsv's TWindow_Draw, TComponent_SetSize and
+  TWindow_InsertChild; virtual calls (SetChildPosition, ReleaseCapture,
+  SetSize, Console->KeyPress, which the tool matches to Control.cpp's
+  KeyPress) are indirect in the binary; the compiler merged the calls of
+  Walk in KeyPress, of AddMessage, OpenContentWindow and CloseContentWindow
+  in HandleEvent and of AddMessage in TStartWindow::HandleEvent;
+  hasContentWindow is inlined; InitMainWindow's GetActionState count in the
+  pseudocode includes the assertion text.
+- **Tests** (mainwindowtest.cpp, about 14,000 checks over 6,000 random
+  operations): the windows of the files that are not reconstructed are
+  fakes on both sides (the image's constructors and members jump to the same
+  code as ours), every other callee is a logging fake (PatchOwn for ours);
+  the real map frames get a logging vtable right after construction and lose
+  their map view, so nothing reaches the map. Both main windows get the same
+  mode changes, sizes, drawing, keys, events, splitter drags, mouse events,
+  containers, trade and content windows, start window events and
+  ExitMainWindow/InitMainWindow; after each one the logs and a dump of both
+  window trees are compared. A mutation check (three changed lines, then
+  two) made thousands of checks fail. Not exercised: the error paths. It
+  runs after mapwindowtest.cpp and patches for good as well;
+  DIFFTEST_ONLY=MainWindow runs it alone. playertest.cpp lost its
+  InitMainWindow stub.
