@@ -299,3 +299,44 @@ callcheck differences, caller integration and differential coverage.
 - **Buffer sizes**: the loader's identifier copy is 20 bytes (CopyString
   limit 0x14); the saver's hotkey buffer is written as HOTKEY_LENGTH+1 (the
   `_snprintf` limit 0x101; the stack slot is 264 bytes with padding).
+
+## Player.cpp
+
+- **Member functions of CPlayerApp** (medium): FatalError, HandleProgramError,
+  HandleException and ReadErrorFile are written as members. HandleProgramError
+  and HandleException read `this` (+0xa0, +0x1c); FatalError gets `this` in
+  ECX from both callers but does not use it; ReadErrorFile is called with
+  ECX still holding `this` (low: it could be a free function).
+- **Names** (low unless noted): Terminating (+0xa0) and RunPatch (+0xa1, Run
+  starts patch.exe; set elsewhere through the application pointer),
+  GetWindowTitle/GetWindowClassName (the decoded "Tibia   " and
+  "TibiaClient"), CountTibiaWindows (the EnumWindows callback at 0x4d9420,
+  missed by Ghidra), NumberOfTibiaWindows, LastMousePosition,
+  LastMouseCursor. OutputControlErrorInformations (0x445900) and
+  CMainFrame::OutputErrorInformations (0x4a8360) are named after Player.cpp's
+  catch texts (high).
+- **The XOR code tables at 0x5733a4/0x5733c4** are in another object's
+  .rdata (owner unknown; the key tables at 0x56dd98/0x56ddb8 are Player's,
+  next to its vtable). Both are written as static tables in Player.cpp.
+- **The critical-error text pointer 0x5c249c** is part of a table of UI
+  texts (0x5c2480-0x5c2517) whose owner is unknown; declared in external.h
+  as DAT_005c249c.
+- **Source order**: no line evidence for the message map, constructor,
+  FatalError, CountTibiaWindows, the error handlers and ReadErrorFile; they
+  are in binary order around the decoders (62, 75); InitInstance (255-347),
+  Run (383-408) and OnIdle (456) end the file in line order (the compiler put
+  OnIdle at 0x4d94c0).
+- **The top-level handlers of InitInstance and Run** are written out (not a
+  macro): PROGRAM_ERROR shows its code, a TMyException is wrapped ("exception
+  occurred"), std::bad_alloc, std::out_of_range, exception, const char* and
+  ... become TERRORs, and an outer catch of TMyException writes error.txt.
+  Their catch types are from the exception tables.
+- **std::exception** stands for VC7.1's global `exception` (the binary's type
+  name is .?AVexception@@).
+- **Odd behaviour kept**: "host" and "port" on the command line are parsed and
+  dropped; InitInstance returns TRUE after an error; the 30-character
+  service pack buffer may lack its terminator; error.txt's last dashes have
+  no line break; HandleProgramError/HandleException set Terminating only when
+  it is already set.
+- **Tests**: only the two decoders are pure. Player.cpp is linked into the
+  difftest against stubs for MFC and its callees (playertest.cpp).

@@ -1,0 +1,32 @@
+// Player.h: the MFC application class (c:\mud\tibiaplayer, so Player.cpp).
+//
+// The class name CPlayerApp follows MFC's wizard naming for the project
+// "tibiaplayer"; the member names are ours. Layout: CWinApp (0xa0 bytes),
+// then the two flags.
+
+#pragma once
+
+#include "common.h"
+
+class CPlayerApp : public CWinApp {
+public:
+	CPlayerApp();
+	virtual BOOL InitInstance();
+	virtual int Run();
+	virtual BOOL OnIdle(LONG lCount);
+
+	void FatalError(const char *Text, const char *Caption);
+	void HandleProgramError(PROGRAM_ERROR Error);
+	void HandleException(TMyException &Exception);
+	void ReadErrorFile();
+
+	bool Terminating; // +0xa0, a fatal error is being shown; later errors return at once
+	bool RunPatch;    // +0xa1, Run starts patch.exe when the message loop ends
+
+	DECLARE_MESSAGE_MAP()
+};
+
+extern CPlayerApp theApp; // 0x719dc0, initialiser at 0x55a030
+
+void GetWindowTitle(char *Text);     // "Tibia   "
+void GetWindowClassName(char *Text); // "TibiaClient"

@@ -376,6 +376,7 @@ int main(int argc, char **argv)
 	TestPreferences();
 	TestScript();
 	TestPreferencesFile();
+	TestPlayer();
 	TestTalk();
 	TestObjects(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	printf("%d checks, %d failures\n", Checks, Failures);

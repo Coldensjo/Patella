@@ -6,7 +6,7 @@ Read this and `git log` first when resuming.
 
 1. Script.cpp — **done** (commit "Reconstruct Script.cpp").
 2. Preferences/Script gap (0x4ddc00-0x4df6ca) — **done**: loader/saver/ExitPreferences in Preferences.cpp, inline code in Script.h.
-3. Player.cpp, incl. the error.txt reader (0x4da140).
+3. Player.cpp, incl. the error.txt reader (0x4da140) — **done**.
 4. Small gaps: ContextMenus/Control (0x445900-0x445aeb), start/Communication
    (0x401000-0x40434f), Status/SurfaceDX (0x4eaa80-0x4ed19f).
 5. Objects.cpp and the Objects/Player gap — **done** (Claude Opus 5.5 delegate, reviewed, merged). The gap is all Player.obj.
@@ -18,9 +18,9 @@ Read this and `git log` first when resuming.
 
 ## Current item
 
-3: Player.cpp, incl. the error.txt reader (0x4da140) and the three game
-functions left in the Objects/Player gap (0x4d7cd0 message map, 0x4d7cf0
-app constructor, 0x4d7d80 FatalError).
+4: small gaps. ContextMenus/Control (0x445900 OutputControlErrorInformations,
+0x4459b0 with catch line 93 of Control.cpp), start/Communication
+(0x401000-0x40434f), Status/SurfaceDX (0x4eaa80-0x4ed19f).
 
 ## Delegates (running)
 
@@ -39,7 +39,7 @@ merging.
 
 ## Last difftest
 
-2,870,593 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
+2,870,595 checks against the original, 0 failures; 3,201 vlong checks, 0 failures.
 
 ## Notes for later files
 

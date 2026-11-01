@@ -496,3 +496,35 @@ bool FUN_004fcba0(const char *FileName); // 0x4fcba0, the file exists
 bool FUN_004fcbc0(const char *FileName); // 0x4fcbc0, deletes the file
 void FUN_004fcd00();                   // 0x4fcd00, seeds rand
 void FUN_004fcd30();                   // 0x4fcd30
+
+// --- added for Player.cpp ---
+
+#include <ostream>
+
+// MainFrm.cpp: the frame window.
+class CMainFrame : public CFrameWnd {
+public:
+	CMainFrame(bool Gamemaster);                         // 0x4a8520
+	void OutputErrorInformations(std::ostream &Out);     // 0x4a8360, name from Player.cpp's catch text
+};
+void FUN_004a88f0();                    // 0x4a88f0, MainFrm.cpp; called before InitInstance gives up
+void FUN_004a8af0(int Value);           // 0x4a8af0, MainFrm.cpp; FatalError calls it with 1 outside view mode 1
+void FUN_004aa1d0();                    // 0x4aa1d0, MainFrm.cpp; called when the mouse cursor changes
+
+// Between ContextMenus.cpp and Control.cpp; name from Player.cpp's catch text.
+void OutputControlErrorInformations(std::ostream &Out); // 0x445900
+
+// graphics.cpp
+void FUN_0048da50();                    // 0x48da50, after the surfaces are created
+
+// Between Status.cpp and SurfaceDX.cpp.
+extern int DAT_005c2564;                // 0x5c2564, engine from the command line ("engine N"), -1 = none
+int FUN_004eaa80();                     // 0x4eaa80, the graphics engine in use (error.txt "Graphic Engine")
+void FUN_004eac20(HWND *Window);        // 0x4eac20, sets up the surface for the main window
+
+// Between SurfaceGL.cpp and sysinc.cpp: texts for a PROGRAM_ERROR code.
+const char *FUN_004fcbf0(int Error);    // 0x4fcbf0, what failed ("Cannot find file ...")
+const char *FUN_004fcc90(int Error);    // 0x4fcc90, what to do ("Please re-install ...")
+
+// Owner unknown: a table of message texts in .data (0x5c2480-0x5c2517).
+extern const char *DAT_005c249c;        // 0x5c249c, "The Tibia client encountered a critical error ..."

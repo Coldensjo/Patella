@@ -706,7 +706,7 @@ address	name	kind	confidence	note
 0x4d7d40	std_codecvt_char_do_always_noconv	stl	high	codecvt<char,char,mbstate_t> virtual (returns true), for Player.cpp ifstream; not found by Ghidra
 0x4d7d50	std_codecvt_char_do_max_length	stl	high	codecvt<char,char,mbstate_t>::do_max_length and do_encoding (folded, return 1); not found by Ghidra
 0x4d7d60	CPlayerApp_scalar_deleting_dtor	stl	high	compiler-generated, slot 1 of the app vtable 0x56de08; not in the source
-0x4d7d80	FatalError	game	low	Player.cpp (only caller); ShutdownConnection, leaves fullscreen, hides the main window, MessageBox(Text, Caption, MB_ICONERROR), exit(1); each step in try/catch(...){}; name ours
+0x4d7d80	CPlayerApp_FatalError	game	low	Player.cpp (only caller); ShutdownConnection, leaves fullscreen, hides the main window, MessageBox(Text, Caption, MB_ICONERROR), exit(1); each step in try/catch(...){}; name ours
 0x4d7e20	std_streambuf_getloc	stl	high	basic_streambuf::getloc, used by filebuf::open; not in the source
 0x4d7e60	std_string_compare_pos	stl	high	std::string::compare(pos, n, const char*, count), used by Player.cpp 0x4da140; not in the source
 0x4d7ee0	std_codecvt_char_ctor	stl	high	codecvt<char,char,mbstate_t>(refs), vtable 0x56dec0; not in the source
@@ -738,3 +738,23 @@ address	name	kind	confidence	note
 0x4ddc00	InitPreferences	game	medium	Preferences.cpp: loads Tibia.cfg (defaults on any error), sets PreferencesLoaded; called by InitControl
 0x4de890	SavePreferences	game	medium	Preferences.cpp: writes Tibia.cfg if PreferencesLoaded, errors ignored
 0x4df520	ExitPreferences	game	medium	Preferences.cpp: frees the MotD and saves; called by ExitControl
+0x4d9140	GetWindowTitle	game	medium	Player.cpp line 62: XOR-decodes "Tibia   " (8 characters)
+0x4d92b0	GetWindowClassName	game	medium	Player.cpp line 75: XOR-decodes "TibiaClient"
+0x4d9420	CountTibiaWindows	game	medium	Player.cpp, EnumWindows callback (missed by Ghidra): counts windows with the client's title or class
+0x4d94c0	CPlayerApp_OnIdle	game	high	Player.cpp line 456: mouse moves, cursor changes, ProcessEvents
+0x4d96d0	std_string_append_cstr	stl	medium	std::string::operator+=(const char*), used by ReadErrorFile
+0x4d9700	std_basic_filebuf_dtor	stl	medium	std::basic_filebuf<char> destructor (closes if open), inlined into the stream destructors
+0x4d9790	std_ofstream_ctor	stl	medium	std::basic_ofstream<char> constructor (virtual base flag), HandleException
+0x4d9890	std_ofstream_dtor	stl	medium	std::basic_ofstream<char> destructor (complete object, this at the ostream part)
+0x4d98f0	std_basic_filebuf_scalar_deleting_dtor	stl	medium	compiler-generated
+0x4d9910	CPlayerApp_HandleProgramError	game	medium	Player.cpp: shows "<text> (Error Code n)" with a hint and ends the program
+0x4d9a00	std_ofstream_vbase_dtor	stl	medium	ofstream destructor plus the ios_base virtual base
+0x4d9a20	std_ifstream_ctor	stl	medium	std::basic_ifstream<char> constructor, ReadErrorFile
+0x4d9b20	std_ifstream_dtor	stl	medium	std::basic_ifstream<char> destructor
+0x4d9bb0	std_ifstream_vbase_dtor	stl	medium	ifstream destructor plus the ios_base virtual base
+0x4d9bd0	CPlayerApp_HandleException	game	medium	Player.cpp: appends a report to error.txt and ends the program
+0x4da140	CPlayerApp_ReadErrorFile	game	medium	Player.cpp: reads error.txt into the error reports (Status.cpp)
+0x4da3e0	CPlayerApp_InitInstance	game	high	Player.cpp lines 255-347
+0x4dae60	CPlayerApp_Run	game	high	Player.cpp lines 383-408; starts patch.exe when RunPatch is set
+0x445900	OutputControlErrorInformations	game	medium	between ContextMenus.cpp and Control.cpp; name from Player.cpp's catch text
+0x4a8360	CMainFrame_OutputErrorInformations	game	medium	MainFrm.cpp; name from Player.cpp's catch text
