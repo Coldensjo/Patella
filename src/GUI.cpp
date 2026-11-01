@@ -124,7 +124,7 @@ void DrawSkin(int Surface, int x, int y, int width, int height, int skin, int sr
 	TASSERT1(height>0, height);
 	TBEGIN
 	if (Skins[skin].width == width && Skins[skin].height == height) {
-		FUN_00490c60(Surface, x, y, 4, Skins[skin].x, Skins[skin].y, Skins[skin].width, Skins[skin].height);
+		DrawPicturePart(Surface, x, y, 4, Skins[skin].x, Skins[skin].y, Skins[skin].width, Skins[skin].height);
 	} else {
 		int PieceHeight = 0;
 		int dy = 0;
@@ -151,7 +151,7 @@ void DrawSkin(int Surface, int x, int y, int width, int height, int skin, int sr
 				}
 				if (PieceHeight > h)
 					PieceHeight = h;
-				FUN_00490c60(Surface, dx + x, dy + y, 4, SourceX, SourceY, PieceWidth, PieceHeight);
+				DrawPicturePart(Surface, dx + x, dy + y, 4, SourceX, SourceY, PieceWidth, PieceHeight);
 				dx += PieceWidth;
 			}
 			dy += PieceHeight;
@@ -182,8 +182,8 @@ void DrawSkinClipped(int Surface, int x, int y, int width, int height, int skin,
 		TERROR(s.str().c_str());
 	}
 	if (Skins[skin].width == width && Skins[skin].height == height) {
-		FUN_004910e0(Surface, x, y, 4, Skins[skin].x, Skins[skin].y, Skins[skin].width, Skins[skin].height,
-			ClipX, ClipY, ClipWidth, ClipHeight);
+		DrawPicturePartClipped(Surface, x, y, 4, Skins[skin].x, Skins[skin].y, Skins[skin].width,
+			Skins[skin].height, TRect(ClipX, ClipY, ClipWidth, ClipHeight));
 	} else {
 		int PieceHeight = 0;
 		int dy = 0;
@@ -210,8 +210,8 @@ void DrawSkinClipped(int Surface, int x, int y, int width, int height, int skin,
 				}
 				if (PieceHeight > h)
 					PieceHeight = h;
-				FUN_004910e0(Surface, dx + x, dy + y, 4, SourceX, SourceY, PieceWidth, PieceHeight,
-					ClipX, ClipY, ClipWidth, ClipHeight);
+				DrawPicturePartClipped(Surface, dx + x, dy + y, 4, SourceX, SourceY, PieceWidth, PieceHeight,
+					TRect(ClipX, ClipY, ClipWidth, ClipHeight));
 				dx += PieceWidth;
 			}
 			dy += PieceHeight;
@@ -245,7 +245,7 @@ void InitSkinProperties()
 	SkinProperties.TooltipFont.Color.R = 64;
 	SkinProperties.TooltipFont.Color.G = 64;
 	SkinProperties.TooltipFont.Color.B = 64;
-	SkinProperties.TooltipFont.Unknown10 = 0;
+	SkinProperties.TooltipFont.Alignment = 0;
 	SkinProperties.TooltipBorder = 4;
 	SkinProperties.TooltipBackground.R = 192;
 	SkinProperties.TooltipBackground.G = 192;
@@ -277,7 +277,7 @@ void InitSkinProperties()
 	SkinProperties.Data0B0.Color.R = 224;
 	SkinProperties.Data0B0.Color.G = 224;
 	SkinProperties.Data0B0.Color.B = 224;
-	SkinProperties.Data0B0.Unknown10 = 0;
+	SkinProperties.Data0B0.Alignment = 0;
 	SkinProperties.Data0C4 = 8;
 	SkinProperties.Data0C8.R = 128;
 	SkinProperties.Data0C8.G = 128;
@@ -339,7 +339,7 @@ void InitSkinProperties()
 	SkinProperties.Style194.Data38.Color.R = 144;
 	SkinProperties.Style194.Data38.Color.G = 144;
 	SkinProperties.Style194.Data38.Color.B = 144;
-	SkinProperties.Style194.Data38.Unknown10 = 0;
+	SkinProperties.Style194.Data38.Alignment = 0;
 	SkinProperties.Style194.Data4C = 19;
 	SkinProperties.Style194.Data50.x = 4;
 	SkinProperties.Style194.Data50.y = 15;
@@ -476,7 +476,7 @@ void InitSkinProperties()
 	SkinProperties.Style3E0.Data10.Color.R = 255;
 	SkinProperties.Style3E0.Data10.Color.G = 255;
 	SkinProperties.Style3E0.Data10.Color.B = 255;
-	SkinProperties.Style3E0.Data10.Unknown10 = 1;
+	SkinProperties.Style3E0.Data10.Alignment = 1;
 	SkinProperties.Style3E0.Data24.x = 17;
 	SkinProperties.Style3E0.Data24.y = 11;
 	SkinProperties.Style3E0.Data24.Width = 32;
@@ -485,7 +485,7 @@ void InitSkinProperties()
 	SkinProperties.Style3E0.Data34.Color.R = 176;
 	SkinProperties.Style3E0.Data34.Color.G = 176;
 	SkinProperties.Style3E0.Data34.Color.B = 176;
-	SkinProperties.Style3E0.Data34.Unknown10 = 1;
+	SkinProperties.Style3E0.Data34.Alignment = 1;
 	SkinProperties.Style428.Data00.x = 17;
 	SkinProperties.Style428.Data00.y = 2;
 	SkinProperties.Style428.Data00.Width = 32;
@@ -494,7 +494,7 @@ void InitSkinProperties()
 	SkinProperties.Style428.Data10.Color.R = 255;
 	SkinProperties.Style428.Data10.Color.G = 255;
 	SkinProperties.Style428.Data10.Color.B = 255;
-	SkinProperties.Style428.Data10.Unknown10 = 1;
+	SkinProperties.Style428.Data10.Alignment = 1;
 	SkinProperties.Style428.Data24.x = 17;
 	SkinProperties.Style428.Data24.y = 11;
 	SkinProperties.Style428.Data24.Width = 32;
@@ -503,7 +503,7 @@ void InitSkinProperties()
 	SkinProperties.Style428.Data34.Color.R = 176;
 	SkinProperties.Style428.Data34.Color.G = 176;
 	SkinProperties.Style428.Data34.Color.B = 176;
-	SkinProperties.Style428.Data34.Unknown10 = 1;
+	SkinProperties.Style428.Data34.Alignment = 1;
 	SkinProperties.Data470.x = 2;
 	SkinProperties.Data470.y = 2;
 	SkinProperties.Data470.Width = 104;
@@ -518,7 +518,7 @@ void InitSkinProperties()
 	SkinProperties.Data498.Color.R = 192;
 	SkinProperties.Data498.Color.G = 192;
 	SkinProperties.Data498.Color.B = 192;
-	SkinProperties.Data498.Unknown10 = 2;
+	SkinProperties.Data498.Alignment = 2;
 	SkinProperties.Data4AC = 134;
 	SkinProperties.Data4B0 = 43;
 	SkinProperties.Data4B4.x = 0;
@@ -605,7 +605,7 @@ void InitSkinProperties()
 	SkinProperties.StatusWindow.Data54.Color.R = 176;
 	SkinProperties.StatusWindow.Data54.Color.G = 176;
 	SkinProperties.StatusWindow.Data54.Color.B = 176;
-	SkinProperties.StatusWindow.Data54.Unknown10 = 0;
+	SkinProperties.StatusWindow.Data54.Alignment = 0;
 	SkinProperties.Data608 = 26;
 	SkinProperties.Data60C.x = 8;
 	SkinProperties.Data60C.y = 3;
@@ -629,7 +629,7 @@ void InitSkinProperties()
 	SkinProperties.Data654.Color.R = 176;
 	SkinProperties.Data654.Color.G = 176;
 	SkinProperties.Data654.Color.B = 176;
-	SkinProperties.Data654.Unknown10 = 0;
+	SkinProperties.Data654.Alignment = 0;
 	SkinProperties.Data668 = 10;
 	SkinProperties.Data66C = 10;
 	SkinProperties.Data670.x = 192;
@@ -663,7 +663,7 @@ void InitSkinProperties()
 	SkinProperties.Style688.Data54.Color.R = 176;
 	SkinProperties.Style688.Data54.Color.G = 176;
 	SkinProperties.Style688.Data54.Color.B = 176;
-	SkinProperties.Style688.Data54.Unknown10 = 0;
+	SkinProperties.Style688.Data54.Alignment = 0;
 	SkinProperties.Style688.Data68.R = 71;
 	SkinProperties.Style688.Data68.G = 71;
 	SkinProperties.Style688.Data68.B = 71;
@@ -688,7 +688,7 @@ void InitSkinProperties()
 	SkinProperties.Style6FC.Data44.Color.R = 255;
 	SkinProperties.Style6FC.Data44.Color.G = 255;
 	SkinProperties.Style6FC.Data44.Color.B = 255;
-	SkinProperties.Style6FC.Data44.Unknown10 = 0;
+	SkinProperties.Style6FC.Data44.Alignment = 0;
 	SkinProperties.Style6FC.Data58.x = 0;
 	SkinProperties.Style6FC.Data58.y = 12;
 	SkinProperties.Style6FC.Data60.x = 0;
@@ -733,7 +733,7 @@ void InitSkinProperties()
 	SkinProperties.Style6FC.DataF8.Color.R = 255;
 	SkinProperties.Style6FC.DataF8.Color.G = 255;
 	SkinProperties.Style6FC.DataF8.Color.B = 255;
-	SkinProperties.Style6FC.DataF8.Unknown10 = 1;
+	SkinProperties.Style6FC.DataF8.Alignment = 1;
 	SkinProperties.BuddylistWindow.Data00 = 32;
 	SkinProperties.BuddylistWindow.Data04 = 16;
 	SkinProperties.BuddylistWindow.Logo.x = 2;
@@ -748,7 +748,7 @@ void InitSkinProperties()
 	SkinProperties.BuddylistWindow.Data28.Color.R = 224;
 	SkinProperties.BuddylistWindow.Data28.Color.G = 224;
 	SkinProperties.BuddylistWindow.Data28.Color.B = 224;
-	SkinProperties.BuddylistWindow.Data28.Unknown10 = 0;
+	SkinProperties.BuddylistWindow.Data28.Alignment = 0;
 	SkinProperties.BuddylistWindow.Data3C.x = 96;
 	SkinProperties.BuddylistWindow.Data3C.y = 248;
 	SkinProperties.BuddylistWindow.Data44.x = 96;
@@ -771,12 +771,12 @@ void InitSkinProperties()
 	SkinProperties.Buttons.Data00.Color.R = 255;
 	SkinProperties.Buttons.Data00.Color.G = 255;
 	SkinProperties.Buttons.Data00.Color.B = 255;
-	SkinProperties.Buttons.Data00.Unknown10 = 1;
+	SkinProperties.Buttons.Data00.Alignment = 1;
 	SkinProperties.Buttons.Data14.FontNumber = 3;
 	SkinProperties.Buttons.Data14.Color.R = 192;
 	SkinProperties.Buttons.Data14.Color.G = 192;
 	SkinProperties.Buttons.Data14.Color.B = 192;
-	SkinProperties.Buttons.Data14.Unknown10 = 1;
+	SkinProperties.Buttons.Data14.Alignment = 1;
 	SkinProperties.Buttons.Data28 = 1;
 	SkinProperties.Buttons.Texture.x = 2;
 	SkinProperties.Buttons.Texture.y = 2;
@@ -785,17 +785,17 @@ void InitSkinProperties()
 	SkinProperties.Style8C4.Data00.Color.R = 224;
 	SkinProperties.Style8C4.Data00.Color.G = 224;
 	SkinProperties.Style8C4.Data00.Color.B = 224;
-	SkinProperties.Style8C4.Data00.Unknown10 = 0;
+	SkinProperties.Style8C4.Data00.Alignment = 0;
 	SkinProperties.Style8C4.Data14.FontNumber = 4;
 	SkinProperties.Style8C4.Data14.Color.R = 255;
 	SkinProperties.Style8C4.Data14.Color.G = 255;
 	SkinProperties.Style8C4.Data14.Color.B = 255;
-	SkinProperties.Style8C4.Data14.Unknown10 = 0;
+	SkinProperties.Style8C4.Data14.Alignment = 0;
 	SkinProperties.Style8C4.Data28.FontNumber = 4;
 	SkinProperties.Style8C4.Data28.Color.R = 160;
 	SkinProperties.Style8C4.Data28.Color.G = 160;
 	SkinProperties.Style8C4.Data28.Color.B = 255;
-	SkinProperties.Style8C4.Data28.Unknown10 = 0;
+	SkinProperties.Style8C4.Data28.Alignment = 0;
 	SkinProperties.CheckBox.Item.x = 6;
 	SkinProperties.CheckBox.Item.y = 5;
 	SkinProperties.CheckBox.Data08.x = 24;
@@ -806,12 +806,12 @@ void InitSkinProperties()
 	SkinProperties.CheckBox.Data18.Color.R = 176;
 	SkinProperties.CheckBox.Data18.Color.G = 176;
 	SkinProperties.CheckBox.Data18.Color.B = 176;
-	SkinProperties.CheckBox.Data18.Unknown10 = 0;
+	SkinProperties.CheckBox.Data18.Alignment = 0;
 	SkinProperties.CheckBox.Data2C.FontNumber = 4;
 	SkinProperties.CheckBox.Data2C.Color.R = 112;
 	SkinProperties.CheckBox.Data2C.Color.G = 112;
 	SkinProperties.CheckBox.Data2C.Color.B = 112;
-	SkinProperties.CheckBox.Data2C.Unknown10 = 0;
+	SkinProperties.CheckBox.Data2C.Alignment = 0;
 	SkinProperties.Data940 = 1;
 	SkinProperties.Style944.Data00.R = 54;
 	SkinProperties.Style944.Data00.G = 54;
@@ -826,12 +826,12 @@ void InitSkinProperties()
 	SkinProperties.Style944.Data24.Color.R = 224;
 	SkinProperties.Style944.Data24.Color.G = 224;
 	SkinProperties.Style944.Data24.Color.B = 224;
-	SkinProperties.Style944.Data24.Unknown10 = 0;
+	SkinProperties.Style944.Data24.Alignment = 0;
 	SkinProperties.Style944.Data38.FontNumber = 4;
 	SkinProperties.Style944.Data38.Color.R = 176;
 	SkinProperties.Style944.Data38.Color.G = 176;
 	SkinProperties.Style944.Data38.Color.B = 176;
-	SkinProperties.Style944.Data38.Unknown10 = 0;
+	SkinProperties.Style944.Data38.Alignment = 0;
 	SkinProperties.Style944.Data4C.R = 128;
 	SkinProperties.Style944.Data4C.G = 128;
 	SkinProperties.Style944.Data4C.B = 128;
@@ -843,7 +843,7 @@ void InitSkinProperties()
 	SkinProperties.Style9A0.Data0C.Color.R = 176;
 	SkinProperties.Style9A0.Data0C.Color.G = 176;
 	SkinProperties.Style9A0.Data0C.Color.B = 176;
-	SkinProperties.Style9A0.Data0C.Unknown10 = 0;
+	SkinProperties.Style9A0.Data0C.Alignment = 0;
 	SkinProperties.Style9A0.Data20 = 3;
 	SkinProperties.Style9A0.Data24.R = 112;
 	SkinProperties.Style9A0.Data24.G = 112;
@@ -852,7 +852,7 @@ void InitSkinProperties()
 	SkinProperties.Style9A0.Data30.Color.R = 255;
 	SkinProperties.Style9A0.Data30.Color.G = 255;
 	SkinProperties.Style9A0.Data30.Color.B = 255;
-	SkinProperties.Style9A0.Data30.Unknown10 = 0;
+	SkinProperties.Style9A0.Data30.Alignment = 0;
 	SkinProperties.Data9E4 = 1;
 	SkinProperties.Style9E8.Data00 = 106;
 	SkinProperties.Style9E8.Data04.x = 18;
@@ -900,7 +900,7 @@ void InitSkinProperties()
 	SkinProperties.Style9E8.DataA8.Color.R = 160;
 	SkinProperties.Style9E8.DataA8.Color.G = 160;
 	SkinProperties.Style9E8.DataA8.Color.B = 255;
-	SkinProperties.Style9E8.DataA8.Unknown10 = 0;
+	SkinProperties.Style9E8.DataA8.Alignment = 0;
 	SkinProperties.StyleAA4.Data00 = 96;
 	SkinProperties.StyleAA4.Data04 = 18;
 	SkinProperties.StyleAA4.Data08.x = 48;
@@ -910,22 +910,22 @@ void InitSkinProperties()
 	SkinProperties.StyleAA4.Data14.Color.R = 224;
 	SkinProperties.StyleAA4.Data14.Color.G = 224;
 	SkinProperties.StyleAA4.Data14.Color.B = 224;
-	SkinProperties.StyleAA4.Data14.Unknown10 = 1;
+	SkinProperties.StyleAA4.Data14.Alignment = 1;
 	SkinProperties.StyleAA4.Data28.FontNumber = 2;
 	SkinProperties.StyleAA4.Data28.Color.R = 128;
 	SkinProperties.StyleAA4.Data28.Color.G = 128;
 	SkinProperties.StyleAA4.Data28.Color.B = 128;
-	SkinProperties.StyleAA4.Data28.Unknown10 = 1;
+	SkinProperties.StyleAA4.Data28.Alignment = 1;
 	SkinProperties.StyleAA4.Data3C.FontNumber = 2;
 	SkinProperties.StyleAA4.Data3C.Color.R = 248;
 	SkinProperties.StyleAA4.Data3C.Color.G = 96;
 	SkinProperties.StyleAA4.Data3C.Color.B = 96;
-	SkinProperties.StyleAA4.Data3C.Unknown10 = 1;
+	SkinProperties.StyleAA4.Data3C.Alignment = 1;
 	SkinProperties.StyleAA4.Data50.FontNumber = 2;
 	SkinProperties.StyleAA4.Data50.Color.R = 248;
 	SkinProperties.StyleAA4.Data50.Color.G = 248;
 	SkinProperties.StyleAA4.Data50.Color.B = 248;
-	SkinProperties.StyleAA4.Data50.Unknown10 = 1;
+	SkinProperties.StyleAA4.Data50.Alignment = 1;
 	SkinProperties.StyleB08.Data00 = 162;
 	SkinProperties.StyleB08.Data04 = 68;
 	SkinProperties.StyleB08.Data08.x = 5;
@@ -936,7 +936,7 @@ void InitSkinProperties()
 	SkinProperties.StyleB08.Data18.Color.R = 144;
 	SkinProperties.StyleB08.Data18.Color.G = 144;
 	SkinProperties.StyleB08.Data18.Color.B = 144;
-	SkinProperties.StyleB08.Data18.Unknown10 = 1;
+	SkinProperties.StyleB08.Data18.Alignment = 1;
 	SkinProperties.StyleB08.Data2C.x = -56;
 	SkinProperties.StyleB08.Data2C.y = -30;
 	SkinProperties.StyleB08.Data34.x = -109;
@@ -955,12 +955,12 @@ void InitSkinProperties()
 	SkinProperties.StyleB08.Data64.Color.R = 192;
 	SkinProperties.StyleB08.Data64.Color.G = 192;
 	SkinProperties.StyleB08.Data64.Color.B = 192;
-	SkinProperties.StyleB08.Data64.Unknown10 = 0;
+	SkinProperties.StyleB08.Data64.Alignment = 0;
 	SkinProperties.StyleB08.Data78.FontNumber = 4;
 	SkinProperties.StyleB08.Data78.Color.R = 192;
 	SkinProperties.StyleB08.Data78.Color.G = 192;
 	SkinProperties.StyleB08.Data78.Color.B = 192;
-	SkinProperties.StyleB08.Data78.Unknown10 = 0;
+	SkinProperties.StyleB08.Data78.Alignment = 0;
 	SkinProperties.DataB94 = 200;
 	SkinProperties.DataB98 = 86;
 	SkinProperties.DataB9C.x = 0;
@@ -1148,12 +1148,12 @@ void InitSkinProperties()
 	SkinProperties.StyleE68.Data08.Color.R = 176;
 	SkinProperties.StyleE68.Data08.Color.G = 176;
 	SkinProperties.StyleE68.Data08.Color.B = 176;
-	SkinProperties.StyleE68.Data08.Unknown10 = 1;
+	SkinProperties.StyleE68.Data08.Alignment = 1;
 	SkinProperties.StyleE68.Data1C.FontNumber = 4;
 	SkinProperties.StyleE68.Data1C.Color.R = 176;
 	SkinProperties.StyleE68.Data1C.Color.G = 176;
 	SkinProperties.StyleE68.Data1C.Color.B = 176;
-	SkinProperties.StyleE68.Data1C.Unknown10 = 0;
+	SkinProperties.StyleE68.Data1C.Alignment = 0;
 	SkinProperties.StyleE68.Data30 = 8;
 	SkinProperties.StyleE68.Data34.x = 0;
 	SkinProperties.StyleE68.Data34.y = 0;
@@ -1740,7 +1740,7 @@ void TComponent::Draw(int Surface, int x, int y)
 		TASSERT1(DrawingList[i].skin<NumberOfSkins, DrawingList[i].skin);
 		if (DrawingList[i].width == 0 && DrawingList[i].height == 0) {
 			TSkin *Skin = &Skins[DrawingList[i].skin];
-			FUN_00490c60(Surface, DrawingList[i].x + x, DrawingList[i].y + y, 4, Skin->x, Skin->y, Skin->width,
+			DrawPicturePart(Surface, DrawingList[i].x + x, DrawingList[i].y + y, 4, Skin->x, Skin->y, Skin->width,
 				Skin->height);
 			continue;
 		}

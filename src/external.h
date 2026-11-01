@@ -30,11 +30,6 @@ struct regexp;
 regexp *regcomp(char *exp);                     // 0x50fa40, the result is malloc'd
 int regexec(regexp *prog, char *string);        // 0x50f360, 1 on a match
 
-// --- added for Communication.cpp ---
-
-extern uint32 DAT_005cc758; // 0x5cc758, graphics.cpp; Tibia.pic signature
-extern uint32 DAT_005ccb64; // 0x5ccb64, graphics.cpp; Tibia.spr signature
-
 // --- added for Control.cpp ---
 
 struct TFullscreenMode; // Preferences.h
@@ -46,8 +41,8 @@ struct TFullscreenMode; // Preferences.h
 // SurfaceExitInstance (error messages in ChangeEngine). The other class,
 // member and variable names are ours; member offsets are from the reads.
 
-// GUI.cpp: the window classes (TComponent, TElement, TWindow), and for now
-// the graphics types TRect, TRGBColor and TFont (GUI.h).
+// GUI.cpp: the window classes (TComponent, TElement, TWindow); GUI.h includes
+// graphics.h, which has the graphics types TRect, TRGBColor and TFont.
 #include "GUI.h"
 
 // ConsoleWindow.cpp. Not instantiated here; the arrays stand for the members
@@ -146,13 +141,25 @@ public:
 	void Unknown0C(); void Unknown10(); void FillRectangle(int Surface, TRect Rect, TRGBColor Color);
 	void Unknown18(); void Unknown1C(); void Unknown20();
 	void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color);
-	void Unknown28(); void Unknown2C(); void Unknown30(); void Unknown34(); void Unknown38();
-	void Unknown3C(); void Unknown40(); void Unknown44(); void Unknown48(); void Unknown4C();
-	void Unknown54(int a, int b, int c, int d); void Unknown58(); void Unknown5C(); void Unknown60();
+	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data);
+	void WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data, uint8 *Mask,
+		TRGBColor *Colors);
+	void Unknown30();
+	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
+		TRGBColor ColorKey);
+	void Unknown38();
+	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
+		int Height, TRGBColor ColorKey, TRect Clip);
+	void Unknown40(); void Unknown44();
+	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
+		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip);
+	void Unknown4C();
+	void Unknown54(int Surface, TRGBColor ColorKey); void Unknown58(); void Unknown5C(); void Unknown60();
 	void Unknown68(); void Unknown6C(); void Unknown70(); void Unknown74(); void Unknown78();
 	void Unknown7C(); void FinishFrame();
 	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force);
-	void Unknown8C(); void Unknown90(); void Unknown94(); bool Unknown9C(int Value);
+	void Unknown8C(); int GetCacheSurfaces(); void GetSurfaceRect(int Surface, TRect *Rect);
+	bool Unknown9C(int Value);
 	bool IsUnavailable(); void UnknownA4(); void UnknownA8(); void UnknownAC(); double GetFPS();
 	void InitSurfaces(); void ExitSurfaces();
 	uint8 DataGL[0x498 - 0x44];
@@ -211,26 +218,6 @@ TWindow *FUN_00484200(void (*OpenURL)(const char *URL));                // 0x484
 TWindow *FUN_00484400();                                                // 0x484400, "Error Report"
 TWindow *FUN_00485290(INT_PTR Param1, INT_PTR Param2);                  // 0x485290, "Rule Violation"
 
-// Between DialogWindow.cpp and graphics.cpp
-void FUN_0048b4a0();                   // 0x48b4a0
-
-// graphics.cpp
-void FUN_00490c60(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY,
-	int Width, int Height);            // 0x490c60, line 1164
-int FUN_00491880(int FontNumber, const char *Text); // 0x491880, lines 1352-1353; text height
-void FUN_004922c0();                   // 0x4922c0
-void FUN_00492490();                   // 0x492490
-void FUN_00493af0(int Surface, int x, int y, int FontNumber, TRGBColor Color, const char *Text,
-	int Param7);                       // 0x493af0, lines 1282-1284
-void FUN_00493f60(int Surface, int x, int y, TFont Font, const char *Text); // 0x493f60, line 1295
-int FUN_00494570(int FontNumber, const char *Text); // 0x494570, lines 1373-1374; text width
-void FUN_00494900();                   // 0x494900
-void FUN_00494af0(int MemoryCacheBytes); // 0x494af0
-
-// graphics.cpp, added for GUI.cpp's DrawSkinClipped (kept apart from the
-// lines above, which the graphics.cpp reconstruction replaces)
-void FUN_004910e0(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
-	int Height, int ClipX, int ClipY, int ClipWidth, int ClipHeight); // 0x4910e0, lines 1191-1193; clipped
 
 // Between MainFrm.cpp and MainWindow.cpp
 void FUN_004ac090();                   // 0x4ac090
@@ -259,9 +246,6 @@ void FUN_004ac090();                   // 0x4ac090
 // MainWindow.cpp: creates the main game window with the frame's callbacks.
 void FUN_004b05b0(int Width, int Height, void (*ExitProgram)(), void (*SetDisplayMode)(int Mode),
 	void (*OpenURL)(const char *URL));  // 0x4b05b0
-
-// graphics.cpp
-void FUN_0048da50();                    // 0x48da50, after the surfaces are created
 
 // Owner unknown (.data after Status.cpp's 0x5c2560): set by "engine N" on
 // the command line, read by SurfaceInitInstance; -1 = none.

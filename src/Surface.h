@@ -21,7 +21,12 @@ extern int curEngine; // 0x71d0c4
 // The vtable is at 0x56ef78. Slots with _purecall in the binary are pure;
 // the others have the default bodies in Surface.cpp. Unknown slots keep
 // their offsets; their parameters are known only where a default body
-// shows them (by its RET n).
+// shows them (by its RET n). The slots graphics.cpp calls (+0x28, +0x2c,
+// +0x34, +0x3c, +0x48, +0x50, +0x90, +0x94) have their parameters from those
+// calls (ToSurface and FromSurface from SurfaceGL.cpp's assertions; the other
+// names are ours); +0x50 gets a colour key by value (the callers copy a
+// TRGBColor to the stack) and passes it on to +0x54. Surfaces 6 and up are
+// the video cache surfaces.
 class TSurface {
 public:
 	TSurface();
@@ -35,18 +40,23 @@ public:
 	virtual void Unknown1C() = 0;
 	virtual void Unknown20() = 0;
 	virtual void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color) = 0; // +0x24
-	virtual void Unknown28() = 0;
-	virtual void Unknown2C() = 0;
+	virtual void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data) = 0; // +0x28
+	virtual void WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data,
+		uint8 *Mask, TRGBColor *Colors) = 0;                         // +0x2c
 	virtual void Unknown30() = 0;
-	virtual void Unknown34() = 0;
+	virtual void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
+		int Height, TRGBColor ColorKey) = 0;                          // +0x34
 	virtual void Unknown38() = 0;
-	virtual void Unknown3C() = 0;
+	virtual void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY,
+		int Width, int Height, TRGBColor ColorKey, TRect Clip) = 0;   // +0x3c
 	virtual void Unknown40() = 0;
 	virtual void Unknown44() = 0;
-	virtual void Unknown48() = 0;
+	virtual void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface,
+		int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight,
+		TRect Clip) = 0;                                              // +0x48
 	virtual void Unknown4C() = 0;
-	virtual void Unknown50(int a, int b, int c, int d);               // +0x50, calls +0x54
-	virtual void Unknown54(int a, int b, int c, int d) = 0;
+	virtual void Unknown50(int Surface, TRGBColor ColorKey);         // +0x50, calls +0x54; graphics.cpp sets a cache surface's colour key
+	virtual void Unknown54(int Surface, TRGBColor ColorKey) = 0;
 	virtual void Unknown58() = 0;
 	virtual void Unknown5C() = 0;
 	virtual void Unknown60() = 0;
@@ -61,8 +71,8 @@ public:
 	virtual void FinishFrame() = 0;                                   // +0x84
 	virtual bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force) = 0; // +0x88
 	virtual void Unknown8C() = 0;
-	virtual void Unknown90() = 0;
-	virtual void Unknown94() = 0;
+	virtual int GetCacheSurfaces() = 0;                               // +0x90, the number of video cache surfaces
+	virtual void GetSurfaceRect(int Surface, TRect *Rect) = 0;        // +0x94
 	virtual void Unknown98(int a, int b, int c, int d, int e);        // +0x98, empty
 	virtual bool Unknown9C(int Value) = 0;                            // +0x9c
 	virtual bool IsUnavailable() = 0;                                 // +0xa0

@@ -24,6 +24,7 @@
 #include "Objects.h"
 #include "Communication.h"
 #include "Creatures.h"
+#include "graphics.h"
 #include "Preferences.h"
 #include "Skins.h"
 #include "Script.h"
@@ -107,7 +108,7 @@ void CheckSurface(bool Force)
 	if (!Success)
 		ChangeEngine(0);
 	if (GetSurface()->Unknown9C(1))
-		FUN_004922c0();
+		ResetVideoCache();
 	TEND1(Force?1:0)
 }
 
@@ -187,8 +188,8 @@ void Redraw(bool Force)
 	if (Tooltip != NULL) {
 		int x, y;
 		GetMouseOverTextPosition(&x, &y);
-		int Width = FUN_00494570(SkinProperties.TooltipFont.FontNumber, Tooltip) + SkinProperties.TooltipBorder * 2;
-		int Height = FUN_00491880(SkinProperties.TooltipFont.FontNumber, Tooltip) + SkinProperties.TooltipBorder * 2;
+		int Width = GetTextWidth(SkinProperties.TooltipFont.FontNumber, Tooltip) + SkinProperties.TooltipBorder * 2;
+		int Height = GetTextHeight(SkinProperties.TooltipFont.FontNumber, Tooltip) + SkinProperties.TooltipBorder * 2;
 		y -= Height;
 		int MaxX = GetWindowWidth() - Width - 1;
 		if (MaxX >= 1) {
@@ -217,8 +218,8 @@ void Redraw(bool Force)
 		TRect Rect = {x, y, Width, Height};
 		GetSurface()->FillRectangle(1, Rect, SkinProperties.TooltipBackground);
 		GetSurface()->DrawFrame(1, Rect, 1, SkinProperties.TooltipFrame);
-		FUN_00493f60(1, SkinProperties.TooltipBorder + x, SkinProperties.TooltipBorder + y, SkinProperties.TooltipFont,
-			Tooltip);
+		PrintFormattedText(1, SkinProperties.TooltipBorder + x, SkinProperties.TooltipBorder + y,
+			SkinProperties.TooltipFont, Tooltip);
 	}
 	if (ShowFPS) {
 		char Engine[4];
@@ -240,7 +241,7 @@ void Redraw(bool Force)
 		char Text[64];
 		_snprintf(Text, 20, "%s %.02f fps", Engine, FPS);
 		TRGBColor Color = {200, 200, 200};
-		FUN_00493af0(1, 4, 4, 2, Color, Text, 0);
+		PrintText(1, 4, 4, 2, Color, Text, 0);
 	}
 	if (!GetWindowsMousepointer()) {
 		int Cursor = GetMouseCursor();
@@ -274,7 +275,7 @@ void Redraw(bool Force)
 				break;
 			}
 			TSkin *Picture = &Skins[Cursor];
-			FUN_00490c60(1, x, y, 4, Picture->x, Picture->y, Picture->width, Picture->height);
+			DrawPicturePart(1, x, y, 4, Picture->x, Picture->y, Picture->width, Picture->height);
 		}
 	}
 	GetSurface()->FinishFrame();
@@ -1129,10 +1130,10 @@ void ProcessEvents()
 			ReloadObjects();
 			break;
 		case 0x46:
-			FUN_00492490();
+			ReloadSprites();
 			break;
 		case 0x47:
-			FUN_00494900();
+			ReloadPictures();
 			break;
 		case 0x48:
 			CloseCallback();
@@ -1191,7 +1192,7 @@ void InitControl(bool Gamemaster)
 		InitHelp();
 		InitPreferences();
 		InitTalk();
-		FUN_00494af0(0xa00000);
+		InitGraphics(0xa00000);
 		InitSkins();
 		InitSkinProperties();
 		InitNetwork(ConnectionEstablished, ReceivePackets, ConnectionClosed);
@@ -1220,7 +1221,7 @@ void ExitControl()
 	ExitCommunication();
 	ExitNetwork();
 	ExitSkins();
-	FUN_0048b4a0();
+	ExitGraphics();
 	GetSurface()->ExitSurfaces();
 	SurfaceExitInstance();
 	ExitPreferences();

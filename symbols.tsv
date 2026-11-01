@@ -3254,11 +3254,11 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x48b1dc	20	Catch@0048b1dc	catch	DialogWindow.cpp	between		0x48aea0	
 0x48b1f0	151	Catch@0048b1f0	catch	DialogWindow.cpp	assert	297	0x48aea0	Strategy
 0x48b287	174	Catch@0048b287	catch	DialogWindow.cpp	assert	297	0x48aea0	
-0x48b380	39	FUN_0048b380	game	DialogWindow.cpp|graphics.cpp	gap			
-0x48b3b0	57	FUN_0048b3b0	game	DialogWindow.cpp|graphics.cpp	gap			
-0x48b430	38	FUN_0048b430	game	DialogWindow.cpp|graphics.cpp	gap			
-0x48b460	59	FUN_0048b460	game	DialogWindow.cpp|graphics.cpp	gap			
-0x48b4a0	167	FUN_0048b4a0	game	DialogWindow.cpp|graphics.cpp	gap			
+0x48b380	39	FUN_0048b380	game	graphics.h	range			
+0x48b3b0	57	FUN_0048b3b0	game	graphics.h	range			
+0x48b430	38	FUN_0048b430	game	graphics.cpp	range			
+0x48b460	59	FUN_0048b460	game	graphics.cpp	range			
+0x48b4a0	167	FUN_0048b4a0	game	graphics.cpp	range			
 0x48b550	735	FUN_0048b550	game	graphics.cpp	assert	130,131		
 0x48b839	21	Catch@0048b839	catch	graphics.cpp	between		0x48b550	
 0x48b84e	20	Catch@0048b84e	catch	graphics.cpp	between		0x48b550	

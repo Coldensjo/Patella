@@ -4,7 +4,8 @@
 //   filled with 0xcc (the untouched ints must stay), then the original
 //   InitSkinProperties (0x498160) and ours, compared byte for byte.
 // - DrawSkin, DrawSkinClipped and TComponent::Draw: the picture functions of
-//   graphics.cpp (0x490c60, 0x4910e0) are recorders on both sides.
+//   graphics.cpp (0x490c60 DrawPicturePart, 0x4910e0 DrawPicturePartClipped)
+//   are recorders on both sides (ours redirected while TestGUI runs).
 // - The window classes: two mirrored trees, one of original objects (made by
 //   the image's constructors 0x496080 and 0x496100; every call through their
 //   vtables runs the original code), one of ours. The leaves are probes of
@@ -20,6 +21,7 @@
 
 #include "difftest.h"
 #include "../../src/GUI.h"
+#include "../../src/graphics.h"
 #include "../../src/Skins.h"
 #include "../../src/Help.h"
 #include <map>
@@ -42,7 +44,10 @@ static void Logf(int Side, const char *Format, ...)
 
 // --- graphics.cpp recorders -------------------------------------------------
 
-void FUN_00490c60(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width, int Height)
+// Our DrawPicturePart and DrawPicturePartClipped (graphics.cpp, tested in
+// graphicstest.cpp) jump to these recorders while TestGUI runs.
+static void OurPicture(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
+	int Height)
 {
 	Logf(OURS, "P%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY, Width, Height);
 }
@@ -53,11 +58,28 @@ static void __cdecl ImagePicture(int Surface, int x, int y, int PictureNumber, i
 	Logf(ORIGINAL, "P%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY, Width, Height);
 }
 
-void FUN_004910e0(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
-	int Height, int ClipX, int ClipY, int ClipWidth, int ClipHeight)
+static void OurClippedPicture(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
+	int Height, TRect Clip)
 {
 	Logf(OURS, "C%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY, Width,
-		Height, ClipX, ClipY, ClipWidth, ClipHeight);
+		Height, Clip.x, Clip.y, Clip.Width, Clip.Height);
+}
+
+// Redirects one of our functions to a recorder (Restore = false) or puts
+// back its first five bytes, as talktest.cpp does with the CRT clock.
+static uint8 SavedPicture[2][5];
+static void RedirectOurs(int Index, void *Function, void *Recorder, bool Restore)
+{
+	DWORD Protection;
+	VirtualProtect(Function, 5, PAGE_EXECUTE_READWRITE, &Protection);
+	if (Restore) {
+		memcpy(Function, SavedPicture[Index], 5);
+	} else {
+		memcpy(SavedPicture[Index], Function, 5);
+		PatchJump((uint32)(uintptr_t)Function, Recorder);
+	}
+	FlushInstructionCache(GetCurrentProcess(), Function, 5);
+	VirtualProtect(Function, 5, Protection, &Protection);
 }
 
 static void __cdecl ImageClippedPicture(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY,
@@ -934,6 +956,8 @@ void TestGUI()
 	PatchImage();
 	PatchJump(0x490c60, (void *)ImagePicture);
 	PatchJump(0x4910e0, (void *)ImageClippedPicture);
+	RedirectOurs(0, (void *)DrawPicturePart, (void *)OurPicture, false);
+	RedirectOurs(1, (void *)DrawPicturePartClipped, (void *)OurClippedPicture, false);
 	PrepareSkins();
 	int Before = Checks, BeforeFailures = Failures;
 	TestSkinProperties();
@@ -949,4 +973,6 @@ void TestGUI()
 		Failures - BeforeFailures, Least);
 	ExitSkins();
 	Global<TSkin *>(0x71c454) = NULL;
+	RedirectOurs(0, (void *)DrawPicturePart, NULL, true);
+	RedirectOurs(1, (void *)DrawPicturePartClipped, NULL, true);
 }

@@ -15,45 +15,9 @@
 #include "common.h"
 #include "Container.h"
 
-// --- Graphics types -----------------------------------------------------
-// They belong to graphics.cpp's header, which is not reconstructed yet; they
-// are here because the window classes and SkinProperties need them complete.
-// The binary's default constructors zero them (SkinProperties' constructor
-// 0x496800 zeroes every such member).
-
-struct TRect {     // passed by value (16 bytes)
-	constexpr TRect() : x(0), y(0), Width(0), Height(0) {}
-	constexpr TRect(int x, int y, int Width, int Height) : x(x), y(y), Width(Width), Height(Height) {}
-	int x, y, Width, Height;
-};
-
-struct TRGBColor { // passed by value (12 bytes)
-	constexpr TRGBColor() : R(0), G(0), B(0) {}
-	constexpr TRGBColor(int R, int G, int B) : R(R), G(G), B(B) {}
-	// 0x425950 (out-of-line copy between ConsoleWindow.cpp and
-	// ContentWindows.cpp; inlined in Map.cpp's SetAmbientLight): a colour of
-	// the 6x6x6 palette, Color = R*36 + G*6 + B with steps of 51.
-	TRGBColor(int Color)
-	{
-		R = Color / 36 * 51;
-		B = Color % 6 * 51;
-		G = Color / 6 % 6 * 51;
-	}
-	int R, G, B;
-};
-
-// The colour TFont's default constructor reads from memory. Every object
-// that constructs a TFont has its own copy (GUI.obj 0x5c1954, DialogElements
-// 0x5c1230, an earlier object 0x5c066c), so it is a constant defined in a
-// header (internal linkage). The name is ours.
-const TRGBColor DefaultFontColor(224, 224, 224);
-
-struct TFont {     // passed by value (20 bytes)
-	TFont() : FontNumber(4), Color(DefaultFontColor), Unknown10(0) {}
-	int FontNumber;
-	TRGBColor Color;
-	int Unknown10;
-};
+// The graphics types TRect, TRGBColor and TFont are graphics.h's; the window
+// classes and SkinProperties need them complete.
+#include "graphics.h"
 
 void DrawSkin(int Surface, int x, int y, int width, int height, int skin, int srcx, int srcy); // 0x497a00
 void DrawSkinClipped(int Surface, int x, int y, int width, int height, int skin, int ClipX, int ClipY,

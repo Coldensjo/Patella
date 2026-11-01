@@ -839,7 +839,7 @@ address	name	kind	confidence	note
 0x4eab60	SurfaceExitInstance	game	high	Surface.cpp: deletes the surface; name from ChangeEngine's error messages
 0x4eab80	TSurface_TestEngine	game	high	Surface.cpp: default TestEngine (vtable +0xbc) takes the main window, returns true
 0x4eab90	TSurface_ctor	game	high	Surface.cpp
-0x4eabb0	TSurface_Unknown50	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same four arguments (missed by Ghidra)
+0x4eabb0	TSurface_Unknown50	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same arguments, a surface and a colour key (TRGBColor by value; graphics.cpp sets the cache surfaces' key with it) (missed by Ghidra)
 0x4eabd0	TSurface_dtor	game	high	Surface.cpp
 0x4eabe0	GetAvailableEngines	game	low	Surface.cpp: bit 0 OpenGL, bit 1 DirectX 9
 0x4eabf0	TSurface_Unknown98	game	medium	Surface.cpp: vtable +0x98, empty (missed by Ghidra)
@@ -1265,3 +1265,62 @@ address	name	kind	confidence	note
 0x425950	TRGBColor_ctor_palette	game	medium	inline TRGBColor(int Color) of a header (6x6x6 palette, steps of 51), out-of-line copy between ConsoleWindow.cpp and ContentWindows.cpp; inlined in SetAmbientLight; returns this
 0x426170	vector_TMark_ctor	game	high	Container.h vector<TMark>::vector(min, max, block); copy kept from an object before Map.obj; used by TAutomapBlock's constructor
 0x425b20	vector_TMark_at	game	high	Container.h vector<TMark>::operator(); copy kept from an object before Map.obj; used by Map.cpp
+0x48b380	TRGBColor_operator_eq	game	high	inline TRGBColor::operator==(TRGBColor) (graphics.h, by inference); out-of-line copy kept in graphics.obj, first called by FindVideoMaskedSprite (0x48e09e); SurfaceGL.cpp calls it too
+0x48b3b0	TRGBColor_operator_ne	game	high	inline TRGBColor::operator!=(TRGBColor), !(==) (graphics.h, by inference); out-of-line copy kept in graphics.obj, called by GetVideoPicture (0x48f1df)
+0x48b3f0	TVideoCacheItem_ctor	game	medium	graphics.cpp: clears the colours at +0x18..+0x47; passed to the eh vector constructor iterator by InitVideoCache (missed by Ghidra); class name ours
+0x48b430	GetFontLineHeight	game	low	graphics.cpp gap: Fonts[n-1]+0x718, out-of-range numbers (not 0) give font 3; GUI callers use it for every text line after the first
+0x48b460	ClearMemoryCache	game	medium	graphics.cpp gap: every memory cache item EMPTY_ITEM, hash table -1
+0x48b4a0	ExitGraphics	game	medium	graphics.cpp gap: frees the caches, fonts, pictures and sprites; called by ExitControl
+0x48b550	LoadSprites	game	medium	graphics.cpp lines 130-148; Tibia.spr header and offsets; PROGRAM_ERROR 2
+0x48b9a0	LoadSprite	game	medium	graphics.cpp lines 156-212; decodes a sprite to 32x32 RGB; PROGRAM_ERROR 4
+0x48bea0	LoadPictures	game	medium	graphics.cpp lines 244-272; Tibia.pic header and tile offsets; PROGRAM_ERROR 3
+0x48c3b0	LoadPictureTile	game	medium	graphics.cpp lines 280-322; decodes one picture tile; PROGRAM_ERROR 5
+0x48c9c0	InitMemoryCache	game	medium	graphics.cpp line 458; MemoryCacheBytes/3072 items
+0x48cc30	TouchMemoryItem	game	low	graphics.cpp line 466; moves an item to the front of the LRU list
+0x48ce00	FindMemorySprite	game	low	graphics.cpp; hash chain lookup, -1 if absent
+0x48ce70	FindMemoryPicture	game	low	graphics.cpp; hash chain lookup of a picture tile
+0x48cef0	RemoveMemoryItem	game	low	graphics.cpp line 522; empties an item and unlinks it from its hash chain
+0x48d0a0	InsertMemoryItem	game	low	graphics.cpp lines 536-539; links an item into a hash chain
+0x48d440	GetMemorySprite	game	medium	graphics.cpp lines 553-569; decoded sprite, loading it into the least recent item
+0x48d740	GetMemoryPicture	game	medium	graphics.cpp lines 578-595; decoded picture tile
+0x48da50	InitVideoCache	game	medium	graphics.cpp line 636; slots on the cache surfaces (surface +0x90 count, +0x94 size of surface 6); called by Player.cpp
+0x48dd70	TouchVideoItem	game	low	graphics.cpp line 644
+0x48df40	FindVideoSprite	game	low	graphics.cpp; gives up after VideoCacheSize+2 steps
+0x48dfc0	FindVideoMaskedSprite	game	low	graphics.cpp; sprite, mask and four colours
+0x48e0f0	FindVideoPicture	game	low	graphics.cpp; matches font characters too
+0x48e190	FindVideoFontChar	game	low	graphics.cpp; picture tile in a colour
+0x48e250	RemoveVideoItem	game	low	graphics.cpp line 762; ignores position 0 (sic)
+0x48e410	InsertVideoItem	game	low	graphics.cpp lines 776-779
+0x48e7b0	GetVideoSprite	game	medium	graphics.cpp lines 793-814
+0x48eb30	GetVideoMaskedSprite	game	medium	graphics.cpp lines 824-850; surface +0x2c with mask and colours
+0x48f020	GetVideoPicture	game	medium	graphics.cpp lines 859-885; colour key test on Pictures[PictureNumber] (sic)
+0x48f430	GetVideoFontChar	game	medium	graphics.cpp lines 894-919
+0x48f870	DrawSprite	game	medium	graphics.cpp line 933; surface +0x34
+0x48fa60	DrawSpriteClipped	game	medium	graphics.cpp lines 948-953; surface +0x3c with a TRect
+0x48fd80	DrawSpriteScaled	game	medium	graphics.cpp lines 979-984; surface +0x48
+0x4900d0	DrawMaskedSprite	game	medium	graphics.cpp lines 998-1003
+0x4904b0	DrawMaskedSpriteScaled	game	medium	graphics.cpp lines 1059-1064
+0x490920	DrawPicture	game	medium	graphics.cpp lines 1145-1155
+0x490a58	DrawPicture_loop_block	game	high	internal block of DrawPicture (0x490920) that Ghidra split off; not a function
+0x490c60	DrawPicturePart	game	medium	graphics.cpp lines 1164-1182; Control.cpp draws the mouse cursor with it
+0x4910e0	DrawPicturePartClipped	game	medium	graphics.cpp lines 1191-1206
+0x491710	GetFontHeight	game	medium	graphics.cpp line 1343; Fonts[n-1]+0x714
+0x491880	GetTextHeight	game	medium	graphics.cpp lines 1352-1353; highest character of a text
+0x491b80	GetTextPartWidth	game	medium	graphics.cpp lines 1386-1388; width of the first Length characters
+0x491f50	GetFittingTextLength	game	low	graphics.cpp lines 1410-1411; characters that fit into a width
+0x492260	GetTextPosition	game	low	graphics.cpp; aligns a TFont text in a box, centred vertically
+0x4922c0	ResetVideoCache	game	medium	graphics.cpp line 1474; frees and rebuilds the video cache; ChangeEngine
+0x492490	ReloadSprites	game	medium	graphics.cpp line 1498; after patching Tibia.spr
+0x492640	InitFont	game	medium	graphics.cpp lines 348-387; FontName (catch string) is the font number; widths and heights from the picture
+0x492c30	InitFonts	game	medium	graphics.cpp line 403; four fonts
+0x492e30	PrintTextPart	game	medium	graphics.cpp lines 1215-1239; Length characters, Alignment; DrawText is a windows.h macro
+0x4934e0	PrintTextClipped	game	medium	graphics.cpp lines 1249-1273
+0x493af0	PrintText	game	medium	graphics.cpp lines 1282-1288
+0x493f60	PrintFormattedText	game	medium	graphics.cpp lines 1295-1299; TFont Format
+0x4941d0	PrintFormattedTextClipped	game	medium	graphics.cpp line 1309
+0x4943b0	PrintFormattedTextPart	game	medium	graphics.cpp line 1319
+0x494570	GetTextWidth	game	medium	graphics.cpp lines 1373-1378
+0x494900	ReloadPictures	game	medium	graphics.cpp line 1517; after patching Tibia.pic
+0x494af0	InitGraphics	game	medium	graphics.cpp line 1539; MemoryCacheBytes; called by InitControl
+0x494ca0	DrawObject	game	medium	graphics.cpp line 1100; object in a box, with its count
+0x495080	DrawOutfit	game	medium	graphics.cpp line 1137; outfit in four colours, or an object for outfit 0
