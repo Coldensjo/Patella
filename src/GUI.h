@@ -30,6 +30,15 @@ struct TRect {     // passed by value (16 bytes)
 struct TRGBColor { // passed by value (12 bytes)
 	constexpr TRGBColor() : R(0), G(0), B(0) {}
 	constexpr TRGBColor(int R, int G, int B) : R(R), G(G), B(B) {}
+	// 0x425950 (out-of-line copy between ConsoleWindow.cpp and
+	// ContentWindows.cpp; inlined in Map.cpp's SetAmbientLight): a colour of
+	// the 6x6x6 palette, Color = R*36 + G*6 + B with steps of 51.
+	TRGBColor(int Color)
+	{
+		R = Color / 36 * 51;
+		B = Color % 6 * 51;
+		G = Color / 6 % 6 * 51;
+	}
 	int R, G, B;
 };
 

@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 557 | 79561 |
+| range | 573 | 80758 |
 | header | 18 | 11957 |
-| gap | 155 | 40054 |
+| gap | 139 | 38857 |
 
 ## Source files
 
@@ -36,7 +36,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Control.cpp | 27 | 94 | 22840 | `0x445900` | `0x44b699` | 93-1661 |
 | Creatures.cpp | 96 | 87 | 27135 | `0x44b740` | `0x45243e` | 108-1414 |
 | DialogElements.cpp | 190 | 384 | 97128 | `0x4524e0` | `0x46b6d7` | 42-4301 |
-| Container.h | 9 | 0 | 5069 | `0x452ac0` | `0x4fd6e0` | 355-370 |
+| Container.h | 10 | 0 | 5080 | `0x452ac0` | `0x4fd6e0` | 355-370 |
 | Dialogs.cpp | 139 | 408 | 101452 | `0x46c3e0` | `0x48540d` | 48-4084 |
 | DialogWindow.cpp | 39 | 119 | 22972 | `0x485843` | `0x48b287` | 63-1127 |
 | graphics.cpp | 53 | 106 | 40314 | `0x48b550` | `0x4953c3` | 130-1539 |
@@ -45,8 +45,8 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Inventory.cpp | 31 | 12 | 15494 | `0x4a4460` | `0x4a7f00` | 55-400 |
 | MainFrm.cpp | 36 | 91 | 15505 | `0x4a8210` | `0x4abf66` | 112-871 |
 | MainWindow.cpp | 31 | 76 | 17738 | `0x4ac010` | `0x4b07c6` | 85-828 |
-| Map.cpp | 74 | 151 | 55685 | `0x4b1440` | `0x4bf7ba` | 169-1842 |
-| MapWindow.cpp | 26 | 120 | 42126 | `0x4bfb0c` | `0x4ca00e` | 130-1606 |
+| Map.cpp | 83 | 151 | 56255 | `0x4b08a0` | `0x4bf7ba` | 169-1842 |
+| MapWindow.cpp | 31 | 121 | 42742 | `0x4bf860` | `0x4ca00e` | 130-1606 |
 | Network.cpp | 36 | 93 | 21574 | `0x4ca450` | `0x4cf982` | 132-961 |
 | Objects.cpp | 62 | 184 | 31867 | `0x4cfbb0` | `0x4d7c29` | 67-1023 |
 | Player.cpp | 47 | 36 | 12247 | `0x4d7ce0` | `0x4db286` | 62-456 |
@@ -80,8 +80,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 | DialogElements.cpp / Dialogs.cpp | 30 | 2206 | `0x46b790`-`0x46c0ce` |
 | Dialogs.cpp / DialogWindow.cpp | 7 | 811 | `0x4854c0`-`0x485843` |
 | DialogWindow.cpp / graphics.cpp | 5 | 360 | `0x48b380`-`0x48b547` |
-| MainWindow.cpp / Map.cpp | 10 | 581 | `0x4b08a0`-`0x4b0b2b` |
-| Map.cpp / MapWindow.cpp | 6 | 616 | `0x4bf860`-`0x4bfb0c` |
 | MapWindow.cpp / Network.cpp | 8 | 502 | `0x4ca0e0`-`0x4ca2f5` |
 | SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |

@@ -8,6 +8,7 @@
 #include "Help.h"
 #include "Inventory.h"
 #include "Creatures.h"
+#include "Map.h"
 #include "Network.h"
 #include "Objects.h"
 #include "Utils.h"
@@ -31,7 +32,6 @@ static int LastCancelZ;       // 0x5c437c
 static int LastCancelY;       // 0x5c4380
 static int LastCancelX;       // 0x5c4384
 
-static_assert(sizeof(TCommunicationObject) == 12, "object layout");
 static_assert(offsetof(TCreature, Direction) == 0x50, "creature direction");
 static_assert(offsetof(TCreature, OutfitType) == 0x60, "creature outfit");
 static_assert(offsetof(TCreature, Skull) == 0x90, "creature skull");
@@ -722,8 +722,8 @@ void SendRefreshField(int x, int y, int z)
 	SendWord(y);
 	SendByte(z);
 	SendCommand(true);
-	FUN_004b0960(&x, &y, &z);
-	FUN_004bdd70(x, y, z);
+	AbsoluteToRelative(&x, &y, &z);
+	RequestFieldRefresh(x, y, z);
 	TEND2(x, y)
 }
 
@@ -1166,7 +1166,7 @@ uint32 ReadCreature(int Type, int x, int y, int z)
 			Creature->Direction = GetByte();
 	}
 	if (Creature != NULL) {
-		FUN_004b0910(&x, &y, &z);
+		RelativeToAbsolute(&x, &y, &z);
 		Creature->SetPosition(x, y, z);
 		Creature->Visible = true;
 	}
@@ -1195,7 +1195,7 @@ void ReadField(int rx, int ry, int rz)
 			}
 			if (Type == 0x61 || Type == 0x62 || Type == 0x63) {
 				uint32 CreatureID = ReadCreature(Type, rx, ry, rz);
-				FUN_004b8ec0(rx, ry, rz, TCommunicationObject{0x63, CreatureID, 0});
+				AppendObject(rx, ry, rz, TObject{0x63, (int)CreatureID, 0});
 			} else {
 				int Data = 0;
 				if (GetObjectFlag(Type, 5))
@@ -1204,14 +1204,14 @@ void ReadField(int rx, int ry, int rz)
 					Data = GetByte();
 				if (GetObjectFlag(Type, 10))
 					Data = GetByte();
-				FUN_004b8ec0(rx, ry, rz, TCommunicationObject{Type, (uint32)Data, 0});
+				AppendObject(rx, ry, rz, TObject{Type, Data, 0});
 			}
 		}
 	} else {
 		SkipFields--;
 	}
-	if (rz == FUN_004b08f0())
-		FUN_004beb90(rx, ry);
+	if (rz == GetMapLevel())
+		UpdateAutomap(rx, ry);
 	TEND2(Type, OldType)
 }
 
@@ -1222,7 +1222,7 @@ void ReadMap(int xmin, int ymin, int xmax, int ymax)
 	int PlayerX;
 	int PlayerY;
 	int PlayerZ;
-	FUN_004b08c0(&PlayerX, &PlayerY, &PlayerZ);
+	GetMapPosition(&PlayerX, &PlayerY, &PlayerZ);
 	int Floor;
 	int EndFloor;
 	int Step;
@@ -1256,8 +1256,8 @@ void ReceiveMap()
 	PlayerX = GetWord();
 	PlayerY = GetWord();
 	int PlayerZ = GetByte();
-	FUN_004b08a0(PlayerX, PlayerY, PlayerZ);
-	FUN_004bccb0();
+	SetMapPosition(PlayerX, PlayerY, PlayerZ);
+	ClearMap();
 	HideAllCreatures();
 	ReadMap(0, 0, 17, 13);
 	SetTalkChanged();
@@ -1270,13 +1270,13 @@ void ReceiveMap()
 void ReceiveMapNorth()
 {
 	TBEGIN
-	FUN_004bd560(0, 1);
+	ShiftMap(0, 1);
 	ReadMap(0, 0, 17, 0);
 	SetTalkChanged();
 	int x;
 	int y;
 	int z;
-	FUN_004b08c0(&x, &y, &z);
+	GetMapPosition(&x, &y, &z);
 	CheckEventHelpPosition(x, y, z);
 	TEND
 }
@@ -1285,13 +1285,13 @@ void ReceiveMapNorth()
 void ReceiveMapEast()
 {
 	TBEGIN
-	FUN_004bd560(-1, 0);
+	ShiftMap(-1, 0);
 	ReadMap(17, 0, 17, 13);
 	SetTalkChanged();
 	int x;
 	int y;
 	int z;
-	FUN_004b08c0(&x, &y, &z);
+	GetMapPosition(&x, &y, &z);
 	CheckEventHelpPosition(x, y, z);
 	TEND
 }
@@ -1300,13 +1300,13 @@ void ReceiveMapEast()
 void ReceiveMapSouth()
 {
 	TBEGIN
-	FUN_004bd560(0, -1);
+	ShiftMap(0, -1);
 	ReadMap(0, 13, 17, 13);
 	SetTalkChanged();
 	int x;
 	int y;
 	int z;
-	FUN_004b08c0(&x, &y, &z);
+	GetMapPosition(&x, &y, &z);
 	CheckEventHelpPosition(x, y, z);
 	TEND
 }
@@ -1315,13 +1315,13 @@ void ReceiveMapSouth()
 void ReceiveMapWest()
 {
 	TBEGIN
-	FUN_004bd560(1, 0);
+	ShiftMap(1, 0);
 	ReadMap(0, 0, 0, 13);
 	SetTalkChanged();
 	int x;
 	int y;
 	int z;
-	FUN_004b08c0(&x, &y, &z);
+	GetMapPosition(&x, &y, &z);
 	CheckEventHelpPosition(x, y, z);
 	TEND
 }
@@ -1337,12 +1337,12 @@ void ReceiveField()
 	rx = GetWord();
 	ry = GetWord();
 	rz = GetByte();
-	FUN_004b0960(&rx, &ry, &rz);
-	FUN_004bc720(rx, ry, rz, false);
+	AbsoluteToRelative(&rx, &ry, &rz);
+	ClearField(rx, ry, rz, false);
 	SkipFields = 0;
 	ReadField(rx, ry, rz);
-	if (rz == FUN_004b08f0())
-		FUN_004beb90(rx, ry);
+	if (rz == GetMapLevel())
+		UpdateAutomap(rx, ry);
 	TEND2(rx, ry)
 }
 
@@ -1356,13 +1356,13 @@ void ReceiveAddObject()
 	rx = GetWord();
 	ry = GetWord();
 	rz = GetByte();
-	FUN_004b0960(&rx, &ry, &rz);
+	AbsoluteToRelative(&rx, &ry, &rz);
 	int Type = GetWord();
-	TCommunicationObject Object;
+	TObject Object;
 	if (Type == 0x61 || Type == 0x62 || Type == 0x63) {
 		Object.Type = 0x63;
-		Object.Data = ReadCreature(Type, rx, ry, rz);
-		Object.Extra = 0;
+		Object.Data1 = ReadCreature(Type, rx, ry, rz);
+		Object.Data2 = 0;
 	} else {
 		int Data = 0;
 		if (GetObjectFlag(Type, 5))
@@ -1372,12 +1372,12 @@ void ReceiveAddObject()
 		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
 		Object.Type = Type;
-		Object.Data = Data;
-		Object.Extra = 0;
+		Object.Data1 = Data;
+		Object.Data2 = 0;
 	}
-	FUN_004b88f0(rx, ry, rz, Object);
-	if (rz == FUN_004b08f0())
-		FUN_004beb90(rx, ry);
+	AddObject(rx, ry, rz, Object);
+	if (rz == GetMapLevel())
+		UpdateAutomap(rx, ry);
 	TEND2(rx, ry)
 }
 
@@ -1391,9 +1391,9 @@ void ReceiveChangeObject()
 	rx = GetWord();
 	ry = GetWord();
 	rz = GetByte();
-	FUN_004b0960(&rx, &ry, &rz);
+	AbsoluteToRelative(&rx, &ry, &rz);
 	int Position = GetByte();
-	TCommunicationObject OldObject = FUN_004b6580(rx, ry, rz, Position);
+	TObject OldObject = GetMapObject(rx, ry, rz, Position);
 	if (OldObject.Type == NoObject.Type) {
 		TASSERT2(FieldRefreshRequested(rx,ry,rz), rx, ry);
 		int Type = GetWord();
@@ -1409,16 +1409,16 @@ void ReceiveChangeObject()
 			GetByte();
 	} else {
 		if (OldObject.Type == 0x63) {
-			TCreature *Creature = GetCreature(OldObject.Data);
+			TCreature *Creature = GetCreature(OldObject.Data1);
 			if (Creature != NULL)
 				Creature->Visible = false;
 		}
 		int Type = GetWord();
-		TCommunicationObject Object;
+		TObject Object;
 		if (Type == 0x61 || Type == 0x62 || Type == 0x63) {
 			Object.Type = 0x63;
-			Object.Data = ReadCreature(Type, rx, ry, rz);
-			Object.Extra = 0;
+			Object.Data1 = ReadCreature(Type, rx, ry, rz);
+			Object.Data2 = 0;
 		} else {
 			int Data = 0;
 			if (GetObjectFlag(Type, 5))
@@ -1428,12 +1428,12 @@ void ReceiveChangeObject()
 			if (GetObjectFlag(Type, 10))
 				Data = GetByte();
 			Object.Type = Type;
-			Object.Data = Data;
-			Object.Extra = 0;
+			Object.Data1 = Data;
+			Object.Data2 = 0;
 		}
-		FUN_004b9940(rx, ry, rz, Position, Object);
-		if (rz == FUN_004b08f0())
-			FUN_004beb90(rx, ry);
+		ChangeObject(rx, ry, rz, Position, Object);
+		if (rz == GetMapLevel())
+			UpdateAutomap(rx, ry);
 	}
 	TEND2(rx, ry)
 }
@@ -1449,20 +1449,20 @@ void ReceiveDeleteObject()
 	ry = GetWord();
 	rz = GetByte();
 	int Position = GetByte();
-	FUN_004b0960(&rx, &ry, &rz);
-	TCommunicationObject Object = FUN_004b6580(rx, ry, rz, Position);
+	AbsoluteToRelative(&rx, &ry, &rz);
+	TObject Object = GetMapObject(rx, ry, rz, Position);
 	if (Object.Type == NoObject.Type) {
 		TASSERT2(FieldRefreshRequested(rx,ry,rz), rx, ry);
 	} else {
 		if (Object.Type == 0x63) {
-			TCreature *Creature = GetCreature(Object.Data);
+			TCreature *Creature = GetCreature(Object.Data1);
 			if (Creature != NULL)
 				Creature->Visible = false;
 		}
-		bool Refresh = FUN_004b9420(rx, ry, rz, Position);
-		if (rz == FUN_004b08f0())
-			FUN_004beb90(rx, ry);
-		FUN_004b0910(&rx, &ry, &rz);
+		bool Refresh = DeleteObject(rx, ry, rz, Position);
+		if (rz == GetMapLevel())
+			UpdateAutomap(rx, ry);
+		RelativeToAbsolute(&rx, &ry, &rz);
 		if (Refresh)
 			SendRefreshField(rx, ry, rz);
 	}
@@ -1491,14 +1491,14 @@ void ReceiveMoveCreature()
 	int abs_zy = zy;
 	int abs_zz = zz;
 	bool Teleport = dz != 0 || abs(dx) >= 2 || abs(dy) >= 2;
-	FUN_004b0960(&sx, &sy, &sz);
-	FUN_004b0960(&zx, &zy, &zz);
-	TCommunicationObject Object = FUN_004b6580(sx, sy, sz, Position);
+	AbsoluteToRelative(&sx, &sy, &sz);
+	AbsoluteToRelative(&zx, &zy, &zz);
+	TObject Object = GetMapObject(sx, sy, sz, Position);
 	std::string Error;
 	TCreature *Creature = NULL;
 	if (Object.Type == NoObject.Type || Object.Type != 0x63) {
 		if (FieldRefreshRequested(sx, sy, sz)) {
-			FUN_004b0910(&zx, &zy, &zz);
+			RelativeToAbsolute(&zx, &zy, &zz);
 			SendRefreshField(zx, zy, zz);
 			return;
 		}
@@ -1513,11 +1513,11 @@ void ReceiveMoveCreature()
 				Text << " (CREATURE, ";
 			else
 				Text << " (" << Object.Type << ", ";
-			Text << (int)Object.Data << ")";
+			Text << Object.Data1 << ")";
 		}
 		Error = Text.str();
 	} else {
-		Creature = GetCreature(Object.Data);
+		Creature = GetCreature(Object.Data1);
 		if (Creature != NULL) {
 			if (Teleport) {
 				if (Creature->CreatureID == GetPlayerID())
@@ -1533,7 +1533,7 @@ void ReceiveMoveCreature()
 				if (Creature->CreatureID != GetPlayerID())
 					Creature->StartMovement(0, 0, 0);
 			} else {
-				TCommunicationObject Bank = FUN_004b6140(zx, zy, zz);
+				TObject Bank = GetFirstObject(zx, zy, zz);
 				if (GetObjectFlag(Bank.Type, 0))
 					Creature->StartMovement(dx, dy, GetObjectWaypoints(Bank.Type));
 				else
@@ -1555,32 +1555,32 @@ void ReceiveMoveCreature()
 		Text << " abs_zx: " << abs_zx << " abs_zy: " << abs_zy << " abs_zz: " << abs_zz << std::endl;
 		Text << " Start Cylinder (1): ";
 		try {
-			TCommunicationObject Current = FUN_004b6140(sx, sy, sz);
+			TObject Current = GetFirstObject(sx, sy, sz);
 			while (Current.Type != 0) {
-				Text << " (" << Current.Type << "," << (int)Current.Data << ")";
-				Current = FUN_004b6510();
+				Text << " (" << Current.Type << "," << Current.Data1 << ")";
+				Current = GetNextObject();
 			}
 			Text << std::endl << " Start Cylinder (2): ";
 			for (int i = 0; i < 10; i++) {
-				Current = FUN_004b6580(sx, sy, sz, i);
+				Current = GetMapObject(sx, sy, sz, i);
 				if (Current.Type == NoObject.Type)
 					Text << "(-)";
 				else
-					Text << " (" << Current.Type << "," << (int)Current.Data << ")";
+					Text << " (" << Current.Type << "," << Current.Data1 << ")";
 			}
 			Text << std::endl << " Destination Cylinder (1): ";
-			Current = FUN_004b6140(zx, zy, zz);
+			Current = GetFirstObject(zx, zy, zz);
 			while (Current.Type != 0) {
-				Text << " (" << Current.Type << "," << (int)Current.Data << ")";
-				Current = FUN_004b6510();
+				Text << " (" << Current.Type << "," << Current.Data1 << ")";
+				Current = GetNextObject();
 			}
 			Text << std::endl << " Destination Cylinder (2): ";
 			for (int i = 0; i < 10; i++) {
-				Current = FUN_004b6580(zx, zy, zz, i);
+				Current = GetMapObject(zx, zy, zz, i);
 				if (Current.Type == NoObject.Type)
 					Text << "(-)";
 				else
-					Text << " (" << Current.Type << "," << (int)Current.Data << ")";
+					Text << " (" << Current.Type << "," << Current.Data1 << ")";
 			}
 		} catch (TMyException &Exception) {
 			Text << std::endl << "Exception during cylinder looping: " << std::endl << Exception.GetMessage();
@@ -1592,18 +1592,18 @@ void ReceiveMoveCreature()
 		}
 		throw TMYEXCEPTION(Error.c_str(), "", 0, "", 0, Text.str().c_str());
 	}
-	if (FUN_004b9420(sx, sy, sz, Position)) {
+	if (DeleteObject(sx, sy, sz, Position)) {
 		int x = sx;
 		int y = sy;
 		int z = sz;
-		FUN_004b0910(&x, &y, &z);
+		RelativeToAbsolute(&x, &y, &z);
 		SendRefreshField(x, y, z);
 	}
-	if (sz == FUN_004b08f0())
-		FUN_004beb90(sx, sy);
-	FUN_004b88f0(zx, zy, zz, Object);
-	if (zz == FUN_004b08f0())
-		FUN_004beb90(zx, zy);
+	if (sz == GetMapLevel())
+		UpdateAutomap(sx, sy);
+	AddObject(zx, zy, zz, Object);
+	if (zz == GetMapLevel())
+		UpdateAutomap(zx, zy);
 	TEND
 }
 
@@ -1789,7 +1789,7 @@ void ReceiveWorldLight()
 	TBEGIN
 	int Brightness = GetByte();
 	int Color = GetByte();
-	FUN_004b09e0(Brightness, Color);
+	SetAmbientLight(Brightness, Color);
 	TEND
 }
 
@@ -1803,9 +1803,9 @@ void ReceiveMagicEffect()
 	rx = GetWord();
 	ry = GetWord();
 	rz = GetByte();
-	FUN_004b0960(&rx, &ry, &rz);
+	AbsoluteToRelative(&rx, &ry, &rz);
 	int Effect = GetByte();
-	FUN_004bab40(rx, ry, rz, Effect);
+	AddGraphicalEffect(rx, ry, rz, Effect);
 	TEND2(rx, ry)
 }
 
@@ -1819,11 +1819,11 @@ void ReceiveAnimatedText()
 	rx = GetWord();
 	ry = GetWord();
 	rz = GetByte();
-	FUN_004b0960(&rx, &ry, &rz);
+	AbsoluteToRelative(&rx, &ry, &rz);
 	int Color = GetByte();
 	char Text[24];
 	GetString(Text, 10);
-	FUN_004bad00(rx, ry, rz, Color, Text);
+	AddTextualEffect(rx, ry, rz, Color, Text);
 	TEND2(rx, ry)
 }
 
@@ -1837,13 +1837,13 @@ void ReceiveDistanceEffect()
 	sx = GetWord();
 	sy = GetWord();
 	sz = GetByte();
-	FUN_004b0960(&sx, &sy, &sz);
+	AbsoluteToRelative(&sx, &sy, &sz);
 	int dx = GetWord();
 	int dy = GetWord();
 	int dz = GetByte();
-	FUN_004b0960(&dx, &dy, &dz);
+	AbsoluteToRelative(&dx, &dy, &dz);
 	int Effect = GetByte();
-	FUN_004bb0c0(sx, sy, sz, dx, dy, dz, Effect);
+	AddMissileEffect(sx, sy, sz, dx, dy, dz, Effect);
 	TEND2(sx, sy)
 }
 
@@ -2334,20 +2334,20 @@ void ReceiveFloorUp()
 	int x;
 	int y;
 	int z;
-	FUN_004b08c0(&x, &y, &z);
+	GetMapPosition(&x, &y, &z);
 	z += -1;
 	x += 1;
 	y += 1;
-	FUN_004b08a0(x, y, z);
+	SetMapPosition(x, y, z);
 	if (z < 8) {
 		if (z == 7) {
-			FUN_004bdb70(-3);
+			ShiftMapLevel(-3);
 			SkipFields = 0;
 			for (int rz = 2; rz < 8; rz++)
 				ReadFloor(rz);
 		}
 	} else {
-		FUN_004bdb70(-1);
+		ShiftMapLevel(-1);
 		SkipFields = 0;
 		ReadFloor(4);
 	}
@@ -2356,7 +2356,7 @@ void ReceiveFloorUp()
 	CheckEventHelpPosition(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {
 		for (int ry = 0; ry < 14; ry++)
-			FUN_004beb90(rx, ry);
+			UpdateAutomap(rx, ry);
 	}
 	TEND
 }
@@ -2368,20 +2368,20 @@ void ReceiveFloorDown()
 	int x;
 	int y;
 	int z;
-	FUN_004b08c0(&x, &y, &z);
+	GetMapPosition(&x, &y, &z);
 	z += 1;
 	x += -1;
 	y += -1;
-	FUN_004b08a0(x, y, z);
+	SetMapPosition(x, y, z);
 	if (z < 9) {
 		if (z == 8) {
-			FUN_004bdb70(3);
+			ShiftMapLevel(3);
 			SkipFields = 0;
 			for (int rz = 2; rz >= 0; rz--)
 				ReadFloor(rz);
 		}
 	} else {
-		FUN_004bdb70(1);
+		ShiftMapLevel(1);
 		SkipFields = 0;
 		if (z < 14)
 			ReadFloor(0);
@@ -2391,7 +2391,7 @@ void ReceiveFloorDown()
 	CheckEventHelpPosition(x, y, z);
 	for (int rx = 0; rx < 18; rx++) {
 		for (int ry = 0; ry < 14; ry++)
-			FUN_004beb90(rx, ry);
+			UpdateAutomap(rx, ry);
 	}
 	TEND
 }

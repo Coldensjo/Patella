@@ -3916,16 +3916,16 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4b072b	20	Catch@004b072b	catch	MainWindow.cpp	between		0x4b05b0	
 0x4b073f	135	Catch@004b073f	catch	MainWindow.cpp	assert	828	0x4b05b0	Width,Height
 0x4b07c6	176	Catch@004b07c6	catch	MainWindow.cpp	assert	828	0x4b05b0	
-0x4b08a0	30	FUN_004b08a0	game	MainWindow.cpp|Map.cpp	gap			
-0x4b08c0	36	FUN_004b08c0	game	MainWindow.cpp|Map.cpp	gap			
-0x4b08f0	25	FUN_004b08f0	game	MainWindow.cpp|Map.cpp	gap			
-0x4b0910	77	FUN_004b0910	game	MainWindow.cpp|Map.cpp	gap			
-0x4b0960	102	FUN_004b0960	game	MainWindow.cpp|Map.cpp	gap			
-0x4b09d0	13	FUN_004b09d0	game	MainWindow.cpp|Map.cpp	gap			
-0x4b09e0	129	FUN_004b09e0	game	MainWindow.cpp|Map.cpp	gap			
-0x4b0a70	125	FUN_004b0a70	game	MainWindow.cpp|Map.cpp	gap			
-0x4b0af0	33	FUN_004b0af0	game	MainWindow.cpp|Map.cpp	gap			
-0x4b0b20	11	FUN_004b0b20	game	MainWindow.cpp|Map.cpp	gap			
+0x4b08a0	30	FUN_004b08a0	game	Map.cpp	range			
+0x4b08c0	36	FUN_004b08c0	game	Map.cpp	range			
+0x4b08f0	25	FUN_004b08f0	game	Map.cpp	range			
+0x4b0910	77	FUN_004b0910	game	Map.cpp	range			
+0x4b0960	102	FUN_004b0960	game	Map.cpp	range			
+0x4b09d0	13	FUN_004b09d0	game	Map.cpp	range			
+0x4b09e0	129	FUN_004b09e0	game	Map.cpp	range			
+0x4b0a70	125	FUN_004b0a70	game	Map.cpp	range			
+0x4b0af0	33	FUN_004b0af0	game	Map.cpp	range			
+0x4b0b20	11	FUN_004b0b20	game	Container.h	range			
 0x4b0bc0	423	FUN_004b0bc0	game	Container.h	header	152		
 0x4b0d70	912	FUN_004b0d70	game	Container.h	header	282,283,284		
 0x4b1100	776	FUN_004b1100	game	Container.h	header	217,218		
@@ -4157,12 +4157,12 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4bf717	20	Catch@004bf717	catch	Map.cpp	between		0x4bf620	
 0x4bf72b	143	Catch@004bf72b	catch	Map.cpp	assert	1830	0x4bf620	
 0x4bf7ba	160	Catch@004bf7ba	catch	Map.cpp	assert	1830	0x4bf620	
-0x4bf860	97	FUN_004bf860	game	Map.cpp|MapWindow.cpp	gap			
-0x4bf8f0	59	FUN_004bf8f0	game	Map.cpp|MapWindow.cpp	gap			
-0x4bf930	162	FUN_004bf930	game	Map.cpp|MapWindow.cpp	gap			
-0x4bf9e0	30	FUN_004bf9e0	game	Map.cpp|MapWindow.cpp	gap			
-0x4bfa00	248	FUN_004bfa00	game	Map.cpp|MapWindow.cpp	gap			
-0x4bfaf8	20	Catch@004bfaf8	catch	Map.cpp|MapWindow.cpp	gap		0x4bfa00	
+0x4bf860	97	FUN_004bf860	game	MapWindow.cpp	range			
+0x4bf8f0	59	FUN_004bf8f0	game	MapWindow.cpp	range			
+0x4bf930	162	FUN_004bf930	game	MapWindow.cpp	range			
+0x4bf9e0	30	FUN_004bf9e0	game	MapWindow.cpp	range			
+0x4bfa00	248	FUN_004bfa00	game	MapWindow.cpp	range			
+0x4bfaf8	20	Catch@004bfaf8	catch	MapWindow.cpp	range		0x4bfa00	
 0x4bfb0c	131	Catch@004bfb0c	catch	MapWindow.cpp	assert	130	0x4bfa00	
 0x4bfb8f	154	Catch@004bfb8f	catch	MapWindow.cpp	assert	130	0x4bfa00	
 0x4bfc30	91	FUN_004bfc30	game	MapWindow.cpp	between			Width,Height

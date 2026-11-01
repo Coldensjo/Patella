@@ -384,6 +384,7 @@ int main(int argc, char **argv)
 	TestInventory();
 	TestTalk();
 	TestObjects(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+	TestMap(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestCreatures(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestGUI();
 #endif
