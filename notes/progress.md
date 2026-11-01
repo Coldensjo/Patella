@@ -25,8 +25,11 @@ loader 0x4ddc00, the saver 0x4de890 and 0x4df520.
 ## Delegates (running)
 
 - Map.cpp + MainWindow/Map and Map/MapWindow gaps (item 6): Claude Opus 5.5, own worktree.
-- Talk.cpp + sysinc/Talk and Talk/TMyException gaps (item 9): ChatGPT
-  gpt-6.1-sol, own worktree.
+- Talk.cpp (item 9): first version f5ccfa7 (branch t3/reconstruct-talk-cpp,
+  ChatGPT gpt-6.1-sol) NOT merged: 21 functions kept FUN_ names and it added
+  shim wrappers/casts to Communication's temporary views. Sent back to
+  gpt-6.1-sol (branch t3/talk-cpp-integration) to name them, drop the shims
+  and replace the external.h views by Talk.h types.
 Both append-only to names.tsv/external.h; review each against decomp/clean
 and the binary before merging.
 
