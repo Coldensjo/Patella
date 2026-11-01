@@ -1,15 +1,10 @@
 // Differential tests of Preferences.cpp against the original code. Uses the
-// image patches of statustest.cpp (malloc/free redirected); the Talk.cpp
-// list reset that SetDefaultPreferences calls is replaced by a counter on
-// both sides, and the image's atol by ours.
+// image patches of statustest.cpp (malloc/free redirected), Talk.cpp
+// for the real ignore-list reset, and the image's atol redirected to ours.
 
 #include "difftest.h"
 #include "../../src/Preferences.h"
-
-static int TalkResets[2];
-
-void FUN_00501400() { TalkResets[0]++; }
-static void __cdecl ImageTalkReset() { TalkResets[1]++; }
+#include "../../src/Talk.h"
 // The original atol needs the locale data of its uninitialised CRT.
 static long __cdecl ImageAtol(const char *Text) { return atol(Text); }
 
@@ -115,7 +110,7 @@ static void CheckLists(const char *When)
 void TestPreferences()
 {
 	PatchImage();
-	PatchJump(0x501400, (void *)ImageTalkReset);
+	At<VectorInitCtorFn>(0x4fd6e0)((void *)(uintptr_t)0x71efb0, 0, 0, 9, 10, 0);
 	PatchJump(0x51262a, (void *)ImageAtol);
 	// The original's static initialisers (0x55a050-0x55a0d0) did not run.
 	At<VectorCtorFn>(0x4dbe90)((void *)(uintptr_t)0x71c324, 0, 0, 9, 10);
@@ -125,9 +120,11 @@ void TestPreferences()
 	At<VectorCtorFn>(0x4a2b90)((void *)(uintptr_t)0x71c430, 0, 0, 9, 10);
 
 	CheckAllOptions("start");
+	IgnoreName("reset probe", true);
+	At<void (__cdecl *)(const char *, bool)>(0x501940)("reset probe", true);
 	SetDefaultPreferences();
 	At<void (__cdecl *)()>(0x4db720)();
-	CHECK(TalkResets[0] == 1 && TalkResets[1] == 1, "Talk list reset");
+	CHECK(GetIgnoreListText() == NULL && At<char *(__cdecl *)()>(0x501010)() == NULL, "Talk list reset");
 	CheckAllOptions("SetDefaultPreferences");
 
 	for (int t = 0; t < 20000; t++) {

@@ -46,6 +46,155 @@ with the evidence, for review. Confidence: high, medium, low.
   error calls are noreturn for the compiler, so the code after them does not
   show the original loop shape.
 
+## Talk.cpp
+
+Integration naming audit, November 1, 2026, by ChatGPT gpt-6.1-sol. No
+original function spellings are present in these entries' assertion/catch
+strings, so the TitleCase names below are inferred from behavior and callers.
+Confidence is **medium** for the chosen name/role and **low** for its exact
+original spelling; the field offsets, flags, arguments and vtable slots are
+**high** confidence from instructions and differential tests. Assertion/catch
+identifiers (Speaker, TargetBuffer, ReceiveTalkMode, Addressee, etc.) are kept.
+
+| Address | Chosen name | Confidence | Behavior |
+|---|---|---|---|
+| 0x4fd4c0 | SetTalkChanged | medium; spelling low | Sets the talkbox/status redraw latch |
+| 0x4fd540 | SetTalkThrottle | medium; spelling low | Restarts the ignored-talk throttle for 1000 milliseconds |
+| 0x4fd590 | SetConsoleChanged | medium; spelling low | Sets the console redraw latch |
+| 0x5052e0 | AddTalkbox | medium; spelling low | Adds or merges positioned speech/private/broadcast text with its speaker prefix |
+| 0x505ac0 | AddMessageTalkbox | medium; spelling low | Adds queued event/admin text or replaces the information talkbox |
+| 0x4ff130 | UpdateTalkboxes | medium; spelling low | Expires talkboxes using elapsed milliseconds since the previous update |
+| 0x4ff500 | SetStatusMessage | medium; spelling low | Copies or clears the status message and sets its permanent/50-tick lifetime |
+| 0x4ff7d0 | UpdateStatusMessage | medium; spelling low | Decrements the status-message tick counter and requests redraw on expiration |
+| 0x500060 | IsTalkIgnored | medium; spelling low | Tests the ignore filters after temporary and buddy-name exemptions |
+| 0x500c60 | AddTemporaryIgnore | medium; spelling low | Replaces the temporary name exemption used when buddy ignoring is enabled |
+| 0x500e40 | RemoveTemporaryIgnore | medium; spelling low | Removes the temporary name exemption |
+| 0x501400 | ClearIgnoreList | medium; spelling low | Frees every ignore filter and clears its vector entry; called by SetDefaultPreferences |
+| 0x5076e0 | ShowPermanentIgnoreWarning | medium; spelling low | Appends the permanent-ignore warning to the default console when named permanent filters exist |
+| 0x505f10 | AddTextBufferLine | medium; spelling low | Constructs a statement with optional addressee and appends it to the supplied text buffer |
+| 0x5061f0 | AddConsoleText | medium; spelling low | Routes statements through console filters or broadcasts messages according to preferences |
+| 0x5025c0 | GetTextBuffer | medium; spelling low | Looks up the console text buffer matching receive mode, addressee and channel |
+| 0x504d70 | ResetTalk | medium; spelling low | Clears all talkboxes, status text and the default text buffer and resets talk order |
+| 0x504f30 | InitTalk | medium; spelling low | Initializes ignore flags, resets talk and allocates the default text buffer |
+| 0x507a00 | ExitTalk | medium; spelling low | Clears ignore/exemption lists and destroys the default text buffer |
+| 0x507bc0 | CreateTextBuffer | medium; spelling low | Creates the matching concrete buffer and registers its filter; send mode is an integer |
+| 0x503920 | TTalkBuffer::GetNext | medium; spelling low | Advances the non-null statement cursor and returns the advanced cursor |
+
+
+- **Leading sysinc/Talk gap** (high). 0x4fd440-0x4fd59f is Talk.cpp:
+  fourteen helpers use the same status message, ten talkboxes, console-change
+  flag and ignore flags at 0x71dbd0-0x71ef6c as asserted Talk functions. None
+  uses sysinc's clock storage at 0x71dbcc. 0x55a130 initializes that sysinc
+  clock; the next four initializers, 0x55a140/160/180/1a0, construct Talk's
+  filter vectors at 0x71ef70/90/b0/d0. No function in this gap goes to sysinc.cpp.
+- **Header assignments** (high for ownership/layout, low for invented member
+  names). 0x4fd5a0-0x4fd6df contains the inline buffer constructor, vtable
+  accessors and TTalkLine::GetText, not standalone sysinc routines. The
+  0x573738 vtable and its five derived vtables identify the slots. Ghidra
+  missed most tiny accessors; names.tsv records them nevertheless. The
+  addressee getter 0x506eb0, channel-ID getter 0x507060, write-enabled
+  setter/getter 0x507260/270, private-channel predicate 0x5079f0, and
+  always-throwing 0x5075c0 (Talk.h line 321) likewise belong to Talk.h.
+  Identical true/false/null/-1 accessors folded into earlier objects stay
+  inline, not additional C++ translation-unit functions.
+- **Container.h** (high). 0x4fd6e0 is the initialized four-byte pointer
+  vector constructor, with Container.h lines 355/356, space>0 and block>=0.
+  Its existing vector<T> implementation is reused and its instantiation
+  documented in Container.h. operator() folds with vector<int> at 0x452ac0.
+  The static initializers pass (0,9,10,NULL) for the first three lists and
+  (0,4,5,NULL) for ConsoleFilterList. No STL implementation is reconstructed.
+- **Trailing Talk/TMyException region** (high). Talk's final catch at
+  0x5081b5 ends at exclusive 0x508261. Through 0x50826f there is only INT3
+  alignment. 0x508270 is VC7.1 std::string::find_last_of, already marked
+  stl and owned by TMyException.cpp; 0x508350 is its existing STL substring
+  constructor. Nothing additional is assigned to Talk.cpp or sysinc.cpp.
+- **Ghidra function splits** (high). 0x502f70 is a branch target inside
+  Remove(TTalkLine*) at 0x502f00; 0x5036c0 is a loop block of GetLine at
+  0x503670. Neither has an entry prologue, independent stack frame, or callable
+  signature. They have names.tsv labels but no duplicate reimplementation.
+  ehinfo's scan can also mistake the following function's prologue for the
+  frame of the four-byte getter at 0x507060 and the tail-call destructor at
+  0x506920; disassembly establishes that both have no frame of their own.
+- **Names and source types** (low for original spelling; high for tested
+  layouts). TTalkBuffer, TTalkLine, TTalkFilter, the five derived class names,
+  flag names and helpers not present in assertion strings are ours. Talk.h
+  now owns the full types, the shared TALK_MODE enum and all Talk declarations.
+  TTextBuffer/TCommunicationChannel/TCommunicationStatement views and all Talk
+  declarations were removed from external.h. It includes Talk.h only for its
+  unfinished ConsoleWindow declarations. TRGBColor stays in external.h;
+  Talk.h forward-declares it for its pointer-only color interfaces.
+- **One definition per entry** (high). CreateTextBuffer is the only definition
+  of 0x507bc0, and TTalkBuffer::GetNext the only definition of 0x503920.
+  Both compatibility shims and all Talk-to-TCommunicationChannel casts are
+  removed. Every names.tsv address is unique; reviewed Talk rows are edited
+  in place and now describe each function's behavior.
+- **Factory's second parameter** (high). 0x507bc0 takes integer SendTalkMode,
+  not bool. ReceiveRuleViolationChannel pushes 1 at 0x4115d6 and calls the
+  factory at 0x4115dd. Its source now uses (6,1,NULL,ChannelID), preserving
+  the binary request, including the fallback lookup and event 0x32. Equal
+  modes and full integer send modes remain differentially tested.
+- **Old channel-view correction** (high). First +0x10, Cursor +0x18 and the
+  statement Name +0x14 exactly match TTalkBuffer::first/cursor and
+  TTalkLine::Addressee; static assertions enforce them in Communication.cpp.
+  The old view's comment calling slot +0x10 close was wrong: that slot is
+  SetWriteEnabled(bool), not Close (slot +0x08). ReceiveCancelRuleViolation,
+  ReceiveLockRuleViolation and ReceiveCloseChannel all pass false to +0x10;
+  those calls now use SetWriteEnabled(false) without changing Closed.
+  Removal remains virtual Remove(TTalkLine*) at +0x20, and event 0x31's
+  Unknown40(1) becomes SetSelected(true), the same +0x40 slot. See the full
+  caller/instruction audit and regression coverage in notes/Talk.md.
+- **Source order** (high where lines exist). The compiler placed the free
+  slot finder (line 300), speech/message insertion (352-474), permanent-ignore
+  warning (1144-1149), routing (1179-1279), factory/deletion (1361-1383), and
+  buffer/line constructors late in the binary. They are placed by source
+  lines, not address. Helpers without line evidence stay with their binary
+  neighbours; header COMDATs are in the header.
+- **Exact oddities retained** (high). Remove(int)'s loop never increments i
+  (0x503330-0x50333d), so only index zero can succeed on a nonempty list;
+  nonzero indices run to the Search!=NULL assertion. GetNext returns the
+  advanced cursor. Base/private/channel constructors leave Closed untouched;
+  only the rule-violation constructors clear it. Zero/negative line limits
+  are not normalized. Named-line insertion uses its time offset; insertion
+  without an addressee discards the caller's offset. Ignore filters never
+  match modes 9/10/11/12. IgnoreEnabled gates exceptions, not the final ignore
+  list itself. HasUnreadConsoleText is an inferred, imperfect name: the
+  actual predicate is selected AND IsPrivateChannel(), not selected AND
+  locked; differential testing caught and corrected that distinction.
+- **Allocation and destruction** (high for binary behavior, low for original
+  source syntax). Talk uses nothrow allocations to preserve VC7's null-return
+  new branches. A null filter allocation is stored as a null list entry; a
+  null line allocation still reaches virtual Append. Unchecked string
+  allocations remain unchecked. Objects allocated with new are deliberately
+  released with free, as in the image. The buffer destructor is nonvirtual,
+  resets to the base vtable and clears through the base destructor; its
+  noexcept(false) is a modern-language adaptation so Clear exceptions can
+  still reach the caller's TEND. Limits, padding and uninitialized fields
+  are not repaired.
+- **ABI and field types** (high for widths/offsets, low for original source
+  declarations). Colors use an explicit output pointer and return it, which
+  reproduces the hidden-return-buffer x86 ABI without guessing the original
+  struct-by-value syntax. TTalkLine::Time is a signed 32-bit time_t, not
+  modern time_t. Flags at +0x24..+0x29 have inferred semantic names; their
+  byte values, vtable access and six class sizes are checked. Write's original
+  catch calls its FILE* stack slot bytes; an INT_PTR alias retains that name.
+- **Differential harness** (high). The Preferences test's old Talk-reset
+  counter is replaced with the real implementation on both sides; its
+  original ignore vector is initialized before SetDefaultPreferences.
+  PatchImage is reused; Talk additionally redirects 32-bit time/localtime,
+  sprintf and fprintf. The test executable's own _time32 is temporarily
+  redirected to the same fixed clock, restored afterwards, to avoid
+  second-boundary races. Only explicitly invoked mapped functions execute;
+  the original executable's loader, imports and entry point never run.
+  Error/exception and allocation-failure paths are not invoked in the image.
+- **Metadata correction** (high). The old automatic names extraction
+  mistook the 0x502f70 explanatory comment for a function and appended
+  BuddyIgnoreList. The erroneous duplicate is removed; the single remaining
+  TTalkBuffer_Remove_line_block row identifies an internal block of 0x502f00,
+  not a function or global. No separate source definition is added.
+
+See notes/Talk.md for exception-table checks, switch tables, all remaining
+callcheck differences, caller integration and differential coverage.
+
 ## Objects.cpp
 
 - **The whole Objects/Player gap (0x4d7cd0-0x4d913e) is Player.obj** (high).
