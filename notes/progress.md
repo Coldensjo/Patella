@@ -24,6 +24,7 @@ loader 0x4ddc00, the saver 0x4de890 and 0x4df520.
 
 ## Delegates (running)
 
+- Map.cpp + MainWindow/Map and Map/MapWindow gaps (item 6): Claude Opus 5.5, own worktree.
 - Talk.cpp + sysinc/Talk and Talk/TMyException gaps (item 9): ChatGPT
   gpt-6.1-sol, own worktree.
 Both append-only to names.tsv/external.h; review each against decomp/clean
