@@ -47,3 +47,13 @@ merging.
   C/C++ escapes with the Edit/Write tools, not through shell commands.
 - tools/callcheck.py now resolves member calls named `Class_method` in
   names.tsv (own class first, else a unique method name).
+- Map.cpp (delegate branch): TObject now clears itself (default member
+  initializers), TRGBColor has constructors (palette index 0x425950, R/G/B,
+  default), vector<T> has its destructor, Container.h has matrix<T> and
+  matrix3d<T>. Communication.cpp's map code uses TObject; TCommunicationObject
+  is left for the Inventory.cpp calls. The Map/MapWindow gap has names.tsv
+  rows (TMapWindow_*) for MapWindow.cpp.
+- The difftest image's static initialisers never run: call the original
+  constructors of a file's static objects explicitly (maptest.cpp does it
+  for Map.cpp's), and keep inputs away from paths that raise exceptions in
+  the original (e.g. opening a missing file).

@@ -18,6 +18,7 @@
 
 #include "Control.h"
 #include "Network.h"
+#include "Map.h"
 #include "Objects.h"
 #include "Communication.h"
 #include "Preferences.h"
@@ -302,12 +303,12 @@ void EnterGame()
 		SetActionState(0);
 		MainWindow->FUN_004ad650(1);
 	}
-	FUN_004bccb0();
+	ClearMap();
 	FUN_004a7d20();
 	FUN_004509e0();
 	ResetTalk();
 	ShowPermanentIgnoreWarning();
-	FUN_004b09e0(-1, 0);
+	SetAmbientLight(-1, 0);
 	TEND
 }
 
@@ -818,8 +819,8 @@ void TimerEvent()
 	UpdateTalkboxes();
 	UpdateStatusMessage();
 	if (GetActionNumber() % 10 == 0)
-		FUN_004b0a70();
-	FUN_004bba70();
+		UpdateAmbientLight();
+	ProcessEffects();
 	if (GetPendingActionNumber() != 0 && GetPendingActionState() == 6) {
 		if (GetActionNumber() - GetPendingActionNumber() < 7)
 			return;
@@ -1179,7 +1180,7 @@ void InitControl(bool Gamemaster)
 	try {
 		FUN_004fcd00();
 		InitObjects();
-		FUN_004bf620(FUN_0044c8c0);
+		InitMap(FUN_0044c8c0);
 		FUN_004a7d70();
 		FUN_00452190();
 		InitStatus(Gamemaster, LinkCopyWarning);
@@ -1222,7 +1223,7 @@ void ExitControl()
 	ExitStatus();
 	FUN_00496160();
 	FUN_00496160();
-	FUN_004b5760();
+	ExitMap();
 	ExitObjects();
 	FUN_004fcd30();
 	TEND

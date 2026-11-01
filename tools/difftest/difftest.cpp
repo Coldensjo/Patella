@@ -379,6 +379,7 @@ int main(int argc, char **argv)
 	TestPlayer();
 	TestTalk();
 	TestObjects(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+	TestMap(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	printf("%d checks, %d failures\n", Checks, Failures);
 	return Failures == 0 ? 0 : 1;
 }

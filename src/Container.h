@@ -15,6 +15,8 @@
 //   vector<TBuddy>          constructor 0x4dc170, operator() 0x4dba60 (Preferences.cpp)
 //   vector<TTalkFilter *>   initialized constructor 0x4fd6e0 (Talk.cpp),
 //                           operator() folded with vector<int> at 0x452ac0
+//   vector<TMark>           constructor 0x426170, operator() 0x425b20 (Map.cpp; the
+//                           linker kept the copies of an object before Map.obj)
 // Preferences.cpp also uses vector<int>, whose code the linker kept from an
 // earlier object: constructors 0x453300 (with init) and 0x4a2b90,
 // operator() 0x452ac0.
@@ -29,8 +31,7 @@
 // min, d, i, low() and high() are named in the assertions and in the
 // error message of operator(). Instantiations reconstructed so far:
 //   array<TProperties>  constructor 0x4cfa30, operator() 0x4d1a10 (Objects.cpp)
-// Map.cpp has another one (element size 0xac): constructor 0x4b0bc0,
-// operator() 0x4b5900.
+//   array<TMapPoint>    constructor 0x4b0bc0, operator() 0x4b5900 (Map.cpp)
 template <class T> class array {
 public:
 	array(int min, int max);
@@ -69,10 +70,111 @@ template <class T> T &array<T>::operator()(int i)
 	return entry[i];
 }
 
+// matrix<T> is a fixed two-dimensional array indexed from xmin/ymin (lines
+// 217-253); matrix3d<T> its three-dimensional counterpart (lines 282-328).
+// The class names are ours; xmin, ymin, zmin, dx, dy, dz, x, y and z are named
+// in the assertions and error messages. x is the fastest index. The
+// destructors free the entries; their only out-of-line copy is matrix's at
+// 0x4b0b20, called when an exception unwinds Map.cpp's FindPath.
+// Instantiations reconstructed so far (Map.cpp):
+//   matrix<TPathNode>  constructor 0x4b1100, operator() 0x4b5e90, destructor 0x4b0b20
+//   matrix3d<int>      constructor 0x4b0d70, operator() 0x4b5b40
+template <class T> class matrix {
+public:
+	matrix(int xmin, int xmax, int ymin, int ymax);
+	~matrix() { delete[] entry; }
+	T &operator()(int x, int y);
+
+	int xmin; // +0x00
+	int ymin; // +0x04
+	int dx;   // +0x08
+	int dy;   // +0x0c
+	T *entry; // +0x10
+};
+
+// Lines 217-218. No try block; the assertions are the only EH states.
+template <class T> matrix<T>::matrix(int xmin, int xmax, int ymin, int ymax)
+{
+	this->xmin = xmin;
+	this->ymin = ymin;
+	dx = xmax - xmin + 1;
+	dy = ymax - ymin + 1;
+	TASSERT1(dx>0, dx);
+	TASSERT1(dy>0, dy);
+	entry = new T[dx * dy];
+}
+
+// Line 253.
+template <class T> T &matrix<T>::operator()(int x, int y)
+{
+	x -= xmin;
+	y -= ymin;
+	if (x < 0 || x >= dx || y < 0 || y >= dy) {
+		std::stringstream s;
+		s << "index out of range (" << "original x: " << x + xmin << ", original y: " << y + ymin
+			<< ", x: " << x << ", y: " << y << ", xmin: " << xmin << ", ymin: " << ymin << ", dx: " << dx
+			<< ", dy: " << dy << ")";
+		TERROR(s.str().c_str());
+	}
+	return entry[y * dx + x];
+}
+
+template <class T> class matrix3d {
+public:
+	matrix3d(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax);
+	~matrix3d() { delete[] entry; }
+	T &operator()(int x, int y, int z);
+
+	int xmin; // +0x00
+	int ymin; // +0x04
+	int zmin; // +0x08
+	int dx;   // +0x0c
+	int dy;   // +0x10
+	int dz;   // +0x14
+	T *entry; // +0x18
+};
+
+// Lines 282-284.
+template <class T> matrix3d<T>::matrix3d(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax)
+{
+	this->xmin = xmin;
+	this->ymin = ymin;
+	this->zmin = zmin;
+	dx = xmax - xmin + 1;
+	dy = ymax - ymin + 1;
+	dz = zmax - zmin + 1;
+	TASSERT1(dx>0, dx);
+	TASSERT1(dy>0, dy);
+	TASSERT1(dz>0, dz);
+	entry = new T[dx * dy * dz];
+}
+
+// Line 328. Unlike the other containers, the error names a bug number as its
+// expression.
+template <class T> T &matrix3d<T>::operator()(int x, int y, int z)
+{
+	x -= xmin;
+	y -= ymin;
+	z -= zmin;
+	if (x < 0 || x >= dx || y < 0 || y >= dy || z < 0 || z >= dz) {
+		std::stringstream s;
+		s << "index out of range (" << "original x: " << x + xmin << ", original y: " << y + ymin
+			<< ", original z: " << z + zmin << ", x: " << x << ", y: " << y << ", z: " << z
+			<< ", xmin: " << xmin << ", ymin: " << ymin << ", zmin: " << zmin << ", dx: " << dx
+			<< ", dy: " << dy << ", dz: " << dz << ")";
+		throw TMYEXCEPTION(s.str().c_str(), "", 0, "", 0, "[bug0000013]");
+	}
+	return entry[(z * dy + y) * dx + x];
+}
+
 template <class T> class vector {
 public:
 	vector(int min, int max, int block, T init);
 	vector(int min, int max, int block);
+	// Inlined everywhere: the atexit thunks of the static vectors
+	// (0x55a320-0x55a3c0) and Map.cpp's TAutomapBlock destructor 0x4b0b30
+	// free entry.
+	~vector() { delete[] entry; }
 	T &operator()(int i);
 
 	int min;          // +0x00, lowest index used so far

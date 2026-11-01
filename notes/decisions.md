@@ -396,3 +396,148 @@ callcheck differences, caller integration and differential coverage.
 - **0x5c2564** (the "engine N" value) stays DAT_005c2564 in external.h: it is
   in .data after Status.cpp's 0x5c2560, written by Player.cpp and read here;
   its owner is not clear.
+
+## Map.cpp
+
+Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
+
+- **MainWindow/Map gap (0x4b08a0-0x4b0b10) is Map.cpp** (high). The nine
+  functions use only Map.cpp data: the centre position 0x5d16e8-0x5d16f0
+  (also written by ShiftMap and InitMap), the automap flag 0x5d16cc (set by
+  AddAutomapMark, UpdateAutomap, InitMap), the light 0x5d16c4/c8 and
+  0x7152d0-0x7152e4; line 1784 asserts AmbienteActualBrightness (0x5d16c4).
+  Map.cpp's data is 0x5d16c0-0x7152e7: its static initialisers 0x559f40,
+  0x559f60, 0x559f90 construct 0x5d4c18, 0x5d4c24 and 0x5d4c40, and the next
+  one, 0x559fc0, constructs 0x7152e8 (MapWindow). 0x5d16b4 (an 8-byte object
+  initialised by 0x559f30 and never used) lies before Map's first variable
+  0x5d16c0 and is left to MainWindow.cpp (low). 0x5d16f4 is unused.
+  Ghidra missed four functions of the object: 0x4b0880 (TPathNode's inline
+  constructor, called only by matrix<TPathNode>'s constructor; it starts the
+  object, before the gap), 0x4b0b30 (TAutomapBlock's destructor, from the
+  atexit iterator 0x55a2e0), 0x4b0b40 (TMapPoint's constructor, passed to the
+  eh vector constructor iterator by array<TMapPoint>) and 0x4b1410
+  (TAutomapBlock's constructor, initialiser 0x559f90). 0x4b0b20 is
+  matrix<TPathNode>'s destructor (Container.h), called only by FindPath's
+  unwind funclet. The gap functions have no line evidence and open the file
+  in binary order.
+- **Map/MapWindow gap (0x4bf860-0x4bfb0b) is MapWindow.cpp** (high): the
+  destructor, scalar deleting destructor and constructor of the class with
+  vtable 0x56cf38, whose constructor 0x4bfa00 owns the catch blocks of
+  MapWindow.cpp line 130; 0x4bf8d0/0x4bf8e0 (missed by Ghidra) are its vtable
+  slots +0x3c/+0x40 returning 240 and 176; 0x4bf8f0 and 0x4bf930 work on
+  member arrays of 18x14 fields. Only names.tsv rows (the class name
+  TMapWindow and the member names are ours, low).
+- **Container.h matrix<T> and matrix3d<T>** (high for the code, low for the
+  class names). Lines 217-253 and 282-328, between array (152-178) and
+  vector (353 on); xmin, ymin, zmin, dx, dy, dz, x, y, z are in the
+  assertions and messages. matrix3d's error has "[bug0000013]" as its
+  expression, matrix's has none. Both have destructors: matrix's out-of-line
+  copy is 0x4b0b20, and the atexit thunks 0x55a2c0/0x55a2d0 free the entries
+  of the static array and matrix3d.
+- **vector<T> gets its destructor** (high): delete[] entry, inlined in the
+  atexit thunks of all static vectors (Talk's 0x55a390-0x55a3c0, those of
+  Preferences and Status at 0x55a320-0x55a380) and in TAutomapBlock's
+  destructor 0x4b0b30, which frees Marks.entry (+0x200a0 = +0x20018 + 0x88).
+  Container.h had no destructor; the earlier static vectors now free their
+  entries at exit like the original.
+- **TObject's default constructor clears it** (medium). TMapPoint's
+  constructor 0x4b0b40 zeroes exactly the ten TObjects and nothing else,
+  which is what a compiler-generated constructor does when TObject has a
+  constructor that clears its fields. Written as default member initializers
+  in external.h, so TObject stays an aggregate (brace initialisation still
+  works). There is no static initialiser for the TObject globals (NoObject,
+  the objects of Status.cpp): the original compiler apparently dropped
+  constructors that only store zeros into .bss (low for that explanation).
+- **TRGBColor constructors** (medium for TRGBColor(int Color), low for the
+  others). 0x425950 (between ConsoleWindow.cpp and ContentWindows.cpp) takes
+  ECX and a palette index, stores R, B, G and returns this: a constructor.
+  GetAutomapColor calls it on its return slot; SetAmbientLight has it inlined
+  (same store order). Defined inline in external.h's TRGBColor (the header
+  it belongs to is not reconstructed); a default constructor and a
+  three-value constructor (GetAutomapColor's black, and Control.cpp's
+  "= {200, 200, 200}") were added so that the type stays usable as before.
+- **Colours by value** (medium). GetAmbientColor and GetAutomapColor return
+  TRGBColor by value (hidden return pointer, the same ABI as Talk's explicit
+  output pointer); the constructor call on the return slot shows a returned
+  temporary.
+- **Callers switched from TCommunicationObject to TObject** (high): the
+  layout is the same (Type, Data, Extra = Type, Data1, Data2, 12 bytes).
+  Communication.cpp's map code (ReadField, ReceiveAddObject,
+  ReceiveChangeObject, ReceiveDeleteObject, ReceiveMoveCreature) now uses
+  TObject; TCommunicationObject remains only for the Inventory.cpp calls, so
+  its external.h comment (shared with TCommunicationCreature) was left as it
+  is.
+- **Names** (low unless noted). From the binary: MAPSIZE_X/Y/Z,
+  OBJECTS_PER_POINT, EFFECTS, Point, Effect(s), Block, Coordinate,
+  EffectNumber, EffectIteratorField/Count, AmbienteActualBrightness, the
+  fields ObjectCount, EffectNumber, Status, Type, Next, Previous, bx, by, bz,
+  x, y, and FindPath with its parameters (StartX ... ForceDiagonal, from its
+  error message; high). AmbienteBrightness, AmbienteColor and
+  AmbienteActualColor follow the binary's "Ambiente" spelling. Ours:
+  TMapPoint (the assertions say "Point"), TEffect, TMark, TCoordinate,
+  TAutomapBlock, TPathNode, the globals Fields and FieldNumber, and all
+  function names. GetObject is called GetMapObject because windows.h defines
+  GetObject as a macro. The four GetTop*Object names guess the purpose from
+  the flags they test (UNMOVE: move; FORCEUSE, LIQUIDPOOL: use); MapWindow.cpp
+  will tell.
+- **Static functions**: the functions without callers outside Map.obj
+  (SortObjects, InsertObject, GetEffectIteratorNumber, NewEffect,
+  DeleteEffect, the six ShiftMap* helpers, GetFieldAutomapInfo, the automap
+  file and cache functions, IsAutomapBlocked, GetAutomapSpeed) are static,
+  as Objects.cpp's GetEntry* are.
+- **Parameter forms** (medium): the GetTop*Object functions take int
+  &Position (the catch prints "Position" with the value read through the
+  pointer); AddAutomapMark takes TCoordinate &Coordinate ("Coordinate.x");
+  DeleteAutomapMark reads only x and y of its first parameter (the callers
+  pass an x/y pair and the level separately; written as TCoordinate &, low);
+  GetAutomapMarks takes vector<TMark> * and int * (low).
+- **Assertions with bug numbers**: expression texts such as
+  "In(rx,0,MAPSIZE_X-1) [bug0000013]" are written with local TASSERTB macros
+  that append the tag to the stringised expression. All assertion texts of
+  the file were compared with the binary's strings.
+- **Try blocks from the exception tables**: InsertObject's try starts after
+  its five assertions (states 25-25), although the point lookup precedes it;
+  SaveAutomapBlock's starts before its early return and its assertions
+  (states 0-38); the others follow the usual pattern. LoadAutomapBlock and
+  SaveAutomapBlock have inner try blocks whose catch (TMyException &)
+  handlers wrap the error ("failed to write colors" in both, sic, "failed to
+  load flags", "failed to write flag count", "failed to write flag" with i)
+  and an outer one that reports a damaged file. FindPath has a single try
+  with only a TMyException & handler (no TEND trio).
+- **Locals that the catch blocks print**: GetAutomapBlock keeps Position in
+  bx's stack slot (written with Position declared before TBEGIN); ClearField
+  sets i to -1 after the object loop (kept); ProcessEffects,
+  ProcessMissileEffects, ExitMap and DeleteAutomapMark declare i before
+  TBEGIN so that TEND1(i) can print it (the binary's slot is uninitialised
+  before the loop, ours is 0).
+- **Exact oddities kept**: AddMissileEffect's duration is 150 ms times
+  (int)sqrt(sqrt(dx*dx + dy*dy)) (two fsqrt; dx*dx in double, dy*dy in int);
+  only missiles on the centre's level are added; effect, text and missile
+  data overlap (union); DeleteObject returns true when 9 objects remain;
+  AddObject silently drops an object on a full point while AppendObject
+  raises an error; ShiftMapLevel clears levels 5-7 after moving up; an
+  automap file without marks is accepted (eof); GetAutomapMarks takes block
+  coordinates in parameters named x and y; FindPath's error message has no
+  opening parenthesis, and its open-list removal assumes the node is present
+  (a missing node is cut after the last one; an empty list would crash);
+  IsFieldPassable treats piles of more than two HEIGHT objects as passable.
+- **Source order**: line order, the gap functions first (binary order);
+  GetNextObject between lines 171 and 197 and ClearMap between 913 and 945,
+  as in the binary. GetAmbientBrightness (1784) stays in line order near the
+  end, apart from the other light functions at the start.
+- **callcheck** (45 of 75 functions differ, all explained): the Container.h
+  operator() calls (Fields(...), FieldNumber(...), Nodes(...), Marks(...))
+  and the TRGBColor constructor are not lexical calls of names; the binary
+  inlines GetMapLevel, GetNextObject, AbsoluteToRelative and
+  RelativeToAbsolute in some callers; Ghidra split LoadAutomapBlock,
+  SaveAutomapBlock and ShiftMapLevel, so their file calls and ClearField are
+  counted under 0x4b3242, 0x4b3988 and 0x4bdbe0; the file member calls
+  (open, readQuad, ...) are not resolved because several classes have
+  methods of these names; AddMissileEffect's _ftol is a cast; the two
+  DeleteEffect calls of ProcessEffects share one call site in the binary.
+- **Tests** (maptest.cpp): the image's static constructors are called
+  explicitly (its initialisers never run); each side works in its own
+  directory of generated automap files; missing and damaged files are not
+  tested (the original would raise an exception), so deleted marks (at 0,0,
+  block 0,0) are never looked up. FindPath reached every result except -4
+  (no path).
