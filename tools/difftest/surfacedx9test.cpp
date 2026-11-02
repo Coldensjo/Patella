@@ -21,13 +21,15 @@
 // image's object is called through its own vtable); after each, the logs, a
 // dump of both objects (every member word, fake objects by number), the
 // contents of every fake object and Surface.cpp's frame statistics are
-// compared. The error paths (assertions, PROGRAM_ERRORs) are not run: the
-// image cannot throw in the child.
+// compared. The error paths (issue #34, TestSurfaceDX9Errors after the
+// counted checks): one creation call fails, the desktop depth or d3d9.dll,
+// and the drawing functions' assertions, compared through imageeh.h.
 //
 // DIFFTEST_ONLY=SurfaceDX9 runs it alone (DX9_TRACE=1 traces, DX9_LOGS=<file>
 // writes every compared log).
 
 #include "difftest.h"
+#include "imageeh.h"
 #include "../../src/surfaceDX9.h"
 #include "../../src/GUI.h"
 #include "../../src/Preferences.h"
@@ -89,8 +91,19 @@ struct TDX9World {
 	int ScreenWidth, ScreenHeight;
 	int Confine;
 	HRESULT AlphaResult;
+	int FailCall; // the error round (issue #34): the FailCall-th creation call fails (0: none)
+	int Calls;
 };
 static TDX9World World;
+// DirectDrawCreate, QueryInterface, Direct3DCreate9, CreateDevice and
+// CreateTexture count their calls; the one World.FailCall names fails.
+static bool Failing(const char *What)
+{
+	if (World.FailCall == 0 || ++World.Calls != World.FailCall)
+		return false;
+	Logf("%s fails;", What);
+	return true;
+}
 
 // --- Fake COM objects ------------------------------------------------------------------------
 
@@ -213,6 +226,10 @@ static TDX9Fake *NewSurface(int Width, int Height)
 static HRESULT __stdcall D3DCreateDevice(TDX9Fake *This, UINT Adapter, D3DDEVTYPE Type, HWND Window, DWORD Flags,
 	D3DPRESENT_PARAMETERS *P, TDX9Fake **Device)
 {
+	if (Failing("CreateDevice")) {
+		*Device = NULL;
+		return D3DERR_NOTAVAILABLE;
+	}
 	TDX9Fake *F = NewFake('V', DeviceVtbl);
 	F->Parameters = *P;
 	*Device = F;
@@ -251,6 +268,10 @@ static HRESULT __stdcall DevGetBackBuffer(TDX9Fake *This, UINT Chain, UINT Buffe
 static HRESULT __stdcall DevCreateTexture(TDX9Fake *This, UINT Width, UINT Height, UINT Levels, DWORD Usage,
 	D3DFORMAT Format, D3DPOOL Pool, TDX9Fake **Texture, HANDLE *Shared)
 {
+	if (Failing("CreateTexture")) {
+		*Texture = NULL;
+		return D3DERR_OUTOFVIDEOMEMORY;
+	}
 	TDX9Fake *F = NewFake('T', TextureVtbl);
 	SetPixels(F, Width, Height);
 	*Texture = F;
@@ -428,6 +449,10 @@ static HRESULT __stdcall BufUnlock(TDX9Fake *This)
 // IDirectDraw and IDirectDraw7
 static HRESULT __stdcall DDQueryInterface(TDX9Fake *This, REFIID Id, void **Object)
 {
+	if (Failing("QueryInterface")) {
+		*Object = NULL;
+		return E_NOINTERFACE;
+	}
 	TDX9Fake *F = NewFake('7', DirectDraw7Vtbl);
 	*Object = F;
 	Logf("%s.QueryInterface(%08x)=%s;", Name(This), Hash((const uint8 *)&Id, sizeof(IID)), Name(F));
@@ -509,6 +534,8 @@ static bool D3D9Missing;
 
 static IDirect3D9 *WINAPI FakeDirect3DCreate9(UINT Version)
 {
+	if (Failing("Direct3DCreate9"))
+		return NULL;
 	TDX9Fake *F = NewFake('D', Direct3DVtbl);
 	Logf("Direct3DCreate9(%u)=%s;", Version, Name(F));
 	return (IDirect3D9 *)F;
@@ -574,6 +601,10 @@ static void WINAPI FakeSleep(DWORD Milliseconds)
 }
 static HRESULT WINAPI FakeDirectDrawCreate(GUID *Id, IDirectDraw **DirectDraw, IUnknown *Outer)
 {
+	if (Failing("DirectDrawCreate")) {
+		*DirectDraw = NULL;
+		return DDERR_GENERIC;
+	}
 	TDX9Fake *F = NewFake('O', DirectDrawVtbl);
 	*DirectDraw = (IDirectDraw *)F;
 	Logf("DirectDrawCreate(%p,%p)=%s;", Id, Outer, Name(F));
@@ -1260,6 +1291,163 @@ static void RunRound(int Round)
 	ClearFakes();
 }
 
+// --- Error paths (issue #34) ---------------------------------------------------------------
+
+// Both sides as Both does, each in ImageThrow/OurThrow: what they threw, then
+// the logs and the objects.
+template <class F> static void BothThrown(TErrorRound &R, const char *Name, F Operation)
+{
+	What = Name;
+	if (Trace)
+		printf("  %s (errors)\n", Name);
+	TDX9World Start = World;
+	Side = IMAGE;
+	TThrown Original = ImageThrow([&] { Operation(Objects[IMAGE]); });
+	World = Start;
+	Side = OURS;
+	TThrown Ours = OurThrow([&] { Operation(Objects[OURS]); });
+	R.Compare(Name, Ours, Original);
+	Compare();
+}
+
+// PROGRAM_ERROR 7, 8, 12 and 14-18: one creation call fails (DirectDrawCreate,
+// QueryInterface, Direct3DCreate9, CreateDevice, each CreateTexture), the
+// desktop has too few bits, or d3d9.dll is missing; then the assertions of
+// the drawing functions with surfaces and rectangles out of range.
+static void TestSurfaceDX9Errors()
+{
+	TErrorRound R("SurfaceDX9");
+	for (int Round = 0; Round < 120; Round++) {
+		RandomWorld();
+		int Case = Round % 4;
+		Side = IMAGE;
+		Objects[IMAGE] = At<TSurface *(__cdecl *)()>(0x4f1430)();
+		Side = OURS;
+		Objects[OURS] = CreateSurfaceDX9();
+		FillPattern(Objects[IMAGE]);
+		FillPattern(Objects[OURS]);
+		What = "constructor";
+		Compare();
+		World.Calls = 0;
+		World.FailCall = Case == 0 ? Between(1, 2) : 0; // DirectDrawCreate, QueryInterface
+		BothThrown(R, "InitSurfaces", [&](TSurface *T) { T->InitSurfaces(); });
+		bool Ready = World.FailCall == 0;
+		if (Ready) {
+			World.Calls = 0;
+			World.FailCall = Case == 1 ? Between(1, 26) : 0;
+			if (Case == 2) {
+				if (Chance(50))
+					World.DesktopDepth = Between(1, 15);
+				else
+					D3D9Missing = true;
+			}
+			HWND Window = (HWND)(uintptr_t)0x10010;
+			int Mode = Chance(50) ? WINDOWED_MODE : FULLSCREEN_MODE;
+			TFullscreenMode Copies[2];
+			for (int s = 0; s < 2; s++) {
+				Copies[s].Width = 640;
+				Copies[s].Height = 480;
+				Copies[s].Depth = 32;
+				Copies[s].Frequency = 60;
+			}
+			BothThrown(R, "Init", [&](TSurface *T) { T->Init(&Window, Mode, &Copies[Side], false); });
+			D3D9Missing = false;
+			World.FailCall = 0;
+			if (Case == 3 && DeviceReady()) {
+				int Bad = Chance(50) ? Between(-5, -1) : Between(NUMBER_OF_SURFACES_DX9, NUMBER_OF_SURFACES_DX9 + 5);
+				int Good = Between(0, NUMBER_OF_SURFACES_DX9 - 1);
+				TRect Empty(Between(0, 5), Between(0, 5), Between(-3, 0), Between(1, 5));
+				if (Chance(50))
+					std::swap(Empty.width, Empty.height);
+				TRect Some(Between(0, 5), Between(0, 5), Between(1, 50), Between(1, 50));
+				TRect Huge(0, 0, Between(2000, 5000), Between(1, 50));
+				TRGBColor Key(1, 2, 3);
+				int x = Chance(50) ? Between(-5, -1) : Between(0, 40), y = Between(0, 40);
+				int w = Chance(50) ? Between(-2, 0) : Between(1, 20), h = Between(1, 20);
+				static uint8 Data[64 * 64 * 3], Mask[64 * 64 * 3];
+				static TRGBColor Colors[8];
+				BothThrown(R, "SetSourceColorKey", [&](TSurface *T) { T->SetSourceColorKey(Bad, Key); });
+				BothThrown(R, "GetSurfaceRect", [&](TSurface *T) { TRect Out; T->GetSurfaceRect(Bad, &Out); });
+				BothThrown(R, "WriteMaskedImage screen", [&](TSurface *T) {
+					T->WriteMaskedImage(SCREEN_SURFACE, 0, 0, 4, 4, Data, Mask, Colors);
+				});
+				BothThrown(R, "WriteMaskedImage area", [&](TSurface *T) {
+					T->WriteMaskedImage(SPRITE_SURFACE, x, y, w, h, Data, Mask, Colors);
+				});
+				int Stretch = Between(0, 5);
+				int From = Stretch == 0 ? TEMP_SURFACE : Stretch == 1 ? STRETCH_SURFACE : Good;
+				int To = Stretch == 2 ? TEMP_SURFACE : Stretch == 3 ? STRETCH_SURFACE : SCREEN_SURFACE;
+				TRect FromRect = Stretch == 4 ? Huge : Some, ToRect = Stretch == 5 ? Huge : TRect(Some.x, Some.y, Some.width + 1, Some.height);
+				BothThrown(R, "StretchBlit", [&](TSurface *T) {
+					T->StretchBlit(To, ToRect, From, FromRect, Key, Key, TRect(0, 0, 800, 600));
+				});
+				BothThrown(R, "Blit", [&](TSurface *T) { T->Blit(SCREEN_SURFACE, 1, 1, Good, Empty, Key); });
+				BothThrown(R, "BlitRect", [&](TSurface *T) { T->BlitRect(SCREEN_SURFACE, 1, 1, Good, Empty); });
+				// InitDisplay's and CreateSurfaces' state checks: the members they
+				// check set on both objects for the call, then put back.
+				TSurfaceDX9 *D[2] = {(TSurfaceDX9 *)Objects[0], (TSurfaceDX9 *)Objects[1]};
+				for (int Check = 0; Check < 12; Check++) {
+					TFullscreenMode Mode640 = Copies[0];
+					void *SavedDraw[2], *SavedD3D[2], *SavedSurfaces[2][6];
+					HWND SavedWindow[2];
+					int SavedView[2];
+					static const int Order[6] = {PRIMARY_SURFACE, SCREEN_SURFACE, TEMP_SURFACE, CACHE_SURFACE, AUTOMAP_SURFACE,
+						SPRITE_SURFACE};
+					for (int s = 0; s < 2; s++) {
+						SavedDraw[s] = D[s]->DirectDraw;
+						SavedD3D[s] = D[s]->Direct3D;
+						SavedWindow[s] = D[s]->hWindow;
+						SavedView[s] = D[s]->ViewMode;
+						for (int k = 0; k < 6; k++)
+							SavedSurfaces[s][k] = D[s]->Surface9[Order[k]];
+						if (Check == 0 || Check == 1)
+							D[s]->DirectDraw = NULL;
+						if (Check == 2)
+							D[s]->hWindow = NULL;
+						if (Check >= 4) { // CreateSurfaces with Direct3D gone and Check - 5 surfaces gone
+							D[s]->Direct3D = Check == 4 ? D[s]->Direct3D : NULL;
+							for (int k = 0; k < Check - 5 && k < 6; k++)
+								D[s]->Surface9[Order[k]] = NULL;
+							if (Check == 6 && D[s]->Surface9[SCREEN_SURFACE] == NULL) // never set: a stand-in
+								D[s]->Surface9[SCREEN_SURFACE] = (decltype(D[s]->Surface9[0]))SavedSurfaces[s][0];
+							if (Check == 11)
+								D[s]->ViewMode = 7;
+						}
+					}
+					if (Check <= 3) {
+						int VMode = Check == 3 ? (Chance(50) ? 7 : FULLSCREEN_MODE) : WINDOWED_MODE;
+						TFullscreenMode *GMode = Check == 3 && VMode == FULLSCREEN_MODE ? NULL : &Mode640;
+						BothThrown(R, "InitDisplay", [&](TSurface *T) { ((TSurfaceDX9 *)T)->InitDisplay(VMode, GMode); });
+					}
+					if (Check == 1 || Check >= 4)
+						BothThrown(R, "CreateSurfaces", [&](TSurface *T) { ((TSurfaceDX9 *)T)->CreateSurfaces(); });
+					for (int s = 0; s < 2; s++) {
+						D[s]->DirectDraw = (decltype(D[s]->DirectDraw))SavedDraw[s];
+						D[s]->Direct3D = (decltype(D[s]->Direct3D))SavedD3D[s];
+						D[s]->hWindow = SavedWindow[s];
+						D[s]->ViewMode = SavedView[s];
+						for (int k = 0; k < 6; k++)
+							D[s]->Surface9[Order[k]] = (decltype(D[s]->Surface9[0]))SavedSurfaces[s][k];
+					}
+					Compare();
+				}
+			}
+		}
+		BothThrown(R, "ExitSurfaces", [&](TSurface *T) { T->ExitSurfaces(); });
+		Side = IMAGE;
+		delete Objects[IMAGE];
+		Side = OURS;
+		delete Objects[OURS];
+		What = "destructor";
+		Log[0].clear();
+		Log[1].clear();
+		Objects[0] = Objects[1] = NULL;
+		ClearFakes();
+	}
+	World.FailCall = 0;
+	R.Finish();
+}
+
 void TestSurfaceDX9()
 {
 	PatchImage();
@@ -1275,8 +1463,9 @@ void TestSurfaceDX9()
 			printf("round %d\n", Round);
 		RunRound(Round);
 	}
+	printf("SurfaceDX9: %d checks\n", Checks - Before);
+	TestSurfaceDX9Errors();
 	RestoreAll();
 	if (LogFile != NULL)
 		fclose(LogFile);
-	printf("SurfaceDX9: %d checks\n", Checks - Before);
 }
