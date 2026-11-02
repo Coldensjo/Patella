@@ -476,8 +476,10 @@ void TMainWindow::ChangeMode(bool InGame)
 void TMainWindow::ResizeConsole(int ConsoleHeight)
 {
 	TBEGIN
-	if (ConsoleHeight < Console->getMinimumHeight())
-		ConsoleHeight = Console->getMinimumHeight();
+	// One call of getMinimumHeight (0x4ac642; issue #34).
+	int MinimumHeight = Console->getMinimumHeight();
+	if (ConsoleHeight < MinimumHeight)
+		ConsoleHeight = MinimumHeight;
 	Console->SetSize(Console->Width, ConsoleHeight);
 	TEND1(ConsoleHeight)
 }
