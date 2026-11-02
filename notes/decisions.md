@@ -2076,3 +2076,169 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   gives the real separators its test vtable after each construction,
   contentwindowstest.cpp and mainwindowtest.cpp name the real icons and
   separators by vtable (mainwindowtest.cpp fakes DrawObject now).
+
+## Dialogs.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
+
+- **Range** (high). Dialogs.obj is 0x46b790-0x4854ad: the leading run of
+  header code settled in issue #7 (now every function named, see below), the
+  line-numbered functions (lines 48-4084) and, without lines, the inline
+  virtuals and compiler-generated destructors the binary emits with the
+  vtables. The last catch block (the rule violation creator's, line 490)
+  ends at 0x4854ad; DialogWindow.obj starts at 0x4854b0 (issue #3). No header
+  code or Container.h instance follows the last function. The binary moves
+  the creators (lines 48-631), the constructors that call functions defined
+  further down (TDialog's 0x47c970, the outfit's, the edit list's, the ignore
+  list's, the hotkeys', the error report's, the rule violation's) and the
+  rule violation's HandleEvent (line 3124, which calls UpdateActions of line
+  3158) to the end of the object, Creatures.cpp's pattern; the source
+  follows the line numbers. Ghidra missed 0x46bb00, 0x46bef0, 0x4719a0,
+  0x47cf50, 0x47cf60 and 0x47db50 (vtable slots and a qsort comparator).
+- **Leading run** (high for the code, medium for the names): the inline
+  constructors of TQuestionLabel, TLogoutLabel and TWaitLabel (0x46b790,
+  0x46b840, 0x46b8f0; the first two take the font by reference and copy it
+  into TLabel's), the inline destructors of TWaitLabel, TReconnectWindow,
+  TCharacterListDialog, TNewChannelDialog, TGraphicsOptionsDialog,
+  TEditBuddyDialog, TRuleViolationDialog, TEditMarkDialog,
+  TAdvancedGraphicsDialog, TLoginDialog and TOutfitDialog (each deletes its
+  timer, its array or its radio/focus groups), TReconnectWindow::SetTime
+  (0x46ba10, "Trying to reconnect in %d %s."), TEditBuddyDialog::KeyPress
+  (0x46bef0), the compiler-generated ~TQuestionLabel (0x46bdf0, jmp ~TLabel,
+  shared with TLogoutLabel) and the deleting destructors; CompareNames
+  (0x46bb00) is the ignore list's qsort comparator (_stricmp of two char *),
+  an inline function of the header by its place (low). Container.h's
+  vector<TIgnoreEntry> (destructor 0x46bb60, operator() 0x46bb70,
+  constructor 0x46c0d0) clears Name[0] and Permanent of every new entry and of
+  init: TIgnoreEntry has an inline default constructor (medium; in
+  HandleEvent the store of Name[0] before CopyString is missing, which
+  suggests whole-program optimisation).
+- **Data** (high). Dialogs.obj's only static is NoCallback 0x5cc420
+  (initialiser 0x559e10; 0x559e20, the TCallback 0x5cc428, is DialogWindow.obj's,
+  as issue #3 found). Its copy of the text table is 0x5c123c-0x5c1484, then its
+  regular expression pointer 0x5c1488 and DefaultFontColor 0x5c148c; the
+  entries it reads are declared in external.h (names ours) and the test reads
+  the image's texts into them. The code also reads SkinProperties, Skins and
+  curEngine 0x71d0c4.
+- **Classes** (high for layouts, vtables and sizes; names ours, low, unless
+  noted). The frame TDialog (vtable 0x563778, 0xc4 bytes; the assertions name
+  the parameters _Caption and _Dialog and the members OkButton, CancelButton
+  and ExtraButton, so the body is "the dialog" and the frame is named TDialog)
+  and 31 bodies, each a TWindow (or a label) with its own KeyPress and
+  HandleEvent: TQuestionLabel 0x562110, TLogoutLabel 0x562198, TWaitLabel
+  0x562220, TReconnectWindow 0x5622b0, TLoginDialog 0x5627d8,
+  TCharacterListDialog 0x562370, TMoveObjectsDialog 0x562b68 (the member
+  DraggedObject is named in an assertion), TOutfitDialog 0x562878,
+  TTextDialog 0x562c28, TEditListDialog 0x563868, TIgnoreListDialog 0x5639d8,
+  TBugReportDialog 0x562cd8, TNewChannelDialog 0x562418, TPrivateChannelDialog
+  0x562db8, TReportDialog 0x562e58, TAddBuddyDialog 0x562ef8,
+  TEditBuddyDialog 0x562558 (member CharacterID from an assertion),
+  TUpdateDialog 0x562ff0, THelpDialog 0x5630c0, THintsDialog 0x563160,
+  TRuleViolationDialog 0x5625f8, TEditMarkDialog 0x562698, TOptionsDialog
+  0x563258, TGeneralOptionsDialog 0x563360, TGraphicsOptionsDialog 0x5624b8,
+  TAdvancedGraphicsDialog 0x562738, TConsoleOptionsDialog 0x563598,
+  TNetworkOptionsDialog 0x563650, THotkeyDialog 0x563a90 and
+  TErrorReportDialog 0x563b30. Sizes from the creators' new-expressions. A few
+  members are never touched and kept as UnusedNN (the move dialog's +0x58, the
+  new channel dialog's +0x34/+0x38, the update dialog's +0x2c).
+- **Creators** (names ours, medium): CreateMessageDialog ... CreateErrorReportDialog
+  (lines 48-631), with the parameter names of the catch blocks (Timeout,
+  CharacterID, DataSize) and typed parameters for external.h's placeholders:
+  the receivers of the connecting, question and logout dialogs are TComponent
+  pointers, the outfit, text and house-list dialogs take int arrays, the new
+  channel dialog the channel IDs and an array of 30-character names, the rule
+  violation dialog a name and a TTalkLine, the mark dialog a TCoordinate and a
+  TMark (deleted by the dialog). The move and report creators return NULL
+  when they make no dialog. Control.cpp's 40 call sites call them with casts
+  of its INT_PTR parameters.
+- **Exception tables and switches** (high): ehinfo.py for every function;
+  build/scratch/dg8/ehcheck.py finds the assertions before TBEGIN in every
+  constructor (TDialog's three, the outfit's, the text dialog's, the edit
+  list's two, the new channel dialog's two, the hotkey dialog's UpdateLine)
+  and flags only the ignore list's constructor, whose try block starts after
+  the base and its two vector members (state 3), as in the source. The update
+  dialog's HandleEvent names Event with the constant 2 in its catch block: its
+  try block is inside the test. The only jump table is the outfit dialog's part
+  names (0x47d648, cases 0-3); the other switches (the help, options, general
+  options, rule violation, hotkey and graphics key handlers) are compare chains.
+  Ghidra flattened the control flow of many handlers (the move dialog's
+  KeyPress, the reconnect and character list events, the new channel dialog's
+  Event = 301, the ignore list's event chain): they were rebuilt from the
+  assembly.
+- **Odd behaviour kept**: the frame's bottom edge starts at Skins[45].height;
+  the OK button's own callback stays NoCallback when the creator passes it
+  (only Return gets (this, 1)); the new channel dialog's Return sends 302 with
+  a name (nothing but closing; the frame's OK button takes Return first);
+  "Exclude player" has an "Add" button; the outfit dialog's part loop runs
+  over 216 colours (reading past the 133 buttons); the ignore list's Delete
+  loops stop one short of the vector's last index and its selection event
+  computes the entry twice; the hotkey dialog's event 11 without a selection
+  reads before its texts; the move dialog computes the cumulative pattern and
+  does not use it; the help menu's Client Help closes before it asks; an
+  incomplete rule violation report still closes the dialog; the advanced
+  options' selection is reset to the current engine on every draw; the hints
+  and help dialogs are not arranged at the end of their constructors.
+- **Side changes** (high unless noted): TObject's member Data1 is Data
+  (assertion text "In(DraggedObject.Data,1,100)"; every file and test);
+  TBorder frames a TComponent (the outfit dialog frames its TOutfitIcon;
+  DialogElements.cpp/.h and elementfakes.cpp's decorated names);
+  TListBox::GetNumberOfLines is inline in DialogElements.h (its out-of-line
+  copy is folded with Talk.h's TChannelTalkBuffer::GetChannelID 0x507060);
+  TSurface's slots +0x8c and +0xac are GetFullscreenModes(TFullscreenMode **)
+  and SetFramerateLimit(int) (the arguments pushed), and GetAvailableEngines
+  is a non-virtual TSurface member (Dialogs.cpp calls it with the surface in
+  ECX; Surface.cpp, external.h's TSurfaceGL and playertest.cpp follow);
+  external.h's dialog placeholders are gone.
+- **SkinProperties retyped** (medium; build/scratch/dg8/retype.py relayouts the
+  blocks, checks that the constructor-zeroed bytes stay the same and rewrote
+  GUI.cpp's 260 stores by offset; guitest.cpp compares the bytes): the pairs of
+  points Dialogs.cpp reads as one rectangle are TRects (SetChildArea's areas)
+  in TSkinProperties (0xbac-0x1518, see GUI.h), StyleB08 (the caption, the
+  separator and the body rectangle, which FitToChild takes by value, and the
+  three button positions as an array), StyleD3C (the ignore list: relaid
+  completely; its colour of permanent entries is Data88), StyleE68, StyleF8C,
+  Style1114, Style1274 (the label positions are points), Style1084, Style1394;
+  0xc88 is an array of four points (the outfit parts), 0x1064 a TRect that is
+  zeroed and never read, 0x14d4 the colour of hotkeys sent automatically.
+- **SetChildArea takes a TRect by value** (not changed): every caller in
+  Dialogs.obj builds a 16-byte block (sub esp,0x10) for the area, so the
+  original signature is SetChildArea(TComponent *, TRect); GUI.h's five-int
+  form has the same stack layout, so the source keeps it (issue #27).
+- **callcheck** (all differences explained): constructors of base classes,
+  members and new-expressions (TWindow, TCallback, TTimer, TLabel, the
+  controls, the vectors, TDrawing's vector constructor iterator) are not
+  lexical calls; virtual calls (SetChildArea, FitToChildren, SetChecked,
+  IsChecked, SetDisabled, IsDisabled, StartEdit, StopEdit, HandleEvent,
+  SetTimeout) are indirect in the binary, and calls on this in constructors are
+  direct in the binary but resolved to their own class by the tool; members
+  whose name several classes share (GetLine, AddLine, SetLine, Clear,
+  SetEnabled, SetActive, InsertChild) are not resolved by the tool; the binary
+  merges equal tails (SetActionState, AddMessage, Send) and unrolls the
+  rule violation's loops over the seven actions (CheckRight, GetActionName,
+  AddLine, GetLine); Limit is inlined; OpenURL and SetDisplayMode are function
+  pointers that the tool matches with MainFrm.cpp's functions of the same
+  names; OutfitColor's GetOutfitColor call is counted for the move dialog's
+  HandleEvent (the tool splits at "// 0x" comments); atol is Ghidra's _atol;
+  the error report's stringstream calls are library code.
+- **Tests**. dialogstest.cpp (new): every round opens one of 34 dialogs on
+  both sides through its creator (the image's at its address, ours directly),
+  the DialogElements controls real on both sides, then 20-60 random
+  operations (drawing, keys, clicks on the dialog's components with drags,
+  double and right clicks, the wheel, hovering, caption drags, the body's own
+  events and the frame's, Arrange, the timers, the frame's button setters and
+  each body's members against their image copies: SetTime, SetTimeout,
+  SetTimer, UpdateActions/GetReason/GetAction, UpdateLine, selections and names
+  through the controls' members); the logs of every callee with an effect and
+  a dump of the frame's tree (geometry, drawing lists, every member word with
+  pointers named, strings for the string members, timers and groups) are
+  compared after each. The callees are fakes answering from a random world;
+  Preferences.cpp's has one copy per side (the dialogs set and read them in
+  one operation). The image's error report constructor cannot run in the
+  child (its std::stringstream needs the CRT's static initialisers, which call
+  imports the child does not resolve): TestErrorReport runs our constructor
+  twice and gives the second object the image's vtable, so its KeyPress,
+  HandleEvent and destructor are the image's. CompareNames is checked against
+  0x46bb00. A mutation check of 22 changes failed each run (the update
+  dialog's two-second close needed small clock steps). 98,889 checks in the
+  full run.
+  DIFFTEST_ONLY=Dialogs runs it alone (DG_TRACE, DG_LOGS).

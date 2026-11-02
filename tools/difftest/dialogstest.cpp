@@ -143,9 +143,23 @@ static bool ReadString(const void *Address, std::string *Out)
 	}
 	return false;
 }
+// Bytes of the fill pattern (two or more 0xab bytes) are no pointer, even if
+// the heap has grown over that address meanwhile.
+static bool IsPattern(uint32 Value)
+{
+	int Count = 0;
+	for (int i = 0; i < 4; i++)
+		Count += ((Value >> (8 * i)) & 0xff) == 0xab;
+	return Count >= 2;
+}
 // A value: a known object's name, a string, a pointer or a number.
 static std::string Val(int s, uint32 Value)
 {
+	if (IsPattern(Value)) {
+		char Hex[16];
+		sprintf(Hex, "%x", Value);
+		return Hex;
+	}
 	auto N = Names[s].find((const void *)(uintptr_t)Value);
 	if (N != Names[s].end())
 		return N->second;
@@ -1169,7 +1183,8 @@ static bool IsStringMember(const std::string &Class, int Offset)
 
 static void DumpWord(std::string &Out, int s, uint32 Value, bool String)
 {
-	if (Value >= 0x10000 && Readable((void *)(uintptr_t)Value) && Names[s].find((void *)(uintptr_t)Value) == Names[s].end()) {
+	if (Value >= 0x10000 && !IsPattern(Value) && Readable((void *)(uintptr_t)Value)
+			&& Names[s].find((void *)(uintptr_t)Value) == Names[s].end()) {
 		std::string Text;
 		if (String && ReadString((void *)(uintptr_t)Value, &Text)) {
 			Out += "'" + Text + "'";
@@ -1369,6 +1384,37 @@ static void Members(uint32 r)
 		break;
 	}
 	case K_RULEVIOLATION:
+		if ((r >> 4) % 2 != 0) {
+			// Select a reason and an action and fill the texts (the list boxes'
+			// and edit lines' own members), then send OK.
+			TRuleViolationDialog *D = (TRuleViolationDialog *)Body(OURS);
+			int Reason = D->ReasonList->Lines > 0 ? (int)((r >> 8) % D->ReasonList->Lines) : -1;
+			uint32 r2 = Random();
+			static const char *const Comments[] = {"", "he insulted me", "spam"};
+			const char *Comment = Comments[r2 % 3], *Name = (r2 >> 4) % 3 == 0 ? "" : "Offender";
+			OperationName = "report";
+			Both([&](int s) {
+				TRuleViolationDialog *B = (TRuleViolationDialog *)Body(s);
+				if (s == OURS)
+					B->ReasonList->SetSelection(Reason);
+				else
+					CallI<void>(0x46ad10, B->ReasonList, Reason);
+				B->HandleEvent(21);
+			});
+			int Action = D->ActionList->Lines > 0 ? (int)((r2 >> 8) % D->ActionList->Lines) : -1;
+			Both([&](int s) {
+				TRuleViolationDialog *B = (TRuleViolationDialog *)Body(s);
+				if (s == OURS)
+					B->ActionList->SetSelection(Action);
+				else
+					CallI<void>(0x46ad10, B->ActionList, Action);
+				B->CommentEdit->SetText(Comment);
+				if (!B->NameEdit->ReadOnly)
+					B->NameEdit->SetText(Name);
+				B->HandleEvent(1);
+			});
+			break;
+		}
 		OperationName = "UpdateActions";
 		Both([&](int s) {
 			if (s == OURS) {
@@ -1383,6 +1429,19 @@ static void Members(uint32 r)
 		});
 		break;
 	case K_HOTKEYS: {
+		if ((r >> 12) % 2 != 0) {
+			// A selection by the list's member, then its event.
+			int Line = (int)((r >> 4) % HOTKEYS);
+			OperationName = "select";
+			Both([&](int s) {
+				if (s == OURS)
+					((THotkeyDialog *)Body(s))->ListBox->SetSelection(Line);
+				else
+					CallI<void>(0x46ad10, ((THotkeyDialog *)Body(s))->ListBox, Line);
+				Body(s)->HandleEvent(11);
+			});
+			break;
+		}
 		int Number = (int)((r >> 4) % HOTKEYS);
 		OperationName = "UpdateLine";
 		Both([&](int s) {
@@ -1393,6 +1452,38 @@ static void Members(uint32 r)
 		});
 		break;
 	}
+	case K_NEWCHANNEL: case K_INVITE: case K_EXCLUDE: case K_ADDBUDDY: {
+		// A name: the player's own (the new channel dialog refuses it), another or none.
+		const char *Name = (r >> 4) % 3 == 0 ? Player.Name : (r >> 4) % 3 == 1 ? "Someone" : "";
+		OperationName = "name";
+		Both([&](int s) {
+			TEditLine *E = Kind == K_NEWCHANNEL ? ((TNewChannelDialog *)Body(s))->NameEdit
+				: Kind == K_ADDBUDDY ? ((TAddBuddyDialog *)Body(s))->NameEdit : ((TPrivateChannelDialog *)Body(s))->NameEdit;
+			E->SetText(Name);
+			Body(s)->HandleEvent(1);
+		});
+		break;
+	}
+	case K_HINTS: case K_GRAPHICS: {
+		// A selection by the list's member, then its event.
+		TListBox *L = Kind == K_HOTKEYS ? ((THotkeyDialog *)Body(OURS))->ListBox
+			: Kind == K_HINTS ? ((THintsDialog *)Body(OURS))->ListBox : ((TGraphicsOptionsDialog *)Body(OURS))->ResolutionList;
+		if (L->Lines == 0)
+			break;
+		int Line = (int)((r >> 4) % L->Lines);
+		int Event = Kind == K_HOTKEYS ? 11 : 1;
+		OperationName = "select";
+		Both([&](int s) {
+			TListBox *List = Kind == K_HOTKEYS ? ((THotkeyDialog *)Body(s))->ListBox
+				: Kind == K_HINTS ? ((THintsDialog *)Body(s))->ListBox : ((TGraphicsOptionsDialog *)Body(s))->ResolutionList;
+			if (s == OURS)
+				List->SetSelection(Line);
+			else
+				CallI<void>(0x46ad10, List, Line);
+			Body(s)->HandleEvent(Event);
+		});
+		break;
+	}
 	default:
 		OperationName = "minimum size";
 		Both([&](int s) { Logf("Min%d,%d;", Frame[s]->getMinimumWidth(), Frame[s]->getMinimumHeight()); });
@@ -1400,6 +1491,7 @@ static void Members(uint32 r)
 	}
 }
 
+static int Clock; // the test clock of the round (the dialogs start at 1000)
 static void Operation()
 {
 	TDialog *F0 = Frame[OURS];
@@ -1419,8 +1511,7 @@ static void Operation()
 	World.FPSHundredths = Random() % 10000;
 	curEngine = World.Engine;
 	Global<int>(0x71d0c4) = World.Engine;
-	static int Clock = 1000;
-	Clock += Random() % 3000;
+	Clock += Kind == K_UPDATE ? Random() % 600 : Random() % 3000; // the update dialog closes 2 s after the end
 	SetTestClock(Clock);
 	// The hotkey list sends event 11 for a click beside its lines; without a
 	// selection the dialog then reads before its texts (garbage of each side).
@@ -1642,7 +1733,8 @@ void TestDialogs()
 		RandomArguments();
 		curEngine = World.Engine;
 		Global<int>(0x71d0c4) = World.Engine;
-		SetTestClock(1000);
+		Clock = 1000;
+		SetTestClock(Clock);
 		Testing = true;
 		OperationName = "creator";
 		Both([&](int s) { Frame[s] = Create(s); });

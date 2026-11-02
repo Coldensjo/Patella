@@ -13,7 +13,8 @@
 // TObject's member Data), the parameters _Caption, _Dialog, timeout, Event,
 // Key, Surface, seconds, MaximumLength, _ObjectNumber, _NumberOfChannels,
 // _ChannelIDs, _CharacterID, CharacterID, DataSize, Timeout, Number, x, y,
-// Code. The class, function and other member names are ours; see
+// Code, Text, MaxLength, Data, _Coordinate and the locals Position,
+// Creature, Number and AllocationNumber. The class, function and other member names are ours; see
 // notes/decisions.md, "Dialogs.cpp".
 //
 // The header's inline constructors and destructors have out-of-line copies
