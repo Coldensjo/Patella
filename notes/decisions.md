@@ -45,6 +45,14 @@ with the evidence, for review. Confidence: high, medium, low.
   body; the binary jumps straight into the switch on the first pass. The
   error calls are noreturn for the compiler, so the code after them does not
   show the original loop shape.
+  Reviewed in #24: confirmed. Every state's break jumps to 0x4e0203 `cmp [esp+0x10],0x3e7; jne 0x4dfcad`
+  (the switch), and the identifier state compares `cmp ebx,0x14` (0x4dfde1) right after its getc, as
+  written. Only the first pass differs from a check at the loop head, where Size is 0, so the shape cannot
+  change behaviour. scripttest.cpp's TestLongTokens now reads the two limits from those instructions,
+  compares identifiers of 18-19 characters and strings of 996-998 stored characters (with escapes) on both
+  sides and checks that one character more raises our error (our side only; the image cannot throw in the
+  child). Mutations: limit MAX_STRING_LENGTH -> 100 failures; identifier limit - 1 -> our side raises.
+  High.
 
 ## Talk.cpp
 
@@ -170,6 +178,8 @@ identifiers (Speaker, TargetBuffer, ReceiveTalkMode, Addressee, etc.) are kept.
   noexcept(false) is a modern-language adaptation so Clear exceptions can
   still reach the caller's TEND. Limits, padding and uninitialized fields
   are not repaired.
+  Reviewed in #24: confirmed: the low part is only the source syntax; the behaviour (null-return new,
+  free, the destructor) is what talktest compares.
 - **ABI and field types** (high for widths/offsets, low for original source
   declarations). Colors use an explicit output pointer and return it, which
   reproduces the hidden-return-buffer x86 ABI without guessing the original
@@ -177,6 +187,8 @@ identifiers (Speaker, TargetBuffer, ReceiveTalkMode, Addressee, etc.) are kept.
   modern time_t. Flags at +0x24..+0x29 have inferred semantic names; their
   byte values, vtable access and six class sizes are checked. Write's original
   catch calls its FILE* stack slot bytes; an INT_PTR alias retains that name.
+  Reviewed in #24: confirmed: TTalkLine::Time is only set from _time32 and passed to _localtime32 (never
+  compared), so its signedness cannot show; the colour output pointer is the hidden-return ABI (talktest).
 - **Differential harness** (high). The Preferences test's old Talk-reset
   counter is replaced with the real implementation on both sides; its
   original ignore vector is initialized before SetDefaultPreferences.
@@ -222,6 +234,8 @@ callcheck differences, caller integration and differential coverage.
   the empty object. It lies between Objects.cpp's last global (0x719d9c) and
   Player.cpp's first (0x719db0); the object system is the likelier owner.
   The name is ours.
+  Reviewed in #24: confirmed for the behaviour: a .bss datum with no static initialiser in the __xc table
+  0x5c002c-0x5c00c4 and no atexit, only read; its owner decides the file, not the code. Owner stays low.
 - **Container.h array<T>** (class name low, members high). The four tables
   are 12-byte objects {min, d, entry} with a constructor at line 152
   ("d>0") and operator() at line 178 ("index out of range (original i: ...,
@@ -230,6 +244,8 @@ callcheck differences, caller integration and differential coverage.
   (Container.h already has it so). The destructor `delete[] entry` is
   inferred from ReleaseObjects, which frees entry right before the array.
   Put before vector<T> in Container.h, as in the original line order.
+  Reviewed in #24: confirmed: the atexit thunk 0x55a2c0 of Map.obj's array<TMapPoint> (0x5d4c18) deletes
+  its entry (0x5d4c20), the same destructor ReleaseObjects inlines.
 - **TProperties and field names** (low for the struct name, high for Width,
   Height, Layers, PatternWidth, PatternHeight, PatternDepth, Phases and
   Flags, which are in the assertions). ExactSize, Sprites, Waypoints,
@@ -252,8 +268,12 @@ callcheck differences, caller integration and differential coverage.
   "GetObjectFlag(Obj,CUMULATIVE)" needs an overload for objects, written as
   an inline in Objects.h); LoadProperties takes pointers. The outfit
   sprite's 5th parameter is called Direction (PatternX = Direction + 1).
+  Reviewed in #24: confirmed: a reference and a pointer are passed alike (the callers push an address);
+  objectstest compares every function.
 - **Obj.Data2 holds the hook flag** (medium): GetHangPattern compares the
   third TObject field with 18 and 19 (HOOKSOUTH, HOOKEAST).
+  Reviewed in #24: confirmed: GetHangPattern reads [Obj+8] (0x4d6f0f) and compares it with 0x12 and 0x13.
+  High.
 - **Source order**: line order. LoadProperties (line 939) is placed by the
   compiler after GetEntrySpriteNumber, and ExitObjects (1023) before
   ReloadObjects (1012). The line gaps 70-91 and 281-303 fit one more accessor
@@ -307,6 +327,9 @@ callcheck differences, caller integration and differential coverage.
   and HandleException read `this` (+0xa0, +0x1c); FatalError gets `this` in
   ECX from both callers but does not use it; ReadErrorFile is called with
   ECX still holding `this` (low: it could be a free function).
+  Reviewed in #24: confirmed for the behaviour: ReadErrorFile (0x4da140) writes ECX before any read and
+  FatalError (0x4d7d80) only pushes it as a stack slot, so member or free function compile to the same
+  behaviour.
 - **Names** (low unless noted): Terminating (+0xa0) and RunPatch (+0xa1, Run
   starts patch.exe; set elsewhere through the application pointer),
   GetWindowTitle/GetWindowClassName (the decoded "Tibia   " and
@@ -387,6 +410,8 @@ callcheck differences, caller integration and differential coverage.
   with placeholder names except Window (+0x08). TSurfaceGL is declared in
   external.h (constructor 0x4fb670, 0x498 bytes) because GetSurface creates
   it with new.
+  Reviewed in #24: superseded: issues #9-#11 typed every slot from the engines' code, and their tests call
+  them on both sides.
 - **Names** (low): GetCurrentEngine, GetSurface, GetAvailableEngines,
   SurfaceInitInstance (after the binary's SurfaceExitInstance),
   SurfaceWindow, AvailableEngines.
@@ -394,6 +419,10 @@ callcheck differences, caller integration and differential coverage.
   states around ChoosePixelFormat/DescribePixelFormat without a try-block
   entry; the compiler drops handlers that only guard C functions. The catch
   body is unknown; it is written like the first one (PROGRAM_ERROR 12), low.
+  Reviewed in #24: confirmed: our /EHsc compile of SurfaceInitInstance has the binary's 4 unwind states
+  and one try block (states 0-0); the second catch (...) is eliminated by our compiler too (C functions
+  only), so its guessed body is never emitted. (difftest builds with /EHa, which keeps it; no test reaches
+  it.)
 - **0x5c2564** (the "engine N" value) is Surface.cpp's CommandLineEngine
   (issue #12, see "Unknown-owner data"): in .data after Status.cpp's 0x5c2560
   and before CacheSurfaceWidth, written by Player.cpp and read here.
@@ -447,6 +476,8 @@ callcheck differences, caller integration and differential coverage.
   compared byte for byte.
 - **The vector<int> destructor** (atexit 0x55a2b0 frees entry) is not in
   Container.h yet; behaviour at process exit only.
+  Reviewed in #24: superseded by issue #13: Container.h's vector destructor frees entry, and our
+  EventHelps registers it at exit like the binary's atexit thunk 0x55a2b0 (delete of 0x5ce558).
 
 ## Inventory.cpp and the Inventory/MainFrm gap
 
@@ -457,6 +488,10 @@ callcheck differences, caller integration and differential coverage.
   (the binary's limit 0x24); BODY_POSITIONS, OPEN_CONTAINERS and
   OBJECTS_PER_OFFER are from the assertions. Layouts from the offsets
   (container 0x1ec bytes; offer 0x4d4, CounterOffer is 0x4d8 after OwnOffer).
+  Reviewed in #24: the padding is confirmed harmless: no instruction or data word refers to
+  0x5d116c-0x5d116f (only OwnOffer 0x5d0c98, its Count/Objects 0x5d0cb8-0x5d0cc4, CounterOffer 0x5d1170
+  and 0x5d1190-0x5d119c), nothing copies a whole TOffer, and CounterOffer ends at PacketHeader 0x5d1644.
+  TOffer is 0x4d4 bytes (Inventory.h said 0x4d8; corrected).
 - **Function names** (medium/low): ours, after their callers in
   Communication.cpp; GetContainerObject is the container itself,
   GetContainerContent an object in it.
@@ -487,12 +522,17 @@ callcheck differences, caller integration and differential coverage.
   clears it and OutputErrorInformations prints it; Network.cpp writes it.
   The other data 0x5d1654-0x5d169c (the frame pointer, cursors, button
   flags, the class name buffer, the wheel remainder) are MainFrm's too.
+  Reviewed in #24: confirmed for the behaviour (.bss, no initialiser, no atexit; the constructor clears
+  it). The same review found MainFrm.obj's unused TCallback 0x5d1674 (initialiser 0x559f20) missing: added
+  as MainFrm.cpp's static NoCallback.
 - **Free functions** ExitProgram, CloseProgram, SetDisplayMode, OpenURL and
   UpdateMouseCursor (names low; OpenURL and SetDisplayMode after
   Control.cpp's callback parameter names) use the global MainFrame and are
   passed as callbacks to InitWindow and the main window.
 - **Eliminated try blocks**: ExitProgram, AddFrameSize and KeyUp have the
   unwind states of a TBEGIN/TEND but no try entry; written with TBEGIN/TEND.
+  Reviewed in #24: confirmed: our /EHsc compile of ExitProgram, AddFrameSize and KeyUp has the binary's 11
+  unwind states and no try block, so the guessed catch bodies are never emitted.
 - **Control.cpp's RightButtonDown** now takes (x, y, Flags) like the other
   button functions: MainFrm passes them; the reconstruction had declared it
   without parameters.
@@ -539,12 +579,18 @@ Reconstructed by Claude Opus 5.5, November 1, 2026.
   (`delete[] entry`) is documented in Container.h but not added: adding it
   changes the exit behaviour of Status/Preferences/Talk statics (correct per
   the binary's atexit handlers, but outside this file); open question.
+  Reviewed in #24: the open question was settled by issue #13 (vector<T> has its destructor; the statics
+  free their entries at exit as the binary's atexit thunks do).
 - **Static initialisers** (low, not used as evidence): 0x559df0 constructs an
   8-byte (0,0) object at 0x5c4558, just before Creatures data, and
   0x559e00-0x559e20 three at 0x5cc418-0x5cc42f just after it (0x5cc420 is used
   by Dialogs.cpp). The same constructor (0x496130) builds such objects in
   several objects. Issue #12 settled them: 0x5c4558 is Control.obj's
   NoCallback, 0x5cc418 Creatures.obj's (see "Unknown-owner data").
+  Reviewed in #24: confirmed: the __xc table 0x5c002c-0x5c00c4 has one TCallback(NULL, 0) (0x496130, no
+  atexit) for ConsoleWindow, ContentWindows, ContextMenus, Control, Creatures, Dialogs, DialogWindow,
+  MainFrm (0x5d1674), MainWindow and MapWindow; ours are a static NoCallback in each of those files
+  (MainFrm.cpp's added now), without a destructor.
 - **Source order** (medium for the rule, low for the gap functions' place).
   The binary order is the line order except that a function calling a
   function defined further down comes after the last of them: lines 278-592,
@@ -555,6 +601,8 @@ Reconstructed by Claude Opus 5.5, November 1, 2026.
   (line 108) put before the three TCreature accessors that come last
   (GetDeltaX, GetDeltaY, GetDrawDirection). IsPlayerInParty reads the
   shield itself instead of calling GetPlayerPartyFlag, which comes after it.
+  Reviewed in #24: no behaviour: the order of definitions does not change the code; IsPlayerInParty's
+  inlined read is compared by creaturestest.
 - **Names from the binary** (high): GetCreature, GetPlayerID,
   GetPlayerPartyFlag (assertions in ContextMenus.cpp/ConsoleWindow.cpp),
   CreatureID (the member catch blocks read `*this`), NumberOfPlayerSteps,
@@ -581,6 +629,8 @@ Reconstructed by Claude Opus 5.5, November 1, 2026.
   states match an assertion plus a TEND, and the compiler removes a try block
   whose body cannot throw. Their catch lines and names are unknown; written
   as plain TEND.
+  Reviewed in #24: confirmed: our /EHsc compile has the binary's 16 and 11 unwind states and no try block,
+  so the guessed catch bodies are never emitted.
 - **"[bug0000038]" / "[bug0000289]"** in two assertion texts: written with a
   local TASSERT1_BUG/TASSERT2_BUG macro in Creatures.cpp that appends the
   bug number to the stringized expression (common.h unchanged).
@@ -599,6 +649,9 @@ Reconstructed by Claude Opus 5.5, November 1, 2026.
   `_time32` (VC7.1's 32-bit time_t, as in Talk.cpp); GetHealthColor returns
   TRGBColor by value (hidden pointer, `ret 4`). The IsPlayer* state bits are
   declared bool (the binary returns `(State >> n) & 1` in EAX).
+  Reviewed in #24: confirmed: every comparison with 0x40000000 is unsigned (0x44b910 sbb, 0x44d8a1,
+  0x451fb4, 0x451ff2 jb), UpdateSkulls compares SkullTime signed (0x44c88d jl, 0x44c894 jle: a 32-bit
+  time_t), the bits are 0/1 in either type, GetHealthColor ends with ret 4 (creaturestest). High.
 - **Switches checked against the jump tables** (high): GetSkillName
   (0x44d6a8, cases 0-6), DoPlayerStep (0x4510c8, step directions 1-8),
   FindPlayerPath (0x4513f0, results -4..-1); CompareBuddies' sort-method
@@ -637,6 +690,8 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   matrix<TPathNode>'s destructor (Container.h), called only by FindPath's
   unwind funclet. The gap functions have no line evidence and open the file
   in binary order.
+  Reviewed in #24: confirmed: 0x559f30 sits between MainFrm.obj's 0x559f20 and Map.obj's 0x559f40 in the
+  __xc table 0x5c002c-0x5c00c4. High.
 - **Map/MapWindow gap (0x4bf860-0x4bfb0b) is MapWindow.cpp** (high): the
   destructor, scalar deleting destructor and constructor of the class with
   vtable 0x56cf38, whose constructor 0x4bfa00 owns the catch blocks of
@@ -665,6 +720,12 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   works). There is no static initialiser for the TObject globals (NoObject,
   the objects of Status.cpp): the original compiler apparently dropped
   constructors that only store zeros into .bss (low for that explanation).
+  Reviewed in #24: confirmed, and the explanation corrected: Inventory.obj does run zeroing initialisers
+  for TObjects in .bss (0x559ea0: TContainer.Object inline and Objects[] through the eh vector constructor
+  iterator with 0x4a4450, which clears three words; 0x559ee0/0x559f00: OwnOffer/CounterOffer.Objects), so
+  the compiler did not drop them; only the plain TObject globals and arrays (NoObject, Body, Status.cpp's)
+  have none. Either way the data are zero before main; ours (default member initialisers) have the same
+  three Inventory initialisers. High for the constructor.
 - **TRGBColor constructors** (medium for TRGBColor(int Color), low for the
   others). 0x425950 (between ConsoleWindow.cpp and ContentWindows.cpp) takes
   ECX and a palette index, stores R, B, G and returns this: a constructor.
@@ -673,10 +734,14 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   it belongs to is not reconstructed); a default constructor and a
   three-value constructor (GetAutomapColor's black, and Control.cpp's
   "= {200, 200, 200}") were added so that the type stays usable as before.
+  Reviewed in #24: confirmed: the constructors only store their values (the order of independent stores
+  cannot show); the default one zeroes, as the binary does (graphics.cpp's entry); maptest and
+  graphicstest compare the colours.
 - **Colours by value** (medium). GetAmbientColor and GetAutomapColor return
   TRGBColor by value (hidden return pointer, the same ABI as Talk's explicit
   output pointer); the constructor call on the return slot shows a returned
   temporary.
+  Reviewed in #24: confirmed: by value with a hidden return pointer is the ABI the binary shows (maptest).
 - **Callers switched from TCommunicationObject to TObject** (high): the
   layout is the same (Type, Data, Extra = Type, Data1, Data2, 12 bytes).
   Communication.cpp's map code (ReadField, ReceiveAddObject,
@@ -708,6 +773,8 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   DeleteAutomapMark reads only x and y of its first parameter (the callers
   pass an x/y pair and the level separately; written as TCoordinate &, low);
   GetAutomapMarks takes vector<TMark> * and int * (low).
+  Reviewed in #24: confirmed: references and pointers are passed alike; DeleteAutomapMark reads only x and
+  y either way (maptest).
 - **Assertions with bug numbers**: expression texts such as
   "In(rx,0,MAPSIZE_X-1) [bug0000013]" are written with local TASSERTB macros
   that append the tag to the stringised expression. All assertion texts of
@@ -727,6 +794,8 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   ProcessMissileEffects, ExitMap and DeleteAutomapMark declare i before
   TBEGIN so that TEND1(i) can print it (the binary's slot is uninitialised
   before the loop, ours is 0).
+  Reviewed in #24: no behaviour outside the error paths: only the value TEND1(i) prints differs, where the
+  original prints an uninitialised slot (cannot be reproduced).
 - **Exact oddities kept**: AddMissileEffect's duration is 150 ms times
   (int)sqrt(sqrt(dx*dx + dy*dy)) (two fsqrt; dx*dx in double, dy*dy in int);
   only missiles on the centre's level are added; effect, text and missile
@@ -738,6 +807,9 @@ Reconstructed by Claude Opus 5.5 (delegate), November 1, 2026.
   opening parenthesis, and its open-list removal assumes the node is present
   (a missing node is cut after the last one; an empty list would crash);
   IsFieldPassable treats piles of more than two HEIGHT objects as passable.
+  Reviewed in #24: the union is confirmed: its offsets are the accessors', maptest compares every effect
+  kind after random operations, and MSVC does no type-based alias analysis, so a union cannot change the
+  code.
 - **Source order**: line order, the gap functions first (binary order);
   GetNextObject between lines 171 and 197 and ClearMap between 913 and 945,
   as in the binary. GetAmbientBrightness (1784) stays in line order near the
@@ -783,6 +855,7 @@ WIP, checked and finished by a second one), November 1, 2026.
   (0x41a070) precedes graphics.obj in link order, so it is not an inline copy
   but graphics.cpp's own function. The three have no exception frame and no
   line evidence and open the file in binary order (as in Creatures.cpp).
+  Reviewed in #24: no behaviour: the header only decides where the identical inline copies are emitted.
 - **Graphics/GUI gap**: not reconstructed (the GUI.cpp delegate settles it).
   No graphics.cpp function was found in it: 0x495480-0x495700 construct
   objects with TFonts whose colour comes from GUI.obj's copy at 0x5c1954, and
@@ -812,6 +885,8 @@ WIP, checked and finished by a second one), November 1, 2026.
   the stack (`sub esp,0xc`), so it was changed from four ints to
   (int Surface, TRGBColor ColorKey), and +0x54 likewise (same ABI). Only
   engines 1 and 2 (OpenGL and DirectX 9) get the call.
+  Reviewed in #24: confirmed: (int, TRGBColor) has the stack layout of the callers' copies; graphicstest
+  records the calls on both sides.
 - **TVideoCacheItem's overlapping fields** (medium): masked sprites keep the
   mask number and four colours at +0x14/+0x18, pictures and font characters
   TileX, TileY and the text colour at +0x14/+0x18/+0x1c (the Find and Get
@@ -820,6 +895,9 @@ WIP, checked and finished by a second one), November 1, 2026.
   user constructor with these stores. A C++03 union cannot hold a TRGBColor
   with a constructor, so the original declaration was probably different
   (low); the stores are what the binary shows.
+  Reviewed in #24: confirmed: 0x48b3f0 stores +0x18..+0x47 and then +0x1c..+0x27, as ours; graphicstest
+  memcmp's every item (0x5c bytes) after each operation, so layout, union bytes and the constructor are
+  compared. The original declaration stays low.
 - **TRGBColor's default constructor zeroes** (as GUI.cpp found): the binary
   zeroes default-constructed colours, also here (DrawOutfit's local array, the
   `new TSprite[]` and `new TPicture[]` loops, which leave Offset and the tile
@@ -827,6 +905,8 @@ WIP, checked and finished by a second one), November 1, 2026.
   DrawOutfit just declares its array; the WIP's explicit zeroing (written
   against the old non-zeroing TRGBColor()) was removed in the merge with
   GUI.cpp. TFont's third field is Alignment (was Unknown10 in GUI.h).
+  Reviewed in #24: confirmed: the SkinProperties constructor test (guitest, byte for byte) shows the
+  zeroing; DrawOutfit sets all four colours before using them, so its array's initial value cannot show.
 - **Dropped code with exception states left** (medium): FindMemorySprite,
   FindMemoryPicture, the four FindVideo* functions (11 states, no try block),
   GetTextHeight and GetFittingTextLength (21) and GetTextPartWidth (26) are
@@ -837,6 +917,9 @@ WIP, checked and finished by a second one), November 1, 2026.
   assertions `Width>0` and `Height>0` after that return (as in
   DrawPicturePartClipped, lines 1192-1193) were removed as always true. Their
   line numbers are unknown.
+  Reviewed in #24: confirmed: our /EHsc compile has the binary's unwind states and no try block for the
+  eight Find/text functions (11, 21, 26 states), and DrawPicturePart's 26 states with the try at 15-15:
+  the two always-true assertions emit nothing in either.
 - **Try blocks from the exception tables**: the four file functions have an
   inner try (states 11-12; the TReadBinaryFile is state 12) whose
   catch (TMyException &) throws PROGRAM_ERROR 2 (LoadSprites), 4
@@ -868,6 +951,7 @@ WIP, checked and finished by a second one), November 1, 2026.
   can compare the caches, hash tables and LRU lists directly (Objects.h
   exports its property tables the same way). They are in .bss order with
   their addresses; 0x5cc75c is unused.
+  Reviewed in #24: no behaviour: linkage only.
 - **Header structure**: graphics.h holds TRect, TRGBColor (with the two
   operators), DefaultFontColor and TFont, moved from GUI.h, and includes only
   common.h (TObject, a parameter of DrawObject, is forward-declared). GUI.h
@@ -881,6 +965,8 @@ WIP, checked and finished by a second one), November 1, 2026.
   ClipHeight). guitest.cpp keeps its picture recorders: our two functions
   jump to them while TestGUI runs (and are restored after it), as talktest.cpp
   does with the CRT clock.
+  Reviewed in #24: confirmed: a 16-byte struct argument has the stack layout of the binary's four stores
+  (guitest).
 - **Source order**: line order; the three gap functions first, the Find
   functions (no lines) between TouchMemoryItem (466) and RemoveMemoryItem
   (522) and between TouchVideoItem (644) and RemoveVideoItem (762), and
@@ -953,6 +1039,8 @@ finished it), November 1, 2026.
   its x, y, Width, Height are the left, top, right, bottom margins. The
   SkinProperties members passed this way (+0x0a0, Style194+0x50) became
   TRects.
+  Reviewed in #24: confirmed: the 16-byte block is the binary's; which struct type it is cannot change the
+  code.
 - **Names from the binary**: SkinProperties and its member paths
   (PlayerStates.NumberOfIcons, BuddylistWindow.Logo, Buttons.Texture,
   CheckBox.Item, StatusWindow.HitpointsBar/ManaBar), DrawingList,
@@ -970,6 +1058,8 @@ finished it), November 1, 2026.
   names GUIStyle and TGUIStyle are replaced by SkinProperties/TSkinProperties.
   PlayerStates' block constructor was inlined, so its boundaries are unknown
   and NumberOfIcons stays the direct member Data490 (low).
+  Reviewed in #24: no behaviour: the member keeps its offset (guitest compares SkinProperties byte for
+  byte).
 - **Graphics types in GUI.h** (judgement): TRect, TRGBColor and TFont belong
   to graphics.cpp's header, but GUI.h needs them complete, so they moved from
   external.h into GUI.h until graphics.cpp is merged. (Done in the merge with graphics.cpp: they are in graphics.h now,
@@ -980,6 +1070,8 @@ finished it), November 1, 2026.
   0x5c1230, an earlier object 0x5c066c), so DefaultFontColor is a header
   constant. Main's TRGBColor(int Color) palette constructor (Map.cpp) was
   merged into GUI.h's TRGBColor.
+  Reviewed in #24: confirmed: the three copies 0x5c1954, 0x5c1230 and 0x5c066c hold 224, 224, 224 (one per
+  object, as a header constant gives).
 - **The empty function 0x496160** (low for the names): ExitControl calls it
   five times; following InitControl's order backwards they are ExitHotkeys
   (InitHotkeys is called last), ExitCommunication, ExitHelp, ExitCreatures
@@ -1056,6 +1148,8 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
   external.h's 0x5c0c80 table); the two texts MapWindow uses are declared in
   external.h with this object's addresses (TextReceiveHint 0x5c2130,
   TextSelectPlayerToTrade 0x5c2258).
+  Reviewed in #24: confirmed: 0x559fc0 builds TCallback(NULL, 0) at 0x7152e8 with no atexit, as our static
+  does.
 - **Two classes** (high for the layouts, low for the names). TMapWindow
   (vtable 0x56cf38, 0x92d8 bytes) is the map view; TMapFrame (vtable
   0x56d0b8, 0x40 bytes, created by MainWindow.cpp with operator new(0x40))
@@ -1079,6 +1173,8 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
   the value of Obj.Type, and the assertions "SrcObj!=0", "TradeObject!=0" and
   "Obj!=CREATURE" compare an object with a number while the code tests its
   Type. external.h's TObject got `operator int() const { return Type; }`.
+  Reviewed in #24: confirmed: the conversion only enables the binary's TEND1(Obj) and comparisons; every
+  TObject user is compiled and differentially tested.
 - **Status.cpp's object slots take the index first** (high). LeftButtonDown
   calls SetDragObject(Obj, Position, x, y, z), and the getters' first output
   goes to the Position argument of SendMoveObject, SendLook and the other
@@ -1098,6 +1194,8 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
 - **TDrawing constructors** (medium): `new TDrawing[8]` in TMapFrame's
   constructor zeroes the entries in a loop (an inline default constructor),
   and Arrange assigns whole entries built from seven values.
+  Reviewed in #24: confirmed: the binary zeroes the new entries (0x4c1ab4) and the window tests compare
+  the drawing lists.
 - **Surface slots** (high for the arguments, low for the names): +0x20
   DrawFrameClipped(Surface, TRect, LineWidth, TRGBColor, TRect Clip), +0x30
   BlitRect(ToSurface, x, y, FromSurface, TRect Source), +0x40
@@ -1105,6 +1203,8 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
   ShadeRectangles(Surface, Count, TRect *, TRGBColor *) with four corner
   colours per rectangle, +0xa4 CanShadeRectangles(). +0x9c(2) returning true
   makes Draw forget the tile cache (the surface lost its contents, low).
+  Reviewed in #24: no behaviour: only the explanation of +0x9c(2) is low; the code does what the binary
+  does (mapwindowtest).
 - **FULLBANK = 30** (low for the name): the Tibia.dat flag after LENSHELP;
   Draw takes the highest level whose first object has it as the field's
   cover level. **EVENTHELPS** moved from Help.cpp to Help.h
@@ -1119,6 +1219,7 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
   binary has no copy. Written as a static inline function of MapWindow.cpp.
   **TERROR1B** (local macro): the party flag error has "[bug0001106]" as its
   expression, like Map.cpp's TASSERTB.
+  Reviewed in #24: confirmed: the inline clamp is compared wherever it is used (window tests).
 - **Odd behaviour kept** (high): the light of a graphical effect is added
   with the field's level as its radius and its brightness as its level (the
   arguments are swapped; the missile light has them right); Draw reads
@@ -1208,6 +1309,7 @@ Reconstructed by Claude Opus 5.5 (issue #2), November 1, 2026.
   destructor, is TStartWindow's (vtable 0x56c5c0 slot 0); TMapFrame's was
   folded into it. TSplitter's deleting destructor is the folded 0x429590
   (ContentWindows.obj; it calls the jmp-to-~TComponent 0x4672c0).
+  Reviewed in #24: confirmed: 0x559f30 builds TCallback(NULL, 0) with no atexit, as our static does.
 - **Three classes** (high for the layouts, low for the names). TMainWindow
   (0x4c bytes; MapFrame +0x2c, SideBar +0x30, DialogWindow +0x34 (name from
   "DialogWindow!=NULL"), SidePanel +0x38, Console +0x3c, Splitter +0x40,
@@ -1233,6 +1335,7 @@ Reconstructed by Claude Opus 5.5 (issue #2), November 1, 2026.
   lines) follow the constructor, before Draw, where the binary has them;
   GetConsoleWindowHeight sits between 475 and 503 and TSplitter::Arrange
   between 749 and 780, as in the binary.
+  Reviewed in #24: no behaviour: the order of definitions does not change the code.
 - **No try blocks left** (high). GetConsoleWindowHeight (0x4ac7c0) and
   TSplitter::Arrange (0x4ae430) have exception frames with 11 states and no
   try block, sharing FuncInfo 0x5a9d48: a TBEGIN/TEND whose body cannot
@@ -1264,6 +1367,9 @@ Reconstructed by Claude Opus 5.5 (issue #2), November 1, 2026.
   a macro-style max). The quit question of event 0x1fb is a new INT_PTR[4]
   (operator new[] 0x523817; Control.cpp's message 6 deletes it with
   delete[]).
+  Reviewed in #24: confirmed: the minimum heights read between are getters that cannot change
+  Splitter->Height, GetConsoleHeight has no side effect, the question array comes from operator new[]
+  (0x523817); mainwindowtest compares SetSize and ChangeMode.
 - **SkinProperties.Style0D8 retyped** (medium). MainWindow.cpp reads
   +0x10-+0x37 (0x5cd0b0-0x5cd0d4) as five x/y pairs, the positions of "Enter
   Game", "Options", "Info", "Exit Game" and "Access Account"
@@ -1275,6 +1381,8 @@ Reconstructed by Claude Opus 5.5 (issue #2), November 1, 2026.
   is a TRect (a guess: any type with a constructor would do). Data134 (the
   frame border), Data138 (the splitter height) and Data184 (the side bar
   width) got comments.
+  Reviewed in #24: confirmed: guitest compares the constructor's and InitSkinProperties' bytes; within the
+  zeroed bytes, five points and a TRect are the same code.
 - **External sketches** (low). TConsoleWindow now derives from TWindow (0x6c
   bytes; Data34 kept for Control.cpp). New in external.h, for the files that
   are not reconstructed: TDialogWindow (vtable 0x563f80, 0x4c bytes; slot
@@ -1288,6 +1396,7 @@ Reconstructed by Claude Opus 5.5 (issue #2), November 1, 2026.
   (0x4526c0), TSideWindow3/4/5 and the ContentWindows.cpp creators (FUN_
   names kept). FUN_004362b0 and FUN_00436510 take the main window as their
   argument (push esi; Ghidra dropped it).
+  Reviewed in #24: superseded: the sketched classes are the reconstructed ones now (issues #3-#8), tested.
 - **callcheck** (16 of 29 functions differ, all explained): the constructor
   calls of new-expressions, base constructors and destructors and TCallback
   temporaries are not lexical calls; TWindow::Draw, TWindow::SetSize and
@@ -1327,6 +1436,7 @@ Reconstructed by Claude Opus 5.5 (issue #3), November 1, 2026.
   TCallback 0x5cc428 (initialiser 0x559e20, after Dialogs.cpp's 0x5cc420 at
   0x559e10; medium, written as a static NoCallback like MainWindow.cpp's).
   The file ends at 0x48b37f (graphics.h's operator== follows).
+  Reviewed in #24: confirmed: 0x559e20 builds TCallback(NULL, 0) with no atexit, as our static does.
 - **Three classes** (high for layouts and vtables, low-medium for names).
   TDialogWindow (0x4c bytes, vtable 0x563f80, a new slot +0xa0 Rearrange):
   Area (a TRect at +0x2c: the constructor stores the four ints twice, the
@@ -1357,10 +1467,12 @@ Reconstructed by Claude Opus 5.5 (issue #3), November 1, 2026.
   copy would have been kept from there, so they are not header code. The
   same is assumed for the others. TSubWindow's constructor inlines the base
   constructor (auto-inlining, as in Utils.cpp).
+  Reviewed in #24: no behaviour: inline or out of line, the code is the same (dialogwindowtest).
 - **Source order** (medium). Line order. The binary puts Arrange (169),
   Shrink (377-394), Grow (505) and Rearrange (271-297) at the end of the
   object: each calls a function defined further down (GetFreeHeight 524,
   the strategy helpers), the pattern noted for Creatures.cpp.
+  Reviewed in #24: no behaviour: the order of definitions does not change the code.
 - **Exception tables** (high), checked with ehinfo.py: every function with a
   try block has states 0-0 except Draw of TContentWindow 0-10 (two
   assertions), DragChild, Shrink and TSubWindow::Arrange 0-5 (one each),
@@ -1388,6 +1500,8 @@ Reconstructed by Claude Opus 5.5 (issue #3), November 1, 2026.
   (DialogElements.cpp 0x453be0, vtable 0x5612b0, 0x38 bytes, "_ToResize"),
   TSkinButton::SetSkins (0x458b20, "_ButtonUp", "_ButtonDown"); both have
   low-confidence names.tsv rows so that callcheck resolves them.
+  Reviewed in #24: superseded: TResizer, TSkinButton and TSubWindowBody are the reconstructed classes now
+  (issues #6, #7).
 - **MainWindow.cpp** changed only in names and casts: GetContentWindow
   returns a TContentWindow, cast to TSubWindow where the body is used
   (OpenContainer, UpdateTrade) as the original must; the setters and
@@ -1440,6 +1554,7 @@ Reconstructed by Claude Opus 5.5 (issue #4), November 1, 2026.
   after ContentWindows.obj's 0x5c4500 (initialiser 0x559dd0) and before
   Control.obj's .bss (0x5c4510). Written as a static NoCallback after the
   includes, like DialogWindow.cpp's.
+  Reviewed in #24: confirmed: 0x559de0 builds TCallback(NULL, 0) with no atexit, as our static does.
 - **Classes** (high for layouts and vtables, low-medium for names).
   THelpBubble (vtable 0x55f8b8, 0x30 bytes) is a TWindow, not a
   TContextMenu as Control.cpp's sketch had it: its constructor calls TWindow's
@@ -1465,10 +1580,12 @@ Reconstructed by Claude Opus 5.5 (issue #4), November 1, 2026.
   in ContextMenus.h. The two Arrange functions (no frame, no line) are in the
   .cpp where the binary has them (after SetSize and after TContextMenu's
   constructor), ~TSkillContextMenu at the top of the file.
+  Reviewed in #24: no behaviour: inline or out of line, the code is the same (contextmenustest).
 - **Source order** (medium). Line order. The binary moves the help bubble's
   constructor (106) and Place (257), AddEntry (506) and Show (486) behind the
   event handlers, followed by all menu constructors: each calls a function
   defined further down (Creatures.cpp's pattern).
+  Reviewed in #24: no behaviour: the order of definitions does not change the code.
 - **Exception tables and switches** (high), checked with ehinfo.py: the
   assertions before TBEGIN in the help bubble's constructor (6-8), AddEntry
   (15-16), the text menu (11-11: 1056 and 1057), the request, edit, mark and
@@ -1502,6 +1619,8 @@ Reconstructed by Claude Opus 5.5 (issue #4), November 1, 2026.
 - **Text buffers** (low). Char buffers of the menus are 50 bytes (the entry
   text limit), 200 for the ignore message (_snprintf's limit) and 220 for the
   report title; the binary's frames are not exact enough to give more.
+  Reviewed in #24: no behaviour: the buffers receive sprintf of a name (at most 29 characters) and at most
+  11 fixed ones, or _snprintf with the binary's limit 200, so a size at or above that cannot show.
 - **Data types changed elsewhere**: SkinProperties.Data160/Data168 (two
   TGUIPoints) are one TRect Data160 (the help bubble's text margins, passed
   by value as one 16-byte block like Data0A0); GUI.cpp's InitSkinProperties
@@ -1515,6 +1634,8 @@ Reconstructed by Claude Opus 5.5 (issue #4), November 1, 2026.
   names low confidence. external.h no longer includes a ContextMenus header:
   ContextMenus.h needs Map.h, which includes external.h (Control.cpp includes
   it directly).
+  Reviewed in #24: confirmed for the TRect (the same 16-byte block); the sketches are the reconstructed
+  classes now.
 - **callcheck** (24 of 36 functions differ, all explained): base class
   constructors and ~TWindow, new-expressions (entries, separators, the
   formatted text, TTalkLine) and member initialisers (TCallback) are not
@@ -1570,6 +1691,7 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   header evidence win over file-ranges.tsv as assertion evidence does (the
   three header functions of the first gap stay header code; four Container.h
   functions of older ranges changed from "range" to "header", same file).
+  Reviewed in #24: no behaviour: which object keeps the identical copies does not change the code.
 - **NoCallback** (high for the datum, medium for the form; issue #26). The
   object's only .bss datum is the unused TCallback 0x5c4390, constructed as
   TCallback(NULL, 0) (0x496130) by the static initialiser 0x559dc0 (between
@@ -1577,6 +1699,7 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   its only reference is the initialiser). It follows Communication.obj's .bss
   (0x5c4340-0x5c438f) and comes before ContentWindows.obj's (0x5c4398).
   Written as a static NoCallback after the includes, like DialogWindow.cpp's.
+  Reviewed in #24: confirmed: 0x559dc0 builds TCallback(NULL, 0) with no atexit, as our static does.
 - **Classes** (high for layouts and vtables, low-medium for names).
   TConsoleWindow (0x6c bytes, vtable 0x55e1a0; Data30 is never used),
   TTabBar (0x40, 0x55dcd8, a new slot +0xa0 Rearrange), TTab (0x58,
@@ -1614,6 +1737,7 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   TTabBar's constructor, SetCurrentTab, DeleteChild and RemoveChild and most
   of TConsoleWindow behind the rest: each calls a function defined further
   down (Creatures.cpp's pattern).
+  Reviewed in #24: no behaviour: the order of definitions does not change the code.
 - **Exception tables and switches** (high), checked with ehinfo.py (every
   catch is the standard trio): no try block in TLineFormat's constructor (25
   states, five assertions), SetCurrentLineNumber, GetServerMessages and
@@ -1630,6 +1754,8 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   (talk modes 0-15; 6 and 12 go to the default), KeyPress 0x424ad4
   (0x100-0x10b), TConsoleWindow::HandleEvent 0x424f68/0x424fa0 (201-403;
   209 is the default).
+  Reviewed in #24: confirmed: the inlined call stores CurrentLineNumber as the binary does
+  (consolewindowtest).
 - **Odd behaviour kept**: FormatLines does not reset LineEnd between the
   parts of a talk line and loops for ever in a width without room for a
   character; TTextWindow::Arrange loops for ever on a line without a format;
@@ -1664,6 +1790,7 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   TConsole), a TRGBColor (the selection) and the font; GUI.cpp's stores are
   rewritten with the same values and offsets (guitest.cpp compares them byte
   by byte).
+  Reviewed in #24: confirmed: guitest compares the constructor's and InitSkinProperties' bytes.
 - **DialogElements.cpp sketches** (external.h, low): TEditLine is a TWindow
   (vtable 0x560e98, 0x68 bytes, constructor 0x467b50 with an area, 255 and
   0; SetActive 0x45bc80; the inline HasSelection; slots +0xa0 SetText, +0xa4
@@ -1673,6 +1800,8 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   pushed first; Reset 0x452790), TScrollBar (0x469a80) with its
   TScrollBarRange (SetRange 0x460450, Value at +0x30). All have
   low-confidence names.tsv rows.
+  Reviewed in #24: superseded: DialogElements.h (issue #7); TScrollBar's last parameter is ButtonRange, 1
+  at ConsoleWindow.cpp's call.
 - **Callers** changed in names only: MainWindow.cpp (SetActive,
   OpenDefaultChannel), Control.cpp (OpenChannel with the name and caption as
   strings, AddChannel, ReportRuleViolation, CurrentConsole->TextWindow),
@@ -1797,11 +1926,14 @@ Reconstructed by Claude Opus 5.5 (issue #6), November 1, 2026.
   calls TContainerWindowBody::UpdateUpButton (cast, as the original must),
   MainWindow.cpp's OpenContainer calls the container body's Update (+0xb8)
   and IsMinimized (+0xa8, so far "the body allows it").
+  Reviewed in #24: confirmed: the folded 0x425a00 returns true, and contentwindowstest found and compares
+  it.
 - **Limit** (low for the name, medium for the header). 0x425920 clamps
   *Value to Min..Max in either order. ContentWindows.cpp inlines it in
   TTradeWindowBody::SetSize (with std::min/std::max of the maximum and
   minimum heights, each read twice), DialogElements.cpp calls the
   out-of-line copy. A header both include: common.h, next to In.
+  Reviewed in #24: confirmed: the clamp is compared wherever it is used.
 - **Source order** (medium). Line order (the creators first, lines 106-280).
   The binary moves the creators, the constructors of the bodies,
   TAutomapWindow, TStatusWindow, TSmallInventoryWindow's neighbours and
@@ -1810,6 +1942,7 @@ Reconstructed by Claude Opus 5.5 (issue #6), November 1, 2026.
   defined further down, Creatures.cpp's pattern). Functions without lines
   where the binary has them: TInventoryView::GetSlotAt after HelpMouseMove
   (1344), ~TSkillsWindowBody after its constructor (1980).
+  Reviewed in #24: no behaviour: the order of definitions does not change the code.
 - **Exception tables and switches** (high), checked with ehinfo.py: the
   assertions before TBEGIN in TButtonsWindow's constructor (6-10),
   TPlayerStates::GetIcon (5-10), TSkillsWindowBody::GetLine (5-15), both
@@ -1852,10 +1985,14 @@ Reconstructed by Claude Opus 5.5 (issue #6), November 1, 2026.
   offline buddies; Data54 is a new buddy). The other blocks are used as
   GUI.h has them (some TRects and TGUIPoints are used as other shapes;
   comments in ContentWindows.cpp).
+  Reviewed in #24: confirmed: guitest compares the constructor's and InitSkinProperties' bytes; the
+  by-value block is the same 16 bytes.
 - **Surface slots named** (medium): +0x0c SetPixel(Surface, x, y, Color), +0x10
   FillRectangleClipped(Surface, Rect, Color, Clip), +0x18
   DrawHorizontalLine(Surface, x, y, Width, Color), from the arguments pushed
   here; external.h's TSurfaceGL and playertest.cpp's stubs follow.
+  Reviewed in #24: confirmed: the parameters are the pushed arguments; the tests' recording surface
+  compares the calls.
 - **DialogElements.cpp sketches** (external.h, low): TSkinButton gained
   RadioButtonGroup (+0x38), Tooltip (+0x3c) and SetRadioButtonGroup (0x458de0,
   "RadioButtonGroup==NULL"); new: TRadioButtonGroup (0x28 bytes: Selected,
@@ -1868,6 +2005,7 @@ Reconstructed by Claude Opus 5.5 (issue #6), November 1, 2026.
   (0x460710); TScrollBar's last parameter is a step (int; 1 in
   ConsoleWindow.cpp, which now passes 1 instead of true). All have
   low-confidence names.tsv rows.
+  Reviewed in #24: superseded: DialogElements.h (issue #7).
 - **Callers** changed in names and casts: MainWindow.cpp (the creators,
   TAutomapWindow, TStatusWindow, TButtonsWindow, OpenContainer's Update and
   IsMinimized), DialogWindow.cpp (Minimize, Maximize, UpdateUpButton),
@@ -1997,6 +2135,7 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   console's SetReadOnly (+0xb8) is SetDisabled (+0x65; ReadOnly is the
   constructor's +0x66), TBorder::FUN_00455500 is FitToWindow, TScrollBar's
   parameters are (Min, Max, Value, Visible, ButtonRange).
+  Reviewed in #24: confirmed: the parameter roles are what the code does with them (dialogelementstest).
 - **getMinimumWidth/getMinimumHeight** (high): the assertions of
   TBorder::SetSize name "Width>=getMinimumWidth()" and
   "Height>=getMinimumHeight()" (lines 242-243), so GUI.h's virtuals +0x3c/+0x40
@@ -2012,6 +2151,7 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   scroll bars' KeyPress slot is 0x4731d0, ICF-folded with a Dialogs.cpp
   function of the same code (Range->KeyPress(Key)). 0x4672c0 is GUI.h's
   implicit ~TElement (jumps to ~TComponent), kept here.
+  Reviewed in #24: no behaviour: inline or out of line, the code is the same.
 - **Exception tables and switches** (high), checked with ehinfo.py for every
   function (build/scratch/de7/ehcheck.py compares the assertions before TBEGIN
   with the try ranges): constructors' try blocks start after the base class,
@@ -2048,6 +2188,7 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   compares the bytes): CheckBox.Data08/Data10 are one TRect Data08 (the area
   TCheckBox fits its label into). Surface.h's slot +0x1c is DrawVerticalLine
   (the edit line's cursor), external.h's TSurfaceGL and playertest.cpp follow.
+  Reviewed in #24: confirmed: guitest compares the constructor's and InitSkinProperties' bytes.
 - **Callers** (high): external.h's sketches are gone; DialogElements.h includes
   external.h (TObject), Status.h and Skins.h, so its users include it
   directly (ConsoleWindow.cpp, ContentWindows.h, ContextMenus.cpp,
@@ -2122,6 +2263,7 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   width/height names while keeping the existing TRect drawing ABI; it adds
   no binary function or wrapper. The factory is CreateSurfaceDX (0x4eca00):
   its allocation is 0x250 bytes with an inlined empty derived constructor.
+  Reviewed in #24: confirmed: a local view and an empty inlined constructor add no code (surfacedxtest).
 - **Layout (high)**: TSurface is 0x70 bytes, not the former 0x44 sketch.
   Doubles at +0x48/+0x50/+0x58/+0x60 give it 8-byte alignment, making +0x04
   padding, not a member. hWindow is still +0x08; mode, size, availability,
@@ -2149,6 +2291,8 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   to 320 by InitSurfaces. The private DeviceGUID pointer at 0x5c2570
   selects IID_IDirect3DHALDevice. Exact source ownership of shared globals
   is low confidence, but their addresses, types and common use are verified.
+  Reviewed in #24: confirmed for the behaviour: zero .bss and the .data words 0x100 (0x5c2568/0x5c256c)
+  and a pointer constant (0x5c2570), no initialisers; the owner stays medium/low.
 - **EH and switches (high)**: AttachWindow has 15 unwind states,
   StretchBlitUnclipped/StretchBlit 30, Blit/BlitRect/GetSurfaceRect 5,
   InitDisplay 20 and CreateSurfaces 45, all with zero try blocks: assertions
@@ -2266,6 +2410,8 @@ Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
   init: TIgnoreEntry has an inline default constructor (medium; in
   HandleEvent the store of Name[0] before CopyString is missing, which
   suggests whole-program optimisation).
+  Reviewed in #24: confirmed: vector<TIgnoreEntry>'s constructor 0x46c0d0 clears Name[0] and Permanent of
+  each entry, as our default constructor; containertest compares that instance on pattern-filled memory.
 - **Data** (high). Dialogs.obj's only static is NoCallback 0x5cc420
   (initialiser 0x559e10; 0x559e20, the TCallback 0x5cc428, is DialogWindow.obj's,
   as issue #3 found). Its copy of the text table is 0x5c123c-0x5c1484, then its
@@ -2304,6 +2450,7 @@ Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
   TMark (deleted by the dialog). The move and report creators return NULL
   when they make no dialog. Control.cpp's 40 call sites call them with casts
   of its INT_PTR parameters.
+  Reviewed in #24: confirmed: pointers and arrays are passed alike; dialogstest compares every creator.
 - **Exception tables and switches** (high): ehinfo.py for every function;
   build/scratch/dg8/ehcheck.py finds the assertions before TBEGIN in every
   constructor (TDialog's three, the outfit's, the text dialog's, the edit
@@ -2353,6 +2500,7 @@ Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
   Style1114, Style1274 (the label positions are points), Style1084, Style1394;
   0xc88 is an array of four points (the outfit parts), 0x1064 a TRect that is
   zeroed and never read, 0x14d4 the colour of hotkeys sent automatically.
+  Reviewed in #24: confirmed: guitest compares the constructor's and InitSkinProperties' bytes.
 - **SetChildArea takes a TRect by value** (not changed): every caller in
   Dialogs.obj builds a 16-byte block (sub esp,0x10) for the area, so the
   original signature is SetChildArea(TComponent *, TRect); GUI.h's five-int
@@ -2558,6 +2706,8 @@ both list code only (names.tsv has no data rows).
   engine (curEngine is Surface.cpp's too), Player.cpp's command-line parser (0x4da5c6) writes it.
   Defined in Surface.cpp, extern in Surface.h; Surface.cpp is linked into difftest.exe, so
   playertest.cpp's definition went.
+  Reviewed in #24: confirmed for the behaviour: the .data word is -1 and ours is constant-initialised;
+  owner medium.
 - **The XOR code tables 0x5733a4/0x5733c4 are sysinc.cpp's** (low): TitleCode and ClassNameCode
   (names from the Player.cpp reconstruction), extern in sysinc.h, defined in sysinc.cpp;
   playertest.cpp keeps a test definition (sysinc.cpp is not in difftest.exe). They lie exactly
@@ -2573,6 +2723,8 @@ both list code only (names.tsv has no data rows).
   later functions precede them); as sysinc.cpp's they are its first .rdata, defined at the top of
   the file as usual. If #11's reconstruction of SurfaceGL.cpp finds file-scope data at the end of
   that file, revisit this.
+  Reviewed in #24: confirmed for the behaviour: constant tables with the binary's values; the owner stays
+  low.
 - **0x5c4558 is Control.cpp's NoCallback** (high): the static initialiser 0x559df0 constructs it as
   TCallback(NULL, 0) (0x496130, no atexit), nothing else references it. The __xc table lists one
   initialiser per object in link order: ContextMenus.obj's 0x559de0 (0x5c4508), then 0x559df0, then
@@ -2586,6 +2738,7 @@ both list code only (names.tsv has no data rows).
 - **0x5d16b4 was already settled** (medium, issue #2): MainWindow.cpp's static NoCallback
   (initialiser 0x559f30, between MainFrm.obj's 0x559f20 and Map.obj's 0x559f40); the issue text
   was stale. Nothing changed.
+  Reviewed in #24: confirmed (see Map.cpp's entry).
 - **The text table "owner unknown, .data 0x5c0c80-0x5c0d7c"** in external.h is Control.obj's copy
   (0x5c0b34-0x5c0d7f, before Control.cpp's LastPacketType 0x5c0d8c; every entry declared there is
   read only by Control.cpp, 0x4499c8-0x449f1a): the comment says so now.
@@ -2620,6 +2773,8 @@ Reconstructed by Claude Opus 5.5, November 2, 2026.
   the header's) and the prefix of glh_ExtensionExists. strdup is written _strdup (the same CRT function;
   the modern SDK deprecates the POSIX name). Odd behaviour kept: ExtensionExists' GL_VERSION_1_x answers
   leak padExtName.
+  Reviewed in #24: confirmed: our compile pushes 173 and 191 for the two messages, as 0x4f92e2 and
+  0x4f93ca do.
 - **Class** (layout high, names low unless from the binary). TSurfaceGL, 0x498 bytes: Context +0x70, the
   textures TTextureGL Textures[22] +0x74 (0x20 bytes each: name, size, power-of-two size, the colour key;
   the inline constructor sets the key to (1,1,1) after TRGBColor's default constructor zeroed it), RECT
@@ -2636,6 +2791,8 @@ Reconstructed by Claude Opus 5.5, November 2, 2026.
   names.tsv (TSurface_SelectSurface, TSurface_AddDirtyRect, TSurface_SetSurfaceRect for the old
   Unknown04/80/98 rows) and surfacedxtest.cpp's calls are renamed. The base slot names do not collide with
   TSurfaceDX9's non-virtual SetRenderTarget.
+  Reviewed in #24: confirmed: a TRect by value is the callers' 16-byte block; surfacegltest compares the
+  calls.
 - **Folded copies** (high). Six slots of the vtable point to identical code kept from another object:
   ClipRect 0x4f0410 and ResetFrameTimer 0x4f04d0 (surfaceDX9.obj), SetFramerateLimit 0x4eb000
   (SurfaceDX.obj), CanShadeRectangles and TestEngine 0x4d7d40 (the return-true body folded with the STL's
@@ -2872,3 +3029,117 @@ Classified by Claude Opus 5.5, November 2, 2026.
   reganch's shortcut in regexec (an anchored program fails at every later position anyway and leaves the
   same NULL startp/endp) and ANYBUT's `*reginput == '\0'` test (strchr finds the terminator, so the
   remaining test fails too).
+## Review of the low-confidence decisions (issue #24)
+
+Every low or medium entry above that could change behaviour, checked against the binary or a test.
+Entries whose low part is only a name, a spelling or a file name are left out (names only: the Script.cpp
+patch names, Talk.cpp's table, Objects.cpp's TProperties and flag names, the Preferences/Script gap,
+ContextMenus/Control and start/Communication gaps, sysinc.cpp, Help.cpp's names, Inventory.cpp's function
+names, surfaceDX9.cpp, Resources, Header code and every "Names"/"Classes" entry). Skipped as other issues':
+TRect width/height and FromRect/ToRect (#29), SetChildArea's TRect (#27). Line numbers are those before this
+review.
+
+Tools (new): tools/xctable.py lists the __xc initialiser table with what each initialiser builds and the
+atexit thunk it registers; tools\listing.cmd compiles src files like compile-check.cmd with assembly listings
+(build\listing); tools/ehcompare.py prints ehinfo.py next to the unwind states and try blocks of our listing.
+
+- **Static initialisers and destructors at exit**: our listings' dynamic initialisers (??__E) and atexit
+  destructors (??__F) per object against the binary's __xc table 0x5c002c-0x5c00c4: the same initialisers in
+  the same order, with an atexit destructor exactly where the binary registers one (GUI's Timers/Hotkeys,
+  Help, Map's three, Network's TXTEA, Player, Preferences' five, Status' two, Talk's four, TRSA), none for
+  the TCallbacks, SkinProperties, Inventory's three (their TObjects are zeroed, as by 0x559ea0/0x559ee0/
+  0x559f00), the network buffers and StartTime, after two corrections: MainFrm.obj's TCallback 0x5d1674
+  (0x559f20) was missing (now MainFrm.cpp's static NoCallback), and the unused `vlong(65537)` with an atexit
+  destructor that Communication.obj (0x5c435c, 0x559da0) and TRSA.obj (0x71eff8, 0x55a1c0, right before
+  TRSA.cpp's PublicExponent 0x71f004) construct was missing: one copy per includer of TRSA.h (vlong.obj has
+  none, so not vlong.h), now `static vlong HeaderExponent(65537)` in TRSA.h (name ours). Both are unused data:
+  no differential test can see them.
+
+Result: 80 entries reviewed, none left open: 79 confirmed (8 of them settled by later issues that replaced
+the guess, 15 without any possible effect on behaviour, one with a new test: nextToken's length limits in
+scripttest.cpp), one confirmed with its explanation corrected (Map.cpp's TObject initialisers). Source
+changes: MainFrm.cpp's NoCallback, TRSA.h's HeaderExponent, the TOffer size comment in Inventory.h.
+
+| Line | Section | Entry | Verdict | Evidence | Change |
+|---|---|---|---|---|---|
+| 44 | Script.cpp | nextToken's string length check | confirmed + test | 0x4e0203 cmp Size,0x3e7 after every state; 0x4dfde1 cmp ebx,0x14 | scripttest.cpp TestLongTokens |
+| 163 | Talk.cpp | Allocation and destruction | confirmed | talktest (behaviour); syntax only is low | - |
+| 173 | Talk.cpp | ABI and field types | confirmed | Time only stored and passed to _localtime32; hidden-return ABI | - |
+| 220 | Objects.cpp | NoObject 0x719da0 is Objects.cpp's | confirmed (behaviour) | .bss, no initialiser, never written | - |
+| 225 | Objects.cpp | Container.h array<T> destructor | confirmed | atexit 0x55a2c0 frees array<TMapPoint>'s entry (+8); ReleaseObjects | - |
+| 250 | Objects.cpp | Parameter passing | confirmed | references and pointers are the same ABI; objectstest | - |
+| 255 | Objects.cpp | Obj.Data2 holds the hook flag | confirmed | 0x4d6f0f mov eax,[esi+8]; sub eax,0x12; je; dec eax; je | - |
+| 305 | Player.cpp | Member functions of CPlayerApp | confirmed (behaviour) | ReadErrorFile writes ECX before reading it; FatalError only push ecx | - |
+| 382 | Surface.cpp | TSurface slot parameter lists | confirmed (superseded) | slots typed and tested by issues #9-#11 | - |
+| 393 | Surface.cpp | Removed try block in SurfaceInitInstance | confirmed | tools/ehcompare.py (our /EHsc compile): 4 states, 1 try block in both | - |
+| 448 | Help.cpp | vector<int> destructor at exit | confirmed (superseded) | atexit 0x55a2b0 frees 0x5ce558; Container.h ~vector since #13 | - |
+| 453 | Inventory.cpp | CounterOffer 4 bytes after OwnOffer | confirmed | no reference to 0x5d116c-0x5d116f | Inventory.h comment |
+| 486 | MainFrm.cpp | PacketHeader 0x5d1644 is MainFrm.cpp's | confirmed (behaviour) | .bss, no initialiser or atexit | MainFrm.cpp NoCallback 0x5d1674 |
+| 494 | MainFrm.cpp | Eliminated try blocks | confirmed | tools/ehcompare.py (our /EHsc compile): 11 states, no try block in all three | - |
+| 526 | Creatures.cpp | Trailing gap: template destructor open question | confirmed (superseded) | Container.h ~vector since #13 | - |
+| 542 | Creatures.cpp | Static initialisers (NoCallback objects) | confirmed | the __xc table 0x5c002c-0x5c00c4: TCallback(NULL,0), no atexit, one per object | MainFrm.cpp NoCallback |
+| 548 | Creatures.cpp | Source order | confirmed (no behaviour) | order of definitions; creaturestest | - |
+| 579 | Creatures.cpp | Dropped try blocks | confirmed | tools/ehcompare.py (our /EHsc compile): AddCreature 16, UpdateSkulls 11 states, no try block | - |
+| 597 | Creatures.cpp | Types | confirmed | 0x40000000 compares jb/sbb; SkullTime jl/jle | - |
+| 621 | Map.cpp | 0x5d16b4 left to MainWindow.cpp | confirmed | initialiser 0x559f30 between MainFrm's and Map's | - |
+| 660 | Map.cpp | TObject's default constructor clears it | confirmed; explanation corrected | 0x4a4450 clears 3 words; 0x559ee0/0x559f00 zero the offers' TObjects | note |
+| 668 | Map.cpp | TRGBColor constructors | confirmed | store order irrelevant; maptest/graphicstest | - |
+| 676 | Map.cpp | Colours by value | confirmed | hidden return pointer = by value | - |
+| 705 | Map.cpp | Parameter forms | confirmed | references and pointers are the same ABI; maptest | - |
+| 724 | Map.cpp | Locals that the catch blocks print | confirmed (error path only) | only TEND1(i)'s value on an error path | - |
+| 730 | Map.cpp | TEffect union | confirmed | offsets from the accessors; maptest; no type-based aliasing in MSVC | - |
+| 767 | graphics.cpp | DialogWindow/graphics gap (header placement) | confirmed (no behaviour) | placement of identical inline copies | - |
+| 806 | graphics.cpp | Surface slots +0x50/+0x54 parameters | confirmed | sub esp,0xc copies = TRGBColor by value; graphicstest | - |
+| 815 | graphics.cpp | TVideoCacheItem's overlapping fields | confirmed | 0x48b3f0 store order; graphicstest memcmp of every item | - |
+| 823 | graphics.cpp | TRGBColor's default constructor zeroes | confirmed | DrawOutfit overwrites the array before use; SkinProperties constructor byte for byte | - |
+| 830 | graphics.cpp | Dropped code with exception states left | confirmed | tools/ehcompare.py (our /EHsc compile): same states, no try block; DrawPicturePart 26 states, try 15-15 | - |
+| 865 | graphics.cpp | Data not static | confirmed (no behaviour) | linkage only | - |
+| 871 | graphics.cpp | DrawPicturePartClipped's clip TRect by value | confirmed | sub esp,0x10 and four stores | - |
+| 946 | GUI.cpp | FitToChildren/FitToChild take a TRect by value | confirmed | 16-byte block; any 16-byte struct is the same ABI | - |
+| 956 | GUI.cpp | NumberOfIcons as Data490 | confirmed (no behaviour) | same offset; SkinProperties byte for byte | - |
+| 973 | GUI.cpp | TFont() and DefaultFontColor | confirmed | 0x5c1954, 0x5c1230, 0x5c066c all (224,224,224) | - |
+| 1041 | MapWindow.cpp | NoCallback 0x7152e8 form | confirmed | the __xc table 0x5c002c-0x5c00c4 | - |
+| 1078 | MapWindow.cpp | TObject converts to int | confirmed | compile-check; mapwindowtest and the other TObject users | - |
+| 1098 | MapWindow.cpp | TDrawing constructors | confirmed | new TDrawing[8] zeroing loop at 0x4c1ab4; window dumps | - |
+| 1101 | MapWindow.cpp | Surface slots (+0x9c interpretation) | confirmed (no behaviour) | code mirrors the binary; mapwindowtest | - |
+| 1117 | MapWindow.cpp | Limit | confirmed | clamp in either order; window tests | - |
+| 1194 | MainWindow.cpp | NoCallback 0x5d16b4 form | confirmed | the __xc table 0x5c002c-0x5c00c4 | - |
+| 1229 | MainWindow.cpp | Source order | confirmed (no behaviour) | order of definitions | - |
+| 1261 | MainWindow.cpp | Evaluation order | confirmed | the reads between are getters; new[] 0x523817; mainwindowtest | - |
+| 1267 | MainWindow.cpp | SkinProperties.Style0D8 retyped | confirmed | guitest: constructor and InitSkinProperties byte for byte | - |
+| 1278 | MainWindow.cpp | External sketches | superseded | replaced by the real classes (#3-#8) | - |
+| 1321 | DialogWindow.cpp | NoCallback 0x5cc428 form | confirmed | the __xc table 0x5c002c-0x5c00c4 | - |
+| 1351 | DialogWindow.cpp | No inline header code | confirmed (no behaviour) | placement of identical code | - |
+| 1360 | DialogWindow.cpp | Source order | confirmed (no behaviour) | order of definitions | - |
+| 1385 | DialogWindow.cpp | External sketches | superseded | real classes (#6, #7) | - |
+| 1436 | ContextMenus.cpp | NoCallback form | confirmed | the __xc table 0x5c002c-0x5c00c4 | - |
+| 1460 | ContextMenus.cpp | Inline header functions | confirmed (no behaviour) | placement of identical code | - |
+| 1468 | ContextMenus.cpp | Source order | confirmed (no behaviour) | order of definitions | - |
+| 1502 | ContextMenus.cpp | Text buffers | confirmed (no behaviour) | sprintf of names <= 29 chars + <= 11 fixed; _snprintf limit 200 | - |
+| 1505 | ContextMenus.cpp | Data types changed elsewhere | confirmed / superseded | TRect by value = same block; sketches replaced (#5, #7) | - |
+| 1543 | ConsoleWindow.cpp | Range (In/TRGBColor() copies) | confirmed (no behaviour) | identical COMDAT copies | - |
+| 1573 | ConsoleWindow.cpp | NoCallback form | confirmed | the __xc table 0x5c002c-0x5c00c4 | - |
+| 1611 | ConsoleWindow.cpp | Source order | confirmed (no behaviour) | order of definitions | - |
+| 1617 | ConsoleWindow.cpp | Arrange's inlined SetCurrentLineNumber(-1) | confirmed | the same store; consolewindowtest | - |
+| 1660 | ConsoleWindow.cpp | SkinProperties.Style9E8 retyped | confirmed | guitest byte for byte | - |
+| 1667 | ConsoleWindow.cpp | DialogElements.cpp sketches | superseded | real classes (#7) | - |
+| 1786 | ContentWindows.cpp | TSubWindowBody | confirmed | folded 0x425a00 returns true; contentwindowstest | - |
+| 1800 | ContentWindows.cpp | Limit (header) | confirmed | 0x425920; tests | - |
+| 1805 | ContentWindows.cpp | Source order | confirmed (no behaviour) | order of definitions | - |
+| 1841 | ContentWindows.cpp | SkinProperties retyped | confirmed | guitest byte for byte | - |
+| 1855 | ContentWindows.cpp | Surface slots named | confirmed | pushed arguments; recorded surface | - |
+| 1859 | ContentWindows.cpp | DialogElements.cpp sketches | superseded | real classes (#7) | - |
+| 1981 | DialogElements.cpp | Names (parameter roles) | confirmed | dialogelementstest | - |
+| 2005 | DialogElements.cpp | Header code | confirmed (no behaviour) | placement of identical code | - |
+| 2047 | DialogElements.cpp | SkinProperties retyped | confirmed | guitest byte for byte | - |
+| 2117 | SurfaceDX.cpp | TBlitSize and the factory | confirmed | surfacedxtest | - |
+| 2140 | SurfaceDX.cpp | Shared data ownership | confirmed (behaviour) | .bss zero; 0x5c2568/6c = 0x100; no initialisers | - |
+| 2251 | Dialogs.cpp | Leading run (CompareNames, TIgnoreEntry) | confirmed | 0x46c0d0 clears Name[0] and Permanent; containertest | - |
+| 2297 | Dialogs.cpp | Creators' parameter types | confirmed | pointers/arrays same ABI; dialogstest | - |
+| 2345 | Dialogs.cpp | SkinProperties retyped | confirmed | guitest byte for byte | - |
+| 2554 | Unknown-owner data | 0x5c2564 is Surface.cpp's | confirmed (behaviour) | .data word 0xffffffff; no initialiser | - |
+| 2561 | Unknown-owner data | XOR tables are sysinc.cpp's | confirmed (behaviour) | .rdata constants; owner only | - |
+| 2586 | Unknown-owner data | 0x5d16b4 already settled | confirmed | the __xc table 0x5c002c-0x5c00c4 | - |
+| 2607 | SurfaceGL.cpp | glh_extensions.h #line | confirmed | our listing pushes 173 and 191 like 0x4f92e2/0x4f93ca | - |
+| 2632 | SurfaceGL.cpp | TSurface slots +0x04/+0x08/+0x80 | confirmed | AddDirtyRect's TRect = the 16-byte block; surfacegltest | - |
+| - | Communication/TRSA | unused vlong(65537) statics (not in the log before) | corrected | the __xc table 0x5c002c-0x5c00c4: 0x559da0, 0x55a1c0 | TRSA.h HeaderExponent |

@@ -35,6 +35,9 @@ static bool LeftButtonPressed;     // 0x5d166c
 static bool RightButtonPressed;    // 0x5d166d
 static bool Closing;               // 0x5d166f, CloseRequest is not asked any more
 bool DisplayChanged;               // 0x5d1670, set by OnDisplayChange; SurfaceGL.cpp's Init reads and clears it
+// At 0x5d1674, constructed by the static initialiser 0x559f20 as TCallback(NULL, 0) (no atexit) and
+// never used, like the window files' (issue #24).
+static TCallback NoCallback(NULL, 0);
 static char ClassName[32];         // 0x5d167c
 static int WheelDelta;             // 0x5d169c, the remainder below one notch (120)
 

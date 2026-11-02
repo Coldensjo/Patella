@@ -26,7 +26,8 @@ struct TContainer {
 	TObject Objects[CONTAINER_OBJECTS];  // +0x3c
 };
 
-// 0x4d8 bytes.
+// 0x4d4 bytes. CounterOffer starts 0x4d8 after OwnOffer: nothing refers to the four bytes between them
+// (issue #24).
 struct TOffer {
 	char Name[30];                       // +0x00, the trading partner
 	int Count;                           // +0x20

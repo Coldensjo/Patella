@@ -34,7 +34,11 @@ SurfaceGL.cpp done (issue #11, November 2, 2026): the three engines are reconstr
 The remaining header code done (issue #13, November 2, 2026): every header function of symbols.tsv is in its
 header (glh_extensions.h's with SurfaceGL.cpp, #11); containertest.cpp tests Container.h's instances.
 The library region done (issue #15, November 2, 2026): every library function has a names.tsv row,
-the regexp is src/Extern/regexp. Next: the other open issues; see GitHub (#30: the atoi callers).
+the regexp is src/Extern/regexp. The atoi callers fixed (issue #30).
+Review of the low-confidence decisions done (issue #24, November 2, 2026): 80 behaviour-relevant entries
+confirmed by the binary or a test, two static objects added (MainFrm.cpp's NoCallback, TRSA.h's vlong),
+scripttest.cpp tests nextToken's length limits; summary table at the end of notes/decisions.md.
+Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
 
@@ -55,9 +59,9 @@ None.
 
 ## Last difftest
 
-14,491,059 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11, #13 and #15; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082, Container: 192,832,
-Regexp: 229,958).
+14,492,680 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(after merging #11, #13, #15, #30 and #24; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
+Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 
 ## Notes for later files
 
@@ -284,3 +288,13 @@ Regexp: 229,958).
   prototypes). regerrorhandler (the image's 0x71f034) is NULL in the client; regexptest.cpp sets both sides'.
   DIFFTEST_ONLY=Regexp runs regexptest.cpp alone (RX_SEED, RX_ROUNDS, RX_TRACE=1 prints the coverage);
   it has its own random numbers and restores the image's hook. compile-check also compiles src/Extern/regexp/*.c.
+- Issue #24 (review of the low-confidence decisions, notes/decisions.md's last section): static data and
+  their initialisers are checked by comparing our compiled dynamic initialisers (??__E) and atexit
+  destructors (??__F) per object (tools\listing.cmd) with the binary's __xc table 0x5c002c-0x5c00c4
+  (tools/xctable.py); they agree now. A new static object with a constructor or destructor must
+  match an entry there. TRSA.h has a header static (HeaderExponent): every includer constructs one.
+- Eliminated try blocks: tools\listing.cmd File.cpp, then python -I tools/ehcompare.py Name compares our
+  unwind states and try blocks with tools/ehinfo.py's; a catch whose try body
+  only calls C functions is removed by our compiler too, so a guessed catch body is never emitted (difftest
+  builds with /EHa, where it stays).
+- DIFFTEST_ONLY=Script runs scripttest.cpp alone; its TestLongTokens has its own random generator.

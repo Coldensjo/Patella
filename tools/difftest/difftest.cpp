@@ -435,6 +435,11 @@ int main(int argc, char **argv)
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
+	if (Only != NULL && strcmp(Only, "Script") == 0) {
+		TestScript();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
 	TestXTEA();
 	TestCharacters();
 	TestColors();

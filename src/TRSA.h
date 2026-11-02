@@ -17,3 +17,8 @@ public:
 private:
 	vlong m_ModulusM;                      // +0x4
 };
+
+// Every object that includes this header constructs its own copy (static initialisers with an atexit
+// destructor: Communication.obj 0x5c435c by 0x559da0, TRSA.obj 0x71eff8 by 0x55a1c0, before TRSA.cpp's
+// own PublicExponent 0x71f004) and never uses it. The name is ours (issue #24).
+static vlong HeaderExponent(65537);
