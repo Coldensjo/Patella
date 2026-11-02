@@ -12,6 +12,11 @@
 
 #include "Surface.h"
 #include "graphics.h"
+// The includer defines DIRECT3D_VERSION 0x0700 before its first include (d3d.h's default, which
+// real MFC's d3d9types.h would change to 0x0900; see SurfaceDX.cpp).
+#if defined(DIRECT3D_VERSION) && DIRECT3D_VERSION != 0x0700
+#error define DIRECT3D_VERSION 0x0700 before the first include
+#endif
 #define D3D_OVERLOADS
 #include <ddraw.h>
 #include <d3d.h>

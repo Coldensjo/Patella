@@ -47,6 +47,9 @@ SkinProperties point pairs (issue #31, November 2, 2026): the ten pairs of TGUIP
 took as one area are TRects (nothing else in the binary reads them); the callers pass them.
 external.h removed (issue #14, November 2, 2026): every declaration is in its owner's header; the text
 table is src/Text.h (147 entries, one static copy per including object, as the image's 16 copies).
+Patella.exe builds (issue #16, November 2, 2026): Patella.sln/Patella.vcxproj and tools\build-patella.cmd,
+real MFC 14 static, x86, no warnings; it starts from build\run and shows the start screen. compile-check uses
+real MFC (TIBIA_MFC_SHIM=1 forces the shim). The resource check of #17 passes on Patella.exe.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -54,8 +57,8 @@ Next: the other open issues; see GitHub.
 src/res/Patella.rc + resource.h rebuild all 55 entries of Tibia.exe's .rsrc byte for byte (types, IDs,
 languages). `tools\build-resources.cmd` regenerates the pictures (tools/extract_resources.py Tibia.exe
 build/res; not committed), compiles build\res\Patella.res with rc.exe and compares it with Tibia.exe
-(tools/compare_resources.py: 0 differences). For #16: compile Patella.rc with /I build\res, link the .res,
-do not include MFC's afxres.rc, link with /MANIFEST:NO, then run compare_resources.py Tibia.exe Patella.exe.
+(tools/compare_resources.py: 0 differences). Linked into Patella.exe by #16 (Patella.vcxproj: /I build\res, no
+afxres.rc, /MANIFEST:NO): compare_resources.py Tibia.exe build\Release\Patella.exe reports 0 differences.
 Details and the users of every ID: notes/resources.md.
 
 ## Delegates (running)
@@ -69,7 +72,7 @@ None.
 ## Last difftest
 
 14,492,680 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11, #13, #15, #30 and #24, unchanged by #29, #27, #31 and #14; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
+(after merging #11, #13, #15, #30 and #24, unchanged by #29, #27, #31, #14 and #16; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
 Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 
 ## Notes for later files
@@ -142,6 +145,13 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   DIFFTEST_ONLY=DialogWindow runs the dialog window test alone; it restores every patch it makes.
 - tools/callcheck.py resolves `Class::method(` (with TWindow -> TComponent) and does not match
   `x->Name(` to a free function; differences counted in older notes were made without that.
+- Building Patella.exe (issue #16): tools\build-patella.cmd [Release|Debug]; run the client only from a
+  folder with copies of the data files (build\run), never from the root (it rewrites Tibia.cfg on exit).
+  Real MFC hides Win32 functions inside CWnd/CWinApp members (GetClientRect, SetTimer, LoadIcon, ...):
+  call them as ::Name(m_hWnd, ...) there. A file that includes SurfaceDX.h (DirectX 6/7 d3d.h) defines
+  DIRECT3D_VERSION 0x0700 before its first include (MFC 14 pulls in d3d9types.h); timeGetTime needs
+  <mmsystem.h> (MFC defines WIN32_LEAN_AND_MEAN). compile-check uses real MFC; set TIBIA_MFC_SHIM=1 for the
+  shim, which the difftest keeps using.
 - Python on Windows writes CRLF in text mode: pass newline='\n' when an edit script rewrites a file
   (and write such scripts with the Write tool: the Bash tool expands backslash escapes in them).
 - ContextMenus.cpp (issue #4): ContextMenus.h needs Map.h (TMark, TCoordinate); its users include it

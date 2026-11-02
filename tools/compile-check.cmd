@@ -1,7 +1,8 @@
 @echo off
 rem Compile-check reconstructed sources with modern MSVC (x86, static MFC).
-rem Compiles only; linking needs the files that are not reconstructed yet.
-rem Without the MFC component installed it falls back to src\compat\mfc_shim.h.
+rem Compiles only; tools\build-patella.cmd links Patella.exe (issue #16).
+rem It uses the real MFC of the Visual Studio MFC component; without it, or with the environment
+rem variable TIBIA_MFC_SHIM set (to anything), it checks against src\compat\mfc_shim.h instead.
 rem Usage: tools\compile-check.cmd [file.cpp ...]   (default: every src\*.cpp and the C files of src\Extern\regexp)
 setlocal
 set VCVARS=C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat
@@ -10,7 +11,10 @@ call "%VCVARS%" x86 >nul || exit /b 1
 set ROOT=%~dp0..
 if not exist "%ROOT%\build\check" mkdir "%ROOT%\build\check"
 set SHIM=
-if not exist "%VCToolsInstallDir%atlmfc\include\afxwin.h" (
+if defined TIBIA_MFC_SHIM (
+	echo TIBIA_MFC_SHIM is set; checking against src\compat\mfc_shim.h
+	set SHIM=/DTIBIA_MFC_SHIM
+) else if not exist "%VCToolsInstallDir%atlmfc\include\afxwin.h" (
 	echo MFC is not installed; checking against src\compat\mfc_shim.h
 	set SHIM=/DTIBIA_MFC_SHIM
 )

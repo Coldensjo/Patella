@@ -135,3 +135,9 @@ fallbacks are the same.
   that is the final check of #17.
 - The exe's name decides MFC's app name (no AFX_IDS_APP_TITLE, as in the original): "Patella"
   for Patella.exe. Tibia's code does not use it.
+
+Done in #16 (November 2, 2026): Patella.vcxproj compiles Patella.rc with build\res on the include path
+(its ExtractResources target runs the extractor when build\res\resources.tsv is missing), without
+afxres.rc, and links with /MANIFEST:NO. `python -I tools/compare_resources.py Tibia.exe
+build\Release\Patella.exe` (tools\build-patella.cmd runs it after the build): "55 entries in the original,
+55 in Patella.exe, 0 differences", for the Release and the Debug build.

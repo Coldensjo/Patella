@@ -253,7 +253,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	RECT Client;
-	GetClientRect(m_hWnd, &Client);
+	::GetClientRect(m_hWnd, &Client);
 	InitMainWindow(Client.right, Client.bottom, ExitProgram, SetDisplayMode, OpenURL);
 	InitWindow(m_hWnd, ExitProgram, CloseProgram, SetDisplayMode, OpenURL);
 	int x, y, Width, Height;
@@ -264,7 +264,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		MoveWindow(x, y, Width, Height, TRUE);
 	else
 		SetDefaultWindowPosition();
-	SetTimer(m_hWnd, 1, 100, NULL);
+	::SetTimer(m_hWnd, 1, 100, NULL);
 	return 0;
 	TEND
 }
@@ -276,7 +276,7 @@ LRESULT CMainFrame::OnDisplayChange(WPARAM wParam, LPARAM lParam)
 	TBEGIN
 	if (GetViewMode() == 1) {
 		RECT Rect;
-		GetWindowRect(m_hWnd, &Rect);
+		::GetWindowRect(m_hWnd, &Rect);
 		if ((int)LOWORD(lParam) < Rect.right - Rect.left || (int)HIWORD(lParam) < Rect.bottom - Rect.top)
 			SetDefaultWindowPosition();
 		DisplayChanged = true;
@@ -343,8 +343,8 @@ void CMainFrame::AddFrameSize(int *Width, int *Height)
 {
 	TBEGIN
 	RECT Client, Window;
-	GetClientRect(m_hWnd, &Client);
-	GetWindowRect(m_hWnd, &Window);
+	::GetClientRect(m_hWnd, &Client);
+	::GetWindowRect(m_hWnd, &Window);
 	*Width += Client.left - Client.right - Window.left + Window.right;
 	*Height += Client.top - Client.bottom - Window.top + Window.bottom;
 	TEND
@@ -354,7 +354,7 @@ void CMainFrame::AddFrameSize(int *Width, int *Height)
 void CMainFrame::OnSize(UINT nType, int cx, int cy)
 {
 	TBEGIN
-	if (!IsIconic(m_hWnd) && (cx < 550 || cy < 450)) {
+	if (!::IsIconic(m_hWnd) && (cx < 550 || cy < 450)) {
 		if (cx < 550)
 			cx = 550;
 		if (cy < 450)
@@ -362,13 +362,13 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 		Resize(cx, cy);
 		AddFrameSize(&cx, &cy);
 		RECT Rect;
-		GetWindowRect(m_hWnd, &Rect);
+		::GetWindowRect(m_hWnd, &Rect);
 		MoveWindow(Rect.left, Rect.top, cx, cy, TRUE);
 	} else {
 		int Width = cx;
 		int Height = cy;
 		CFrameWnd::OnSize(nType, cx, cy);
-		if (!IsIconic(m_hWnd))
+		if (!::IsIconic(m_hWnd))
 			Resize(Width, Height);
 	}
 	TEND2(cx, cy)
@@ -388,12 +388,12 @@ void CMainFrame::OnGetMinMaxInfo(MINMAXINFO *lpMMI)
 }
 
 // 0x4a9950, line 441. In fullscreen mode everything is client area.
-UINT CMainFrame::OnNcHitTest(CPoint point)
+LRESULT CMainFrame::OnNcHitTest(CPoint point)
 {
 	TBEGIN
 	if (GetViewMode() == 2)
 		return HTCLIENT;
-	return (UINT)Default();
+	return Default();
 	TEND
 }
 
@@ -434,9 +434,9 @@ void CMainFrame::OnDestroy()
 		GetWindowPlacement(&Placement);
 	RECT &Normal = Placement.rcNormalPosition;
 	SetWindowedMode(Normal.left, Normal.top, Normal.right - Normal.left, Normal.bottom - Normal.top,
-		IsZoomed(m_hWnd) != 0);
+		::IsZoomed(m_hWnd) != 0);
 	CFrameWnd::OnDestroy();
-	KillTimer(m_hWnd, 1);
+	::KillTimer(m_hWnd, 1);
 	DestroyCursor(DefaultCursor);
 	DestroyCursor(HandCursor);
 	TEND
@@ -482,9 +482,9 @@ BOOL CMainFrame::OnSetCursor(CWnd *pWnd, UINT nHitTest, UINT message)
 	TBEGIN
 	if (GetViewMode() != 2) {
 		RECT Client;
-		GetClientRect(m_hWnd, &Client);
-		ClientToScreen(m_hWnd, (POINT *)&Client.left);
-		ClientToScreen(m_hWnd, (POINT *)&Client.right);
+		::GetClientRect(m_hWnd, &Client);
+		::ClientToScreen(m_hWnd, (POINT *)&Client.left);
+		::ClientToScreen(m_hWnd, (POINT *)&Client.right);
 		POINT Cursor;
 		GetCursorPos(&Cursor);
 		if (!PtInRect(&Client, Cursor))
@@ -501,11 +501,11 @@ void CMainFrame::OnLButtonDown(UINT nFlags, CPoint point)
 	TBEGIN
 	Default();
 	if (GetViewMode() == 2)
-		ClientToScreen(m_hWnd, &point);
+		::ClientToScreen(m_hWnd, &point);
 	LeftButtonDown(point.x, point.y, KeyFlags);
 	LeftButtonPressed = true;
 	if (!RightButtonPressed)
-		CWnd::FromHandle(SetCapture(m_hWnd));
+		CWnd::FromHandle(::SetCapture(m_hWnd));
 	TEND2(point.x, point.y)
 }
 
@@ -516,7 +516,7 @@ void CMainFrame::OnLButtonUp(UINT nFlags, CPoint point)
 	Default();
 	if (LeftButtonPressed) {
 		if (GetViewMode() == 2)
-			ClientToScreen(m_hWnd, &point);
+			::ClientToScreen(m_hWnd, &point);
 		LeftButtonUp(point.x, point.y, KeyFlags);
 		LeftButtonPressed = false;
 		if (!RightButtonPressed)
@@ -531,11 +531,11 @@ void CMainFrame::OnLButtonDblClk(UINT nFlags, CPoint point)
 	TBEGIN
 	Default();
 	if (GetViewMode() == 2)
-		ClientToScreen(m_hWnd, &point);
+		::ClientToScreen(m_hWnd, &point);
 	LeftButtonDoubleClick(point.x, point.y, KeyFlags);
 	LeftButtonPressed = true;
 	if (!RightButtonPressed)
-		CWnd::FromHandle(SetCapture(m_hWnd));
+		CWnd::FromHandle(::SetCapture(m_hWnd));
 	TEND2(point.x, point.y)
 }
 
@@ -545,11 +545,11 @@ void CMainFrame::OnRButtonDown(UINT nFlags, CPoint point)
 	TBEGIN
 	Default();
 	if (GetViewMode() == 2)
-		ClientToScreen(m_hWnd, &point);
+		::ClientToScreen(m_hWnd, &point);
 	RightButtonDown(point.x, point.y, KeyFlags);
 	RightButtonPressed = true;
 	if (!LeftButtonPressed)
-		CWnd::FromHandle(SetCapture(m_hWnd));
+		CWnd::FromHandle(::SetCapture(m_hWnd));
 	TEND2(point.x, point.y)
 }
 
@@ -560,7 +560,7 @@ void CMainFrame::OnRButtonUp(UINT nFlags, CPoint point)
 	Default();
 	if (RightButtonPressed) {
 		if (GetViewMode() == 2)
-			ClientToScreen(m_hWnd, &point);
+			::ClientToScreen(m_hWnd, &point);
 		RightButtonUp(point.x, point.y, KeyFlags);
 		RightButtonPressed = false;
 		if (!LeftButtonPressed)
@@ -575,11 +575,11 @@ void CMainFrame::OnRButtonDblClk(UINT nFlags, CPoint point)
 	TBEGIN
 	Default();
 	if (GetViewMode() == 2)
-		ClientToScreen(m_hWnd, &point);
+		::ClientToScreen(m_hWnd, &point);
 	RightButtonDown(point.x, point.y, KeyFlags);
 	RightButtonPressed = true;
 	if (!LeftButtonPressed)
-		CWnd::FromHandle(SetCapture(m_hWnd));
+		CWnd::FromHandle(::SetCapture(m_hWnd));
 	TEND2(point.x, point.y)
 }
 
@@ -591,7 +591,7 @@ void CMainFrame::OnCaptureChanged(CWnd *pWnd)
 	POINT Point;
 	GetCursorPos(&Point);
 	if (GetViewMode() == 1)
-		ScreenToClient(m_hWnd, &Point);
+		::ScreenToClient(m_hWnd, &Point);
 	if (LeftButtonPressed) {
 		LeftButtonUp(Point.x, Point.y, KeyFlags);
 		LeftButtonPressed = false;

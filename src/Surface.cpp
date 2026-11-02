@@ -6,6 +6,9 @@
 // inferred (see Surface.h). No function has line evidence, so they are in
 // binary order. The DirectDraw surface code after 0x4eae70 is SurfaceDX.cpp's.
 
+// SurfaceDX.h's d3d.h must declare the DirectX 6/7 interfaces: real MFC's afxwin.h (common.h)
+// includes d3d9types.h, which would set DIRECT3D_VERSION to 0x0900 first (issue #16).
+#define DIRECT3D_VERSION 0x0700
 #include "Surface.h"
 #include "SurfaceDX.h"
 #include "SurfaceGL.h"

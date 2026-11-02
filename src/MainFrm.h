@@ -44,7 +44,7 @@ protected:
 	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO *lpMMI);
-	afx_msg UINT OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();

@@ -265,7 +265,7 @@ BOOL CPlayerApp::InitInstance()
 			WindowClass.lpfnWndProc = AfxGetAfxWndProc();
 			WindowClass.hInstance = AfxGetInstanceHandle();
 			WindowClass.lpszClassName = ClassName;
-			WindowClass.hIcon = LoadIconA(AfxGetResourceHandle(), MAKEINTRESOURCEA(128));
+			WindowClass.hIcon = ::LoadIconA(AfxGetResourceHandle(), MAKEINTRESOURCEA(128));
 			AfxRegisterClass(&WindowClass);
 
 			char CommandLine[1024];
@@ -337,7 +337,7 @@ BOOL CPlayerApp::InitInstance()
 			Redraw(false);
 			TEND
 			SendMessageA(MainFrame->m_hWnd, WM_SETICON, ICON_BIG,
-				(LPARAM)LoadIconA(AfxGetResourceHandle(), MAKEINTRESOURCEA(128)));
+				(LPARAM)::LoadIconA(AfxGetResourceHandle(), MAKEINTRESOURCEA(128)));
 			m_pMainWnd = MainFrame;
 			int x, y, Width, Height;
 			bool Maximized;
