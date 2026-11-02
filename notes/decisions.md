@@ -2713,8 +2713,9 @@ both list code only (names.tsv has no data rows).
   reconstructed); playertest.cpp defines it for difftest.exe. No other entry of Player's copy is
   read (the crash report texts 0x5c24a0/0x5c24a4 are read through other objects' copies, if at all).
 - **0x5c2564 is Surface.cpp's** (medium): CommandLineEngine, initialised to -1. It lies between
-  Status.cpp's LinkPattern (0x5c2560, its only .data) and Surface.cpp's CacheSurfaceWidth/Height
-  (0x5c2568/0x5c256c), so it is the end of Status.obj's .data or the start of Surface.obj's.
+  Status.cpp's LinkPattern (0x5c2560, its only .data; Status.obj's copy of Status.h's since #33) and
+  Surface.cpp's CacheSurfaceWidth/Height (0x5c2568/0x5c256c), so it is the end of Status.obj's .data or
+  the start of Surface.obj's.
   Status.cpp never uses it; Surface.cpp's SurfaceInitInstance (0x4eac49) reads it to choose the
   engine (curEngine is Surface.cpp's too), Player.cpp's command-line parser (0x4da5c6) writes it.
   Defined in Surface.cpp, extern in Surface.h; Surface.cpp is linked into difftest.exe, so
@@ -3595,3 +3596,83 @@ depended on the heap layout of the run (the environment, TEMP), not on the code.
   and dialogelementstest.cpp's Tip tests only the whole word 0xabababab. They are unchanged.
 - **Totals**: unchanged. tools\difftestuild.cmd: 14,492,680 checks in difftest.exe (Dialogs 98,889 in the
   full run, 98,474 alone), 67 in sysinctest.exe, 3,201 vlong, 0 failures. tools\compile-check.cmd is clean.
+  so it is a header static too (issue #33). Done: it is Status.h's (see "LinkPattern (issue #33)").
+
+## LinkPattern (issue #33)
+
+Settled by Claude Opus 5.5, November 2, 2026. Status.cpp's `static char *LinkPattern` (the URL regular
+expression, a pointer to the text 0x55b758) is now defined in src/Status.h, static, so every object that
+includes Status.h has its own copy, as the image shows. Evidence scripts in the i33 worktree's build/scratch:
+linkcopies.py (.data 0x5c0100-0x5c2600 dword by dword, with the text table copies and the code references),
+statususers.py (per file, the Status.cpp functions and data its code references), incgraph.py (the
+transitive #include sets of src/*.cpp).
+
+- **17 copies, one per object** (high): .data holds the pointer 0x55b758 17 times and nowhere else. A
+  non-const static is not dropped when its object does not read it (Text.h's 147 entries are in all sixteen
+  copies although most objects read none of them), so an object has a copy exactly when it includes the
+  header that defines it. Each object's .data is contiguous and in link order (Communication, ConsoleWindow,
+  ContentWindows, ContextMenus, Control, Creatures, DialogElements, Dialogs, DialogWindow, graphics, GUI,
+  Help, Inventory, MainFrm, MainWindow, Map, MapWindow, Network, Objects, Player, Preferences, Script, Skins,
+  Status, Surface, ...), and an object has at most one copy of each header static, which fixes the owners:
+
+  | Copy | Object | Neighbours and evidence | Confidence |
+  |---|---|---|---|
+  | 0x5c039c | Communication.obj | after its text table 0x5c0150; ConsoleWindow.obj's table, copy and colour (read by its code) follow the RTTI descriptors 0x5c03a0-0x5c0418 | high |
+  | 0x5c0668 | ConsoleWindow.obj | between its table 0x5c041c and its DefaultFontColor 0x5c066c (read 0x41755a) | high |
+  | 0x5c08c4 | ContentWindows.obj | between its table 0x5c0678 (read 0x437697) and its DefaultFontColor 0x5c08c8 | high |
+  | 0x5c0b20 | ContextMenus.obj | between its table 0x5c08d4 and its DefaultFontColor 0x5c0b24; nothing links between ContextMenus.obj and Control.obj | high |
+  | 0x5c0b30 | Control.obj | before its table 0x5c0b34, DefaultFontColor 0x5c0d80 and LastPacketType 0x5c0d8c (read 0x44a9aa) | high |
+  | 0x5c0fdc | Creatures.obj | after its table 0x5c0d90; DialogElements.obj's table 0x5c0fe0 follows directly | high |
+  | 0x5c122c | DialogElements.obj | between its table and its DefaultFontColor 0x5c1230 (read 0x452c86) | high |
+  | 0x5c1488 | Dialogs.obj | between its table 0x5c123c and its DefaultFontColor 0x5c148c (read 0x471f7e) | high |
+  | 0x5c16e4 | DialogWindow.obj | three copies lie between Dialogs.obj's colour and GUI.obj's table, where DialogWindow, graphics and GUI link: one each, in order | high |
+  | 0x5c16f4 | graphics.obj | as above; followed by graphics.obj's DefaultFontColor 0x5c16f8 (no text table: graphics.cpp does not include Text.h) | high |
+  | 0x5c1704 | GUI.obj | as above; directly before its table 0x5c1708 and DefaultFontColor 0x5c1954 (read 0x4954c6) | high |
+  | 0x5c1bac | MainFrm.obj | see below | medium |
+  | 0x5c1e08 | MainWindow.obj | directly before its table 0x5c1e0c (reads 124, 143); see below | medium |
+  | 0x5c22b0 | MapWindow.obj | between its table 0x5c2064 and its DefaultFontColor 0x5c22b4 | high |
+  | 0x5c22c0 | Network.obj | MapWindow.obj has 0x5c22b0; Network.cpp's 0x5c22c4 (read 0x4cdab0) follows | high |
+  | 0x5c22c8 | Player.obj | directly before its table 0x5c22cc and LastMouseCursor 0x5c2518; Objects.obj links between Network.obj and Player.obj but uses nothing of Status.cpp | medium |
+  | 0x5c2560 | Status.obj | read by InitStatus (0x4ea992); between Preferences.cpp's WindowedWidth/Height 0x5c2558/0x5c255c and CommandLineEngine 0x5c2564 | high |
+
+  Between GUI.obj's colour and MapWindow.obj's table the data is: table 0x5c1960, copy 0x5c1bac, table
+  0x5c1bb0, DefaultFontColor 0x5c1dfc, copy 0x5c1e08, MainWindow.obj's table 0x5c1e0c and colour 0x5c2058,
+  for Help, Inventory, MainFrm and MainWindow. MainFrm.cpp (GetMouseX, GetMouseY, GetMouseCursor,
+  Set/GetConnectionState, AddMessage) and MainWindow.cpp (CheckAnyRight, CheckRight, SetActionState, ...)
+  call Status.cpp, Help.cpp and Inventory.cpp do not; with the copy in the header that declares Status.cpp's
+  functions (below), the only split that gives both a copy is MainFrm = 0x5c1bac + table 0x5c1bb0 + colour,
+  MainWindow = 0x5c1e08 + its table + colour, and the table 0x5c1960 to Help.obj or Inventory.obj without a
+  copy. This agrees with #14's low-confidence owner of the table 0x5c1bb0 (MainFrm.obj) and leaves the table
+  0x5c1960 between Help.obj and Inventory.obj, as before. The Player/Objects split is argued the same way.
+- **Objects without a copy** (high): Help, Inventory, Map, Objects, Preferences, Script, Skins, Surface,
+  SurfaceDX, surfaceDX9, SurfaceGL, sysinc, Talk (it has a text table, 0x5c258c, but no copy), TMyException,
+  TRSA, TXTEA, Utils, vlong and regexp. None of them calls a Status.cpp function or touches its data.
+- **The header is Status.h** (high that the copies follow Status.cpp's users; medium for Status.h itself, see the
+  end of this item): every object whose code calls
+  a Status.cpp function or references its data has a copy (Communication 12 functions, ConsoleWindow 7,
+  ContentWindows 14, ContextMenus 9, Control 39, Creatures 2, DialogElements 6, Dialogs 28, MainFrm 6,
+  MainWindow 10, MapWindow 13, Network 6, Player 5, graphics 1 (GetActionNumber), and Status itself), no object
+  without a copy does, and only Status.cpp reads it (CheckClipboardText's link check). The other two objects
+  with a copy use nothing of Status.cpp: DialogWindow.cpp includes Status.h through DialogElements.h (whose
+  inline code calls SetMouseOverText), and GUI.cpp (below). In our sources the .cpp files that include
+  Status.h transitively are exactly the image's set less GUI.cpp; the next-best header, Objects.h, also
+  reaches Inventory, Map and Objects (no copies) and misses GUI. Text.h (the text table) and graphics.h
+  (DefaultFontColor) are other headers: Network, graphics and Status have a copy but no table, Talk and Help
+  (or Inventory) a table but no copy; Communication, Creatures, Network, Player and Status have a copy but
+  no colour. A header that Status.h includes could hold it as
+  well; nothing in the image tells the two apart, so it stays in Status.h, next to CheckClipboardText.
+- **GUI.cpp includes Status.h** (medium): GUI.obj's copy 0x5c1704 says the original GUI.cpp included the
+  header (directly or through another header that no copy-less object includes); GUI.cpp calls nothing of
+  Status.cpp. It now includes Status.h directly, with a comment; no other include changed.
+- **No other datum of the header** (high for .data): the copies are single dwords; what lies next to them is
+  either a text table copy (Text.h), a DefaultFontColor copy (graphics.h) or the object's own data, and no
+  other value accompanies all seventeen. Zero-initialised header statics would be in .bss and cannot be seen
+  this way (not checked).
+- **Order inside an object** (observation, not used): the copy comes after the text table in
+  Communication, ConsoleWindow, ContentWindows, ContextMenus, Creatures, DialogElements, Dialogs,
+  DialogWindow and MapWindow, before it in Control, GUI, MainFrm, MainWindow and Player; the colour always
+  comes last, even where graphics.h is included first. Our include orders were not changed for it.
+- **Behaviour**: none. The pointer is never written and only Status.cpp reads it (its own copy, as before);
+  the other copies are unused, and the modern compiler may drop them. compile-check has no warnings (an
+  unused static variable is not a /W3 warning; Text.h's entries are the same case). The test totals are
+  unchanged (below).

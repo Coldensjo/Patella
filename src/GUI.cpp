@@ -12,6 +12,7 @@
 
 #include "GUI.h"
 #include "Skins.h"
+#include "Status.h" // uses nothing from it, but GUI.obj has its LinkPattern copy (0x5c1704)
 #include "Text.h"
 #include "sysinc.h"
 
