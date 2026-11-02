@@ -3341,6 +3341,8 @@ address	name	kind	confidence	note
 0x52f14f	CCmdTarget_QueryAggregates	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::QueryAggregates
 0x52f1af	MFC_52f1af	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by CWnd_CalcWindowRect, CWnd_XAccessible_accLocation, 0x52f1af
 0x52f20a	MFC_52f20a	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by CWnd_CalcWindowRect, CWnd_XAccessible_accLocation
+0x52f228	CAsyncSocket_Receive	stl	high	MFC 7.1: nafxcw.lib; CAsyncSocket::Receive (virtual +0x14): recv(m_hSocket, ...); issue #37 (networktest.cpp fakes it)
+0x52f240	CAsyncSocket_Send	stl	high	MFC 7.1: nafxcw.lib; CAsyncSocket::Send (virtual +0x18): send(m_hSocket, ...); issue #37 (networktest.cpp fakes it)
 0x52f258	CAsyncSocket_AsyncSelect	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::AsyncSelect
 0x52f286	CAsyncSocket_LookupHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::LookupHandle
 0x52f2aa	CAsyncSocket_vslot_14	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 14 (+0x38) of CAsyncSocket (vtable 0x575524)

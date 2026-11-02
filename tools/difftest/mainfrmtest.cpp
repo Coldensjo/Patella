@@ -1527,6 +1527,9 @@ void TestMainFrmErrors()
 
 void TestMainFrm()
 {
+	// Random()'s state is put back at the end: the later tests (MapWindow, MainWindow) get
+	// the inputs they had before this test existed.
+	uint32 SavedSeed = GetRandomSeed();
 	PatchImage();
 	Trace = getenv("MF_TRACE") != NULL;
 	const char *LogName = getenv("MF_LOGS");
@@ -1639,6 +1642,7 @@ void TestMainFrm()
 	curEngine = SavedEngine;
 	Global<int>(0x71d0c4) = SavedImageEngine;
 	RestoreAll();
+	SetRandomSeed(SavedSeed);
 	if (LogFile != NULL)
 		fclose(LogFile);
 }

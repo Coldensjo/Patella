@@ -1646,6 +1646,9 @@ void TestNetworkErrors()
 
 void TestNetwork()
 {
+	// Random()'s state is put back at the end: the later tests (MapWindow, MainWindow) get
+	// the inputs they had before this test existed.
+	uint32 SavedSeed = GetRandomSeed();
 	PatchImage();
 	PatchScript(); // the image's sprintf
 	Trace = getenv("NW_TRACE") != NULL;
@@ -1718,6 +1721,7 @@ void TestNetwork()
 	TestNetworkErrors();
 	ResetSides();
 	RestoreAll();
+	SetRandomSeed(SavedSeed);
 	if (LogFile != NULL)
 		fclose(LogFile);
 }
