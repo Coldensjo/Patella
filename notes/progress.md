@@ -216,9 +216,13 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   imports): functions that build a std::stringstream in the image (the error report dialog's constructor,
   Container.h's index errors) cannot be called on the image side.
 - dialogstest.cpp's dump prints every member word with pointers named (tree components, receivers, timers)
-  and strings only for the members listed as strings; values with two 0xab bytes are pattern, not pointers.
-  Event 31 only with a timer, event 11 of the hotkey dialog only with a selection.
-- DIFFTEST_ONLY=Dialogs runs dialogstest.cpp alone (DG_TRACE=1, DG_LOGS=<file>).
+  and strings only for the members listed as strings. A word is a pointer only by where it points, never by
+  readability (issue #32): into a block of the round's allocations (H<size>+<offset>, D when freed; freed
+  blocks stay allocated until the round ends), into an image or module (S) or into the stack (K); otherwise
+  it is a number. The fill pattern needs no rule (0xabababab is no address). Event 31 only with a timer,
+  event 11 of the hotkey dialog only with a selection.
+- DIFFTEST_ONLY=Dialogs runs dialogstest.cpp alone (DG_TRACE=1, DG_LOGS=<file>, DG_HEAPSHIFT=<bytes> moves the
+  heap layout, DG_BLOCKS=1 counts the blocks left in the table).
 - SurfaceDX.cpp (issue #9): the engine uses DirectDraw4/Surface4 and
   Direct3D3/Device3/Viewport3 despite its DirectX 5 name. TSurface is 0x70
   bytes (8-byte alignment), TSurfaceDX is 0x250. Base Window is now hWindow;

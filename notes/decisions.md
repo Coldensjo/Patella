@@ -3313,3 +3313,73 @@ Claude Opus 5.5, November 2, 2026.
   DialogWindow.cpp (23 of 47), Dialogs.cpp (111 of 139) and MapWindow.cpp (14 of 26). SetChildArea is a
   virtual call (indirect) or a qualified TWindow:: call in the decompile, so the tool does not count it, and
   TRect's constructor is not a names.tsv function.
+
+## dialogstest dump (issue #32)
+
+dialogstest.cpp failed now and then with "dialogs differ" when the code had not changed. The failures
+depended on the heap layout of the run (the environment, TEMP), not on the code.
+
+- **Cause, confirmed**: two rules of the dump decided by addresses.
+  - `Readable` asked VirtualQuery at dump time whether a word points to committed memory (`P`) or not (a
+    number). The two dumps are built one after the other, and our dump's own strings (about 50 KB for the
+    hotkey dialog) grow the heap between them. A non-pointer word in an address range the heap reaches during
+    our dump was hex in ours and `P` in the original's: THotkeyDialog's AutoSend bools (words 0x01000100,
+    0x01010001 ...) at member words 2323-2331. The reverse (`P` vs hex, the rule violation dialog of #27)
+    happens when the heap gives memory back between the dumps.
+  - `IsPattern` took every word with two 0xab bytes for the fill pattern. A real pointer such as 0x00abab28
+    was hex on that side and the tree name on the other: TColorButton's Next and TOutfitDialog's buttons
+    (`abab28` vs `F.4.49`), the help dialog's parent pointers (`abab38` vs `F.3`).
+- **Reproduction**: DG_HEAPSHIFT=<bytes> allocates a block of that size first (and keeps it). On main, 5 of
+  25 layouts failed (shift 40000, 100000, 250000 with build.cmd's TEMP: 1, 6, 2 failures, all hotkey AutoSend;
+  shift 1500000 with the default TEMP: 1, hotkeys; shift 40000 with the default TEMP: 1,195, the outfit
+  dialog's 0x00abab.. pointers in the 20 failures printed). The other 20 combinations of the shifts (none,
+  1000, 30000, 40000, 100000, 250000, 600000, 1500000, 3000000, 8000000) and TEMPs (build.cmd's, the default,
+  a long path) passed. The help dialog's case showed up in the mutation runs.
+- **The new rules**: a word is a pointer only by where it points, decided from tables that do not change
+  while the two dumps are built:
+  - the side's tree components, receiver, parent window and statement (by name, as before);
+  - a block allocated while a round runs (both sides' operator new and new[], the image's malloc, the fakes'
+    memory): `H<size>+<offset>`, `D<size>+<offset>` when freed. The table is shared by both sides. Our
+    operator delete and delete[] and the image's free (its operator delete calls it) mark a block as freed;
+    freed blocks stay allocated until the round ends, so a dangling pointer cannot point into a newer block of
+    one side only. Allocations of the test's own work (the names, the dumps) are not recorded, and frees of
+    recorded blocks during the dumps wait until both dumps are built. The table's nodes come from a heap of
+    their own (HeapCreate), not from the operator new it records;
+  - the Tibia image, difftest.exe and the DLLs (MEM_IMAGE regions, taken once before the rounds): `S`;
+  - the main thread's stack reservation: `K`;
+  - anything else is a number (hex). 0xabababab is not an address, so the fill pattern needs no rule of its
+    own; a word with some pattern bytes is a number or a pointer by the same rules on both sides.
+  Strings (the string members, and texts in the logs) are read only from a pointer and only inside the block,
+  image or stack it points into; timers are recognised by the vtable at the start of a live block.
+- **Why not "allocation N"**: each side numbering the blocks its pointers reach (first reference in the
+  dump) would compare pointer identity, but the same number in both dumps (random members such as
+  TTextDialog's object number) can fall into a block that only one side's dump references, and would then
+  get different numbers. Size and offset describe the block the same way for both sides. Pointer identity is
+  still compared where it was before: pointers to tree components by name. Pointers to other blocks were `P`
+  and now compare size and offset as well.
+- **Not weakened (mutation check)**: 22 mutations of src\Dialogs.cpp from issue #8, 4 that change only where
+  a pointer member points or the timer's lifetime (the outfit and VIP dialogs' radio selections, the login
+  dialog's focus, SetTimer without the delete), and the outfit wrap. Each ran against main's dump and the new
+  one (same seed, same 98,474 checks). The new dump catches every mutation the old one caught, with the
+  same number of failures as the old dump's lowest count over three TEMP layouts. The old dump's count varies
+  with the layout (the login focus mutation: 1155, 1159, 1174 and 1501 failures; the outfit wrap: 165, 235 and
+  247), the new one does not (1155 and 165 each time). Only the old dump flakes in those runs. The pointer
+  mutations are caught by the dump alone: 1690 failures for the outfit part selection, 592 for the VIP icon
+  selection, 1155 for the login focus. SetTimer without the delete makes our side throw (GUI.cpp's timer list),
+  under both dumps. Issue #8's `Outfit > LastOutfit` to `>=` gives 0 failures under the new dump. Under the old
+  dump it gave 5 and 209 failures in two runs, all of them the IsPattern flake in the help dialog: with
+  today's random sequence, no outfit reaches LastOutfit by event 6. `Outfit = FirstOutfit + 1` after the wrap
+  is caught (165). git diff --stat src is empty afterwards.
+- **Layouts**: the new dump passes all 18 layouts tried (no shift, 1000, 30000, 40000, 100000, 250000,
+  600000, 1500000, 8000000; build.cmd's TEMP and the default TEMP), including the 5 that failed on main, with
+  98,474 checks and 0 failures each. The check count of Dialogs is unchanged (the dump changed what it prints,
+  not what it compares).
+- **The other tests**: no other test decides pointers by readability or partial 0xab patterns.
+  contentwindowstest.cpp, consolewindowtest.cpp, contextmenustest.cpp, dialogwindowtest.cpp,
+  dialogelementstest.cpp, mainwindowtest.cpp, surfacedx9test.cpp and surfacegltest.cpp name objects by role or
+  kind from their own maps (a pointer they do not know prints as "?", the same on both sides);
+  mapwindowtest.cpp compares the windows' bytes at fixed offsets. The raw %p they print are values shared by
+  both sides (the receivers of the element fakes, the talk buffer, the mark menu's window, a made-up number),
+  and dialogelementstest.cpp's Tip tests only the whole word 0xabababab. They are unchanged.
+- **Totals**: unchanged. tools\difftestuild.cmd: 14,492,680 checks in difftest.exe (Dialogs 98,889 in the
+  full run, 98,474 alone), 67 in sysinctest.exe, 3,201 vlong, 0 failures. tools\compile-check.cmd is clean.

@@ -25,8 +25,14 @@
 // atol and _stricmp are the test's CRT. Assertions are not exercised: the
 // inputs keep to what the game does (events each dialog handles, a selected
 // hotkey for event 11, colours of the 133 buttons).
+// The dumps name a pointer by where it points (a tree component, a block of
+// the round's allocations with its size and offset, an image or module, the
+// stack), never by the readability of the memory, so they do not depend on
+// the heap layout of the run (issue #32).
 // DIFFTEST_ONLY=Dialogs runs it alone; DG_TRACE=1 traces rounds and
-// operations, DG_LOGS=<file> writes every compared log and dump.
+// operations, DG_LOGS=<file> writes every compared log and dump,
+// DG_HEAPSHIFT=<bytes> moves the heap layout, DG_BLOCKS=1 counts the blocks
+// left in the table at the end.
 
 #include "difftest.h"
 #include "../../src/Dialogs.h"
@@ -110,30 +116,185 @@ template <class R, class... A> static R CallI(uint32 Address, const void *This, 
 // The names of the objects of the current tree and the receivers.
 static std::map<const void *, std::string> Names[2];
 
-// Readable memory, by the page protection (no access violations: the
-// child's crash handler would report each).
-static bool Readable(const void *Address)
+// --- Allocations and values ----------------------------------------------------------------
+//
+// A value is a pointer only by where it points, never by whether that memory
+// is readable now (the heap grows and shrinks between the two sides' dumps):
+// into a block one of the sides allocated while a round runs (both sides'
+// operator new and new[], the image's malloc, the fakes' memory), into an
+// image or module (the Tibia image, difftest.exe, the DLLs) or into the
+// stack. The table of blocks is the same for both sides, so the same number
+// is the same kind of value in both dumps; a block freed during a round stays
+// allocated (and in the table, as freed) until the round ends, so that a
+// dangling pointer cannot point into a newer block of one side only.
+
+// The table lives on a heap of its own: its nodes must not come from the
+// operator new it records.
+static HANDLE BlockHeap;
+template <class T> struct TBlockAllocator {
+	typedef T value_type;
+	TBlockAllocator() {}
+	template <class U> TBlockAllocator(const TBlockAllocator<U> &) {}
+	T *allocate(size_t Count)
+	{
+		void *Memory = HeapAlloc(BlockHeap, 0, Count * sizeof(T));
+		if (Memory == NULL)
+			throw std::bad_alloc();
+		return (T *)Memory;
+	}
+	void deallocate(T *Memory, size_t) { HeapFree(BlockHeap, 0, Memory); }
+	template <class U> bool operator==(const TBlockAllocator<U> &) const { return true; }
+	template <class U> bool operator!=(const TBlockAllocator<U> &) const { return false; }
+};
+struct TBlock {
+	uint32 Size;
+	bool Freed;
+};
+typedef std::map<uintptr_t, TBlock, std::less<uintptr_t>, TBlockAllocator<std::pair<const uintptr_t, TBlock>>> TBlocks;
+static TBlocks *Blocks;
+// Frees of recorded blocks while the table must not change (the dumps).
+static std::vector<void *, TBlockAllocator<void *>> *PendingFrees;
+static int Untracked; // > 0: the test's own work (names, dumps), not recorded
+static bool Tracking() { return Testing && Untracked == 0 && Blocks != NULL; }
+
+static void *Record(void *Memory, size_t Size)
 {
-	if ((uintptr_t)Address < 0x10000 || (uintptr_t)Address >= 0x7fff0000)
-		return false;
-	MEMORY_BASIC_INFORMATION M;
-	if (VirtualQuery(Address, &M, sizeof(M)) != sizeof(M) || M.State != MEM_COMMIT)
-		return false;
-	if (M.Protect & (PAGE_GUARD | PAGE_NOACCESS))
-		return false;
-	return (M.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE
-		| PAGE_EXECUTE_WRITECOPY)) != 0;
+	if (Memory != NULL && Tracking())
+		(*Blocks)[(uintptr_t)Memory] = TBlock{(uint32)(Size == 0 ? 1 : Size), false};
+	return Memory;
 }
-// A readable C string of printable characters.
-static bool ReadString(const void *Address, std::string *Out)
+// New memory of both sides gets the same byte pattern.
+static void *__cdecl PatternNew(size_t Size)
 {
-	const unsigned char *p = (const unsigned char *)Address;
+	void *Memory = malloc(Size == 0 ? 1 : Size);
+	memset(Memory, 0xab, Size);
+	return Record(Memory, Size);
+}
+static void *__cdecl TrackedMalloc(size_t Size) { return Record(malloc(Size), Size); }
+// Both sides' operator delete and delete[] and the image's free.
+static void __cdecl TrackedFree(void *Memory)
+{
+	if (Memory == NULL)
+		return;
+	TBlocks::iterator B = Blocks == NULL ? TBlocks::iterator() : Blocks->find((uintptr_t)Memory);
+	if (Blocks == NULL || B == Blocks->end()) {
+		free(Memory);
+		return;
+	}
+	if (B->second.Freed)
+		return; // freed twice: it stays until the round ends
+	if (Testing && Untracked > 0) {
+		PendingFrees->push_back(Memory);
+		return;
+	}
+	if (Testing) {
+		B->second.Freed = true;
+		return;
+	}
+	Blocks->erase(B);
+	free(Memory);
+}
+static void ApplyPendingFrees()
+{
+	std::vector<void *, TBlockAllocator<void *>> Pending;
+	Pending.swap(*PendingFrees);
+	for (void *Memory : Pending)
+		TrackedFree(Memory);
+}
+// At the end of a round: the freed blocks really go.
+static void ReleaseFreedBlocks()
+{
+	for (TBlocks::iterator B = Blocks->begin(); B != Blocks->end();) {
+		if (B->second.Freed) {
+			free((void *)B->first);
+			B = Blocks->erase(B);
+		} else {
+			++B;
+		}
+	}
+}
+
+// The images and modules and the stack (fixed for the test).
+struct TRange {
+	uintptr_t Start, End;
+};
+static std::vector<TRange> StaticRanges;
+static TRange StackRange;
+static void InitRanges()
+{
+	IMAGE_NT_HEADERS32 *NT = (IMAGE_NT_HEADERS32 *)(uintptr_t)(0x400000 + ((IMAGE_DOS_HEADER *)0x400000)->e_lfanew);
+	StaticRanges.push_back(TRange{0x400000, 0x400000 + NT->OptionalHeader.SizeOfImage});
+	MEMORY_BASIC_INFORMATION M;
+	for (uintptr_t Address = 0x10000; Address < 0x7fff0000; Address = (uintptr_t)M.BaseAddress + M.RegionSize) {
+		if (VirtualQuery((void *)Address, &M, sizeof(M)) != sizeof(M))
+			break;
+		if (M.Type == MEM_IMAGE)
+			StaticRanges.push_back(TRange{(uintptr_t)M.BaseAddress, (uintptr_t)M.BaseAddress + M.RegionSize});
+	}
+	// The whole reservation of the stack, from its allocation base to the top.
+	VirtualQuery(&M, &M, sizeof(M));
+	StackRange = TRange{(uintptr_t)M.AllocationBase, (uintptr_t)((NT_TIB *)NtCurrentTeb())->StackBase};
+}
+
+enum { NUMBER, BLOCK, STATIC, STACK };
+struct TPlace {
+	int Kind;
+	uintptr_t Start;
+	uint32 Size, Offset;
+	bool Freed;
+};
+static TPlace Locate(uint32 Value)
+{
+	TPlace P = {NUMBER, 0, 0, 0, false};
+	if (Blocks != NULL) {
+		TBlocks::iterator B = Blocks->upper_bound(Value);
+		if (B != Blocks->begin()) {
+			--B;
+			if (Value - B->first < B->second.Size) {
+				P.Kind = BLOCK;
+				P.Start = B->first;
+				P.Size = B->second.Size;
+				P.Offset = (uint32)(Value - B->first);
+				P.Freed = B->second.Freed;
+				return P;
+			}
+		}
+	}
+	for (TRange &R : StaticRanges) {
+		if (Value >= R.Start && Value < R.End) {
+			P.Kind = STATIC;
+			P.Start = R.Start;
+			P.Size = (uint32)(R.End - R.Start);
+			P.Offset = (uint32)(Value - R.Start);
+			return P;
+		}
+	}
+	if (Value >= StackRange.Start && Value < StackRange.End) {
+		P.Kind = STACK;
+		P.Start = StackRange.Start;
+		P.Size = (uint32)(StackRange.End - StackRange.Start);
+		P.Offset = (uint32)(Value - StackRange.Start);
+	}
+	return P;
+}
+// A C string of printable characters that ends inside the memory it points into.
+static bool ReadString(const TPlace &P, uint32 Value, std::string *Out)
+{
+	if (P.Kind == NUMBER)
+		return false;
+	const unsigned char *p = (const unsigned char *)(uintptr_t)Value;
+	uint32 Left = P.Size - P.Offset;
 	std::string S;
-	for (int i = 0; i < 300; i++) {
-		if (i == 0 || ((uintptr_t)(p + i) & 0xfff) == 0) {
-			if (!Readable(p + i))
+	for (uint32 i = 0; i < 300 && i < Left; i++) {
+		if (P.Kind == STATIC && (i == 0 || ((uintptr_t)(p + i) & 0xfff) == 0)) {
+			// Sections are mapped readable; the gaps of a module are not read.
+			MEMORY_BASIC_INFORMATION M;
+			if (VirtualQuery(p + i, &M, sizeof(M)) != sizeof(M) || M.State != MEM_COMMIT
+					|| (M.Protect & (PAGE_GUARD | PAGE_NOACCESS)) != 0)
 				return false;
 		}
+		if (P.Kind == STACK && (uintptr_t)(p + i) < (uintptr_t)&S)
+			return false; // below the current frame
 		if (p[i] == 0) {
 			*Out = S;
 			return true;
@@ -144,35 +305,43 @@ static bool ReadString(const void *Address, std::string *Out)
 	}
 	return false;
 }
-// Bytes of the fill pattern (two or more 0xab bytes) are no pointer, even if
-// the heap has grown over that address meanwhile.
-static bool IsPattern(uint32 Value)
+
+static void *OurTimerVtable;
+// A value: a known object's name, a string (Text 1: any, 2: only a non-empty
+// one), a timer, a block (H, or D when freed, with its size and the offset
+// into it), an image or module address (S), a stack address (K) or a number.
+static std::string Describe(int s, uint32 Value, int Text)
 {
-	int Count = 0;
-	for (int i = 0; i < 4; i++)
-		Count += ((Value >> (8 * i)) & 0xff) == 0xab;
-	return Count >= 2;
-}
-// A value: a known object's name, a string, a pointer or a number.
-static std::string Val(int s, uint32 Value)
-{
-	if (IsPattern(Value)) {
-		char Hex[16];
-		sprintf(Hex, "%x", Value);
-		return Hex;
-	}
 	auto N = Names[s].find((const void *)(uintptr_t)Value);
 	if (N != Names[s].end())
 		return N->second;
-	std::string Text;
-	char Buffer[32];
-	if (Value >= 0x10000 && ReadString((const void *)(uintptr_t)Value, &Text) && Text.size() > 0)
-		return "'" + Text + "'";
-	if (Value >= 0x10000 && Readable((const void *)(uintptr_t)Value))
-		return "P";
+	TPlace P = Locate(Value);
+	char Buffer[48];
+	std::string String;
+	if (Text != 0 && ReadString(P, Value, &String) && (Text == 1 || String.size() > 0))
+		return "'" + String + "'";
+	switch (P.Kind) {
+	case BLOCK:
+		if (!P.Freed && P.Offset == 0 && P.Size >= sizeof(TTimer)) {
+			void *V = *(void **)(uintptr_t)Value;
+			if (V == OurTimerVtable || (uintptr_t)V == 0x5646e8) {
+				TTimer *T = (TTimer *)(uintptr_t)Value;
+				return "Timer(" + std::to_string(T->Remaining) + "," + std::to_string(T->Active ? 1 : 0) + ","
+					+ Describe(s, (uint32)(uintptr_t)T->Callback.Receiver, 2) + "," + std::to_string(T->Callback.Event)
+					+ ")";
+			}
+		}
+		sprintf(Buffer, "%s%x+%x", P.Freed ? "D" : "H", P.Size, P.Offset);
+		return Buffer;
+	case STATIC:
+		return "S";
+	case STACK:
+		return "K";
+	}
 	sprintf(Buffer, "%x", Value);
 	return Buffer;
 }
+static std::string Val(int s, uint32 Value) { return Describe(s, Value, 2); }
 static std::string Val(uint32 Value) { return Val(Side, Value); }
 static std::string Str(const char *Text) { return Text == NULL ? "(null)" : std::string("'") + Text + "'"; }
 
@@ -531,14 +700,6 @@ static void __cdecl ImageQsort(void *Base, size_t Number, size_t Width, int (__c
 static long __cdecl ImageAtol(const char *Text) { return atol(Text); }
 static int __cdecl ImageStricmp(const char *a, const char *b) { return _stricmp(a, b); }
 
-// New memory of both sides gets the same byte pattern.
-static void *__cdecl PatternNew(size_t Size)
-{
-	void *Memory = malloc(Size == 0 ? 1 : Size);
-	memset(Memory, 0xab, Size);
-	return Memory;
-}
-
 // The surface: the calls DialogElements.cpp and Dialogs.cpp make. The modes
 // are new memory the graphics dialog frees.
 class TDGSurface : public TTestSurface {
@@ -760,9 +921,16 @@ static void PatchCallees()
 		{0x512539, NULL, (void *)ImageStricmp},
 		{0x5237e7, (void *)(void *(__cdecl *)(size_t))operator new, (void *)PatternNew},
 		{0x523817, (void *)(void *(__cdecl *)(size_t))operator new[], (void *)PatternNew},
+		// The blocks: the image's malloc and free (its operator delete frees with
+		// free), our operator delete and delete[].
+		{0x512d18, NULL, (void *)TrackedMalloc},
+		{0x51165d, NULL, (void *)TrackedFree},
+		{0, (void *)(void (__cdecl *)(void *))operator delete, (void *)TrackedFree},
+		{0, (void *)(void (__cdecl *)(void *))operator delete[], (void *)TrackedFree},
 	};
 	for (auto &T : Table) {
-		Redirect((void *)(uintptr_t)T.Image, T.Fake);
+		if (T.Image != 0)
+			Redirect((void *)(uintptr_t)T.Image, T.Fake);
 		if (T.Ours != NULL)
 			Redirect(T.Ours, T.Fake);
 	}
@@ -1118,7 +1286,6 @@ static void InitClasses()
 	SIZE(TErrorReportDialog);
 #undef SIZE
 }
-static void *OurTimerVtable;
 static std::string ClassOf(int s, TComponent *C)
 {
 	if (s == ORIGINAL) {
@@ -1164,8 +1331,8 @@ static void NameTree(int s, TComponent *C, const std::string &Path)
 	}
 }
 
-// The members that are strings (the other pointers are only "P": the bytes
-// they point to differ between the sides).
+// The members that are strings (the other pointers are only named by where
+// they point: the bytes they point to differ between the sides).
 static const struct { const char *Class; int Offset; } StringMembers[] = {
 	{"TLabel", 0x24}, {"TLabel", 0x28}, {"TQuestionLabel", 0x24}, {"TQuestionLabel", 0x28}, {"TLogoutLabel", 0x24},
 	{"TLogoutLabel", 0x28}, {"TWaitLabel", 0x24}, {"TWaitLabel", 0x28}, {"TFormattedText", 0x2c}, {"TLink", 0x30},
@@ -1182,27 +1349,7 @@ static bool IsStringMember(const std::string &Class, int Offset)
 	return false;
 }
 
-static void DumpWord(std::string &Out, int s, uint32 Value, bool String)
-{
-	if (Value >= 0x10000 && !IsPattern(Value) && Readable((void *)(uintptr_t)Value)
-			&& Names[s].find((void *)(uintptr_t)Value) == Names[s].end()) {
-		std::string Text;
-		if (String && ReadString((void *)(uintptr_t)Value, &Text)) {
-			Out += "'" + Text + "'";
-			return;
-		}
-		void *V = *(void **)(uintptr_t)Value;
-		if (V == OurTimerVtable || (uintptr_t)V == 0x5646e8) {
-			TTimer *T = (TTimer *)(uintptr_t)Value;
-			Add(Out, "Timer(%d,%d,%s,%d)", T->Remaining, T->Active ? 1 : 0, Val(s, (uint32)(uintptr_t)T->Callback.Receiver).c_str(),
-				T->Callback.Event);
-			return;
-		}
-		Out += "P";
-		return;
-	}
-	Out += Val(s, Value);
-}
+static void DumpWord(std::string &Out, int s, uint32 Value, bool String) { Out += Describe(s, Value, String ? 1 : 0); }
 
 static void Dump(std::string &Out, int s, TComponent *C, int Depth)
 {
@@ -1240,11 +1387,15 @@ static void Dump(std::string &Out, int s, TComponent *C, int Depth)
 
 static void RefreshNames(int s)
 {
+	Untracked++;
 	Names[s].clear();
 	Names[s][Receiver[s]] = "Recv";
 	Names[s][ParentWindow[s]] = "Parent";
+	if (Statement[s] != NULL)
+		Names[s][Statement[s]] = "Statement";
 	if (Frame[s] != NULL)
 		NameTree(s, Frame[s], "F");
+	Untracked--;
 }
 static std::string DumpAll(int s)
 {
@@ -1260,7 +1411,11 @@ static int OperationCount[32];
 static const char *OperationName;
 static void Compare()
 {
+	// The table of blocks does not change between the two dumps.
+	Untracked++;
 	std::string D[2] = {DumpAll(OURS), DumpAll(ORIGINAL)};
+	Untracked--;
+	ApplyPendingFrees();
 	if (LogFile != NULL)
 		fprintf(LogFile, "== %s %s\n%s\n%s\n", KindNames[Kind], OperationName, Log[OURS].c_str(), D[OURS].c_str());
 	CHECK(Log[OURS] == Log[ORIGINAL], "Dialogs %s (%s): logs differ\n  ours: %s\n  orig: %s", OperationName,
@@ -1684,6 +1839,7 @@ static void TestErrorReport()
 		Log[OURS].clear();
 		Log[ORIGINAL].clear();
 		Testing = false;
+		ReleaseFreedBlocks();
 	}
 }
 
@@ -1695,6 +1851,13 @@ void TestDialogs()
 		setvbuf(stdout, NULL, _IONBF, 0);
 	if (getenv("DG_LOGS") != NULL)
 		LogFile = fopen(getenv("DG_LOGS"), "w");
+	// DG_HEAPSHIFT=<bytes>: a block of that size, allocated first and kept, moves
+	// the heap layout (the dump must not depend on it).
+	if (getenv("DG_HEAPSHIFT") != NULL) {
+		size_t Shift = strtoul(getenv("DG_HEAPSHIFT"), NULL, 0);
+		if (Shift > 0)
+			memset(malloc(Shift), 0, Shift);
+	}
 	PatchImage();
 	InitSkins();
 	Global<int>(0x71c450) = NumberOfSkins;
@@ -1713,6 +1876,10 @@ void TestDialogs()
 		OurTimerVtable = *(void **)&Probe;
 	}
 	Surface = new TDGSurface;
+	BlockHeap = HeapCreate(0, 0, 0);
+	Blocks = new TBlocks();
+	PendingFrees = new std::vector<void *, TBlockAllocator<void *>>();
+	InitRanges();
 	PatchCallees();
 	CheckCompareNames();
 	for (int s = 0; s < 2; s++) {
@@ -1758,12 +1925,19 @@ void TestDialogs()
 		Log[OURS].clear();
 		Log[ORIGINAL].clear();
 		Testing = false;
+		ReleaseFreedBlocks();
 	}
 	for (int s = 0; s < 2; s++) {
 		delete Receiver[s];
 		delete ParentWindow[s];
 	}
 	RestoreAll();
+	if (getenv("DG_BLOCKS") != NULL) {
+		int Live = 0, Freed = 0;
+		for (auto &B : *Blocks)
+			(B.second.Freed ? Freed : Live)++;
+		fprintf(stderr, "Dialogs: blocks left %d live, %d freed\n", Live, Freed);
+	}
 	if (LogFile != NULL)
 		fclose(LogFile);
 	int MinKind = 1 << 30, MinOperation = 1 << 30;
