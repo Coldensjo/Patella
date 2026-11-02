@@ -675,6 +675,8 @@ static bool Skipped(const char *Name)
 #define TestMainWindow(...) RUN_TEST(TestMainWindow, __VA_ARGS__)
 #define TestCommunication(...) RUN_TEST(TestCommunication, __VA_ARGS__)
 #define TestControl(...) RUN_TEST(TestControl, __VA_ARGS__)
+#define TestNetwork(...) RUN_TEST(TestNetwork, __VA_ARGS__)
+#define TestMainFrm(...) RUN_TEST(TestMainFrm, __VA_ARGS__)
 
 int main(int argc, char **argv)
 {
@@ -769,6 +771,16 @@ int main(int argc, char **argv)
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
+	if (Only != NULL && strcmp(Only, "Network") == 0) {
+		TestNetwork();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
+	if (Only != NULL && strcmp(Only, "MainFrm") == 0) {
+		TestMainFrm();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
 	if (Only != NULL && strcmp(Only, "MapWindow") == 0) {
 		TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 		printf("%d checks, %d failures\n", Checks, Failures);
@@ -816,6 +828,8 @@ int main(int argc, char **argv)
 	TestContainer();
 	TestRegexp();
 	TestErrors(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+	TestNetwork();
+	TestMainFrm();
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif

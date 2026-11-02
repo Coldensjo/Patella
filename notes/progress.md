@@ -100,8 +100,10 @@ None.
 
 ## Last difftest
 
-16,685,370 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(issue #35, branch issue-35, full build.cmd, November 2, 2026: the line numbers of every compared exception
+16,848,752 checks against the original + 67 in sysinctest.exe + 1,134,513 in communicationtest.exe, 0 failures;
+3,201 vlong checks, 0 failures (main after merging #36 and #37, full build.cmd, November 2, 2026: #37 added
+Network 74,928 + 38,878 and MainFrm 31,424 + 18,152 to difftest.exe, every other count unchanged; #36 added
+communicationtest.exe. Before: issue #35, branch issue-35, full build.cmd, November 2, 2026: the line numbers of every compared exception
 now compared exactly; every count, the error rounds' too, is main's: the line pairs' checks became equality
 checks, one per pair as before. Main after merging #34's third part (issue-34c): the second part's 15,258,447 plus the error rounds of
 Dialogs 200,285 and DialogElements 1,226,638. The second part (issue-34b): the first part's 14,745,663 plus the error rounds of
@@ -438,6 +440,19 @@ no total. Full build.cmd, November 2, 2026).
   (ctime, localtime, ...) with the test's, so it cannot see such differences; tools/compare_files.py runs the
   real executables. Look for more when a session writes or sends text the CRT formats (asctime, strftime,
   printf's %g/%e, ...).
+- Network.cpp and MainFrm.cpp (issue #37): networktest.cpp and mainfrmtest.cpp `#include` the sources (build.cmd
+  links neither file itself any more), so a test reaches their statics by name; DIFFTEST_ONLY=Network (NW_TRACE=1,
+  2 prints every fake call, NW_LOGS=<file>, NW_ROUNDS=<n>) and DIFFTEST_ONLY=MainFrm (MF_TRACE, MF_LOGS, MF_ROUNDS).
+  They fake MFC at the calls into it (the image's MFC functions jump to the fakes; the shim's declarations are the
+  tests' definitions): a new test that needs CWnd/CFrameWnd/CAsyncSocket members gets them from there.
+  playertest.cpp's stubs call StubCalled(__FUNCTION__) now: identical abort() bodies were folded by the linker into
+  one function, so redirecting one stub redirected all of them. A test that makes a user32 fake throw must
+  remember that /EHa keeps our handlers where /EHsc (both real builds) drops them (try blocks that call only C
+  functions: MainFrm.cpp's AddFrameSize and ExitProgram).
+- tools/compare_network.py (issue #37, notes/network.md): crafted and fuzzed server streams for both clients
+  through tools/proxy.py's replay, whose s2c events can now carry frame_hex, xtea_key, inner, hold, pieces
+  (piece_delay) and cut, and Proxy(refuse=("login",)) leaves a port closed. A new scenario is an entry in its
+  scenarios(); --only, --list, --repeat (Tibia.exe again where the clients differ).
 - tools/compare_files.py (issue #21) reuses compare_traffic.py's set-up through set_folder(); its replay()
   runs any session(driver, wait, proxy) against recorded or crafted server packets (connection(),
   s2c(), c2s_expected(), close_event() build a script). tools/client_state.py names more Tibia.exe vtables

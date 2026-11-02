@@ -21,6 +21,18 @@ modulus) decrypts it. All later packets both ways are [u16 size][XTEA([u16 lengt
 [padding to 8 bytes])] (src/Network.cpp SendCommand/PrepareNextPacket) and are decrypted
 with that key.
 
+Crafted and fuzzed server streams (issue #37, tools/compare_network.py): a replayed s2c event
+may also say how its frame is made and delivered:
+  "frame_hex": these bytes instead of the encrypted payload (a broken frame);
+  "xtea_key": encrypt with this key (hex, 16 bytes) instead of the client's (wrong encryption);
+  "inner": the frame's inner length (normally the payload's; bad padding, wrong lengths);
+  "hold": true: keep the frame and send it together with the next one (coalesced frames);
+  "pieces": [n, ...]: send the bytes in pieces of these sizes (repeated), "piece_delay" seconds
+      apart (fragmented frames, slow reads);
+  "cut": n: send only the first n bytes (of the held ones and this frame) and close the
+      connection (a disconnect inside or between frames).
+Proxy(..., refuse=("login",)) does not listen on that port (connection refused).
+
 The recording is a JSON-lines file, one object per event:
   {"t": seconds since the proxy started, "conn": connection number (from 1), "kind":
    "login"/"game", "dir": "c2s"/"s2c"/"close", "raw": the frame as it went over the wire
@@ -299,14 +311,16 @@ class Connection:
 		self.key = None
 		self.closed = False
 		self.lock = threading.Lock()
+		self.pending = b""  # replay: held frames (coalescing)
 
 
 class Proxy:
 	"""Live recording (replay=None) or replay of a recorded session (replay=list of events)."""
 
 	def __init__(self, record_path, rsa_key=None, replay=None, login_port=PROXY_LOGIN_PORT,
-			game_port=PROXY_GAME_PORT, log=None):
+			game_port=PROXY_GAME_PORT, log=None, refuse=()):
 		self.record_path = record_path
+		self.refuse = refuse
 		self.rsa_key = rsa_key or load_private_key()
 		self.replay = replay
 		self.login_port = login_port
@@ -351,7 +365,9 @@ class Proxy:
 	# lifecycle
 
 	def __enter__(self):
-		for port in (self.login_port, self.game_port):
+		for kind, port in (("login", self.login_port), ("game", self.game_port)):
+			if kind in self.refuse:
+				continue
 			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			sock.bind(("127.0.0.1", port))
 			sock.listen(4)
@@ -558,14 +574,15 @@ class Proxy:
 					delay = (recorded["t"] - trigger_time) - (time.time() - trigger_real)
 					if delay > 0:
 						time.sleep(delay)
-					payload = bytes.fromhex(recorded["plain"])
-					frame = encrypt_frame(payload, conn.key)
+					frame = self.build_frame(conn, recorded)
 					self.record({"t": self.now(), "conn": conn.number, "kind": conn.kind,
-						"conn_ordinal": conn.ordinal, "dir": "s2c", "raw": frame.hex(), "plain": recorded["plain"],
+						"conn_ordinal": conn.ordinal, "dir": "s2c", "raw": frame.hex(), "plain": recorded.get("plain", ""),
 						"pad": "", "replayed": index})
-					conn.client.sendall(frame)
+					self.deliver(conn, frame, recorded)
 					self.last_s2c = time.time()
 					index += 1
+					if conn.closed:
+						break
 				elif recorded["dir"] == "c2s":
 					self.set_busy(conn, False)
 					got = self.wait_received(conn, received, 60)
@@ -606,6 +623,46 @@ class Proxy:
 			self.set_busy(conn, False)
 			with self.lock:
 				self.active -= 1
+
+	def build_frame(self, conn, event):
+		"""The frame of a replayed s2c event (the crafted forms: see the module's text)."""
+		if "frame_hex" in event:
+			return bytes.fromhex(event["frame_hex"])
+		payload = bytes.fromhex(event["plain"])
+		key = xtea_key(bytes.fromhex(event["xtea_key"])) if "xtea_key" in event else conn.key
+		if "inner" in event:
+			plain = struct.pack("<H", event["inner"] & 0xffff) + payload
+			plain += bytes((-len(plain)) % 8)
+			body = xtea_encrypt(plain, key)
+			return struct.pack("<H", len(body)) + body
+		return encrypt_frame(payload, key)
+
+	def deliver(self, conn, frame, event):
+		"""Sends a frame as the event says: held for the next one, in pieces, or cut off with a close."""
+		data = conn.pending + frame
+		conn.pending = b""
+		if event.get("hold"):
+			conn.pending = data
+			return
+		cut = event.get("cut")
+		if cut is not None:
+			data = data[:cut]
+		pieces = event.get("pieces")
+		if pieces:
+			position = 0
+			i = 0
+			while position < len(data):
+				size = max(1, pieces[i % len(pieces)])
+				conn.client.sendall(data[position:position + size])
+				position += size
+				i += 1
+				if position < len(data):
+					time.sleep(event.get("piece_delay", 0.0))
+		elif data:
+			conn.client.sendall(data)
+		if cut is not None:
+			time.sleep(0.2)
+			self.close_conn(conn, "server")
 
 	def replay_reader(self, conn, received):
 		try:

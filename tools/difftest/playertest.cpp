@@ -17,34 +17,19 @@
 // --- Link stubs for Player.cpp (MFC shim declarations and callees that are
 // not part of the test build). None of them is called by the tests.
 
-#define STUB { abort(); }
+// Each stub has a body of its own (the function's name): the linker folds
+// identical functions, and mainfrmtest.cpp redirects the Control.cpp stubs
+// one by one. The MFC members MainFrm.cpp calls are mainfrmtest.cpp's fakes,
+// Network.cpp is compiled into networktest.cpp (issue #37).
+[[noreturn]] static void StubCalled(const char *Name)
+{
+	printf("stub %s called\n", Name);
+	abort();
+}
+#define STUB { StubCalled(__FUNCTION__); }
 // For MainFrm.cpp.
-CWinApp *AfxGetApp() STUB
-int CWnd::OnCreate(LPCREATESTRUCT) STUB
-BOOL CWnd::OnSetCursor(CWnd *, UINT, UINT) STUB
-void CWnd::OnClose() STUB
-void CWnd::OnDestroy() STUB
-void CWnd::OnSize(UINT, int, int) STUB
-CFrameWnd::CFrameWnd() { m_hWnd = NULL; }
-CFrameWnd::~CFrameWnd() {}
-BOOL CWnd::GetWindowPlacement(WINDOWPLACEMENT *) const STUB
-BOOL CWnd::SetWindowPlacement(const WINDOWPLACEMENT *) STUB
-BOOL CWnd::ModifyStyle(DWORD, DWORD, UINT) STUB
-BOOL CWnd::ModifyStyleEx(DWORD, DWORD, UINT) STUB
-BOOL CWnd::SetWindowPos(const CWnd *, int, int, int, int, UINT) STUB
-LRESULT CWnd::Default() STUB
-CWnd *PASCAL CWnd::FromHandle(HWND) STUB
-const CWnd CWnd::wndTopMost = CWnd();
-const CWnd CWnd::wndNoTopMost = CWnd();
-BOOL CWnd::DestroyWindow() STUB
-BOOL CWnd::PreCreateWindow(CREATESTRUCT &) STUB
-void CWnd::MoveWindow(int, int, int, int, BOOL) STUB
 bool CloseRequest() STUB
-const char *GetResolvedIPAddress() STUB
-void ConnectToLoginServer() STUB
-void Disconnect(bool) STUB
 void ExitControl() STUB
-void GetErrorMessage(char *, int, int) STUB
 void InitControl(bool) STUB
 void InitWindow(HWND, void (*)(), void (*)(), void (*)(int), void (*)(const char *)) STUB
 void KeyPress(int) STUB
@@ -55,9 +40,6 @@ void MouseWheel(int, int, int) STUB
 void Resize(int, int) STUB
 void RightButtonDown(int, int, int) STUB
 void RightButtonUp(int, int, int) STUB
-void SetConnectionTimeout(int) STUB
-void SetServerError(int) STUB
-void SetServerIPAddress(const char *) STUB
 void TimerEvent() STUB
 BOOL CWnd::ShowWindow(int) STUB
 const RECT CFrameWnd::rectDefault = {0, 0, 0, 0};
@@ -68,7 +50,6 @@ BOOL CWinThread::OnIdle(LONG) STUB
 CWinApp::CWinApp(LPCTSTR) { m_pMainWnd = NULL; m_lpCmdLine = NULL; }
 CWnd *AfxGetMainWnd() STUB
 BOOL AfxRegisterClass(WNDCLASS *) STUB
-HINSTANCE AfxGetInstanceHandle() STUB
 HINSTANCE AfxGetResourceHandle() STUB
 WNDPROC AfxGetAfxWndProc() STUB
 
@@ -88,9 +69,6 @@ const int ClassNameCode[11] = {57, 193, 225, 58, 140, 118, 195, 214, 239, 244, 1
 void Redraw(bool) STUB
 void MouseMove(int, int) STUB
 void ProcessEvents() STUB
-void ShutdownConnection() STUB
-void SetTestServerAddress(const char *) STUB
-void SetTestServerPort(int) STUB
 
 typedef void (__cdecl *TextFn)(char *);
 

@@ -542,7 +542,8 @@ callcheck differences, caller integration and differential coverage.
   MainWindow and ModalWindow.
 - **Tests**: TranslateKey is compared for all keys, flags and modifiers; the
   rest needs MFC and the window system. MainFrm.cpp is linked into the
-  difftest against stubs.
+  difftest against stubs. (Since issue #37 every function is compared with
+  MFC faked at its calls: "Network.cpp and MainFrm.cpp (issue #37)" below.)
 
 ## Order of the GUI files
 
@@ -4628,3 +4629,138 @@ Claude Opus 5.5 (issue #36), November 2, 2026.
   114,595 and its error round 163,552), vlong 3,201, 0 failures, "build.cmd: all tests passed". Alone:
   DIFFTEST_ONLY=Communication about 8 s, Control about 2 s. compile-check clean with real MFC and with
   TIBIA_MFC_SHIM=1; tools\build-patella.cmd 0 warnings, resources 0 differences; tools/lines.py check 0 mismatches.
+## Network.cpp and MainFrm.cpp (issue #37)
+
+Claude Opus 5.5 (issue #37), November 2, 2026. Two lines of comparison: the difftest (networktest.cpp,
+mainfrmtest.cpp: every function in the child against the original's code, logs and state after random
+operations, an error round) and the real clients (tools/compare_network.py: crafted and fuzzed server streams
+through tools/proxy.py's replay, notes/network.md).
+
+- **The files are compiled into their tests** (high). networktest.cpp `#include`s src/Network.cpp and
+  mainfrmtest.cpp src/MainFrm.cpp (build.cmd no longer links MainFrm.cpp itself): their statics (Network.cpp's
+  server list, buffers, socket, timeouts; MainFrm.cpp's cursors, button flags, wheel remainder, class name) are
+  then the tests' and are set and compared by name; the image's are at the addresses of the source comments. The
+  code is the same; only the translation unit differs. The alternative (finding our statics by sentinel values,
+  surfacegltest.cpp's way) would need one search per static.
+- **The MFC boundary** (high). MFC is linked statically into both clients (MFC 7.1's nafxcw.lib in the image,
+  MFC 14 in Patella.exe), so their MFC code differs by design. The tests compare at the calls into MFC: the image's
+  MFC functions (CAsyncSocket's constructor, destructor, Create, Connect, Close, Receive, Send, AfxSocketInit;
+  CFrameWnd's constructor, destructor, OnCreate, OnSize, OnClose, OnDestroy, OnSetCursor, PreCreateWindow; CWnd's
+  Default, Get/SetWindowPlacement, ModifyStyle/Ex, SetWindowPos, MoveWindow, FromHandle, DestroyWindow;
+  AfxGetModuleState, through which MFC 7.1's inline AfxGetApp and AfxGetInstanceHandle read the module state)
+  start with a jump to the tests' fakes, and the shim's declarations (the difftest builds with the shim) are
+  defined by the tests as the same fakes (they were playertest.cpp's abort() stubs). What MFC itself does
+  (message dispatch through the message map, CWnd::Default's DefWindowProc, the socket notifications' window)
+  is not the reconstruction's and is compared only through the real clients (compare_traffic.py,
+  compare_files.py, compare_rendering.py, compare_network.py).
+- **Windows functions** (high). The image calls ws2_32 by ordinal (103 WSAAsyncGetHostByName, 111
+  WSAGetLastError, 108 WSACancelAsyncRequest, 22 shutdown, 12 inet_ntoa): its import slots get the fakes;
+  difftest.exe does not link ws2_32, networktest.cpp's NWSlot_ variables are the `__imp__` symbols
+  (/alternatename, surfacegltest.cpp's way). user32 (PostMessageA, Get{Client,Window}Rect, IsIconic, IsZoomed,
+  Set/KillTimer, SetCursor, GetCursorPos, PtInRect, ClientToScreen, ScreenToClient, SetCapture, ReleaseCapture,
+  GetSystemMetrics, LoadCursorA, DestroyCursor) and shell32's ShellExecuteA through both import tables
+  (surfacedx9test.cpp's way). rand() is a fake on both sides (the image's 0x511f33 and our CRT's): one MSVC
+  generator per side from the same seed before every operation, so SendCommand's padding is compared too.
+- **playertest.cpp's stubs** (high). The linker folded the identical `{ abort(); }` stubs into one function, so
+  redirecting one (as mainfrmtest.cpp does with Control.cpp's LeftButtonDown, KeyPress, ...) redirected all;
+  each stub now calls StubCalled(__FUNCTION__) (a body of its own). Its stubs of Network.cpp's functions and
+  of the MFC members MainFrm.cpp calls are gone (now the real file and mainfrmtest.cpp's fakes). If Control.cpp
+  is linked into the difftest later (issue #36), its real functions replace the stubs and mainfrmtest.cpp's
+  Redirect of them works the same (restored at the end).
+- **The C functions never throw in MainFrm's error round** (high). AddFrameSize's and ExitProgram's TENDs (and
+  KeyUp's) have no handlers in the binary: their try blocks call only C functions (GetClientRect,
+  GetWindowRect, PostMessageA; KeyUp only TranslateKey, inlined), which /EHsc assumes cannot throw, so VC7.1
+  dropped the handlers (notes above, "MainFrm.cpp and the MainFrm/MainWindow gap"; issue #24 found the same in our
+  /EHsc compile: Patella.exe has no handlers there either). The difftest compiles with /EHa, which keeps ours, so
+  a throwing user32 fake made our AddFrameSize wrap the exception ("MainFrm.cpp 388") where the original lets it
+  through (58 failures in the first run, all through AddFrameSize and ExitProgram). A C function cannot throw a
+  C++ exception in either client, so the user32/shell32 fakes do not throw in the round; every TEND of the file
+  is still reached through the MFC and game fakes.
+- **Compared** (Network.cpp, all 44 functions of 0x4ca0e0-0x4cf982): InitServerList, SetTestServerPort,
+  ResetServerAvailability, SetConnectionTimeout, SetNetworkWindow, SetTestServerAddress, SetServerError,
+  SetServerIPAddress, GetCurrentServer, GetServerErrorCode, BeginCommand, SendByte, SendWord, SendQuad,
+  SendString, SendBytes, SendCommand (both forms, the padding, the encryption), PrepareNextPacket,
+  GetNextCommand, GetByte, GetWord, GetQuad, both GetStrings, GetBytes, CheckConnectionTimeout, GetErrorMessage
+  (every error code it names, both types, the test server's text), ResolveHostname, GetResolvedIPAddress,
+  CreateSocket, ConnectSocket, SetSymmetricKey, Disconnect (its draining loop), ConnectToLoginServer (the
+  recursion over the four servers), ConnectToGameServer, TSocket's OnConnect, OnReceive (frames in pieces,
+  coalesced, empty, longer and shorter inner lengths, Receive returning 0 or an error), OnClose and OnSend
+  (0x4eac00, empty), ShutdownConnection, InitNetwork, ExitNetwork; the compiler's TSocket destructor and scalar
+  deleting destructor (0x4ca2f0, 0x4ca2d0: the image's own, run by every `delete Socket`), CObject's inline
+  operator delete (0x4ca2c0, in the unwind funclet of `new TSocket`: not reached, nothing throws in
+  CAsyncSocket's constructor) and TBuffer::SetSize (0x4ca300, Utils.h). The error round reaches 50 of the
+  file's 54 error sites (every assertion, TERROR and TEND; PROGRAM_ERROR_SOCKET_INIT); not reachable: 355 and
+  398 (the catch (...) around the XTEA block loops: EncryptBlock and DecryptBlock cannot throw), 698
+  (SetSymmetricKey's catch (const char *): SetKey throws nothing) and 961 (ExitNetwork's TEND: only the socket's
+  destructor is inside, and MFC's does not throw; ours is noexcept). BeginCommand's TEND (275) needs a send
+  buffer smaller than its 5 header bytes, which the test sets (the client's is 0x800).
+- **Compared** (MainFrm.cpp, all 36 functions of 0x4a8210-0x4abec8): TranslateKey (also playertest.cpp's
+  exhaustive check), OutputErrorInformations (the image writes into a fake ostream: its operator<<(const char *)
+  0x402630, operator<<(int) 0x402f00 and put 0x402c00 are hooked only around that call, because the image's
+  TMyException constructors use them too; ours into a std::ostringstream), the constructor, the destructor,
+  ExitProgram, CloseProgram, SetDisplayMode (every view mode and engine), OpenURL, PreCreateWindow,
+  OnHostResolved (with and without an error, in every connection state), OnActivateApp, AddFrameSize, OnSize
+  (the minimum 550x450 and its neighbours, minimised), OnGetMinMaxInfo, OnNcHitTest, OnTimer, OnClose (Closing,
+  CloseRequest's answer), DestroyWindow, OnDestroy, UpdateMouseCursor (every cursor number), OnSetCursor (inside
+  and outside the client area, fullscreen), the six mouse button handlers (capture, fullscreen screen points),
+  OnCaptureChanged, OnMouseWheel (notches, remainders, both signs), KeyDown, KeyUp, OnKeyDown/OnSysKeyDown
+  (0x4ab7c0) and OnKeyUp/OnSysKeyUp (0x4ab7d0) with every modifier and the extended flag (Alt+F4), OnChar,
+  SetDefaultWindowPosition, OnCreate, OnDisplayChange (screen sizes at and around the window's). Not called:
+  the scalar deleting destructor 0x4ab9b0 (compiler-generated: the destructor and operator delete; MFC's
+  PostNcDestroy deletes the frame) and the message map (data, MFC's dispatch). The error round reaches all 29
+  TEND sites the binary has except the destructor's 123: our destructor cannot throw (issue #34, CFrameWnd's
+  noexcept destructor), so the round never makes ExitControl throw from it.
+- **Results** (high): no difference in either file. networktest.cpp and mainfrmtest.cpp found no reconstruction
+  bug; the first runs' failures were the tests' own (a side-dependent random call, a stale socket stream after a
+  reconnect, negative indexes in the send program) and the /EHa artifact above.
+- **Mutation check** (high): 28 changes, each alone (build/scratch/mutate37.py of the issue's worktree): Network.cpp
+  15 (the login port, the test server's error code, the server list's wrap, the overload check, the padding's
+  rand() range, the packet header's length, OnReceive's error check, an error text, ResolveHostname's timeout,
+  Disconnect's shutdown mode, ConnectToLoginServer's state, OnConnect's state, a TEND line, ConnectToGameServer's
+  message, CheckConnectionTimeout's comparison), MainFrm.cpp 13 (Alt+F4's key, OnChar's letters, the wheel's
+  remainder, OnSize's minimum, OnLButtonUp's capture release, SetDisplayMode's engine, the wait cursor,
+  OnCaptureChanged's view mode, OnDisplayChange's comparison, OnHostResolved's error type, the constructor's view
+  mode, CloseProgram's RunPatch, a TEND2's order): all 28 detected (9 to 26,823 failures). Three needed better
+  inputs first (OnSize's and OnDisplayChange's boundaries, Alt+F4 more often), one was an equivalent mutant
+  (OnReceive's `Count == 0`: a Receive that returns 0 adds no data, so the scan finds nothing new) and was
+  replaced. Restored: 0 failures.
+- **The real clients: replays, no server** (high). tools/compare_network.py (notes/network.md) plays crafted and
+  fuzzed streams made from issue #19's live recording of Tibia.exe (copied to build\network) to both clients
+  through tools/proxy.py's replay, which can now break, re-key, re-length, hold, split and cut frames and leave a
+  port closed. The test server was not started.
+- **"Disconnects at every point"** (medium): every structural point of the login answer (before the frame,
+  after one and both size bytes, inside the body, at its last byte, after the frame, inside the second frame's
+  size and body and at its last byte) and seven points of the game stream (0, 1, 2, 3, 100 and half the bytes of
+  the map frame, inside the second frame), not every byte offset: between two such points the client's code
+  takes the same path (OnReceive waits for the rest of a frame), and each run takes about 20 s.
+- **Variable scenarios** (high): a frame under a wrong XTEA key, and an empty frame coalesced with the next frame
+  (PrepareNextPacket then takes the next frame's undecrypted bytes as the inner length and the commands), make
+  the client read garbage that depends on its session key, which rand() makes anew in every run (seeded with
+  timeGetTime, notes/traffic.md). They are run twice with Tibia.exe and reported as variable only when its two
+  runs differ as well (they did, every time); the outcome is the same kind in both clients (a critical error
+  box or a reconnection, depending on the garbage).
+- **An arrival-timing difference, not the reconstruction's** (medium-high). The first full run had three frames
+  (two empty ones and the map) sent with three separate sends: Patella.exe, consistently, read the first empty
+  frame alone and took the login connection's stale bytes still in ReceiveData as its inner length (a critical
+  error, "unknown packet type during game"), Tibia.exe read all three at once and stopped with GetNextCommand
+  returning -1 while the map frame waited (the original's odd behaviour after an empty frame: the second empty
+  frame is the first one's inner length, the buffer's Position equals its Size, and no further FD_READ comes).
+  Sent so that the arrival is fixed (the empty frame alone and the map frame 0.5 s later; the two empty frames
+  and the map frame in one send) both clients do exactly the same, and the difftest compares this code with
+  empty frames in every arrangement against the original's machine code (no difference). So the clients differ
+  only in when their message loop reads (Patella.exe answers FD_READ sooner); the scenario was replaced by the
+  fixed-arrival ones.
+- **The proxy's own socket errors are not compared** (high): after the critical error box a client may exit
+  with server data still unread, and Windows then resets the connection; whether it does depends on when the
+  client exits (game-bad-size: once for Patella.exe in the final run, never in four other runs of either client).
+  The packets, the boxes, error.txt and the exit are compared in full; the proxy's mismatches too.
+- **Results of the real clients** (high): 51 scenarios, 47 the same, 4 variable (proven by Tibia.exe's second
+  runs), no difference (notes/network.md). No reconstruction bug; src/ unchanged.
+- **Totals** (full tools\difftest\build.cmd, November 2, 2026): difftest.exe 16,848,752 checks, sysinctest.exe 67,
+  vlong 3,201, 0 failures, "build.cmd: all tests passed"; main's 16,685,370 plus Network 74,928, its error round
+  38,878, MainFrm 31,424, its error round 18,152 (alone: Network 76,188 and 38,878, MainFrm 31,916 and 18,152: the
+  counted parts start from another Random() state in the full run). Both tests put Random()'s state back at the
+  end, so every later count (MapWindow, MainWindow and their rounds) is main's; without that MainWindow's round
+  had 41,985 checks instead of 43,150. compile-check clean with real MFC and with TIBIA_MFC_SHIM=1; lines.py check
+  0 mismatches (src/ unchanged, so Patella.exe was built only for the real-client runs: 0 warnings, resources 0
+  differences).
