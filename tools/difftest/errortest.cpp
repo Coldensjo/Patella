@@ -27,6 +27,7 @@
 #include "../../src/Preferences.h"
 #include "../../src/Help.h"
 #include "../../src/graphics.h"
+#include "../../src/Script.h"
 #include <direct.h>
 #include <time.h>
 #include <map>
@@ -137,6 +138,14 @@ static void Compare(const char *What, const TThrown &Ours, const TThrown &Origin
 	CHECK(A == B && OurLines.size() == OriginalLines.size(), "Errors %s: ours %s, original %s", What,
 		Ours.Describe().c_str(), Original.Describe().c_str());
 	MapLines(What, OurLines, OriginalLines);
+}
+
+// Both sides as two calls; returns what the original threw.
+template <class F, class G> static TThrown Both2(const char *What, F Ours, G Original)
+{
+	TThrown A = OurThrow(Ours), B = ImageThrow(Original);
+	Compare(What, A, B);
+	return B;
 }
 
 #define COMPARE(What, OurCall, ImageCall) Compare(What, OurThrow([&] { OurCall; }), ImageThrow([&] { ImageCall; }))
@@ -946,6 +955,184 @@ static void TestWrapping(const char *ExePath)
 	At<void (__cdecl *)()>(0x4d79b0)();
 }
 
+// --- Script.cpp: the tokenizer's and the writer's errors -------------------
+
+typedef void (__fastcall *ScriptFn)(void *This, void *);
+typedef void (__fastcall *ScriptStrFn)(void *This, void *, const char *);
+typedef void (__fastcall *ScriptIntFn)(void *This, void *, int);
+
+static std::string ErrorScript()
+{
+	// Mostly valid tokens with errors in between: long identifiers, open
+	// strings and coordinates, stray characters, bytes, a missing end.
+	static const char *const Parts[] = {
+		"Name", "x_1", "123", "-5", "\"text\"", "\"open", "\"esc\\\"aped\\n\"", "[1,2,3]", "[1,2", "[a]", "1-2-3",
+		"=", ",", "<", ">", "<=", ">=", "<>", "-", "->", "#comment\n", "\n", " ", "\t", "@", "\\", "\"\n\"", "0x",
+		"[-1,-2,-3]", "\"", "[", "1-", "1-2-", "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz",
+	};
+	std::string Text;
+	int Count = (int)(ErRandom() % 30);
+	for (int i = 0; i < Count; i++) {
+		Text += Parts[ErRandom() % (sizeof(Parts) / sizeof(Parts[0]))];
+		if (ErRandom() % 3 == 0)
+			Text += " ";
+	}
+	if (ErRandom() % 6 == 0)
+		Text += std::string(4100, 'a'); // longer than an identifier or a string may be
+	return Text;
+}
+
+static void WriteText(const std::string &Name, const std::string &Text)
+{
+	FILE *File = fopen(Name.c_str(), "wb");
+	fwrite(Text.data(), 1, Text.size(), File);
+	fclose(File);
+}
+
+static void TestScript()
+{
+	std::string Work = std::string(getenv("TEMP") != NULL ? getenv("TEMP") : ".") + "\\errortest";
+	_mkdir(Work.c_str());
+	std::string Name = Work + "\\script.txt", Missing = Work + "\\missing\\none.txt";
+	static uint8 Original[sizeof(TReadScriptFile) + 16];
+	for (int Round = 0; Round < 400; Round++) {
+		WriteText(Name, ErrorScript());
+		At<ScriptFn>(0x4df550)(Original, NULL);
+		TReadScriptFile Ours;
+		switch (Round % 8) {
+		case 0:
+			Both2("TReadScriptFile::nextToken (no file)", [&] { Ours.nextToken(); },
+				[&] { At<ScriptFn>(0x4dfb60)(Original, NULL); });
+			break;
+		case 1:
+			Both2("TReadScriptFile::open (missing)", [&] { Ours.open(Missing.c_str()); },
+				[&] { At<ScriptStrFn>(0x4df6d0)(Original, NULL, Missing.c_str()); });
+			break;
+		default:
+			Ours.open(Name.c_str());
+			At<ScriptStrFn>(0x4df6d0)(Original, NULL, Name.c_str());
+			if (Round % 8 == 2)
+				Both2("TReadScriptFile::open (open)", [&] { Ours.open(Name.c_str()); },
+					[&] { At<ScriptStrFn>(0x4df6d0)(Original, NULL, Name.c_str()); });
+			for (int i = 0; i < 100; i++) {
+				TThrown A = Both2("TReadScriptFile::nextToken", [&] { Ours.nextToken(); },
+					[&] { At<ScriptFn>(0x4dfb60)(Original, NULL); });
+				if (A.Kind != TThrown::NOTHING || Ours.Token == ENDOFFILE)
+					break;
+				int Getter = (int)(ErRandom() % 6);
+				if (Getter == 0)
+					A = Both2("TReadScriptFile::getIdentifier", [&] { Ours.getIdentifier(); },
+						[&] { At<ScriptFn>(0x4e0420)(Original, NULL); });
+				else if (Getter == 1)
+					A = Both2("TReadScriptFile::getNumber", [&] { Ours.getNumber(); },
+						[&] { At<ScriptFn>(0x4e0450)(Original, NULL); });
+				else if (Getter == 2)
+					A = Both2("TReadScriptFile::getString", [&] { Ours.getString(); },
+						[&] { At<ScriptFn>(0x4e0470)(Original, NULL); });
+				else if (Getter == 3)
+					A = Both2("TReadScriptFile::getSpecial", [&] { Ours.getSpecial(); },
+						[&] { At<ScriptFn>(0x4e0490)(Original, NULL); });
+				if (A.Kind != TThrown::NOTHING)
+					break;
+			}
+			break;
+		}
+		Ours.close();
+		At<ScriptFn>(0x4df5d0)(Original, NULL);
+
+		// The writer: open twice, a file that cannot be made, writing without a file.
+		static uint8 Writer[sizeof(TWriteScriptFile) + 16];
+		At<ScriptFn>(0x4df640)(Writer, NULL);
+		TWriteScriptFile OurWriter;
+		std::string Out = Work + "\\written.txt";
+		int Case = (int)(ErRandom() % 6);
+		if (Case == 0) {
+			Both2("TWriteScriptFile::open (missing directory)", [&] { OurWriter.open(Missing.c_str()); },
+				[&] { At<ScriptStrFn>(0x4e04b0)(Writer, NULL, Missing.c_str()); });
+		} else if (Case == 1) {
+			OurWriter.open(Out.c_str());
+			At<ScriptStrFn>(0x4e04b0)(Writer, NULL, Out.c_str());
+			Both2("TWriteScriptFile::open (open)", [&] { OurWriter.open(Out.c_str()); },
+				[&] { At<ScriptStrFn>(0x4e04b0)(Writer, NULL, Out.c_str()); });
+			OurWriter.close();
+			At<ScriptFn>(0x4df660)(Writer, NULL);
+		} else {
+			Both2("TWriteScriptFile::writeLn (no file)", [&] { OurWriter.writeLn(); },
+				[&] { At<ScriptFn>(0x4e0790)(Writer, NULL); });
+			Both2("TWriteScriptFile::writeText (no file)", [&] { OurWriter.writeText("x"); },
+				[&] { At<ScriptStrFn>(0x4e08f0)(Writer, NULL, "x"); });
+			Both2("TWriteScriptFile::writeString (no file)", [&] { OurWriter.writeString("x"); },
+				[&] { At<ScriptStrFn>(0x4e0bb0)(Writer, NULL, "x"); });
+			Both2("TWriteScriptFile::writeNumber (no file)", [&] { OurWriter.writeNumber(5); },
+				[&] { At<ScriptIntFn>(0x4e0ec0)(Writer, NULL, 5); });
+		}
+		At<ScriptFn>(0x4df660)(Writer, NULL);
+	}
+
+	// The binary files: opening, and every access without a file; reading
+	// past the end of a short file.
+	typedef uint32 (__fastcall *ScriptRetFn)(void *This, void *);
+	typedef void (__fastcall *ScriptBytesFn)(void *This, void *, uint8 *, int);
+	static uint8 Reader[sizeof(TReadBinaryFile) + 16], BinaryWriter[sizeof(TWriteBinaryFile) + 16];
+	uint8 Bytes[16];
+	for (int Round = 0; Round < 100; Round++) {
+		std::string Data = RandomPart((int)(ErRandom() % 8));
+		WriteText(Name, Data);
+		At<ScriptFn>(0x4df690)(Reader, NULL);
+		TReadBinaryFile OurReader;
+		bool Open = Round % 3 != 0;
+		if (Open) {
+			OurReader.open(Name.c_str());
+			At<ScriptStrFn>(0x4e1040)(Reader, NULL, Name.c_str());
+		}
+		const std::string &Target = Round % 2 == 0 ? Missing : Name;
+		Both2("TReadBinaryFile::open", [&] { OurReader.open(Target.c_str()); },
+			[&] { At<ScriptStrFn>(0x4e1040)(Reader, NULL, Target.c_str()); });
+		int Offset = (int)(ErRandom() % 12) - 3;
+		Both2("TReadBinaryFile::seek", [&] { OurReader.seek(Offset); }, [&] { At<ScriptIntFn>(0x4e1320)(Reader, NULL, Offset); });
+		for (int i = 0; i < 4; i++) {
+			int Count = (int)(ErRandom() % 5) - 1;
+			switch (ErRandom() % 4) {
+			case 0: Both2("TReadBinaryFile::readByte", [&] { OurReader.readByte(); }, [&] { At<ScriptRetFn>(0x4e1740)(Reader, NULL); }); break;
+			case 1: Both2("TReadBinaryFile::readWord", [&] { OurReader.readWord(); }, [&] { At<ScriptRetFn>(0x4e1a00)(Reader, NULL); }); break;
+			case 2: Both2("TReadBinaryFile::readQuad", [&] { OurReader.readQuad(); }, [&] { At<ScriptRetFn>(0x4e1ba0)(Reader, NULL); }); break;
+			default:
+				Both2("TReadBinaryFile::readBytes", [&] { OurReader.readBytes(Count < 0 ? NULL : Bytes, Count < 0 ? 2 : Count); },
+					[&] { At<ScriptBytesFn>(0x4e1e50)(Reader, NULL, Count < 0 ? NULL : Bytes, Count < 0 ? 2 : Count); });
+				break;
+			}
+		}
+		Both2("TReadBinaryFile::eof", [&] { OurReader.eof(); }, [&] { At<ScriptRetFn>(0x4e15e0)(Reader, NULL); });
+		OurReader.close();
+		At<ScriptFn>(0x4df6b0)(Reader, NULL);
+
+		At<ScriptFn>(0x4df690)(BinaryWriter, NULL);
+		TWriteBinaryFile OurBinary;
+		std::string Out = Work + "\\written.bin";
+		if (Round % 3 == 1) {
+			OurBinary.open(Out.c_str());
+			At<ScriptStrFn>(0x4e21a0)(BinaryWriter, NULL, Out.c_str());
+		}
+		const std::string &WriteTarget = Round % 2 == 0 ? Missing : Out;
+		Both2("TWriteBinaryFile::open", [&] { OurBinary.open(WriteTarget.c_str()); },
+			[&] { At<ScriptStrFn>(0x4e21a0)(BinaryWriter, NULL, WriteTarget.c_str()); });
+		if (Round % 3 == 0) {
+			Both2("TWriteBinaryFile::writeByte", [&] { OurBinary.writeByte(1); }, [&] { At<ScriptIntFn>(0x4e2480)(BinaryWriter, NULL, 1); });
+			Both2("TWriteBinaryFile::writeWord", [&] { OurBinary.writeWord(1); }, [&] { At<ScriptIntFn>(0x4e2750)(BinaryWriter, NULL, 1); });
+			Both2("TWriteBinaryFile::writeQuad", [&] { OurBinary.writeQuad(1); }, [&] { At<ScriptIntFn>(0x4e29e0)(BinaryWriter, NULL, 1); });
+			Both2("TWriteBinaryFile::writeBytes", [&] { OurBinary.writeBytes(Bytes, 2); },
+				[&] { At<ScriptBytesFn>(0x4e2c80)(BinaryWriter, NULL, Bytes, 2); });
+		}
+		OurBinary.close();
+		At<ScriptFn>(0x4df6b0)(BinaryWriter, NULL);
+
+		// InstallPatch: no name, or no patched file "<name>_".
+		const char *Patch = Round % 2 == 0 ? NULL : Missing.c_str();
+		Both2("InstallPatch", [&] { InstallPatch(Patch); }, [&] { At<void (__cdecl *)(const char *)>(0x4e3610)(Patch); });
+	}
+	remove(Name.c_str());
+}
+
 void TestErrors(const char *ExePath)
 {
 	Trace = getenv("ER_TRACE") != NULL && atoi(getenv("ER_TRACE")) != 0;
@@ -965,6 +1152,9 @@ void TestErrors(const char *ExePath)
 		printf("Errors: %s\n", "TestWrapping");
 	PatchScript(); // the image's stdio, for LoadObjects
 	TestWrapping(ExePath);
+	if (Trace)
+		printf("Errors: %s\n", "TestScript");
+	TestScript();
 	if (Trace)
 		printf("Errors: %s\n", "TestPlayer");
 	TestPlayer();

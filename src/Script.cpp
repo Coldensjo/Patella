@@ -20,10 +20,10 @@
 void TReadScriptFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR("file still open");
+		TERROR_REASON("file still open", Filename);
 	File = fopen(FileName, "rb");
 	if (File == NULL)
-		TERROR("failed to open file");
+		TERROR_REASON("failed to open file", FileName);
 	Line = 1;
 	strcpy(Filename, FileName);
 }
@@ -379,10 +379,10 @@ char TReadScriptFile::getSpecial()
 void TWriteScriptFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR("file still open");
+		TERROR_REASON("file still open", Filename);
 	File = fopen(FileName, "wb");
 	if (File == NULL)
-		TERROR("failed to open file");
+		TERROR_REASON("failed to open file", FileName);
 	Line = 0;
 	strcpy(Filename, FileName);
 }
@@ -446,10 +446,10 @@ void TWriteScriptFile::writeNumber(int Number)
 void TReadBinaryFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR("file still open");
+		TERROR_REASON("file still open", Filename);
 	File = fopen(FileName, "rb");
 	if (File == NULL)
-		TERROR("failed to open file");
+		TERROR_REASON("failed to open file", FileName);
 	strncpy(Filename, FileName, sizeof(Filename));
 }
 
@@ -459,7 +459,7 @@ void TReadBinaryFile::seek(int Offset)
 	if (File == NULL)
 		TERROR("no file open");
 	if (Offset < 0)
-		TERROR1("negative offset", Offset);
+		TERROR1_REASON("negative offset", Offset, Filename);
 	fseek(File, Offset, SEEK_SET);
 }
 
@@ -478,7 +478,7 @@ uint8 TReadBinaryFile::readByte()
 		TERROR("no file open");
 	uint8 Byte;
 	if (fread(&Byte, 1, 1, File) == 0)
-		TERROR("out of data");
+		TERROR_REASON("out of data", Filename);
 	return Byte;
 }
 
@@ -530,17 +530,17 @@ void TReadBinaryFile::readBytes(uint8 *Buffer, int Count)
 	if (Buffer == NULL)
 		TERROR("Buffer==NULL");
 	if ((int)fread(Buffer, 1, Count, File) != Count)
-		TERROR1("out of data", Count);
+		TERROR1_REASON("out of data", Count, Filename);
 }
 
 // 0x4e21a0, lines 706-708
 void TWriteBinaryFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR("file still open");
+		TERROR_REASON("file still open", Filename);
 	File = fopen(FileName, "wb");
 	if (File == NULL)
-		TERROR("failed to open file");
+		TERROR_REASON("failed to open file", FileName);
 	strncpy(Filename, FileName, sizeof(Filename));
 }
 
@@ -550,7 +550,7 @@ void TWriteBinaryFile::writeByte(uint8 Byte)
 	if (File == NULL)
 		TERROR("no file open");
 	if (fwrite(&Byte, 1, 1, File) != 1)
-		TERROR("failed to write file");
+		TERROR_REASON("failed to write file", Filename);
 }
 
 // 0x4e2750, lines 737-742
@@ -584,7 +584,7 @@ void TWriteBinaryFile::writeBytes(const uint8 *Buffer, int Count)
 	if (File == NULL)
 		TERROR("no file open");
 	if (fwrite(Buffer, Count, 1, File) != 1)
-		TERROR1("failed to write file", Count);
+		TERROR1_REASON("failed to write file", Count, Filename);
 }
 
 // 0x4e2f50, line 779. A word with the length, then the characters; longer
@@ -714,7 +714,7 @@ void InstallPatch(const char *FileName)
 	strcpy(Name, FileName);
 	Name[strlen(FileName) - 1] = '_';
 	if (!FileExists(Name))
-		TERROR("file does not exists");
+		TERROR_REASON("file does not exists", Name);
 	remove(FileName);
 	rename(Name, FileName);
 }
