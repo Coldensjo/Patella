@@ -11,6 +11,7 @@
 #pragma once
 
 #include "difftest.h"
+#include <map>
 #include <string>
 
 // What a call threw, comparable between both sides.
@@ -53,6 +54,58 @@ void FreeImageString(void *String);
 TThrown ImageThrowCall(void (*Function)(void *), void *Context);
 template <class F> static void ThrowThunk(void *Context) { (*(F *)Context)(); }
 template <class F> TThrown ImageThrow(F Function) { return ImageThrowCall(ThrowThunk<F>, &Function); }
+
+// Compares what both sides threw (errortest.cpp's comparison, shared since
+// issue #34): kind, type, PROGRAM_ERROR value, message and origin exactly,
+// except the line numbers. Every "<file> <line>: " that starts the message or
+// follows ", reason:\n", and the origin's, is compared with the line replaced,
+// and over the whole run each of our lines must stand for one original line
+// and each original line for one of ours (one map for all tests). Failures
+// are reported as "<Test> <What>: ...". One check per call and one per line
+// pair; ThrownCompared and ThrownThrew count the calls and those in which the
+// original threw.
+void CompareThrown(const char *Test, const char *What, const TThrown &Ours, const TThrown &Original);
+extern int ThrownCompared, ThrownThrew;
+typedef std::map<std::string, std::map<int, int>> TLineMap;
+const TLineMap &ThrownLineMap(); // file -> our line -> the original's line
+
+// The error round of a window or surface test (issue #34): the constructor
+// enables the image's exceptions, Compare compares one pair of calls,
+// Finish disables them again and prints "<Test> errors: N checks, M
+// exceptions compared (K calls that threw)". Its checks are counted in
+// Checks like every other, reported apart from the test's own count.
+// Random() runs from a seed of the round's own (EH_SEED=<n> changes it) and
+// gets its old state back in Finish: the round may use the test's random
+// world builders, and the later tests' inputs stay the same.
+// EH_TRACE=1 prints every comparison.
+struct TErrorRound {
+	const char *Test;
+	int Checks0, Compared0, Threw0;
+	bool Trace, Trace2;
+	uint32 SavedSeed;
+	explicit TErrorRound(const char *Test);
+	void Compare(const char *What, const TThrown &Ours, const TThrown &Original);
+	void Calling(const char *What, const char *Side)
+	{
+		if (Trace2)
+			printf("%s errors: calling %s %s\n", Test, Side, What);
+	}
+	void Finish();
+};
+// The two sides run one after the other (ours first); EH_TRACE=2 names each
+// call before it runs.
+#define ROUND_COMPARE(Round, What, OurCall, ImageCall) \
+	do { \
+		(Round).Calling(What, "ours"); \
+		TThrown Ours_ = OurThrow([&] { OurCall; }); \
+		(Round).Calling(What, "the original"); \
+		(Round).Compare(What, Ours_, ImageThrow([&] { ImageCall; })); \
+	} while (0)
+
+// A function that starts with a jump now is a test's fake (earlier tests
+// redirect some functions for good): such comparisons are skipped.
+bool Redirected(const void *Code);
+bool ImageRedirected(uint32 Address);
 
 // The same for our code: catches PROGRAM_ERROR, TMyException and the rest.
 TThrown ThrownOf(const TMyException &Exception);

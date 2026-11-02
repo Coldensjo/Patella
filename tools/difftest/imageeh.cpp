@@ -426,3 +426,139 @@ TThrown ImageThrowCall(void (*Function)(void *), void *Context)
 	ImageThrowSEH(Function, Context, &Raw);
 	return Result;
 }
+
+// --- Comparing what both sides threw (moved from errortest.cpp) ----------
+
+static TLineMap OursToOriginal, OriginalToOurs;
+int ThrownCompared = 0, ThrownThrew = 0;
+const TLineMap &ThrownLineMap() { return OursToOriginal; }
+
+// "<file> <line>" at Start (a message's start or a "reason:\n"): the
+// position of the line number and its end, or false.
+static bool FindLine(const std::string &Text, size_t Start, size_t *Number, size_t *End)
+{
+	size_t Space = Start;
+	while (Space < Text.size() && Text[Space] != ' ' && Text[Space] != '\n')
+		Space++;
+	if (Space == Start || Space >= Text.size() || Text[Space] != ' ')
+		return false;
+	size_t Digits = Space + 1;
+	if (Digits < Text.size() && Text[Digits] == '-')
+		Digits++;
+	size_t Stop = Digits;
+	while (Stop < Text.size() && Text[Stop] >= '0' && Text[Stop] <= '9')
+		Stop++;
+	if (Stop == Digits || (Stop < Text.size() && Text[Stop] != ':'))
+		return false;
+	*Number = Space + 1;
+	*End = Stop;
+	return true;
+}
+
+struct TLineRef {
+	std::string File;
+	int Line;
+};
+
+// Replaces the line numbers of every "<file> <line>: " that starts the
+// message or follows ", reason:\n", and of the origin "<file> <line>".
+static std::string WithoutLines(const std::string &Text, std::vector<TLineRef> *Lines)
+{
+	std::string Result;
+	size_t Position = 0;
+	size_t Start = 0;
+	for (;;) {
+		size_t Number, End;
+		if (FindLine(Text, Start, &Number, &End)) {
+			Result.append(Text, Position, Number - Position);
+			Result += "#";
+			TLineRef Ref = {Text.substr(Start, Number - 1 - Start), atoi(Text.c_str() + Number)};
+			Lines->push_back(Ref);
+			Position = End;
+		}
+		size_t Next = Text.find(", reason:\n", (std::max)(Position, Start));
+		if (Next == std::string::npos)
+			break;
+		Start = Next + 10;
+	}
+	Result.append(Text, Position, std::string::npos);
+	return Result;
+}
+
+static void MapLines(const char *Test, const char *What, const std::vector<TLineRef> &Ours, const std::vector<TLineRef> &Original)
+{
+	for (size_t i = 0; i < Ours.size() && i < Original.size(); i++) {
+		if (Ours[i].File != Original[i].File)
+			continue; // the messages differ; reported there
+		const std::string &File = Ours[i].File;
+		std::map<int, int> &Forward = OursToOriginal[File];
+		std::map<int, int> &Backward = OriginalToOurs[File];
+		auto F = Forward.find(Ours[i].Line);
+		auto B = Backward.find(Original[i].Line);
+		CHECK((F == Forward.end() || F->second == Original[i].Line) && (B == Backward.end() || B->second == Ours[i].Line),
+			"%s %s: our %s line %d stands for the original's line %d, earlier for %d; the original's line %d earlier for our %d",
+			Test, What, File.c_str(), Ours[i].Line, Original[i].Line, F == Forward.end() ? -1 : F->second, Original[i].Line,
+			B == Backward.end() ? -1 : B->second);
+		Forward[Ours[i].Line] = Original[i].Line;
+		Backward[Original[i].Line] = Ours[i].Line;
+	}
+}
+
+void CompareThrown(const char *Test, const char *What, const TThrown &Ours, const TThrown &Original)
+{
+	ThrownCompared++;
+	if (Original.Kind != TThrown::NOTHING)
+		ThrownThrew++;
+	std::vector<TLineRef> OurLines, OriginalLines;
+	TThrown A = Ours, B = Original;
+	A.Message = WithoutLines(Ours.Message, &OurLines);
+	A.Origin = WithoutLines(Ours.Origin + ":", &OurLines);
+	B.Message = WithoutLines(Original.Message, &OriginalLines);
+	B.Origin = WithoutLines(Original.Origin + ":", &OriginalLines);
+	CHECK(A == B && OurLines.size() == OriginalLines.size(), "%s %s: ours %s, original %s", Test, What,
+		Ours.Describe().c_str(), Original.Describe().c_str());
+	MapLines(Test, What, OurLines, OriginalLines);
+}
+
+bool Redirected(const void *Code)
+{
+	return *(const uint8 *)Code == 0xe9;
+}
+bool ImageRedirected(uint32 Address)
+{
+	return Redirected((const void *)(uintptr_t)Address);
+}
+
+TErrorRound::TErrorRound(const char *_Test) : Test(_Test), Checks0(Checks), Compared0(ThrownCompared), Threw0(ThrownThrew)
+{
+	Trace = getenv("EH_TRACE") != NULL && atoi(getenv("EH_TRACE")) != 0;
+	Trace2 = Trace && atoi(getenv("EH_TRACE")) >= 2;
+	SavedSeed = GetRandomSeed();
+	uint32 Seed = 34;
+	for (const char *p = Test; *p != 0; p++)
+		Seed = Seed * 31 + (uint8)*p;
+	if (getenv("EH_SEED") != NULL)
+		Seed ^= strtoul(getenv("EH_SEED"), NULL, 10);
+	SetRandomSeed(Seed);
+	EnableImageExceptions();
+}
+
+void TErrorRound::Compare(const char *What, const TThrown &Ours, const TThrown &Original)
+{
+	if (Trace)
+		printf("%s errors %s: %s\n", Test, What, Original.Describe().c_str());
+	CompareThrown(Test, What, Ours, Original);
+}
+
+void TErrorRound::Finish()
+{
+	DisableImageExceptions();
+	SetRandomSeed(SavedSeed);
+	if (getenv("EH_LINES") != NULL) { // the lines seen so far (every test's): our line -> the original's
+		for (auto &File : OursToOriginal)
+			for (auto &Line : File.second)
+				printf("%s errors line: %s %d -> %d\n", Test, File.first.c_str(), Line.first, Line.second);
+	}
+	printf("%s errors: %d checks, %d exceptions compared (%d calls that threw)\n", Test, Checks - Checks0,
+		ThrownCompared - Compared0, ThrownThrew - Threw0);
+}

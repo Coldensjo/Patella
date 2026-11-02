@@ -47,81 +47,7 @@ static int ComparedThrows = 0; // of them, calls that threw on both sides
 
 // --- Comparing messages ---------------------------------------------------
 
-typedef std::map<std::string, std::map<int, int>> TLineMap;
-static TLineMap OursToOriginal, OriginalToOurs;
-
-// "<file> <line>" at Start (a message's start or a "reason:\n"): the
-// position of the line number and its end, or false.
-static bool FindLine(const std::string &Text, size_t Start, size_t *Number, size_t *End)
-{
-	size_t Space = Start;
-	while (Space < Text.size() && Text[Space] != ' ' && Text[Space] != '\n')
-		Space++;
-	if (Space == Start || Space >= Text.size() || Text[Space] != ' ')
-		return false;
-	size_t Digits = Space + 1;
-	if (Digits < Text.size() && Text[Digits] == '-')
-		Digits++;
-	size_t Stop = Digits;
-	while (Stop < Text.size() && Text[Stop] >= '0' && Text[Stop] <= '9')
-		Stop++;
-	if (Stop == Digits || (Stop < Text.size() && Text[Stop] != ':'))
-		return false;
-	*Number = Space + 1;
-	*End = Stop;
-	return true;
-}
-
-struct TLineRef {
-	std::string File;
-	int Line;
-};
-
-// Replaces the line numbers of every "<file> <line>: " that starts the
-// message or follows ", reason:\n", and of the origin "<file> <line>".
-static std::string WithoutLines(const std::string &Text, std::vector<TLineRef> *Lines)
-{
-	std::string Result;
-	size_t Position = 0;
-	size_t Start = 0;
-	for (;;) {
-		size_t Number, End;
-		if (FindLine(Text, Start, &Number, &End)) {
-			Result.append(Text, Position, Number - Position);
-			Result += "#";
-			TLineRef Ref = {Text.substr(Start, Number - 1 - Start), atoi(Text.c_str() + Number)};
-			Lines->push_back(Ref);
-			Position = End;
-		}
-		size_t Next = Text.find(", reason:\n", (std::max)(Position, Start));
-		if (Next == std::string::npos)
-			break;
-		Start = Next + 10;
-	}
-	Result.append(Text, Position, std::string::npos);
-	return Result;
-}
-
-static void MapLines(const char *What, const std::vector<TLineRef> &Ours, const std::vector<TLineRef> &Original)
-{
-	for (size_t i = 0; i < Ours.size() && i < Original.size(); i++) {
-		if (Ours[i].File != Original[i].File)
-			continue; // the messages differ; reported there
-		const std::string &File = Ours[i].File;
-		std::map<int, int> &Forward = OursToOriginal[File];
-		std::map<int, int> &Backward = OriginalToOurs[File];
-		auto F = Forward.find(Ours[i].Line);
-		auto B = Backward.find(Original[i].Line);
-		CHECK((F == Forward.end() || F->second == Original[i].Line) && (B == Backward.end() || B->second == Ours[i].Line),
-			"Errors %s: our %s line %d stands for the original's line %d, earlier for %d; the original's line %d earlier for our %d",
-			What, File.c_str(), Ours[i].Line, Original[i].Line, F == Forward.end() ? -1 : F->second, Original[i].Line,
-			B == Backward.end() ? -1 : B->second);
-		Forward[Ours[i].Line] = Original[i].Line;
-		Backward[Original[i].Line] = Ours[i].Line;
-	}
-}
-
-// Compares what both sides threw.
+// Compares what both sides threw (imageeh.cpp's CompareThrown).
 static void Compare(const char *What, const TThrown &Ours, const TThrown &Original)
 {
 	Compared++;
@@ -129,15 +55,7 @@ static void Compare(const char *What, const TThrown &Ours, const TThrown &Origin
 		ComparedThrows++;
 	if (Trace)
 		printf("Errors %s: %s\n", What, Original.Describe().c_str());
-	std::vector<TLineRef> OurLines, OriginalLines;
-	TThrown A = Ours, B = Original;
-	A.Message = WithoutLines(Ours.Message, &OurLines);
-	A.Origin = WithoutLines(Ours.Origin + ":", &OurLines);
-	B.Message = WithoutLines(Original.Message, &OriginalLines);
-	B.Origin = WithoutLines(Original.Origin + ":", &OriginalLines);
-	CHECK(A == B && OurLines.size() == OriginalLines.size(), "Errors %s: ours %s, original %s", What,
-		Ours.Describe().c_str(), Original.Describe().c_str());
-	MapLines(What, OurLines, OriginalLines);
+	CompareThrown("Errors", What, Ours, Original);
 }
 
 // Both sides as two calls; returns what the original threw.
@@ -590,14 +508,6 @@ static void TestUtils()
 // starts with a jump now is a test's fake. Such comparisons are skipped and
 // counted (the full run reports them; DIFFTEST_ONLY=Errors has none).
 static int Skipped = 0;
-static bool Redirected(const void *Code)
-{
-	return *(const uint8 *)Code == 0xe9;
-}
-static bool ImageRedirected(uint32 Address)
-{
-	return Redirected((const void *)(uintptr_t)Address);
-}
 
 template <class R, class... A, class... B> static void Both(const char *What, uint32 Address, R (*Ours)(A...), B &&... Arguments)
 {
@@ -1221,7 +1131,7 @@ void TestErrors(const char *ExePath)
 	TestGraphics();
 	DisableImageExceptions();
 	if (getenv("ER_LINES") != NULL) {
-		for (auto &File : OursToOriginal)
+		for (auto &File : ThrownLineMap())
 			for (auto &Line : File.second)
 				printf("Errors line: %s %d -> %d\n", File.first.c_str(), Line.first, Line.second);
 	}

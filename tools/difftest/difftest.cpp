@@ -32,6 +32,8 @@ uint32 Random()
 	Seed = Seed * 1103515245 + 12345;
 	return Seed >> 8;
 }
+uint32 GetRandomSeed() { return Seed; }
+void SetRandomSeed(uint32 Value) { Seed = Value; }
 
 // Original functions.
 typedef void (__cdecl *XTEAFn)(uint32 *Block, const uint32 *Key);
@@ -723,6 +725,11 @@ int main(int argc, char **argv)
 	}
 	if (Only != NULL && strcmp(Only, "Errors") == 0) {
 		TestErrors(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
+	if (Only != NULL && strcmp(Only, "GUI") == 0) {
+		TestGUI();
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
