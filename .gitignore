@@ -8,6 +8,9 @@ Patch.exe
 Tibia.url
 unins000.*
 
+# CipSoft gameserver files
+gameserver/
+
 # REA output: empty stderr logs and the regenerable Ghidra snapshot
 rea-out/*.err
 rea-out/*.snapshot
