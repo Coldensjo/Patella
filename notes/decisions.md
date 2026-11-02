@@ -372,12 +372,13 @@ callcheck differences, caller integration and differential coverage.
   own data (0x71d0c0-0x71d0cc: the main window, curEngine, the available
   engines, the surface object), defines TSurface (vtable 0x56ef78, mostly
   _purecall slots) and creates the engine surfaces; "Surface" sorts between
-  Status and SurfaceDX in the link order. Status.cpp's data ends before
-  0x71d0c0 and SurfaceDX's starts at 0x71d0f0.
+  Status and SurfaceDX in the link order. Issue #9 revises the data split:
+  engine-shared data extends from 0x71d0bc through 0x71d0f4, while private
+  SurfaceDX data starts at 0x71d0f8 (see SurfaceDX.cpp below).
 - **0x4eae70-0x4ed19f is SurfaceDX.cpp** (high): TSurfaceDX's vtable
   (0x56f038) follows TSurface's, its destructor 0x4eae90 sets it and calls
   ~TSurface, and the DirectX 5 factory 0x4eca00 is what GetSurface calls for
-  engine 0. Recorded in file-ranges.tsv, not reconstructed yet.
+  engine 0. Recorded in file-ranges.tsv; issue #9 reconstructs this object.
 - **TSurface moved from external.h to Surface.h** with the binary's shape:
   pure slots where the vtable has _purecall, empty default bodies for +0x04,
   +0x08, +0x64, +0x80, +0x98, a forwarder at +0x50 (to +0x54), TestEngine
@@ -2076,3 +2077,98 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   gives the real separators its test vtable after each construction,
   contentwindowstest.cpp and mainwindowtest.cpp name the real icons and
   separators by vtable (mainwindowtest.cpp fakes DrawObject now).
+
+
+## SurfaceDX.cpp (issue #9)
+
+- **Object boundary (high)**: DirectDraw is 0x4eae70-0x4efd0f, not just the
+  previously settled leading range ending at 0x4ed19f. Vtable 0x56f038
+  identifies the functions Ghidra missed, including the pixel writers,
+  AttachWindow, both stretch wrappers, the clipped blit wrappers, Init,
+  InitDisplay and GetSurfaceRect (assertion line 1411, [bug0000290]). The
+  generated source map counts only functions present in the raw decompile;
+  the missing entries are still named in names.tsv and implemented from
+  instructions, not inferred from that count.
+- **The following gap is Direct3D 9 (high)**: 0x4efd10 loads d3d9.dll and
+  stores Direct3DCreate9 at 0x71d278; 0x4f1430 and 0x4f03f0 install
+  vtable 0x56f480. Assign 0x4efd10-0x4f1ea4 to surfaceDX9.cpp for its own
+  reconstruction issue. Do not implement that engine in this issue.
+- **Interfaces (high)**: the engine is called DirectX 5, but its GUIDs and
+  calls use IDirectDraw4, IDirectDrawSurface4 and IDirect3D3 / Device3 /
+  Viewport3 (DirectX 6 interfaces). Use the installed SDK declarations,
+  ddraw.lib, dxguid.lib, winmm.lib and user32.lib, not handwritten COM shims.
+  d3dtypes.h supplies the empty D3DTLVERTEX constructor at 0x4eae70;
+  D3D_OVERLOADS enables it. Its names.tsv kind is stl (SDK/library code).
+- **Class and names (medium)**: TSurfaceDX is inferred from the object name.
+  Surface, Rect, DirectDraw, Direct3D, hWindow, ViewMode, VMode, GMode,
+  FromRect.width/height, ToRect.width/height and the surface-index constants
+  come from assertions. The other member/parameter names are ours.
+  TBlitSize is a local two-int view solely to retain the asserted lower-case
+  width/height names while keeping the existing TRect drawing ABI; it adds
+  no binary function or wrapper. The factory is CreateSurfaceDX (0x4eca00):
+  its allocation is 0x250 bytes with an inlined empty derived constructor.
+- **Layout (high)**: TSurface is 0x70 bytes, not the former 0x44 sketch.
+  Doubles at +0x48/+0x50/+0x58/+0x60 give it 8-byte alignment, making +0x04
+  padding, not a member. hWindow is still +0x08; mode, size, availability,
+  counts and frame timing have real fields. TSurfaceDX adds Recreated at
+  +0x70, DirectDraw at +0x74, WindowRect at +0x78, Surface[22] at +0x88,
+  Rect[22] at +0xe0 and the three Direct3D pointers at +0x240/+0x244/+0x248.
+  +0x0c/+0x20/+0x44/+0x6c/+0x24c remain offset names (low confidence).
+  TSurfaceGL retains total size 0x498 by shortening its opaque tail.
+- **Folded members (high addresses, medium names)**: eight overrides are
+  shared with neighboring engines: ClipRect 0x4f0410, ResetFrameTimer
+  0x4f04d0 and SurfaceRecreated 0x4f13e0 (DX9); DrawFrame 0x4fa110,
+  DrawFrameClipped 0x4fa2c0, GetCacheSurfaces 0x4fb5e0, IsUnavailable
+  0x4fb5f0 and GetFPS 0x4f9d00 (OpenGL). TestEngine is the return-true body
+  folded with codecvt at 0x4d7d40; unlike TSurface's implementation it
+  does not store the main window. No extra thunk is reconstructed.
+- **Shared data ownership (medium/low)**: all engines reference the blit
+  counters/statistics and InitStep; place them with the engine-independent
+  Surface.cpp data, spanning 0x71d0bc-0x71d0f4, and declare them in Surface.h.
+  This revises the earlier boundary argument: 0x71d0f0 is the shared
+  NumberOfSurfaces, not the first private DirectDraw datum. The private
+  SurfaceMemory[22] starts at 0x71d0f8, followed by WaitForNextFrame's
+  Frames at 0x71d150 and LastSecond at 0x71d158. No dynamic static
+  initializers are needed for these POD/BSS values. CacheSurfaceWidth and
+  CacheSurfaceHeight at 0x5c2568/6c are shared, initially 256 and changed
+  to 320 by InitSurfaces. The private DeviceGUID pointer at 0x5c2570
+  selects IID_IDirect3DHALDevice. Exact source ownership of shared globals
+  is low confidence, but their addresses, types and common use are verified.
+- **EH and switches (high)**: AttachWindow has 15 unwind states,
+  StretchBlitUnclipped/StretchBlit 30, Blit/BlitRect/GetSurfaceRect 5,
+  InitDisplay 20 and CreateSurfaces 45, all with zero try blocks: assertions
+  without TBEGIN. ResetDisplay alone has a PROGRAM_ERROR catch and a
+  nested catch-all protecting cleanup. The six-way assertion prologues
+  interleave an argument load with the FS:[0] setup; ehinfo.py now accepts
+  these and validates the FuncInfo magic. Init's switch is a compare chain
+  (0, windowed, fullscreen), not a jump table; the whole object contains
+  no indexed indirect jump to a switch table.
+- **Odd behavior retained**: Locks set dwSize to 0x6c inside a zeroed
+  0x7c-byte descriptor. The image writers leave sub-16-bit surfaces locked.
+  A zero RGB mask loops forever in GetPixelColor; valid formats avoid it.
+  DirectDrawCreate's initial interface leaks. A failed Direct3D setup only
+  releases Direct3D and decrements NumberOfSurfaces even if its render
+  target was not allocated. GetDisplayMode/GetSurfaceDesc descriptors are
+  not zeroed. Shading uses the original float 1/255 factor promoted to
+  double before truncation; do not algebraically simplify it. The mode
+  callback tests DDSD_REFRESHRATE in ddpfPixelFormat.dwFlags, not dwFlags
+  (0x4ec869); preserve this misplaced-flag test rather than correcting it.
+- **Callcheck audit**: 14 of 43 blocks differ. The destructor/base-constructor
+  calls are implicit (0x4eae90, 0x4eca00); the parser mistakes COM's
+  SetColorKey for TSurface::SetColorKey (0x4eafb0). Vtable dispatch is
+  absent from Ghidra's named-call counts at 0x4ebd20/0x4ebe60 (ClipRect,
+  SetSourceColorKey), 0x4ec220 (WaitForNextFrame), 0x4ec600 (InitDisplay,
+  CreateSurfaces, cleanup), 0x4ec690 (cleanup/reset), 0x4ec9e0 (cleanup),
+  0x4ecdd0 (FillRectangle), 0x4ecfd0 (timer/framerate) and 0x4eed40
+  (AttachWindow). AddFullscreenMode's 8 versus 9 static GetSurface calls
+  are the compiler's duplicated loop-condition test; dynamic calls agree.
+  ShadeRectangle's SDK vertex-array constructors and twelve x87 _ftol
+  conversions are expressed by C++/D3DRGB, not explicit helper calls.
+- **Caller audit**: Surface.cpp now calls CreateSurfaceDX; the other engine
+  factories stay external. graphics.cpp's five +0x50 calls become
+  SetColorKey; the +0x64 window attachment in Control.cpp and +0x9c
+  recreation checks in ContentWindows.cpp/MapWindow.cpp retain their
+  arguments and slot offsets. Sketches/fakes follow the retyped slots.
+  Naming the base CacheSurfaces member exposed a collision with
+  graphicstest.cpp's fake counter; rename that counter GraphicsCacheSurfaces
+  so its GetCacheSurfaces override still returns the configured test value.

@@ -108,7 +108,7 @@ void CheckSurface(bool Force)
 	}
 	if (!Success)
 		ChangeEngine(0);
-	if (GetSurface()->Unknown9C(1))
+	if (GetSurface()->SurfaceRecreated(1))
 		ResetVideoCache();
 	TEND1(Force?1:0)
 }

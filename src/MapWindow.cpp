@@ -436,7 +436,7 @@ void TMapWindow::Draw(int Surface, int x, int y)
 		NumberOfNames = 0;
 		NumberOfTextualEffects = 0;
 		GetMapPosition(&PositionX, &PositionY, &PositionZ);
-		if (GetSurface()->Unknown9C(2)) {
+		if (GetSurface()->SurfaceRecreated(2)) {
 			for (int i = 0; i < 16; i++) {
 				for (int j = 0; j < 12; j++)
 					Cache[i][j].CachedSprites = 0;

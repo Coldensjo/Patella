@@ -19,9 +19,9 @@ Game and catch functions by assignment method:
 |---|---:|---:|
 | assert | 2746 | 676388 |
 | between | 2029 | 236068 |
-| range | 645 | 84366 |
+| range | 675 | 91134 |
 | header | 22 | 15065 |
-| gap | 63 | 32141 |
+| gap | 33 | 25373 |
 
 ## Source files
 
@@ -58,7 +58,7 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Status.cpp | 82 | 3 | 12893 | `0x4e6dc0` | `0x4ea860` | 91-1051 |
 | Surface.cpp | 8 | 1 | 831 | `0x4eaa80` | `0x4eae33` |  |
 | SurfaceDX.cpp | 24 | 2 | 8990 | `0x4eae90` | `0x4eed40` | 1106-1114 |
-| surfaceDX9.cpp | 1 | 0 | 1490 | `0x4f2040` | `0x4f2040` | 982-983 |
+| surfaceDX9.cpp | 29 | 2 | 8258 | `0x4efd10` | `0x4f2040` | 982-983 |
 | SurfaceGL.cpp | 3 | 0 | 3187 | `0x4fb7f0` | `0x4fc130` | 767-1023 |
 | sysinc.cpp | 16 | 0 | 2008 | `0x4fcb90` | `0x4fd1b0` | 63-143 |
 | Talk.cpp | 90 | 192 | 42314 | `0x4fd440` | `0x5081b5` | 81-1952 |
@@ -75,7 +75,6 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 | Between | Functions | Bytes | Range |
 |---|---:|---:|---|
-| SurfaceDX.cpp / surfaceDX9.cpp | 30 | 6768 | `0x4efd10`-`0x4f1ea4` |
 | surfaceDX9.cpp / SurfaceGL.cpp | 33 | 25373 | `0x4f46f0`-`0x4fb6fe` |
 
 ## Header code

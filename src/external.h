@@ -84,7 +84,8 @@ extern const char *TextReportRuleViolation; // 0x5c0664, "Report Rule Violation"
 // Surface.cpp: curEngine, TSurface and the surface functions (Surface.h).
 #include "Surface.h"
 
-// The engines' surface classes (SurfaceDX.cpp, surfaceDX9.cpp, SurfaceGL.cpp).
+// The engines' surface classes (surfaceDX9.cpp, SurfaceGL.cpp; SurfaceDX.cpp's
+// TSurfaceDX is in SurfaceDX.h).
 class TSurfaceGL : public TSurface {       // 0x498 bytes
 public:
 	TSurfaceGL();                          // 0x4fb670
@@ -100,24 +101,28 @@ public:
 	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source);
 	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
 		TRGBColor ColorKey);
-	void Unknown38();
+	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
+		int Height, TRect Clip);
 	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
 		int Height, TRGBColor ColorKey, TRect Clip);
-	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source); void Unknown44();
+	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source);
+	void StretchBlitUnclipped(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
+		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight);
 	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
 		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip);
 	void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors);
-	void Unknown54(int Surface, TRGBColor ColorKey); void Unknown58(); void Unknown5C(); void Unknown60();
-	void Unknown68(); void Unknown6C(); void Unknown70(); void Unknown74(); void Unknown78();
-	void Unknown7C(); void FinishFrame();
+	void SetSourceColorKey(int Surface, TRGBColor ColorKey); bool ClipRect(TRect Clip, RECT *Destination, RECT *Source);
+	void ResetFrameTimer(); void WaitForNextFrame(); void UpdateWindowRect();
+	void InitDisplay(int VMode, TFullscreenMode *GMode); void ExitDisplay(); void CreateSurfaces();
+	void ResetDisplay(int VMode, TFullscreenMode *GMode); void RestoreSurfaces(int ViewMode, TFullscreenMode *Mode);
+	void FinishFrame();
 	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force);
-	void Unknown8C(); int GetCacheSurfaces(); void GetSurfaceRect(int Surface, TRect *Rect);
-	bool Unknown9C(int Value);
-	bool IsUnavailable(); bool CanShadeRectangles(); void UnknownA8(); void UnknownAC(); double GetFPS();
+	int GetFullscreenModes(TFullscreenMode **Modes); int GetCacheSurfaces(); void GetSurfaceRect(int Surface, TRect *Rect);
+	bool SurfaceRecreated(int Surface);
+	bool IsUnavailable(); bool CanShadeRectangles(); int GetSurfaceMemory(int Index); void SetFramerate(int Framerate); double GetFPS();
 	void InitSurfaces(); void ExitSurfaces();
-	uint8 DataGL[0x498 - 0x44];
+	uint8 DataGL[0x498 - 0x70];
 };
-TSurface *FUN_004eca00();               // 0x4eca00, SurfaceDX.cpp: creates the DirectX 5 surface
 TSurface *FUN_004f1430();               // 0x4f1430, surfaceDX9.cpp: creates the DirectX 9 surface
 bool FUN_004efd10();                    // 0x4efd10, between SurfaceDX.cpp and surfaceDX9.cpp: DirectX 9 is installed
 bool FUN_004f9710(HDC Context);         // 0x4f9710, between surfaceDX9.cpp and SurfaceGL.cpp: OpenGL works on the context

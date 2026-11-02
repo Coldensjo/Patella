@@ -478,7 +478,7 @@ void TAutomapView::Draw(int Surface, int x, int y)
 			Window->Changed = true;
 		}
 	}
-	if (GetAutomapChanged() || Window->Changed || GetSurface()->Unknown9C(0)) {
+	if (GetAutomapChanged() || Window->Changed || GetSurface()->SurfaceRecreated(0)) {
 		uint8 Pixels[106 * 106 * 3];
 		for (int i = 0; i < 106; i++) {
 			for (int j = 0; j < 106; j++) {

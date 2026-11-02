@@ -770,7 +770,7 @@ public:
 	{
 		Logf("Blit%d,%d,%d,%d,%d,%d,%d,%d;", ToSurface, x, y, FromSurface, S.x, S.y, S.Width, S.Height);
 	}
-	bool Unknown9C(int Surface)
+	bool SurfaceRecreated(int Surface)
 	{
 		Logf("Lost%d;", Surface);
 		return World.SurfaceLost;

@@ -24,13 +24,16 @@ Read this and `git log` first when resuming.
 
 ## Current item
 
-DialogElements.cpp done (issue #7, November 1, 2026). Next: Dialogs.cpp (with the DialogElements/Dialogs
-gap settled as its leading run), and the surface files (SurfaceDX.cpp with its settled range
-0x4eae70-0x4ed19f, surfaceDX9.cpp, SurfaceGL.cpp) with their gaps; see the GitHub issues.
+SurfaceDX.cpp in progress (issue #9, November 2, 2026), isolated worktree:
+the full DirectDraw object is reconstructed through 0x4efd0f; comprehensive
+fake-COM tests and final validation are in progress. Delivery is a PR, not
+a direct push to main. Another agent owns Dialogs.cpp (#8); its checkout
+and uncommitted changes are untouched. Remaining surface engines keep their
+own issues; the gap 0x4efd10-0x4f1ea4 is now assigned to surfaceDX9.cpp.
 
 ## Delegates (running)
 
-None.
+SurfaceDX differential-test coverage (fake DirectDraw/Direct3D and Win32 effects).
 
 ## Open questions
 

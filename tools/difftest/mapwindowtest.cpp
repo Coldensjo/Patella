@@ -449,7 +449,7 @@ void TSurfaceGL::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor
 		Logf(",%d/%d/%d", Colors[i].R, Colors[i].G, Colors[i].B);
 	Logf(";");
 }
-bool TSurfaceGL::Unknown9C(int Surface) { Logf("S9%d;", Surface); return SurfaceLost; }
+bool TSurfaceGL::SurfaceRecreated(int Surface) { Logf("S9%d;", Surface); return SurfaceLost; }
 bool TSurfaceGL::CanShadeRectangles() { return CanShade; }
 static TSurface *FakeSurface;
 static TSurface *__cdecl FakeGetSurface() { return FakeSurface; }

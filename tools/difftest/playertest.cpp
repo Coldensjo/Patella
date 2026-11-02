@@ -84,27 +84,26 @@ void TSurfaceGL::FillRectangleClipped(int, TRect, TRGBColor, TRect) STUB
 void TSurfaceGL::DrawHorizontalLine(int, int, int, int, TRGBColor) STUB
 void TSurfaceGL::DrawVerticalLine(int, int, int, int, TRGBColor) STUB
 void TSurfaceGL::DrawFrame(int, TRect, int, TRGBColor) STUB
-void TSurfaceGL::Unknown38() STUB
-void TSurfaceGL::Unknown44() STUB
-void TSurfaceGL::Unknown58() STUB
-void TSurfaceGL::Unknown5C() STUB
-void TSurfaceGL::Unknown60() STUB
-void TSurfaceGL::Unknown68() STUB
-void TSurfaceGL::Unknown6C() STUB
-void TSurfaceGL::Unknown70() STUB
-void TSurfaceGL::Unknown74() STUB
-void TSurfaceGL::Unknown78() STUB
-void TSurfaceGL::Unknown7C() STUB
+void TSurfaceGL::BlitRectClipped(int, int, int, int, int, int, int, int, TRect) STUB
+void TSurfaceGL::StretchBlitUnclipped(int, int, int, int, int, int, int, int, int, int, TRGBColor, TRGBColor) STUB
+bool TSurfaceGL::ClipRect(TRect, RECT *, RECT *) STUB
+void TSurfaceGL::ResetFrameTimer() STUB
+void TSurfaceGL::WaitForNextFrame() STUB
+void TSurfaceGL::UpdateWindowRect() STUB
+void TSurfaceGL::InitDisplay(int, TFullscreenMode *) STUB
+void TSurfaceGL::ExitDisplay() STUB
+void TSurfaceGL::CreateSurfaces() STUB
+void TSurfaceGL::ResetDisplay(int, TFullscreenMode *) STUB
+void TSurfaceGL::RestoreSurfaces(int, TFullscreenMode *) STUB
 void TSurfaceGL::FinishFrame() STUB
 bool TSurfaceGL::Init(HWND *, int, TFullscreenMode *, bool) STUB
-void TSurfaceGL::Unknown8C() STUB
+int TSurfaceGL::GetFullscreenModes(TFullscreenMode **) STUB
 bool TSurfaceGL::IsUnavailable() STUB
-void TSurfaceGL::UnknownA8() STUB
-void TSurfaceGL::UnknownAC() STUB
+int TSurfaceGL::GetSurfaceMemory(int) STUB
+void TSurfaceGL::SetFramerate(int) STUB
 double TSurfaceGL::GetFPS() STUB
 void TSurfaceGL::InitSurfaces() STUB
 void TSurfaceGL::ExitSurfaces() STUB
-TSurface *FUN_004eca00() STUB
 TSurface *FUN_004f1430() STUB
 bool FUN_004efd10() STUB
 bool FUN_004f9710(HDC) STUB
