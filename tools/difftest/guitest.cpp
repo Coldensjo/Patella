@@ -114,9 +114,15 @@ static void CheckLogs(const char *What)
 	Checks++;
 	if (Log[OURS] != Log[ORIGINAL]) {
 		Failures++;
-		if (Failures <= 20)
-			printf("FAIL %s: log\n  ours     %.400s\n  original %.400s\n", What, Log[OURS].c_str(),
-				Log[ORIGINAL].c_str());
+		if (Failures <= FailuresPrinted) {
+			size_t First = 0;
+			while (First < Log[OURS].size() && First < Log[ORIGINAL].size() && Log[OURS][First] == Log[ORIGINAL][First])
+				First++;
+			size_t From = First > 200 ? First - 200 : 0;
+			printf("FAIL %s: log (lengths %d, %d, first difference at %d)\n  ours     %.400s\n  original %.400s\n",
+				What, (int)Log[OURS].size(), (int)Log[ORIGINAL].size(), (int)First, Log[OURS].c_str() + From,
+				Log[ORIGINAL].c_str() + From);
+		}
 	}
 	Log[OURS].clear();
 	Log[ORIGINAL].clear();
@@ -408,7 +414,7 @@ static void CompareTrees(const char *What)
 		}
 		if (!Same) {
 			Failures++;
-			if (Failures <= 20)
+			if (Failures <= FailuresPrinted)
 				printf("FAIL %s: node %d differs (parent %d/%d next %d/%d pos %d,%d/%d,%d size %d,%d/%d,%d)\n", What,
 					(int)i, IndexOf(OURS, A->Parent), IndexOf(ORIGINAL, B->Parent), IndexOf(OURS, A->Next),
 					IndexOf(ORIGINAL, B->Next), A->OffsetX, A->OffsetY, B->OffsetX, B->OffsetY, A->Width, A->Height,
@@ -1362,7 +1368,14 @@ static void TestGUIErrors()
 			D.y = (int)(Random() % 20);
 			D.width = 1 + (int)(Random() % 10);
 			D.height = 1 + (int)(Random() % 10);
+			// Offsets inside the skin: an offset of the skin's width or more
+			// makes DrawSkin's pieces 0 wide, and both versions tile forever
+			// (until the logs exhaust the heap: the first full runs).
 			D.srcx = D.srcy = (int)(Random() % 3);
+			if (D.skin < NumberOfSkins) {
+				D.srcx %= Skins[D.skin].width;
+				D.srcy %= Skins[D.skin].height;
+			}
 			for (int s = 0; s < 2; s++)
 				P[s]->DrawingList[i] = D;
 		}
@@ -1390,7 +1403,12 @@ static void TestGUIErrors()
 				Args[4], k);
 			ROUND_COMPARE(R, What, DrawSkin(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0),
 				At<DrawSkinFn>(0x497a00)(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0));
-			ROUND_COMPARE(R, "DrawSkinClipped", DrawSkinClipped(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0, 100,
+			// DrawSkinClipped has no assertions on x and y: with INT_MIN both
+			// sides' picture code asks for buffers of gigabytes (bad_alloc,
+			// "unknown exception" on both sides), and the heap that is left
+			// makes later allocations fail depending on the layout.
+			if (k >= 2)
+				ROUND_COMPARE(R, "DrawSkinClipped", DrawSkinClipped(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0, 100,
 				100, 1, 2), At<DrawSkinClippedFn>(0x4a1690)(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0, 100, 100,
 				1, 2));
 			PictureThrows = false;

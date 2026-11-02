@@ -760,7 +760,7 @@ static void Compare()
 	Checks++;
 	if (Log[IMAGE] != Log[OURS]) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			size_t i = 0;
 			while (i < Log[IMAGE].size() && i < Log[OURS].size() && Log[IMAGE][i] == Log[OURS][i])
 				i++;
@@ -773,7 +773,7 @@ static void Compare()
 	Checks++;
 	if (A != B) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			size_t i = 0;
 			while (i < A.size() && i < B.size() && A[i] == B[i])
 				i++;

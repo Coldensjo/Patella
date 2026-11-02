@@ -251,10 +251,27 @@ static void ReplaceHandler(TRegistration *R)
 	R->Handler = ImageHandlerTrampoline;
 }
 
-static LONG CALLBACK RedirectImageHandlers(EXCEPTION_POINTERS *)
+static LONG CALLBACK RedirectImageHandlers(EXCEPTION_POINTERS *Info)
 {
 	if (!Enabled)
 		return EXCEPTION_CONTINUE_SEARCH;
+	// EH_SEH=1 names every exception that is not a C++ throw (what a
+	// catch (...) reports as "unknown exception occurred").
+	static const bool TraceSEH = getenv("EH_SEH") != NULL;
+	if (TraceSEH && Info->ExceptionRecord->ExceptionCode != 0xe06d7363)
+		printf("eh: exception 0x%08lx at %p\n", Info->ExceptionRecord->ExceptionCode,
+			Info->ExceptionRecord->ExceptionAddress);
+	if (TraceSEH && Info->ExceptionRecord->ExceptionCode == 0xe06d7363
+		&& Info->ExceptionRecord->NumberParameters >= 3) {
+		// ThrowInfo -> CatchableTypeArray -> CatchableType -> TypeDescriptor's name (x86: pointers)
+		uint32 ThrowInfo = (uint32)Info->ExceptionRecord->ExceptionInformation[2];
+		uint32 Array = ThrowInfo != 0 ? *(uint32 *)(uintptr_t)(ThrowInfo + 12) : 0;
+		uint32 Type = Array != 0 ? *(uint32 *)(uintptr_t)(*(uint32 *)(uintptr_t)(Array + 4) + 4) : 0;
+		const char *Name = Type != 0 ? (const char *)(uintptr_t)(Type + 8) : "?";
+		if (strcmp(Name, ".?AVTMyException@@") != 0 && strcmp(Name, ".?AW4PROGRAM_ERROR@@") != 0)
+			printf("eh: C++ exception %s (ThrowInfo 0x%x) at %p\n", Name, ThrowInfo,
+				Info->ExceptionRecord->ExceptionAddress);
+	}
 	for (TRegistration *R = (TRegistration *)__readfsdword(0); R != (TRegistration *)(intptr_t)-1; R = R->Next) {
 		if (InImage((uint32)(uintptr_t)R->Handler))
 			ReplaceHandler(R);

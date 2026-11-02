@@ -610,7 +610,30 @@ static void EndTest()
 	}
 	Status->State = CHILD_BETWEEN_TESTS;
 }
-#define RUN_TEST(Name, ...) (BeginTest(#Name), Name(__VA_ARGS__), EndTest())
+// DIFFTEST_SKIP=<names> (comma-separated, without "Test": SurfaceDX,GUI) leaves
+// those tests out of the full run, to find which earlier test leaves state
+// that a later one depends on.
+static bool Skipped(const char *Name)
+{
+	const char *List = getenv("DIFFTEST_SKIP");
+	if (List == NULL || strncmp(Name, "Test", 4) != 0)
+		return false;
+	Name += 4;
+	size_t Length = strlen(Name);
+	for (const char *p = List; *p != 0;) {
+		const char *End = strchr(p, ',');
+		size_t Item = End != NULL ? (size_t)(End - p) : strlen(p);
+		if (Item == Length && strncmp(p, Name, Length) == 0) {
+			printf("%s: skipped (DIFFTEST_SKIP)\n", Name);
+			return true;
+		}
+		p += Item;
+		if (*p == ',')
+			p++;
+	}
+	return false;
+}
+#define RUN_TEST(Name, ...) (Skipped(#Name) ? (void)0 : (BeginTest(#Name), Name(__VA_ARGS__), EndTest()))
 #define TestXTEA(...) RUN_TEST(TestXTEA, __VA_ARGS__)
 #define TestCharacters(...) RUN_TEST(TestCharacters, __VA_ARGS__)
 #define TestColors(...) RUN_TEST(TestColors, __VA_ARGS__)

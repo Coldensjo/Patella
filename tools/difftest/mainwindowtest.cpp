@@ -762,7 +762,7 @@ static void Compare(const char *What)
 	Checks++;
 	if (Log[OURS] != Log[ORIGINAL]) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			printf("FAIL MainWindow %s (kind %d): logs differ\n  ours:     %.600s\n  original: %.600s\n", What, Kind,
 				Log[OURS].c_str(), Log[ORIGINAL].c_str());
 		}
@@ -771,7 +771,7 @@ static void Compare(const char *What)
 	Checks++;
 	if (A != B) {
 		Failures++;
-		if (Failures <= 20)
+		if (Failures <= FailuresPrinted)
 			printf("FAIL MainWindow %s (kind %d): windows differ\n--- ours\n%s--- original\n%s", What, Kind,
 				A.c_str(), B.c_str());
 	}

@@ -643,8 +643,20 @@ static void FindGlhStrings()
 		Code += 5 + *(int32_t *)(Code + 1);
 	std::vector<TGLRange> Ranges = WritableSections();
 	uint32 *Found[2] = {NULL, NULL};
+	// Only the absolute memory operands of the instructions such code uses
+	// (mov eax/moffs, mov/cmp/test/push/mov imm with a [disp32] ModRM): any
+	// four bytes taken as an address matched a misaligned window once the
+	// sections grew (issue #34).
 	for (int i = 0; i < 96 && Found[1] == NULL; i++) {
-		uint8 *Value = *(uint8 **)(Code + i);
+		int Operand = 0;
+		if (Code[i] == 0xa1 || Code[i] == 0xa3)
+			Operand = i + 1;
+		else if ((Code[i] == 0x8b || Code[i] == 0x89 || Code[i] == 0x39 || Code[i] == 0x3b || Code[i] == 0x85
+			|| Code[i] == 0x83 || Code[i] == 0xc7 || Code[i] == 0xff) && (Code[i + 1] & 0xc7) == 0x05)
+			Operand = i + 2;
+		if (Operand == 0)
+			continue;
+		uint8 *Value = *(uint8 **)(Code + Operand);
 		for (TGLRange &R : Ranges)
 			if (Value >= R.From && Value + 4 <= R.To && ((uintptr_t)Value & 3) == 0) {
 				if (Found[0] == NULL)
@@ -720,7 +732,7 @@ static void Compare()
 	Checks++;
 	if (Log[IMAGE] != Log[OURS]) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			size_t i = 0;
 			while (i < Log[IMAGE].size() && i < Log[OURS].size() && Log[IMAGE][i] == Log[OURS][i])
 				i++;
@@ -733,7 +745,7 @@ static void Compare()
 	Checks++;
 	if (A != B) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			size_t i = 0;
 			while (i < A.size() && i < B.size() && A[i] == B[i])
 				i++;
@@ -747,7 +759,7 @@ static void Compare()
 		if (Global<void *>(P.Image) != *(void **)P.Ours) {
 			Checks++;
 			Failures++;
-			if (Failures <= 20)
+			if (Failures <= FailuresPrinted)
 				printf("FAIL SurfaceGL %s: extension pointer %s differs: %p %p\n", What, P.Name, Global<void *>(P.Image),
 					*(void **)P.Ours);
 			break;
@@ -776,7 +788,7 @@ template <class F> static void Both(const char *Name, F Operation)
 	Checks++;
 	if (memcmp(&AfterImage, &World, sizeof(World)) != 0) {
 		Failures++;
-		if (Failures <= 20)
+		if (Failures <= FailuresPrinted)
 			printf("FAIL SurfaceGL %s: the worlds the sides leave differ\n", Name);
 	}
 }

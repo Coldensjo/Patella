@@ -825,7 +825,7 @@ static void CompareLogs(const char *What, int Arg = 0)
 	Checks++;
 	if (Log[OURS] != Log[ORIGINAL]) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			size_t i = 0;
 			while (i < Log[OURS].size() && i < Log[ORIGINAL].size() && Log[OURS][i] == Log[ORIGINAL][i])
 				i++;
