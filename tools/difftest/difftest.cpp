@@ -12,6 +12,16 @@
 #include "difftest.h"
 #include "../../src/Utils.h"
 #include "../../src/TXTEA.h"
+#include "../../src/TMyException.h"
+#include <exception>
+#include <intrin.h>
+#include <malloc.h>
+#include <signal.h>
+#include <typeinfo>
+
+#ifndef STATUS_HEAP_CORRUPTION
+#define STATUS_HEAP_CORRUPTION ((DWORD)0xc0000374)
+#endif
 
 int Failures = 0;
 int Checks = 0;
@@ -274,12 +284,97 @@ static void TestBuffers()
 static const uintptr_t TIBIA_BASE = 0x400000;
 static const SIZE_T TIBIA_SIZE = 0x328000; // SizeOfImage of Tibia.exe 7.72
 
+// What the child tells the parent (issue #23): a page shared between them,
+// written before and after each test. It outlives the child, so the parent
+// can name the test in which the child died even when the child could not
+// print anything (__fastfail, heap corruption, a stack overflow).
+enum { CHILD_STARTING, CHILD_IN_TEST, CHILD_HEAP_CHECK, CHILD_BETWEEN_TESTS, CHILD_FINISHED };
+struct TChildStatus {
+	volatile LONG State;
+	char Test[64];                  // the test that runs or ran last
+	volatile DWORD ExceptionCode;   // the last fatal exception the child saw (ReportCrash)
+	volatile uint32 ExceptionAddress;
+};
+static TChildStatus OwnStatus;
+static TChildStatus *Status = &OwnStatus;
+
+// The child's exit codes of its own: 0 all checks passed, 1 failures (the
+// totals are printed), 2 it could not start, 3 abort(), 4 the heap check
+// between the tests failed; the others are Windows status codes.
+static const char *ExitCodeName(DWORD Code)
+{
+	switch (Code) {
+	case 0: return "success, but the tests did not finish: ExitProcess in a test?";
+	case 1: return "check failures";
+	case 2: return "the tests could not start";
+	case 3: return "abort()";
+	case 4: return "the heap check between the tests failed";
+	case 0x80000003: return "breakpoint";
+	case 0xc0000005: return "access violation";
+	case 0xc000001d: return "illegal instruction";
+	case 0xc0000025: return "noncontinuable exception";
+	case 0xc0000094: return "integer division by zero";
+	case 0xc0000096: return "privileged instruction";
+	case 0xc00000fd: return "stack overflow";
+	case 0xc000013a: return "Ctrl+C";
+	case 0xc0000374: return "heap corruption";
+	case 0xc0000409: return "__fastfail, a /GS stack cookie or a pure virtual call";
+	case 0xc0000417: return "invalid parameter passed to a C runtime function";
+	case 0xe06d7363: return "uncaught C++ exception";
+	}
+	return "unknown";
+}
+
+// Prints why the child ended unless it ended normally (it printed the totals
+// itself then); returns the exit code of difftest.exe.
+static int ReportChild(DWORD ExitCode, bool TimedOut, DWORD Timeout)
+{
+	if (Status->State == CHILD_FINISHED && (ExitCode == 0 || ExitCode == 1))
+		return (int)ExitCode;
+	if (TimedOut)
+		printf("difftest: the test process did not end within %lu s (DIFFTEST_TIMEOUT) and was stopped", Timeout);
+	else
+		printf("difftest: the test process ended with exit code 0x%08lx (%s)", ExitCode, ExitCodeName(ExitCode));
+	switch (Status->State) {
+	case CHILD_STARTING: printf(" before the first test"); break;
+	case CHILD_IN_TEST: printf(" in %s", Status->Test); break;
+	case CHILD_HEAP_CHECK: printf(" in the heap check after %s", Status->Test); break;
+	case CHILD_BETWEEN_TESTS: printf(" after %s (between the tests, or in a test that does not announce itself)", Status->Test); break;
+	case CHILD_FINISHED: printf(" after the last test"); break;
+	}
+	if (Status->ExceptionCode != 0)
+		printf("; last fatal exception 0x%08lx at 0x%08lx", (unsigned long)Status->ExceptionCode,
+			(unsigned long)Status->ExceptionAddress);
+	printf("\n");
+	fflush(stdout);
+	return ExitCode != 0 && ExitCode != 1 ? (int)ExitCode : 2;
+}
+
 static int RunChild(int argc, char **argv)
 {
-	char CommandLine[2 * MAX_PATH];
+	setvbuf(stdout, NULL, _IONBF, 0);
+	SECURITY_ATTRIBUTES Inherit = {sizeof(Inherit), NULL, TRUE};
+	HANDLE Shared = CreateFileMappingA(INVALID_HANDLE_VALUE, &Inherit, PAGE_READWRITE, 0, sizeof(TChildStatus), NULL);
+	void *View = Shared != NULL ? MapViewOfFile(Shared, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(TChildStatus)) : NULL;
+	if (View == NULL) {
+		printf("cannot share memory with the test process (error %lu)\n", GetLastError());
+		return 2;
+	}
+	Status = (TChildStatus *)View;
+	char CommandLine[2 * MAX_PATH + 64];
 	char Self[MAX_PATH];
 	GetModuleFileNameA(NULL, Self, sizeof(Self));
-	snprintf(CommandLine, sizeof(CommandLine), "\"%s\" --child \"%s\"", Self, argc > 1 ? argv[1] : "C:\\Tibia\\Tibia.exe");
+	snprintf(CommandLine, sizeof(CommandLine), "\"%s\" --child \"%s\" %lu", Self,
+		argc > 1 ? argv[1] : "C:\\Tibia\\Tibia.exe", (unsigned long)(uintptr_t)Shared);
+	// The child is killed with the parent (a job that dies with its handle):
+	// a child left running would keep build.cmd from linking difftest.exe
+	// again. The job also keeps Windows Error Reporting from holding a crashed
+	// child.
+	HANDLE Job = CreateJobObjectA(NULL, NULL);
+	JOBOBJECT_EXTENDED_LIMIT_INFORMATION Limits = {};
+	Limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION;
+	if (Job != NULL)
+		SetInformationJobObject(Job, JobObjectExtendedLimitInformation, &Limits, sizeof(Limits));
 	STARTUPINFOA Startup = {sizeof(Startup)};
 	Startup.dwFlags = STARTF_USESTDHANDLES;
 	Startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -290,6 +385,8 @@ static int RunChild(int argc, char **argv)
 		printf("cannot start the test process (error %lu)\n", GetLastError());
 		return 2;
 	}
+	if (Job == NULL || !AssignProcessToJobObject(Job, Process.hProcess))
+		printf("difftest: warning: the test process is not in a job (error %lu); it may outlive this one\n", GetLastError());
 	void *Reserved = VirtualAllocEx(Process.hProcess, (void *)TIBIA_BASE, TIBIA_SIZE,
 		MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (Reserved != (void *)TIBIA_BASE) {
@@ -297,13 +394,19 @@ static int RunChild(int argc, char **argv)
 		TerminateProcess(Process.hProcess, 2);
 		return 2;
 	}
+	// DIFFTEST_TIMEOUT=<seconds>, default 30 minutes (a full run takes a few).
+	DWORD Timeout = getenv("DIFFTEST_TIMEOUT") != NULL ? strtoul(getenv("DIFFTEST_TIMEOUT"), NULL, 10) : 1800;
 	ResumeThread(Process.hThread);
-	WaitForSingleObject(Process.hProcess, INFINITE);
+	bool TimedOut = WaitForSingleObject(Process.hProcess, Timeout != 0 ? Timeout * 1000 : INFINITE) == WAIT_TIMEOUT;
+	if (TimedOut) {
+		TerminateProcess(Process.hProcess, 2);
+		WaitForSingleObject(Process.hProcess, INFINITE);
+	}
 	DWORD ExitCode = 2;
 	GetExitCodeProcess(Process.hProcess, &ExitCode);
 	CloseHandle(Process.hThread);
 	CloseHandle(Process.hProcess);
-	return (int)ExitCode;
+	return ReportChild(ExitCode, TimedOut, Timeout);
 }
 
 static bool MapImage(const char *Path)
@@ -337,14 +440,20 @@ static bool MapImage(const char *Path)
 	return true;
 }
 
-// Reports where a crash happened; the original code has no symbols.
+// Reports where a crash happened; the original code has no symbols. This
+// vectored handler sees each exception first, also the ones a test catches
+// (none of these codes in a passing run).
 static LONG CALLBACK ReportCrash(EXCEPTION_POINTERS *Info)
 {
 	DWORD Code = Info->ExceptionRecord->ExceptionCode;
 	if (Code == EXCEPTION_ACCESS_VIOLATION || Code == EXCEPTION_ILLEGAL_INSTRUCTION
-	 || Code == EXCEPTION_STACK_OVERFLOW || Code == EXCEPTION_INT_DIVIDE_BY_ZERO) {
-		printf("crash: exception 0x%08lx at 0x%p, eip 0x%08lx esp 0x%08lx\n", Code,
-			Info->ExceptionRecord->ExceptionAddress, (unsigned long)Info->ContextRecord->Eip,
+	 || Code == EXCEPTION_STACK_OVERFLOW || Code == EXCEPTION_INT_DIVIDE_BY_ZERO
+	 || Code == EXCEPTION_PRIV_INSTRUCTION || Code == EXCEPTION_IN_PAGE_ERROR
+	 || Code == STATUS_HEAP_CORRUPTION || Code == STATUS_STACK_BUFFER_OVERRUN) {
+		Status->ExceptionCode = Code;
+		Status->ExceptionAddress = (uint32)(uintptr_t)Info->ExceptionRecord->ExceptionAddress;
+		printf("crash: exception 0x%08lx (%s) at 0x%p in %s, eip 0x%08lx esp 0x%08lx\n", Code, ExitCodeName(Code),
+			Info->ExceptionRecord->ExceptionAddress, Status->Test, (unsigned long)Info->ContextRecord->Eip,
 			(unsigned long)Info->ContextRecord->Esp);
 		if (Code == EXCEPTION_ACCESS_VIOLATION)
 			printf("crash: %s 0x%08lx\n", Info->ExceptionRecord->ExceptionInformation[0] ? "writing" : "reading",
@@ -357,12 +466,188 @@ static LONG CALLBACK ReportCrash(EXCEPTION_POINTERS *Info)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
+// The paths that end the child without the vectored handler's report, or
+// after it: each prints what it knows, then ends the child at once (without
+// Windows Error Reporting). The parent adds the exit code and the test.
+static void Exit(DWORD Code)
+{
+	fflush(stdout);
+	TerminateProcess(GetCurrentProcess(), Code);
+}
+
+// The thrown type of a C++ exception (x86: [1] the object, [2] its ThrowInfo,
+// whose catchable types start with the thrown type) and its message where we
+// know the class.
+static void ReportMessage(const std::type_info *Type, const void *Object)
+{
+	if (Type == &typeid(TMyException)) // ours, not the image's class of that name
+		printf("crash: TMyException: %s\n", ((const TMyException *)Object)->GetMessage().c_str());
+	else if (Type == &typeid(std::exception))
+		printf("crash: what(): %s\n", ((const std::exception *)Object)->what());
+}
+static void ReportCppException(const EXCEPTION_RECORD *Record)
+{
+	__try {
+		if (Record->NumberParameters < 3 || Record->ExceptionInformation[0] != 0x19930520)
+			return;
+		const uint8 *Object = (const uint8 *)Record->ExceptionInformation[1];
+		const uint32 *ThrowInfo = (const uint32 *)Record->ExceptionInformation[2];
+		const uint32 *Types = (const uint32 *)(uintptr_t)ThrowInfo[3];
+		for (uint32 i = 0; i < Types[0]; i++) {
+			const uint32 *Catchable = (const uint32 *)(uintptr_t)Types[1 + i];
+			const std::type_info *Type = (const std::type_info *)(uintptr_t)Catchable[1];
+			if (i == 0)
+				printf("crash: thrown type %s\n", (const char *)Type + 8);
+			ReportMessage(Type, Object + (int)Catchable[2]); // + mdisp: the base class part
+		}
+	} __except (EXCEPTION_EXECUTE_HANDLER) {
+		printf("crash: (the exception object cannot be read)\n");
+	}
+}
+static LONG WINAPI ReportUnhandled(EXCEPTION_POINTERS *Info)
+{
+	DWORD Code = Info->ExceptionRecord->ExceptionCode;
+	Status->ExceptionCode = Code;
+	Status->ExceptionAddress = (uint32)(uintptr_t)Info->ExceptionRecord->ExceptionAddress;
+	printf("crash: unhandled exception 0x%08lx (%s) at 0x%p in %s\n", Code, ExitCodeName(Code),
+		Info->ExceptionRecord->ExceptionAddress, Status->Test);
+	if (Code == 0xe06d7363)
+		ReportCppException(Info->ExceptionRecord);
+	Exit(Code);
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+static void __cdecl ReportTerminate()
+{
+	printf("crash: terminate() in %s (a C++ exception left a noexcept function or a destructor)\n", Status->Test);
+	abort();
+}
+static void __cdecl ReportAbort(int)
+{
+	printf("crash: abort() in %s\n", Status->Test);
+	Exit(3);
+}
+static void __cdecl ReportPurecall()
+{
+	printf("crash: pure virtual function call in %s (caller 0x%p)\n", Status->Test, _ReturnAddress());
+	Exit(0xc0000409);
+}
+static void __cdecl ReportInvalidParameter(const wchar_t *, const wchar_t *, const wchar_t *, unsigned, uintptr_t)
+{
+	printf("crash: invalid parameter passed to a C runtime function in %s\n", Status->Test);
+	Exit(0xc0000417);
+}
+// /GS: a function whose stack cookie is overwritten jumps from
+// __security_check_cookie to __report_gsfailure, which ends the process with
+// __fastfail; the start of __report_gsfailure is patched into a jump here, so
+// the return address is that function's.
+extern "C" void __cdecl __report_gsfailure();
+static void __cdecl ReportStackCookie()
+{
+	printf("crash: /GS stack cookie overwritten in the function that returns to 0x%p, in %s\n", _ReturnAddress(),
+		Status->Test);
+	Exit(0xc0000409);
+}
+static void PatchOwnJump(void *Address, void *Target)
+{
+	DWORD Old;
+	if (VirtualProtect(Address, 5, PAGE_EXECUTE_READWRITE, &Old)) {
+		PatchJump((uint32)(uintptr_t)Address, Target);
+		VirtualProtect(Address, 5, Old, &Old);
+		FlushInstructionCache(GetCurrentProcess(), Address, 5);
+	}
+}
+static void __cdecl ReportFinished()
+{
+	Status->State = CHILD_FINISHED;
+}
+
+static void InstallCrashReports(const char *StatusHandle)
+{
+	setvbuf(stdout, NULL, _IONBF, 0); // keep the output of a crashed run
+	if (StatusHandle != NULL) {
+		void *View = MapViewOfFile((HANDLE)(uintptr_t)strtoul(StatusHandle, NULL, 10), FILE_MAP_ALL_ACCESS, 0, 0,
+			sizeof(TChildStatus));
+		if (View != NULL)
+			Status = (TChildStatus *)View;
+	}
+	strcpy(Status->Test, "the start-up");
+	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+	ULONG Guarantee = 64 << 10; // stack left for ReportCrash after a stack overflow
+	SetThreadStackGuarantee(&Guarantee);
+	AddVectoredExceptionHandler(1, ReportCrash);
+	SetUnhandledExceptionFilter(ReportUnhandled);
+	set_terminate(ReportTerminate);
+	signal(SIGABRT, ReportAbort);
+	_set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+	_set_purecall_handler(ReportPurecall);
+	_set_invalid_parameter_handler(ReportInvalidParameter);
+	PatchOwnJump((void *)__report_gsfailure, (void *)ReportStackCookie);
+	atexit(ReportFinished);
+}
+
+// Every test below announces itself before it runs and checks the heap
+// after it (_heapchk, cheap): heap corruption shows up after the test that
+// caused it, not later in another test or as a 0xc0000374 without a message.
+// The macros keep the calls as they are written: a function-like macro is
+// not expanded again in its own expansion, so TestXTEA() calls the function.
+// A new test needs a line here, else a crash in it is reported as after the
+// test before it.
+static void BeginTest(const char *Name)
+{
+	strncpy(Status->Test, Name, sizeof(Status->Test) - 1);
+	Status->State = CHILD_IN_TEST;
+}
+static void EndTest()
+{
+	Status->State = CHILD_HEAP_CHECK;
+	int Heap = _heapchk();
+	if (Heap != _HEAPOK && Heap != _HEAPEMPTY) {
+		printf("difftest: the heap is corrupted after %s (_heapchk() %d)\n", Status->Test, Heap);
+		Exit(4);
+	}
+	Status->State = CHILD_BETWEEN_TESTS;
+}
+#define RUN_TEST(Name, ...) (BeginTest(#Name), Name(__VA_ARGS__), EndTest())
+#define TestXTEA(...) RUN_TEST(TestXTEA, __VA_ARGS__)
+#define TestCharacters(...) RUN_TEST(TestCharacters, __VA_ARGS__)
+#define TestColors(...) RUN_TEST(TestColors, __VA_ARGS__)
+#define TestStrings(...) RUN_TEST(TestStrings, __VA_ARGS__)
+#define TestFormatNumber(...) RUN_TEST(TestFormatNumber, __VA_ARGS__)
+#define TestBuffers(...) RUN_TEST(TestBuffers, __VA_ARGS__)
+#define TestSkins(...) RUN_TEST(TestSkins, __VA_ARGS__)
+#define TestStatus(...) RUN_TEST(TestStatus, __VA_ARGS__)
+#define TestPreferences(...) RUN_TEST(TestPreferences, __VA_ARGS__)
+#define TestScript(...) RUN_TEST(TestScript, __VA_ARGS__)
+#define TestPreferencesFile(...) RUN_TEST(TestPreferencesFile, __VA_ARGS__)
+#define TestPlayer(...) RUN_TEST(TestPlayer, __VA_ARGS__)
+#define TestHelp(...) RUN_TEST(TestHelp, __VA_ARGS__)
+#define TestInventory(...) RUN_TEST(TestInventory, __VA_ARGS__)
+#define TestSysinc(...) RUN_TEST(TestSysinc, __VA_ARGS__)
+#define TestTalk(...) RUN_TEST(TestTalk, __VA_ARGS__)
+#define TestObjects(...) RUN_TEST(TestObjects, __VA_ARGS__)
+#define TestMap(...) RUN_TEST(TestMap, __VA_ARGS__)
+#define TestCreatures(...) RUN_TEST(TestCreatures, __VA_ARGS__)
+#define TestGraphics(...) RUN_TEST(TestGraphics, __VA_ARGS__)
+#define TestGUI(...) RUN_TEST(TestGUI, __VA_ARGS__)
+#define TestDialogWindow(...) RUN_TEST(TestDialogWindow, __VA_ARGS__)
+#define TestContextMenus(...) RUN_TEST(TestContextMenus, __VA_ARGS__)
+#define TestConsoleWindow(...) RUN_TEST(TestConsoleWindow, __VA_ARGS__)
+#define TestContentWindows(...) RUN_TEST(TestContentWindows, __VA_ARGS__)
+#define TestDialogElements(...) RUN_TEST(TestDialogElements, __VA_ARGS__)
+#define TestDialogs(...) RUN_TEST(TestDialogs, __VA_ARGS__)
+#define TestSurfaceDX(...) RUN_TEST(TestSurfaceDX, __VA_ARGS__)
+#define TestSurfaceDX9(...) RUN_TEST(TestSurfaceDX9, __VA_ARGS__)
+#define TestSurfaceGL(...) RUN_TEST(TestSurfaceGL, __VA_ARGS__)
+#define TestContainer(...) RUN_TEST(TestContainer, __VA_ARGS__)
+#define TestRegexp(...) RUN_TEST(TestRegexp, __VA_ARGS__)
+#define TestMapWindow(...) RUN_TEST(TestMapWindow, __VA_ARGS__)
+#define TestMainWindow(...) RUN_TEST(TestMainWindow, __VA_ARGS__)
+
 int main(int argc, char **argv)
 {
 	if (argc < 2 || strcmp(argv[1], "--child") != 0)
 		return RunChild(argc, argv);
-	setvbuf(stdout, NULL, _IONBF, 0); // keep the output of a crashed run
-	AddVectoredExceptionHandler(1, ReportCrash);
+	InstallCrashReports(argc > 3 ? argv[3] : NULL);
 	if (!MapImage(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe"))
 		return 2;
 #ifdef DIFFTEST_SYSINC

@@ -110,8 +110,8 @@ template <class R, class... A> static R CallI(uint32 Address, const void *This, 
 static std::map<const void *, std::string> Names[2];
 
 // Readable memory, by the page protection (no access violations: the
-// child's crash handler would report each).
-static bool Readable(const void *Address)
+// child's crash handler would report each). Check it right before reading.
+static bool PageReadable(const void *Address)
 {
 	if ((uintptr_t)Address < 0x10000 || (uintptr_t)Address >= 0x7fff0000)
 		return false;
@@ -123,6 +123,26 @@ static bool Readable(const void *Address)
 	return (M.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE
 		| PAGE_EXECUTE_WRITECOPY)) != 0;
 }
+// Whether a value counts as a pointer. While Compare makes the two dumps,
+// each page's first answer is kept: the heap grows and shrinks during the
+// dumps, and a number both sides hold (0x00df64af) must not become a pointer
+// in the second dump only (issue #23). Reads still check PageReadable: a page
+// that counts as readable may be gone by then.
+static bool KeepReadable;
+static std::map<uintptr_t, bool> ReadablePages;
+static bool Readable(const void *Address)
+{
+	if (!KeepReadable)
+		return PageReadable(Address);
+	if ((uintptr_t)Address < 0x10000 || (uintptr_t)Address >= 0x7fff0000)
+		return false;
+	auto Found = ReadablePages.find((uintptr_t)Address >> 12);
+	if (Found != ReadablePages.end())
+		return Found->second;
+	bool Result = PageReadable(Address);
+	ReadablePages[(uintptr_t)Address >> 12] = Result;
+	return Result;
+}
 // A readable C string of printable characters.
 static bool ReadString(const void *Address, std::string *Out)
 {
@@ -130,7 +150,7 @@ static bool ReadString(const void *Address, std::string *Out)
 	std::string S;
 	for (int i = 0; i < 300; i++) {
 		if (i == 0 || ((uintptr_t)(p + i) & 0xfff) == 0) {
-			if (!Readable(p + i))
+			if (!Readable(p + i) || !PageReadable(p + i))
 				return false;
 		}
 		if (p[i] == 0) {
@@ -144,13 +164,16 @@ static bool ReadString(const void *Address, std::string *Out)
 	return false;
 }
 // Bytes of the fill pattern (two or more 0xab bytes) are no pointer, even if
-// the heap has grown over that address meanwhile.
+// the heap has grown over that address meanwhile. One of them must be the top
+// byte (no pointer of a 32-bit process is that high) or the low byte (no
+// object is at an odd address): a heap pointer such as 0x02abab30 is a
+// pointer, else the dump depends on where the heap happens to be (issue #23).
 static bool IsPattern(uint32 Value)
 {
 	int Count = 0;
 	for (int i = 0; i < 4; i++)
 		Count += ((Value >> (8 * i)) & 0xff) == 0xab;
-	return Count >= 2;
+	return Count >= 2 && ((Value >> 24) == 0xab || (Value & 0xff) == 0xab);
 }
 // A value: a known object's name, a string, a pointer or a number.
 static std::string Val(int s, uint32 Value)
@@ -1140,7 +1163,8 @@ static void DumpWord(std::string &Out, int s, uint32 Value, bool String)
 			Out += "'" + Text + "'";
 			return;
 		}
-		void *V = *(void **)(uintptr_t)Value;
+		void *V = PageReadable((void *)(uintptr_t)Value) && PageReadable((char *)(uintptr_t)Value + 3)
+			? *(void **)(uintptr_t)Value : NULL;
 		if (V == OurTimerVtable || (uintptr_t)V == 0x5646e8) {
 			TTimer *T = (TTimer *)(uintptr_t)Value;
 			Add(Out, "Timer(%d,%d,%s,%d)", T->Remaining, T->Active ? 1 : 0, Val(s, (uint32)(uintptr_t)T->Callback.Receiver).c_str(),
@@ -1209,7 +1233,10 @@ static int OperationCount[32];
 static const char *OperationName;
 static void Compare()
 {
+	KeepReadable = true;
+	ReadablePages.clear();
 	std::string D[2] = {DumpAll(OURS), DumpAll(ORIGINAL)};
+	KeepReadable = false;
 	if (LogFile != NULL)
 		fprintf(LogFile, "== %s %s\n%s\n%s\n", KindNames[Kind], OperationName, Log[OURS].c_str(), D[OURS].c_str());
 	CHECK(Log[OURS] == Log[ORIGINAL], "Dialogs %s (%s): logs differ\n  ours: %s\n  orig: %s", OperationName,
