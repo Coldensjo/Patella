@@ -3526,3 +3526,113 @@ Claude Opus 5.5 (issue #23), November 2, 2026.
   ...\build\difftest\tmp without `tools\difftest\..\..`. vcvarsall's output goes to build\difftest\vcvars.txt
   and is shown when it fails. A passing run ends with "build.cmd: all tests passed"; the totals lines are
   unchanged. No incremental build: a full run takes about 3 minutes.
+
+## Error paths (issue #22)
+
+Claude Opus 5.5 (issue #22), November 2, 2026.
+
+- **Why an exception of the image ended the child** (high, reproduced step by step). (1) The image's
+  `_CxxThrowException` (0x511d2b) calls RaiseException through an unbound import slot. (2) Its TMyException
+  constructors build the message in a `std::stringstream`, whose locale and stream buffer code takes
+  `std::_Lockit` and `_Mutex` locks (critical sections the CRT's start-up never initialised) and calls
+  `_getptd` (0x51689a: TLS/FLS slots and calloc of a start-up that never ran). (3) Windows refuses every
+  exception handler of the image: RtlDispatchException and RtlUnwind check each handler (RtlIsValidHandler,
+  the SafeSEH check: RtlUnwind of this Windows build calls it too, seen in ntdll), and with DEP on, which
+  difftest.exe's /NXCOMPAT makes permanent (GetProcessDEPPolicy: flags 3, permanent), a handler outside a
+  mapped image is invalid; the image is private memory. A first own dispatch loop in a vectored handler got
+  through the search but died in RtlUnwind with STATUS_BAD_STACK (0xc0000028, raised right after the
+  RtlIsValidHandler call).
+- **Design: the image's own machinery, made to run** (high). `tools/difftest/imageeh.cpp`'s
+  EnableImageExceptions: the image's malloc/free (PatchImage), `_getptd` returns one static per-thread block
+  set up as `_getptd` sets up a new one (the child has one thread), `_lock`, `_unlock`, `std::_Lockit`,
+  `_Mtxinit/_Mtxdst/_Mtxlock/_Mtxunlock` are no-ops, the kernel32 imports the EH and iostream code needs are
+  bound to the real functions (RaiseException, RtlUnwind, IsBad*Ptr, VirtualQuery, Get/SetLastError,
+  GetCurrentThreadId, Interlocked*), and every other unbound import slot of the image calls a trap that names
+  the import and the caller (an error path that reaches Windows unexpectedly is reported, not a jump to a
+  random address). For the handlers, a vectored handler (it runs before the frame-based dispatch) replaces the
+  handler of every image registration on the thread's chain with `ImageHandlerTrampoline`, a function of
+  difftest.exe in its SafeSEH table, which calls the recorded original (the function's `__CxxFrameHandler`
+  thunk or `_except_handler3`); registrations made later (a catch block's frames) are replaced at the next
+  exception, before anything can unwind them. Windows then dispatches and unwinds as in the client: the
+  image's frame handler finds its catch blocks, its TEND blocks build the wrapping TMyException with the
+  image's own code and throw again. DisableImageExceptions undoes every byte. Alternatives rejected:
+  /NXCOMPAT:NO (works only where the system DEP policy is OptIn), mapping the image as SEC_IMAGE (changes how
+  every test maps it), an own dispatcher and unwinder (RtlUnwind's check stays).
+- **The trampoline is registered by the assembler** (high): the C++ compiler cannot put a function into the
+  SafeSEH table; `imageehseh.asm` (`.safeseh`) does, build.cmd assembles it with ml.exe (`/safeseh`) before the
+  difftest.exe line and links the object.
+- **The boundary** (high). ImageThrow runs the call in `__try` with a filter that takes only C++ exceptions
+  whose ThrowInfo is in the image, copies the thrown object (type name from the image's RTTI; a TMyException's
+  Message +0x04 and Origin +0x20, VC7.1 strings; a PROGRAM_ERROR's value) and destroys it (ThrowInfo's
+  destructor, as a catch block's end would) before the unwind. OurThrow catches PROGRAM_ERROR, TMyException &
+  and `...` and makes the same record.
+- **Line numbers** (medium). Our sources do not keep the original's lines (Utils.cpp 118 is the original's
+  66), so every "<file> <line>" of a message and the origin is compared with the line replaced, and over the
+  whole run each of our lines must stand for one original line and each original line for one of ours (a
+  different assertion with the same text in another place fails it). ER_LINES=1 prints the pairs (for a future
+  issue that aligns the lines, if wanted). File names and everything else are compared exactly.
+- **error.txt** (high). HandleException (0x4d9bd0) runs on both sides into error.txt in a scratch directory and
+  the files are compared byte for byte: the image's ofstream through a VC7.1 FILE without a buffer (its
+  basic_filebuf reads `_ptr`, `_cnt`, `_base` of its FILE directly, so it cannot get one of our CRT's FILEs:
+  heap corruption) whose fopen/fclose/fputc/fwrite/fflush/fseek go to our CRT; time and ctime fixed (patched on
+  both sides: the image's `_time32`/`ctime`, our `_time64`/`_ctime64`); GetVersionExA a fake through both
+  import tables (service pack texts of at most 29 characters: with 30 or more the original prints its 30-byte
+  buffer without a terminator, whatever follows on the stack); OutputControlErrorInformations (Control.cpp,
+  not linked into the difftest) writes nothing on both sides; GetCurrentEngine from the same curEngine.
+  FatalError is a fake that records the text and raises an exception of its own, caught around the call: the
+  original compiled it as noreturn (`int3` after the call in HandleProgramError, other code after it in
+  HandleException), so a fake that returns runs into the next function. HandleProgramError's text is compared
+  the same way (GetErrorText/GetErrorHint fakes; playertest.cpp's two stubs got different bodies, the linker
+  had folded them into one function).
+- **Reconstruction bug found and fixed** (high): Script.cpp's file errors carry a reason in the binary that ours
+  did not: "file still open" the open file's name, "failed to open file" the name asked for (the four open()
+  functions), "negative offset", "out of data" (readByte, readBytes) and "failed to write file" (writeByte,
+  writeBytes) the file's name, InstallPatch's "file does not exists" the patched file's name (the raw
+  decompile builds the string from `this+8`/`this+4`, `param_1` or the local name buffer before the
+  constructor 0x508400). common.h has TERROR_REASON and TERROR1_REASON for them. A scan of the raw decompile of
+  every file for throws with a non-literal reason (build/scratch/reasons.py of the issue's worktree) found no
+  other file with such throws.
+- **Inputs**. errortest.cpp has its own random numbers (ER_SEED); state the messages print is the same on both
+  sides (graphics.cpp's counts set on both and restored; the image's Map.cpp field matrix and object vector
+  constructed as maptest.cpp does; Tibia.dat loaded on both for Objects.cpp; the talkbox getters only when both
+  sides have as many talkboxes, which a note reports otherwise). Leading assertions get values outside their
+  ranges (edges, near, INT_MIN/INT_MAX), the other parameters in range.
+- **Functions earlier tests redirected** (medium). Some tests redirect image and our functions for good
+  (creaturestest.cpp: GetFirstObject, CheckEventHelpName and others on both sides). In the full run such a call
+  reaches a fake (a NULL name crashed the child in the first full run), so a comparison whose function, or
+  whose wrapped callee, starts with a jump is skipped and counted: 250 of the full run's comparisons,
+  none with DIFFTEST_ONLY=Errors. The test runs before TestMapWindow, whose patches are for good too.
+- **Covered** (per file, functions with error paths compared): TMyException.cpp (both constructors on random
+  files, kinds, names, values, reasons); Player.cpp (HandleException's error.txt and FatalError call,
+  HandleProgramError's text, Terminating); Utils.cpp (every assertion: strings, buffers at their ends,
+  SetSize, FormatNumber); Map.cpp (the object, effect, field, automap accessors' coordinate and number
+  assertions; TEND2 of GetFieldHeight, IsFieldPassable, IsFieldThrowable, IsFieldTranslucent,
+  RequestFieldRefresh, FieldRefreshRequested over GetFirstObject's assertions and matrix3d's index error);
+  Container.h (array and matrix3d index errors through Objects.cpp and Map.cpp); Objects.cpp (36 property
+  getters and the four flag getters on the real Tibia.dat: TEND1/TEND2 over the array index error and the
+  Entry flag assertions, GetMissileSpriteNumber, LoadObjects(NULL)); Creatures.cpp (skills, experience,
+  creatures, buddies' parameter checks, HideCreature's TEND1); Inventory.cpp (all container accessors, body
+  objects with TEND1); Talk.cpp (talkboxes with TEND1/TEND2 over GetTalkbox, the text buffer checks, mode
+  checks); Status.cpp (rights, messages, account, characters, clipboard, InitStatus); Preferences.cpp (hotkeys,
+  dialogs, channels, MotD, buddies, skill bars); Help.cpp (all four); graphics.cpp (file names, sprites,
+  pictures, caches, fonts, DrawPicture); Script.cpp (the tokenizer on random broken scripts: every error() text,
+  "identifier too long", "string too long", the get* type errors, open/close errors; the writer's, the binary
+  reader's and writer's errors; InstallPatch).
+- **Not covered, and why**: Communication.cpp, Control.cpp, Network.cpp, MainFrm.cpp (not linked into
+  difftest.exe: sockets, MFC); sysinc.cpp (its own sysinctest.exe; only GetErrorText-style texts);
+  SurfaceDX.cpp, surfaceDX9.cpp, SurfaceGL.cpp, Surface.cpp (their PROGRAM_ERROR throws and assertions need the
+  fake COM/OpenGL worlds of their tests; the boundary is ready for them: PROGRAM_ERROR codes are compared);
+  the window files GUI.cpp, DialogElements.cpp, DialogWindow.cpp, ContextMenus.cpp, ConsoleWindow.cpp,
+  ContentWindows.cpp, Dialogs.cpp, MainWindow.cpp, MapWindow.cpp (member functions of objects that only their
+  tests' fake worlds can build on both sides); assertions that print state of a file's statics our test cannot
+  set (Creatures.cpp's NumberOfBuddies and NumberOfPlayerSteps, Inventory.cpp's offers, Map.cpp's effect
+  status, Status.cpp's AccountCharacters with valid numbers). Issue #34 asks to call the window and surface
+  files' error paths from their own tests with imageeh.cpp.
+- **Mutation check** (high): sixteen changes in src/ (assertion conditions in Utils, Creatures, Preferences,
+  Status, Help; TEND parameter lists in Map, Objects, Inventory; TERROR texts in Script; assertion values in
+  graphics and Talk; TMyException's wrapping format; error.txt's and HandleProgramError's texts; Script's
+  reason removed again): DIFFTEST_ONLY=Errors fails on each, with 4 to 2,895 failures (build/scratch/mutate.py
+  of the issue's worktree; each mutated object rebuilt from the restored source before the next).
+- **Totals**: DIFFTEST_ONLY=Errors 32,822 checks (9,270 exceptions compared, 8,045 of the calls threw on the
+  original's side); in the full run 31,912 (250 skipped), difftest.exe 14,524,592, sysinctest.exe 67, vlong
+  3,201, no failures; the later tests' counts are unchanged. A DIFFTEST_ONLY=Errors run takes about a second.

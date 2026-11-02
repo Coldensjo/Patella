@@ -585,8 +585,26 @@ static void TestUtils()
 
 // Calls our function and the image's at Address (cdecl) with the same
 // arguments, converted to our parameter types.
+// Earlier tests redirect some functions for good (creaturestest.cpp the
+// image's and our GetFirstObject, CheckEventHelpName, ...): a function that
+// starts with a jump now is a test's fake. Such comparisons are skipped and
+// counted (the full run reports them; DIFFTEST_ONLY=Errors has none).
+static int Skipped = 0;
+static bool Redirected(const void *Code)
+{
+	return *(const uint8 *)Code == 0xe9;
+}
+static bool ImageRedirected(uint32 Address)
+{
+	return Redirected((const void *)(uintptr_t)Address);
+}
+
 template <class R, class... A, class... B> static void Both(const char *What, uint32 Address, R (*Ours)(A...), B &&... Arguments)
 {
+	if (ImageRedirected(Address) || Redirected((const void *)Ours)) {
+		Skipped++;
+		return;
+	}
 	if (Trace)
 		printf("Errors: calling %s\n", What);
 	TThrown OurResult = OurThrow([&] { Ours((A)Arguments...); });
@@ -856,29 +874,42 @@ static void TestWrapping(const char *ExePath)
 		At<void (__fastcall *)(void *, void *, int, int, int, int, int, int)>(0x4b0d70)((void *)(uintptr_t)0x5d4c24, NULL,
 			0, 17, 0, 13, 0, 7);
 	}
+	// The callees whose errors are wrapped must be the real ones.
+	bool Fields = !ImageRedirected(0x4b6140) && !Redirected((const void *)(TObject (*)(int, int, int))GetFirstObject);
+	bool Creatures = !ImageRedirected(0x44c6e0) && !Redirected((const void *)GetCreature);
+	bool BodyReal = !ImageRedirected(0x4a4550) && !Redirected((const void *)SetBodyObject);
 	for (int t = 0; t < 40; t++) {
 		int x, y, z;
 		Coordinates(&x, &y, &z, MAPSIZE_X - 1, MAPSIZE_Y - 1, MAPSIZE_Z - 1);
+		if (!Fields) {
+			Skipped += 4;
+			goto Matrix;
+		}
 		Both("GetFieldHeight", 0x4bdf30, GetFieldHeight, x, y, z);
 		Both("IsFieldPassable", 0x4be130, IsFieldPassable, x, y, z, false);
 		Both("IsFieldThrowable", 0x4be390, IsFieldThrowable, x, y, z);
 		Both("IsFieldTranslucent", 0x4be570, IsFieldTranslucent, x, y, z);
+	Matrix:
 		Both("RequestFieldRefresh", 0x4bdd70, RequestFieldRefresh, x, y, z);
 		Both("FieldRefreshRequested", 0x4be750, FieldRefreshRequested, x, y, z);
 		// Inventory.cpp: the body positions 1..BODY_POSITIONS.
 		int Body = Outside(1, BODY_POSITIONS);
 		Both("GetBodyObject", 0x4a4880, GetBodyObject, Body);
-		Both("DeleteBodyObject", 0x4a46d0, DeleteBodyObject, Body);
+		if (BodyReal)
+			Both("DeleteBodyObject", 0x4a46d0, DeleteBodyObject, Body);
 		Both("SetBodyObject", 0x4a4550, SetBodyObject, Body, TObject());
 		// Creatures.cpp: GetCreature(0) asserts.
-		Both("HideCreature", 0x44c8c0, HideCreature, 0);
+		if (Creatures)
+			Both("HideCreature", 0x44c8c0, HideCreature, 0);
 	}
 
 	// Talk.cpp: the talkbox getters call GetTalkbox, which asserts
 	// In(Number,1,GetNumberOfTalkboxes()) and prints the count: the same on
 	// both sides when the earlier tests left both sides alike.
 	int OurTalkboxes = GetNumberOfTalkboxes(), OriginalTalkboxes = At<int (__cdecl *)()>(0x4fd450)();
-	if (OurTalkboxes == OriginalTalkboxes) {
+	if (ImageRedirected(0x4fdd80) || Redirected((const void *)GetTalkbox)) {
+		printf("note: Errors: GetTalkbox is redirected; the talkbox getters are not compared\n");
+	} else if (OurTalkboxes == OriginalTalkboxes) {
 		for (int t = 0; t < 40; t++) {
 			int Number = Outside(1, OurTalkboxes > 0 ? OurTalkboxes : 1);
 			if (OurTalkboxes == 0 && t % 4 == 0)
@@ -1194,5 +1225,6 @@ void TestErrors(const char *ExePath)
 			for (auto &Line : File.second)
 				printf("Errors line: %s %d -> %d\n", File.first.c_str(), Line.first, Line.second);
 	}
-	printf("Errors: %d checks, %d exceptions compared (%d calls that threw)\n", Checks - Before, Compared, ComparedThrows);
+	printf("Errors: %d checks, %d exceptions compared (%d calls that threw), %d comparisons skipped (functions redirected by earlier tests)\n",
+		Checks - Before, Compared, ComparedThrows, Skipped);
 }
