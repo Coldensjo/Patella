@@ -1590,7 +1590,6 @@ void TIgnoreListDialog::HandleEvent(int Event)
 		}
 		TFont Font;
 		TIgnoreEntry Entry;
-		Entry.Permanent = false;
 		CopyString(Entry.Name, "new entry", 30);
 		IgnoreEntries(IgnoreList->GetNumberOfLines()) = Entry;
 		IgnoreList->AddLine("new entry", Font);
@@ -1609,7 +1608,6 @@ void TIgnoreListDialog::HandleEvent(int Event)
 		}
 		TFont Font;
 		TIgnoreEntry Entry;
-		Entry.Permanent = false;
 		CopyString(Entry.Name, "new entry", 30);
 		WhiteEntries(WhiteList->GetNumberOfLines()) = Entry;
 		WhiteList->AddLine("new entry", Font);

@@ -348,6 +348,13 @@ public:
 // Container.h's vector<TIgnoreEntry> 0x46bb60, 0x46bb70, 0x46c0d0; the type
 // name is ours).
 struct TIgnoreEntry {
+	// Inline: the vector's constructor and operator() clear every new entry
+	// (and init) this way.
+	TIgnoreEntry()
+	{
+		Name[0] = 0;
+		Permanent = false;
+	}
 	char Name[30];  // +0x00
 	bool Permanent; // +0x1e
 };
