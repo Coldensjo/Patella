@@ -128,7 +128,10 @@ def classify(funcs):
 
 
 def apply_ranges(funcs):
-	"""Assign settled gaps from file-ranges.tsv; assertion and header evidence still win."""
+	"""Assign settled gaps from file-ranges.tsv; assertion and header evidence still win.
+
+	Library-region functions get the range's file too (a library such as libcmt.lib, or a
+	third-party source such as regexp.c); one whose range names a game file (.cpp/.h) is game code."""
 	path = ROOT / 'file-ranges.tsv'
 	if not path.exists():
 		return
@@ -138,6 +141,13 @@ def apply_ranges(funcs):
 		if len(cols) >= 3:
 			ranges.append((int(cols[0], 16), int(cols[1], 16), cols[2]))
 	for fn in funcs:
+		if fn['kind'] == 'library':
+			for lo, hi, file in ranges:
+				if lo <= fn['addr'] <= hi:
+					fn['file'], fn['how'] = file, 'range'
+					if file.lower().endswith(('.cpp', '.h')):
+						fn['kind'] = 'game'
+			continue
 		if fn['kind'] not in GAME_KINDS or fn['how'] in ('assert', 'header'):
 			continue
 		for lo, hi, file in ranges:
@@ -219,6 +229,15 @@ def write_report(funcs, lib_start):
 			sum(fn['size'] for fn in fs), f'`0x{fs[0]["addr"]:06x}`', f'`0x{fs[-1]["addr"]:06x}`',
 			f'{min(lines)}-{max(lines)}' if lines else ''))
 	out += table(rows, ('File', 'Functions', 'Catch', 'Bytes', 'First', 'Last', 'Assert lines'))
+
+	lib = defaultdict(list)
+	for fn in funcs:
+		if fn['kind'] == 'library':
+			lib[fn['file'] or '(not assigned)'].append(fn)
+	out += ['## Library region', '', 'Library functions by the library or third-party source that provides them '
+		'(file-ranges.tsv; names.tsv has a row for each).', '']
+	out += table([(name, len(fs), sum(fn['size'] for fn in fs), f'`0x{fs[0]["addr"]:06x}`', f'`0x{fs[-1]["addr"]:06x}`')
+		for name, fs in sorted(lib.items(), key=lambda kv: kv[1][0]['addr'])], ('Library', 'Functions', 'Bytes', 'First', 'Last'))
 
 	out += ['## Unresolved gaps', '', 'Functions between two different files. Each belongs to one of the '
 		'neighbours, or to a file without assertions whose name sorts between them.', '']

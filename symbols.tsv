@@ -5504,1107 +5504,1107 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x50e360	636	FUN_0050e360	game	vlong.cpp	range			
 0x50e5e0	1153	FUN_0050e5e0	game	vlong.cpp	range			
 0x50ea70	119	FUN_0050ea70	game	vlong.cpp	range			
-0x50eae8	6	GLU32.DLL::gluOrtho2D	library		named			
-0x50eaee	6	DDRAW.DLL::DirectDrawCreate	library		named			
-0x50eb00	44	FUN_0050eb00	library		region			
-0x50eb30	28	FUN_0050eb30	library		region			
-0x50eb50	66	FUN_0050eb50	library		region			
-0x50eba0	225	FUN_0050eba0	library		region			
-0x50eca0	36	FUN_0050eca0	library		region			
-0x50ecd0	99	FUN_0050ecd0	library		region			
-0x50ed40	29	FUN_0050ed40	library		region			
-0x50ed60	631	FUN_0050ed60	library		region			
-0x50f040	443	FUN_0050f040	library		region			
-0x50f200	120	FUN_0050f200	library		region			
-0x50f280	210	FUN_0050f280	library		region			
-0x50f360	280	FUN_0050f360	library		region			
-0x50f480	491	FUN_0050f480	library		region			
-0x50f670	791	FUN_0050f670	library		region			
-0x50fa40	377	FUN_0050fa40	library		region			
-0x50fbb9	92	ATL::_AtlGetStringResourceImage	library		named			
-0x50fc15	47	ATL::AtlGetStringResourceImage	library		named			
-0x50fc44	26	FUN_0050fc44	library		region			
-0x50fc5e	23	CRect::IsRectNull	library		named			
-0x50fc75	25	CPtrList::GetNext	library		named			
-0x50fc8e	36	CBitmap::CreateCompatibleBitmap	library		named			
-0x50fcb2	33	CDC::CreateCompatibleDC	library		named			
-0x50fcd3	11	FUN_0050fcd3	library		region			
-0x50fcde	22	CMenu::GetSubMenu	library		named			
-0x50fcf4	50	CPushRoutingFrame::CPushRoutingFrame	library		named			
-0x50fd26	30	CPushRoutingFrame::~CPushRoutingFrame	library		named			
-0x50fd44	19	CToolBarCtrl::GetButtonCount	library		named			
-0x50fd57	39	CImageList::Draw	library		named			
-0x50fd7e	25	CToolBarCtrl::GetImageList	library		named			
-0x50fd97	38	FUN_0050fd97	library		region			
-0x50fdbd	29	ATL::ChTraitsCRT<char>::GetBaseTypeLength	library		named			
-0x50fdda	35	ATL::ChTraitsCRT<char>::ConvertToBaseType	library		named			
-0x50fdfd	11	FUN_0050fdfd	library		region			
-0x50fe08	90	ATL::CSimpleStringT<char,0>::CloneData	library		named			
-0x50fe62	40	ATL::CSimpleStringT<char,0>::Reallocate	library		named			
-0x50fe8a	28	FUN_0050fe8a	library		region			
-0x50fea6	28	FUN_0050fea6	library		region			
-0x50fec2	67	ATL::CSimpleStringT<char,0>::Empty	library		named			
-0x50ff05	37	ATL::CSimpleStringT<char,0>::ReleaseBuffer	library		named			
-0x50ff2a	23	FUN_0050ff2a	library		region			
-0x50ff41	30	CSimpleStringT<>	library		named			
-0x50ff5f	103	ATL::CSimpleStringT<char,0>::Fork	library		named			
-0x50ffc6	71	ATL::CSimpleStringT<char,0>::PrepareWrite2	library		named			
-0x51000d	20	FUN_0051000d	library		region			
-0x510021	10	FUN_00510021	library		region			
-0x51002b	42	ATL::CSimpleStringT<char,0>::PrepareWrite	library		named			
-0x510055	89	ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::LoadStringA	library		named			
-0x5100ae	103	ATL::CSimpleStringT<char,0>::SetString	library		named			
-0x510115	32	ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::LoadStringA	library		named			
-0x510135	76	ATL::CSimpleStringT<char,0>::Append	library		named			
-0x510181	37	ATL::CSimpleStringT<char,0>::SetString	library		named			
-0x5101a6	13	FUN_005101a6	library		region			
-0x5101b3	77	_IsPlatformNT	library		named			
-0x510200	250	_InitMultipleMonitorStubs	library		named			
-0x5102fa	76	xMonitorFromRect	library		named			
-0x510346	107	xMonitorFromWindow	library		named			
-0x5103b1	149	xGetMonitorInfo	library		named			
-0x510446	1435	ATL::AtlIAccessibleInvokeHelper	library		named			
-0x510a2d	96	ATL::AtlIAccessibleGetIDsOfNamesHelper	library		named			
-0x510aa5	13	FUN_00510aa5	library		region			
-0x510abf	21	FUN_00510abf	library		region			
-0x510ad4	206	ATL::AtlInternalQueryInterface	library		named			
-0x510ba2	23	CWnd::GetOwner	library		named			
-0x510bb9	33	ATL::CSimpleStringT<char,0>::GetBufferSetLength	library		named			
-0x510be0	24	_IsEqualGUID	library		named			
-0x510bf8	28	FID_conflict:ModifyMenuW	library		named			
-0x510c14	30	CAsyncSocket::Bind	library		named			
-0x510c32	32	CheckImplicitLoad	library		named			
-0x510c52	75	ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>	library		named			
-0x510c9d	27	CPoint::operator==	library		named			
-0x510cb8	22	FUN_00510cb8	library		region			
-0x510cce	28	FUN_00510cce	library		region			
-0x510cea	7	FUN_00510cea	library		region			
-0x510cf1	7	FUN_00510cf1	library		region			
-0x510cf8	7	FUN_00510cf8	library		region			
-0x510cff	7	FUN_00510cff	library		region			
-0x510d06	24	CSimpleException::CSimpleException	library		named			
-0x510d1e	28	FUN_00510d1e	library		region			
-0x510d3a	34	FUN_00510d3a	library		region			
-0x510d5c	28	FUN_00510d5c	library		region			
-0x510d78	34	FUN_00510d78	library		region			
-0x510d9a	28	FUN_00510d9a	library		region			
-0x510db6	34	FUN_00510db6	library		region			
-0x510dd8	34	FUN_00510dd8	library		region			
-0x510dfa	7	FUN_00510dfa	library		region			
-0x510e01	34	FUN_00510e01	library		region			
-0x510e23	7	FUN_00510e23	library		region			
-0x510e2a	48	CDC::BitBlt	library		named			
-0x510e9a	37	FUN_00510e9a	library		region			
-0x510ebf	56	FUN_00510ebf	library		region			
-0x510f13	31	FUN_00510f13	library		region			
-0x510f32	48	FUN_00510f32	library		region			
-0x510f7e	28	FUN_00510f7e	library		region			
-0x510f9a	28	FUN_00510f9a	library		region			
-0x510fb6	11	FUN_00510fb6	library		region			
-0x510fc1	33	CBrush::CreatePatternBrush	library		named			
-0x510fe2	40	CBitmap::CreateBitmap	library		named			
-0x51100a	25	FID_conflict:CreateFontIndirectA	library		named			
-0x511023	45	GetTextExtent	library		named			
-0x511050	20	ATL::CComCriticalSection::CComCriticalSection	library		named			
-0x511064	38	FUN_00511064	library		region			
-0x5110b4	28	CHandleMap::`scalar_deleting_destructor'	library		named			
-0x5110d0	84	CHandleMap::~CHandleMap	library		named			
-0x511124	60	CArchive::operator<<	library		named			
-0x511160	59	CArchive::operator<<	library		named			
-0x51119b	67	CArchive::operator>>	library		named			
-0x5111de	66	CArchive::operator>>	library		named			
-0x511220	77	CArchiveException	library		named			
-0x51126d	28	FUN_0051126d	library		region			
-0x511289	17	FUN_00511289	library		region			
-0x51129a	42	CFixedAllocNoSync::CFixedAllocNoSync	library		named			
-0x5112c4	21	CFixedAllocNoSync::FreeAll	library		named			
-0x5112d9	5	FUN_005112d9	library		region			
-0x5112de	65	CFixedAllocNoSync::Alloc	library		named			
-0x511320	672	_memmove	library		named			
-0x51165d	104	_free	library		named			
-0x5116b0	9	FUN_005116b0	library		region			
-0x5116ce	43	_JumpToContinuation	library		named			
-0x5116fe	7	FID_conflict:_CallMemberFunction1	library		named			
-0x511705	82	_UnwindNestedFrames	library		named			
-0x511757	54	___CxxFrameHandler	library		named			
-0x5117c8	199	_CallSETranslator	library		named			
-0x51188f	175	TranslatorGuardHandler	library		named			
-0x511941	122	_GetRangeOfTrysToCheck	library		named			
-0x5119bb	40	_CreateFrameInfo	library		named			
-0x5119e3	33	IsExceptionObjectToBeDestroyed	library		named			
-0x511a04	76	_FindAndUnlinkFrame	library		named			
-0x511a50	89	_CallCatchBlock2	library		named			
-0x511aac	32	__global_unwind2	library		named			
-0x511aee	104	__local_unwind2	library		named			
-0x511b56	35	__abnormal_termination	library		named			
-0x511b79	9	__NLG_Notify1	library		named			
-0x511b82	24	FUN_00511b82	library		region			
-0x511b9a	17	exception::exception	library		named			
-0x511bab	61	exception::exception	library		named			
-0x511be8	74	exception::exception	library		named			
-0x511c32	22	exception::~exception	library		named			
-0x511c55	25	FUN_00511c55	library		region			
-0x511c86	11	FUN_00511c86	library		region			
-0x511c91	28	FUN_00511c91	library		region			
-0x511cad	28	FUN_00511cad	library		region			
-0x511cc9	61	type_info::~type_info	library		named			
-0x511d06	9	FUN_00511d06	library		region			
-0x511d0f	28	type_info::`scalar_deleting_destructor'	library		named			
-0x511d2b	58	__CxxThrowException@8	library		named			
-0x511d65	6	FUN_00511d65	library		region			
-0x511d6b	88	_sprintf	library		named			
-0x511dd0	173	_memchr	library		named			
-0x511e7d	1	FUN_00511e7d	library		region			
-0x511e7e	56	FUN_00511e7e	library		region			
-0x511eb6	30	__fpmath	library		named			
-0x511ee0	70	_strcspn	library		named			
-0x511f26	13	FUN_00511f26	library		region			
-0x511f33	34	_rand	library		named			
-0x511f55	128	__onexit_lk	library		named			
-0x511fd5	40	___onexitinit	library		named			
-0x511ffd	50	__onexit	library		named			
-0x51202f	6	FUN_0051202f	library		region			
-0x512035	18	_atexit	library		named			
-0x512050	139	FUN_00512050	library		region			
-0x5120d6	76	__fclose_lk	library		named			
-0x512122	70	_fclose	library		named			
-0x51216b	8	FUN_0051216b	library		region			
-0x512173	84	_fprintf	library		named			
-0x5121c7	10	FUN_005121c7	library		region			
-0x5121d1	25	_ctime	library		named			
-0x5121ea	57	FID_conflict:__time32	library		named			
-0x512223	82	__fsopen	library		named			
-0x512275	10	FUN_00512275	library		region			
-0x51227f	19	_fopen	library		named			
-0x512292	86	_printf	library		named			
-0x5122ed	11	FUN_005122ed	library		region			
-0x512300	61	__chkstk	library		named			
-0x51233d	87	__snprintf	library		named			
-0x5123a0	292	_strncpy	library		named			
-0x5124c4	117	FUN_005124c4	library		region			
-0x512539	105	__stricmp	library		named			
-0x5125a2	136	_atol	library		named			
-0x51262a	5	_atol	library		named			
-0x512630	106	shortsort	library		named			
-0x5126a0	643	_qsort	library		named			
-0x512923	200	___tolower_mt	library		named			
-0x5129eb	34	_tolower	library		named			
-0x512a21	74	`eh_vector_constructor_iterator'	library		named			
-0x512a6b	24	FUN_00512a6b	library		region			
-0x512a83	47	__ArrayUnwind	library		named			
-0x512ae1	72	`eh_vector_destructor_iterator'	library		named			
-0x512b29	24	FUN_00512b29	library		region			
-0x512b50	289	FUN_00512b50	library		region			
-0x512c71	111	__heap_alloc	library		named			
-0x512ce3	9	FUN_00512ce3	library		region			
-0x512cec	44	__nh_malloc	library		named			
-0x512d18	18	_malloc	library		named			
-0x512d2a	47	___crtExitProcess	library		named			
-0x512d5a	9	FUN_00512d5a	library		region			
-0x512d63	9	FUN_00512d63	library		region			
-0x512d6c	24	__initterm	library		named			
-0x512d84	106	__cinit	library		named			
-0x512dee	181	doexit	library		named			
-0x512e9d	14	FUN_00512e9d	library		region			
-0x512eb1	17	_exit	library		named			
-0x512ec2	17	__exit	library		named			
-0x512ed3	15	__cexit	library		named			
-0x512ef1	210	_setvbuf	library		named			
-0x512fc3	10	FUN_00512fc3	library		region			
-0x512fcd	108	__ungetc_lk	library		named			
-0x513039	59	_ungetc	library		named			
-0x513074	10	FUN_00513074	library		region			
-0x51307e	93	__flush	library		named			
-0x5130db	46	__fflush_lk	library		named			
-0x513109	182	flsall	library		named			
-0x5131a9	17	FUN_005131a9	library		region			
-0x5131d5	9	FUN_005131d5	library		region			
-0x5131de	70	_fflush	library		named			
-0x513224	10	FUN_00513224	library		region			
-0x513237	69	FID_conflict:_getc	library		named			
-0x51327f	8	FUN_0051327f	library		region			
-0x513287	263	__fwrite_lk	library		named			
-0x51338e	66	_fwrite	library		named			
-0x5133d0	10	FUN_005133d0	library		region			
-0x5133da	77	FID_conflict:_fputc	library		named			
-0x51342a	8	FUN_0051342a	library		region			
-0x513432	34	_fgetpos	library		named			
-0x513454	143	__fseek_lk	library		named			
-0x5134e3	63	_fseek	library		named			
-0x513522	10	FUN_00513522	library		region			
-0x51352c	24	_fsetpos	library		named			
-0x513544	181	_strtok	library		named			
-0x5135f9	20	__execl	library		named			
-0x513620	190	FUN_00513620	library		region			
-0x5136de	246	__eof	library		named			
-0x5137b8	10	FUN_005137b8	library		region			
-0x5137de	354	__ftell_lk	library		named			
-0x513940	233	__fread_lk	library		named			
-0x513a29	66	_fread	library		named			
-0x513a6b	10	FUN_00513a6b	library		region			
-0x513a75	46	FUN_00513a75	library		region			
-0x513aa3	412	_realloc	library		named			
-0x513c0b	9	FUN_00513c0b	library		region			
-0x513c50	70	__access	library		named			
-0x513c96	42	FUN_00513c96	library		region			
-0x513cc0	5	thunk_FUN_00513c96	library		named			
-0x513cc5	227	__resetstkoflw	library		named			
-0x513e96	27	FUN_00513e96	library		region			
-0x513eb1	384	_localtime	library		named			
-0x514031	37	__amsg_exit	library		named			
-0x514056	36	fast_error_exit	library		named			
-0x51407a	426	entry	library		named			
-0x514250	57	_strncmp	library		named			
-0x514289	123	__mbschr	library		named			
-0x514304	41	report_failure	library		named			
-0x514335	14	__security_check_cookie	library		named			
-0x514343	148	__mbscmp	library		named			
-0x5143d8	31	FUN_005143d8	library		region			
-0x514400	672	_memcpy	library		named			
-0x514740	139	_strlen	library		named			
-0x5147d0	96	_memset	library		named			
-0x514830	184	_memcmp	library		named			
-0x5148e8	52	_sscanf	library		named			
-0x51491c	43	__strdup	library		named			
-0x514947	158	__expand	library		named			
-0x5149c5	9	FUN_005149c5	library		region			
-0x5149f1	106	__msize	library		named			
-0x514a5e	9	FUN_00514a5e	library		region			
-0x514a68	59	__SEH_prolog	library		named			
-0x514aa3	17	__SEH_epilog	library		named			
-0x514ab4	9	FUN_00514ab4	library		region			
-0x514abd	9	FUN_00514abd	library		region			
-0x514ac6	115	__dosmaperr	library		named			
-0x514b39	47	_CPtoLCID	library		named			
-0x514b68	41	setSBCS	library		named			
-0x514b91	396	setSBUpLow	library		named			
-0x514d1d	99	___updatetmbcinfo	library		named			
-0x514d83	9	FUN_00514d83	library		region			
-0x514d8c	400	__setmbcp_lk	library		named			
-0x514f1c	327	__setmbcp	library		named			
-0x515063	9	FUN_00515063	library		region			
-0x51506c	30	___initmbctable	library		named			
-0x51508a	107	__mbsrchr	library		named			
-0x515100	52	__allmul	library		named			
-0x5151ea	175	_calloc	library		named			
-0x515294	9	FUN_00515294	library		region			
-0x5152a5	26	___heap_select	library		named			
-0x5152bf	81	__heap_init	library		named			
-0x515310	73	__mtinitlocks	library		named			
-0x515359	85	__mtdeletelocks	library		named			
-0x5153ae	21	FUN_005153ae	library		region			
-0x5153c3	151	__mtinitlocknum	library		named			
-0x51545a	9	FUN_0051545a	library		region			
-0x515463	49	__lock	library		named			
-0x515494	72	___sbh_heap_init	library		named			
-0x5154dc	43	___sbh_find_block	library		named			
-0x515507	792	___sbh_free_block	library		named			
-0x51581f	183	___sbh_alloc_new_region	library		named			
-0x5158d6	262	___sbh_alloc_new_group	library		named			
-0x5159dc	735	___sbh_resize_block	library		named			
-0x515cbb	764	___sbh_alloc_block	library		named			
-0x515fb7	79	TypeMatch	library		named			
-0x516024	148	___FrameUnwindToState	library		named			
-0x5160d7	27	FUN_005160d7	library		region			
-0x5160f2	52	___DestructExceptionObject	library		named			
-0x516137	31	AdjustPointer	library		named			
-0x516156	19	FUN_00516156	library		region			
-0x516169	157	CallCatchBlock	library		named			
-0x5162be	111	FUN_005162be	library		region			
-0x51632d	368	BuildCatchObject	library		named			
-0x5164a9	103	CatchIt	library		named			
-0x516510	190	FindHandlerForForeignException	library		named			
-0x5165ce	516	FindHandler	library		named			
-0x5167d2	162	___InternalCxxFrameHandler	library		named			
-0x516874	9	FUN_00516874	library		region			
-0x51687d	29	__mtterm	library		named			
-0x51689a	113	__getptd	library		named			
-0x516a3d	9	FUN_00516a3d	library		region			
-0x516a49	9	FUN_00516a49	library		region			
-0x516a52	239	__mtinit	library		named			
-0x516b41	46	terminate	library		named			
-0x516b76	38	_inconsistency	library		named			
-0x516bb0	76	__CallSettingFrame@12	library		named			
-0x516c00	7	FUN_00516c00	library		region			
-0x516c10	232	FUN_00516c10	library		region			
-0x516d00	135	_strcmp	library		named			
-0x516d88	78	__CxxUnhandledExceptionFilter	library		named			
-0x516df6	281	__flsbuf	library		named			
-0x516f0f	51	write_char	library		named			
-0x516f42	36	write_multi_char	library		named			
-0x516f66	55	write_string	library		named			
-0x516f9d	2010	__output	library		named			
-0x517838	62	__fassign	library		named			
-0x517876	29	__shift	library		named			
-0x517893	174	__cftoe2	library		named			
-0x517941	108	__cftoe	library		named			
-0x5179ad	156	__cftof2	library		named			
-0x517a49	98	__cftof	library		named			
-0x517aab	154	__cftog	library		named			
-0x517b45	81	__cfltcvt	library		named			
-0x517b96	18	__setdefaultprecision	library		named			
-0x517ba8	64	__ms_p5_test_fdiv	library		named			
-0x517be8	41	__ms_p5_mp_test_fdiv	library		named			
-0x517c11	131	__close_lk	library		named			
-0x517c94	144	__close	library		named			
-0x517d0b	8	FUN_00517d0b	library		region			
-0x517d2f	43	__freebuf	library		named			
-0x517e17	47	__lock_file	library		named			
-0x517e46	35	__lock_file2	library		named			
-0x517e69	47	__unlock_file	library		named			
-0x517e98	35	__unlock_file2	library		named			
-0x517ebb	136	__stbuf	library		named			
-0x517f43	42	__ftbuf	library		named			
-0x517f6d	267	_asctime	library		named			
-0x518080	104	__aulldiv	library		named			
-0x5180e8	360	__openfile	library		named			
-0x518250	278	__getstream	library		named			
-0x518369	9	FUN_00518369	library		region			
-0x518380	78	___ascii_stricmp	library		named			
-0x5183ce	6	FUN_005183ce	library		region			
-0x5183d4	6	FUN_005183d4	library		region			
-0x5183da	208	___freetlocinfo	library		named			
-0x5184aa	193	___updatetlocinfo_lk	library		named			
-0x51856b	36	__strcats	library		named			
-0x51858f	220	___lc_strtolc	library		named			
-0x51866b	78	___lc_lctostr	library		named			
-0x5186b9	50	___updatetlocinfo	library		named			
-0x5186eb	9	FUN_005186eb	library		region			
-0x5186f4	191	__setlocale_get_all	library		named			
-0x5187b3	348	__expandlocale	library		named			
-0x51890f	655	__setlocale_set_cat	library		named			
-0x518b9e	473	__setlocale_lk	library		named			
-0x518d77	337	_setlocale	library		named			
-0x518ec0	9	FUN_00518ec0	library		region			
-0x518ed1	119	___isctype_mt	library		named			
-0x518f48	886	___crtLCMapStringA	library		named			
-0x519304	654	___libm_error_support	library		named			
-0x519592	46	FUN_00519592	library		region			
-0x5195c7	206	___sse2_available_init	library		named			
-0x519695	211	__floor_default	library		named			
-0x519768	27	__callnewh	library		named			
-0x519783	61	__RTC_Initialize	library		named			
-0x51980b	68	__getbuf	library		named			
-0x51984f	462	__write_lk	library		named			
-0x519a1d	160	__write	library		named			
-0x519aa4	8	FUN_00519aa4	library		region			
-0x519ac8	177	__commit	library		named			
-0x519b68	8	FUN_00519b68	library		region			
-0x519b84	225	__filbuf	library		named			
-0x519c65	405	__ftelli64_lk	library		named			
-0x519dfa	61	__ftelli64	library		named			
-0x519e37	10	FUN_00519e37	library		region			
-0x519e41	116	__lseek_lk	library		named			
-0x519eb5	160	__lseek	library		named			
-0x519f3c	8	FUN_00519f3c	library		region			
-0x519f60	147	__fseeki64_lk	library		named			
-0x519ff3	66	__fseeki64	library		named			
-0x51a035	10	FUN_0051a035	library		region			
-0x51a03f	82	comexecmd	library		named			
-0x51a091	320	__execve	library		named			
-0x51a1d1	124	__set_osfhnd	library		named			
-0x51a24d	127	__free_osfhnd	library		named			
-0x51a2cc	65	__get_osfhandle	library		named			
-0x51a30d	148	__lock_fhandle	library		named			
-0x51a3a4	9	FUN_0051a3a4	library		region			
-0x51a3ad	34	__unlock_fhandle	library		named			
-0x51a3cf	356	__alloc_osfhnd	library		named			
-0x51a4a8	9	FUN_0051a4a8	library		region			
-0x51a542	9	FUN_0051a542	library		region			
-0x51a54b	131	__lseeki64_lk	library		named			
-0x51a5ce	179	__lseeki64	library		named			
-0x51a666	8	FUN_0051a666	library		region			
-0x51a68c	510	__ioinit	library		named			
-0x51a88a	475	__read_lk	library		named			
-0x51aa65	160	__read	library		named			
-0x51aaec	8	FUN_0051aaec	library		region			
-0x51ab10	553	__ValidateEH3RN	library		named			
-0x51ad39	666	__tzset_lk	library		named			
-0x51af54	9	FUN_0051af54	library		region			
-0x51afe1	440	cvtdate	library		named			
-0x51b199	391	__isindst_lk	library		named			
-0x51b320	67	___tzset	library		named			
-0x51b363	9	FUN_0051b363	library		region			
-0x51b36c	53	__isindst	library		named			
-0x51b3a1	9	FUN_0051b3a1	library		region			
-0x51b3aa	263	_gmtime	library		named			
-0x51b4b1	375	__NMSG_WRITE	library		named			
-0x51b628	57	__FF_MSGBANNER	library		named			
-0x51b661	356	__XcptFilter	library		named			
-0x51b7c5	93	__wincmdln	library		named			
-0x51b822	199	__setenvp	library		named			
-0x51b8e9	364	parse_cmdline	library		named			
-0x51ba55	162	__setargv	library		named			
-0x51baf7	290	___crtGetEnvironmentStringsA	library		named			
-0x51bc19	102	___security_init_cookie	library		named			
-0x51bc7f	319	___security_error_handler	library		named			
-0x51bdc7	22	__inc	library		named			
-0x51bddd	3387	__input	library		named			
-0x51cc12	421	___crtGetStringTypeA	library		named			
-0x51cdd0	45	_strrchr	library		named			
-0x51ce00	70	_strspn	library		named			
-0x51ce46	58	_isupper	library		named			
-0x51ce80	58	_islower	library		named			
-0x51ceba	58	_isdigit	library		named			
-0x51cef4	63	_isxdigit	library		named			
-0x51cf33	58	_isspace	library		named			
-0x51cf70	64	_strpbrk	library		named			
-0x51cfb0	16	___crtInitCritSecNoSpinCount@8	library		named			
-0x51cfc0	103	___crtInitCritSecAndSpinCount	library		named			
-0x51d04b	28	_ValidateRead	library		named			
-0x51d067	28	_ValidateWrite	library		named			
-0x51d083	24	_ValidateExecute	library		named			
-0x51d09b	24	_abort	library		named			
-0x51d0b3	42	__isatty	library		named			
-0x51d0dd	96	___wctomb_mt	library		named			
-0x51d13d	39	_wctomb	library		named			
-0x51d164	6	FUN_0051d164	library		region			
-0x51d170	149	__aulldvrm	library		named			
-0x51d205	50	__ZeroTail	library		named			
-0x51d237	77	__IncMan	library		named			
-0x51d284	114	__RoundMan	library		named			
-0x51d2f6	27	__CopyMan	library		named			
-0x51d311	25	__IsZeroMan	library		named			
-0x51d32a	123	__ShrMan	library		named			
-0x51d3a5	344	__ld12cvt	library		named			
-0x51d4fd	22	FID_conflict:__ld12tod	library		named			
-0x51d513	22	FID_conflict:__ld12tod	library		named			
-0x51d529	61	FID_conflict:__atodbl	library		named			
-0x51d566	61	FID_conflict:__atodbl	library		named			
-0x51d5a3	119	__fptostr	library		named			
-0x51d61a	186	___dtold	library		named			
-0x51d6d4	108	__fltout2	library		named			
-0x51d740	9	FUN_0051d740	library		region			
-0x51d749	146	__abstract_cw	library		named			
-0x51d7db	142	__hw_cw	library		named			
-0x51d869	50	__control87	library		named			
-0x51d89b	22	__controlfp	library		named			
-0x51d94c	743	__tsopen_lk	library		named			
-0x51dc33	69	__sopen	library		named			
-0x51dc78	16	FUN_0051dc78	library		region			
-0x51dc88	871	__get_lc_time	library		named			
-0x51dfef	400	___free_lc_time	library		named			
-0x51e1de	95	___free_lconv_num	library		named			
-0x51e23d	461	___init_numeric	library		named			
-0x51e40a	217	___free_lconv_mon	library		named			
-0x51e4e3	575	___init_monetary	library		named			
-0x51e722	490	___init_ctype	library		named			
-0x51e90c	25	____lc_codepage_func	library		named			
-0x51e925	25	____lc_handle_func	library		named			
-0x51e93e	96	_TranslateName	library		named			
-0x51e99e	26	_GetLcidFromDefault	library		named			
-0x51e9b8	118	_ProcessCodePage	library		named			
-0x51ea2e	30	_TestDefaultCountry	library		named			
-0x51ea4c	227	crtGetLocaleInfoA	library		named			
-0x51eb2f	53	_LcidFromHexString	library		named			
-0x51eb64	29	_GetPrimaryLen	library		named			
-0x51eb81	148	_CountryEnumProc@4	library		named			
-0x51ec15	113	_TestDefaultLanguage	library		named			
-0x51ec86	538	_LangCountryEnumProc@4	library		named			
-0x51eea0	203	_LanguageEnumProc@4	library		named			
-0x51ef6b	55	_GetLcidFromCountry	library		named			
-0x51efa2	134	_GetLcidFromLangCountry	library		named			
-0x51f028	85	_GetLcidFromLanguage	library		named			
-0x51f07d	437	___get_qualified_locale	library		named			
-0x51f232	67	___ansicp	library		named			
-0x51f275	434	___convertcp	library		named			
-0x51f43e	3	FUN_0051f43e	library		region			
-0x51f441	677	__raise_exc	library		named			
-0x51f6e6	548	__handle_exc	library		named			
-0x51f90a	40	__set_errno	library		named			
-0x51f932	45	__errcode	library		named			
-0x51f95f	158	__umatherr	library		named			
-0x51f9fd	83	__handle_qnan1	library		named			
-0x51fa50	184	__except1	library		named			
-0x51fb08	17	__frnd	library		named			
-0x51fb19	42	__set_exp	library		named			
-0x51fb43	91	__sptype	library		named			
-0x51fb9e	188	__decomp	library		named			
-0x51fc5a	11	__statfp	library		named			
-0x51fc65	12	__clrfp	library		named			
-0x51fc71	36	__ctrlfp	library		named			
-0x51fc95	86	FUN_0051fc95	library		region			
-0x51fceb	474	__dospawn	library		named			
-0x51fec5	507	__cenvarg	library		named			
-0x5200c0	129	__getenv_lk	library		named			
-0x520141	249	___crtMessageBoxA	library		named			
-0x52023a	51	x_ismbbtype	library		named			
-0x52026d	17	__ismbblead	library		named			
-0x52027e	192	___mbtowc_mt	library		named			
-0x52033e	43	_mbtowc	library		named			
-0x520369	46	siglookup	library		named			
-0x520397	356	_raise	library		named			
-0x5204d2	13	FUN_005204d2	library		region			
-0x520510	33	___addl	library		named			
-0x520531	94	___add_12	library		named			
-0x52058f	46	___shl_12	library		named			
-0x5205bd	45	___shr_12	library		named			
-0x5205ea	222	___mtold12	library		named			
-0x5206c8	1028	___strgtold12	library		named			
-0x520afc	654	$I10_OUTPUT	library		named			
-0x520d8a	321	__chsize_lk	library		named			
-0x520ecb	295	___getlocaleinfo	library		named			
-0x520ff2	127	__strnicmp	library		named			
-0x521071	62	xtoa	library		named			
-0x5210af	42	__itoa	library		named			
-0x5210d9	78	__mbsnbicoll	library		named			
-0x521127	144	___wtomb_environ	library		named			
-0x5211b7	562	___ld12mul	library		named			
-0x5213e9	134	___multtenpow12	library		named			
-0x52146f	108	__setmode_lk	library		named			
-0x5214db	281	___crtGetLocaleInfoW	library		named			
-0x52160b	297	___crtGetLocaleInfoA	library		named			
-0x521750	97	___ascii_strnicmp	library		named			
-0x5217b1	28	_strncnt	library		named			
-0x5217cd	848	___crtCompareStringA	library		named			
-0x521b51	77	findenv	library		named			
-0x521b9e	97	copy_environ	library		named			
-0x521bff	469	___crtsetenv	library		named			
-0x521dd4	6	KERNEL32.DLL::RtlUnwind	library		named			
-0x521dda	6	USER32.DLL::ReuseDDElParam	library		named			
-0x521de0	6	USER32.DLL::UnpackDDElParam	library		named			
-0x521de6	6	WINSPOOL.DRV::ClosePrinter	library		named			
-0x521dec	6	WINSPOOL.DRV::DocumentPropertiesA	library		named			
-0x521df2	6	WINSPOOL.DRV::OpenPrinterA	library		named			
-0x521df8	233	__Tolower_lk	library		named			
-0x521ee1	174	__Getctype	library		named			
-0x521f8f	29	FUN_00521f8f	library		region			
-0x521fac	143	__Tolower	library		named			
-0x52203b	29	FUN_0052203b	library		region			
-0x522058	110	__Getcvt	library		named			
-0x5220c6	29	FUN_005220c6	library		region			
-0x5220e3	47	std::_Init_locks::_Init_locks	library		named			
-0x52213b	35	FUN_0052213b	library		region			
-0x52215e	20	FUN_0052215e	library		region			
-0x522172	21	std::_Fac_node::~_Fac_node	library		named			
-0x522187	28	__Deletegloballocale	library		named			
-0x5221a3	35	tidy_global	library		named			
-0x5221c6	37	__Setgloballocale	library		named			
-0x5221eb	53	std::locale::_Getfacet	library		named			
-0x522220	67	__Fac_tidy	library		named			
-0x522263	57	std::locale::facet::_Register	library		named			
-0x52229c	136	std::locale::_Locimp::~_Locimp	library		named			
-0x522324	87	std::_Locinfo::~_Locinfo	library		named			
-0x52237b	28	std::locale::_Locimp::`scalar_deleting_destructor'	library		named			
-0x522397	80	std::locale::_Locimp::_Locimp	library		named			
-0x5223e7	138	std::_Locinfo::_Locinfo	library		named			
-0x522471	162	std::locale::_Init	library		named			
-0x522513	25	std::locale::locale	library		named			
-0x52252c	34	std::ios_base::_Callfns	library		named			
-0x52254e	66	std::ios_base::_Tidy	library		named			
-0x522590	64	std::ios_base::~ios_base	library		named			
-0x5225d0	29	FUN_005225d0	library		region			
-0x5225ed	28	FUN_005225ed	library		region			
-0x522609	60	std::runtime_error::runtime_error	library		named			
-0x522645	28	FUN_00522645	library		region			
-0x522661	11	FUN_00522661	library		region			
-0x52266c	198	std::ios_base::clear	library		named			
-0x522732	67	FUN_00522732	library		region			
-0x52278d	70	std::ios_base::_Init	library		named			
-0x5227d3	24	FUN_005227d3	library		region			
-0x5227eb	21	FUN_005227eb	library		region			
-0x522800	9	FUN_00522800	library		region			
-0x522809	9	FUN_00522809	library		region			
-0x522812	224	__Toupper_lk	library		named			
-0x5228f2	143	__Toupper	library		named			
-0x522981	29	FUN_00522981	library		region			
-0x52299e	60	FUN_0052299e	library		region			
-0x5229e8	29	FUN_005229e8	library		region			
-0x522a05	28	FUN_00522a05	library		region			
-0x522a21	28	FUN_00522a21	library		region			
-0x522a3d	11	FUN_00522a3d	library		region			
-0x522a48	28	FUN_00522a48	library		region			
-0x522a64	11	FUN_00522a64	library		region			
-0x522a6f	63	FUN_00522a6f	library		region			
-0x522b0a	63	FUN_00522b0a	library		region			
-0x522b62	5	thunk_FUN_00516156	library		named			
-0x522b67	162	std::_Fiopen	library		named			
-0x522c09	11	FUN_00522c09	library		region			
-0x522c14	11	FUN_00522c14	library		region			
-0x522c1f	11	FUN_00522c1f	library		region			
-0x522c2a	11	FUN_00522c2a	library		region			
-0x522c35	32	__Atexit	library		named			
-0x522c75	29	ATL::CSimpleArray<HINSTANCE__*,ATL::CSimpleArrayEqualHelper<HINSTANCE__*>_>::RemoveAll	library		named			
-0x522c92	26	ATL::_ATL_BASE_MODULE70::_ATL_BASE_MODULE70	library		named			
-0x522cac	22	ATL::CAtlBaseModule::~CAtlBaseModule	library		named			
-0x522cc2	171	ATL::CAtlBaseModule::CAtlBaseModule	library		named			
-0x522d6d	10	DelayLoad_CreateStdAccessibleObject	library		named			
-0x522d77	17	FUN_00522d77	library		region			
-0x522d88	6	OLEACC.DLL::CreateStdAccessibleObject	library		named			
-0x522d8e	10	DelayLoad_LresultFromObject	library		named			
-0x522d98	6	OLEACC.DLL::LresultFromObject	library		named			
-0x522d9e	579	___delayLoadHelper2@8	library		named			
-0x522fe1	5	AfxWinMain	library		named			
-0x522fe6	30	AfxInitialize	library		named			
-0x523017	8	FUN_00523017	library		region			
-0x52301f	41	CSimpleException::InitString	library		named			
-0x523048	80	CSimpleException::GetErrorMessage	library		named			
-0x523098	25	FUN_00523098	library		region			
-0x5230b2	25	FUN_005230b2	library		region			
-0x5230cc	124	FID_conflict:afxMapHMENU	library		named			
-0x523148	42	Detach	library		named			
-0x523172	22	FUN_00523172	library		region			
-0x523188	14	CImageList::FromHandle	library		named			
-0x523196	11	FUN_00523196	library		region			
-0x5231a1	28	FUN_005231a1	library		region			
-0x5231bd	32	RemoveAll	library		named			
-0x5231dd	34	FreeNode	library		named			
-0x5231ff	36	CPtrList::RemoveHead	library		named			
-0x523223	35	CPtrList::CPtrList	library		named			
-0x523246	11	FUN_00523246	library		region			
-0x523251	86	NewNode	library		named			
-0x5232a7	41	CPtrList::AddTail	library		named			
-0x5232d0	28	FUN_005232d0	library		region			
-0x5232ec	48	FUN_005232ec	library		region			
-0x52331d	22	CPlex::FreeDataChain	library		named			
-0x523333	261	CByteArray::SetSize	library		named			
-0x52344f	16	FUN_0052344f	library		region			
-0x5234dc	28	FUN_005234dc	library		region			
-0x5234f8	76	CMapPtrToPtr::InitHashTable	library		named			
-0x523544	43	CMapPtrToPtr::RemoveAll	library		named			
-0x52356f	25	FreeAssoc	library		named			
-0x523588	56	CMapPtrToPtr::GetAssocAt	library		named			
-0x5235c0	55	CMapPtrToPtr::GetValueAt	library		named			
-0x5235f7	39	CMapPtrToPtr::Lookup	library		named			
-0x52361e	67	CMapPtrToPtr::RemoveKey	library		named			
-0x523661	122	CMapPtrToPtr::GetNextAssoc	library		named			
-0x5236db	46	CMapPtrToPtr::CMapPtrToPtr	library		named			
-0x523709	11	FUN_00523709	library		region			
-0x523714	75	CMapPtrToPtr::NewAssoc	library		named			
-0x52375f	85	CMapPtrToPtr::operator[]	library		named			
-0x5237b4	28	FUN_005237b4	library		region			
-0x5237d0	5	thunk_FUN_00523098	library		named			
-0x5237d5	18	AfxSetNewHandler	library		named			
-0x5237e7	43	operator_new	library		named			
-0x523812	5	_free	library		named			
-0x523817	5	operator_new	library		named			
-0x523821	70	CWnd::CWnd	library		named			
-0x523867	80	_AfxModifyStyle	library		named			
-0x5238d1	26	CWnd::ModifyStyleEx	library		named			
-0x523948	31	FUN_00523948	library		region			
-0x523967	113	OnToolHitTest	library		named			
-0x5239d8	23	FUN_005239d8	library		region			
-0x5239ef	23	FUN_005239ef	library		region			
-0x523a06	241	AfxRegisterClass	library		named			
-0x523af7	16	Catch@00523af7	library		region			
-0x523b08	21	FUN_00523b08	library		region			
-0x523b1d	27	FUN_00523b1d	library		region			
-0x523b3e	64	AfxFindMessageEntry	library		named			
-0x523b7e	68	CWnd::WindowProc	library		named			
-0x523bc2	25	CTestCmdUI::CTestCmdUI	library		named			
-0x523bf4	140	AfxRepositionWindow	library		named			
-0x523c80	45	CWnd::CalcWindowRect	library		named			
-0x523ce8	9	FUN_00523ce8	library		region			
-0x523cf1	27	CWnd::XAccessible::GetIDsOfNames	library		named			
-0x523f37	49	CWnd::XAccessible::accLocation	library		named			
-0x524272	44	CWnd::accLocation	library		named			
-0x524330	120	_AfxInitCommonControls	library		named			
-0x5243a8	31	CFrameWnd::IsTracking	library		named			
-0x5243e1	67	CWnd::CWnd	library		named			
-0x524424	35	_AfxPreInitDialog	library		named			
-0x524447	73	CreateEx	library		named			
-0x524490	78	Create	library		named			
-0x52452f	84	CMenu::TrackPopupMenu	library		named			
-0x524583	91	FUN_00524583	library		region			
-0x5245de	178	AfxRegisterWndClass	library		named			
-0x524690	81	CWnd::WinHelpInternal	library		named			
-0x524700	13	FUN_00524700	library		region			
-0x52470d	437	CWnd::CenterWindow	library		named			
-0x5248e7	65	_AfxRegisterWithIcon	library		named			
-0x524928	719	AfxEndDeferRegisterClass	library		named			
-0x524bf7	53	CWnd::GetCurrentMessage	library		named			
-0x524c2c	39	CWnd::Default	library		named			
-0x524c53	124	afxMapHWND	library		named			
-0x524ccf	39	CWnd::FromHandle	library		named			
-0x524cf6	26	CWnd::FromHandlePermanent	library		named			
-0x524d10	57	CWnd::Attach	library		named			
-0x524d49	46	CWnd::Detach	library		named			
-0x524d77	66	AfxUnhookWindowCreate	library		named			
-0x524db9	32	FUN_00524db9	library		region			
-0x524dd9	59	CWnd::OnDestroy	library		named			
-0x524e14	273	CWnd::OnNcDestroy	library		named			
-0x524f25	84	CWnd::DestroyWindow	library		named			
-0x524f79	70	CWnd::OnNTCtlColor	library		named			
-0x524fbf	119	CWnd::GetDescendantWindow	library		named			
-0x525036	328	CWnd::RepositionBars	library		named			
-0x52517e	66	CWnd::WalkPreTranslateTree	library		named			
-0x5251c0	45	CWnd::SendChildNotifyLastMsg	library		named			
-0x5251ed	35	FUN_005251ed	library		region			
-0x525210	106	CWnd::OnHelpInfo	library		named			
-0x52527a	58	CWnd::OnGetObject	library		named			
-0x5252b4	33	FUN_005252b4	library		region			
-0x5252d5	64	CWnd::OnEnterIdle	library		named			
-0x525315	39	CWnd::OnCtlColor	library		named			
-0x52533c	121	_AfxPostInitDialog	library		named			
-0x5253b5	171	FUN_005253b5	library		region			
-0x525460	32	Catch@00525460	library		region			
-0x525483	31	FUN_00525483	library		region			
-0x5254a2	75	AfxWndProc	library		named			
-0x5254ed	6	FUN_005254ed	library		region			
-0x5254f3	124	CWnd::~CWnd	library		named			
-0x52556f	43	FID_conflict:OnCharToItem	library		named			
-0x52559a	120	FUN_0052559a	library		region			
-0x525612	63	CWnd::GetParentFrame	library		named			
-0x525651	65	CWnd::GetTopLevelFrame	library		named			
-0x525692	125	CWnd::SendMessageToDescendants	library		named			
-0x52570f	175	CWnd::ReflectLastMsg	library		named			
-0x5257eb	42	CWnd::OnDragList	library		named			
-0x525815	28	CWnd::`scalar_deleting_destructor'	library		named			
-0x525831	61	FUN_00525831	library		region			
-0x52586e	42	CWnd::OnCompareItem	library		named			
-0x5258b8	115	AfxHtmlHelp	library		named			
-0x52592b	140	CWnd::OnCommand	library		named			
-0x5259b7	122	CWnd::OnNotify	library		named			
-0x525a31	69	AfxGetParentOwner	library		named			
-0x525a76	40	CWnd::GetTopLevelParent	library		named			
-0x525a9e	70	CWnd::OnSysColorChange	library		named			
-0x525ae4	75	CWnd::OnDevModeChange	library		named			
-0x525b2f	73	CWnd::OnDisplayChange	library		named			
-0x525b78	97	_AfxHandleActivate	library		named			
-0x525bd9	118	_AfxHandleSetCursor	library		named			
-0x525c4f	291	_AfxActivationWndProc	library		named			
-0x525d72	53	Catch@00525d72	library		region			
-0x525da7	543	_AfxCbtFilterHook	library		named			
-0x525fc6	76	AfxHookWindowCreate	library		named			
-0x526012	198	CreateEx	library		named			
-0x5260d8	115	CWnd::PrepareForHelp	library		named			
-0x52614b	1287	CWnd::OnWndMsg	library		named			
-0x526756	232	CWnd::ReflectChildNotify	library		named			
-0x52686a	200	CWnd::CreateAccessibleProxy	library		named			
-0x526932	122	FID_conflict:WinHelpW	library		named			
-0x5269ac	121	FID_conflict:HtmlHelpA	library		named			
-0x526a25	81	CWnd::OnChildNotify	library		named			
-0x526b2d	26	CWnd::GetExStyle	library		named			
-0x526b47	26	CWnd::GetExStyle	library		named			
-0x526b61	42	CWnd::ModifyStyle	library		named			
-0x526b8b	42	CWnd::ModifyStyleEx	library		named			
-0x526bb5	33	FID_conflict:SetWindowTextW	library		named			
-0x526bd6	62	CWnd::MoveWindow	library		named			
-0x526c14	33	CWnd::ShowWindow	library		named			
-0x526c35	27	CWnd::IsWindowEnabled	library		named			
-0x526c50	33	CWnd::EnableWindow	library		named			
-0x526c92	60	CWnd::SetWindowPos	library		named			
-0x526cce	65	CWnd::AttachControlSite	library		named			
-0x526d0f	26	CCmdTarget::CCmdTarget	library		named			
-0x526d29	13	CCmdTarget::~CCmdTarget	library		named			
-0x526d36	230	_AfxDispatchCmdMsg	library		named			
-0x526e4c	268	CCmdTarget::OnCmdMsg	library		named			
-0x526fbb	38	CCmdUI::CCmdUI	library		named			
-0x526fe1	97	CCmdUI::DoUpdate	library		named			
-0x527042	21	CCmdTarget::BeginWaitCursor	library		named			
-0x527057	21	CCmdTarget::EndWaitCursor	library		named			
-0x52706c	127	CCmdUI::Enable	library		named			
-0x5270eb	101	CCmdUI::SetCheck	library		named			
-0x527150	86	CCmdUI::SetRadio	library		named			
-0x5271a6	84	SetText	library		named			
-0x527275	102	CWinApp::OnIdle	library		named			
-0x5272db	158	CWinApp::DevModeChange	library		named			
-0x527379	33	CWinApp::Run	library		named			
-0x5273ce	52	FUN_005273ce	library		region			
-0x527402	52	CWinApp::WinHelpInternal	library		named			
-0x527436	9	FUN_00527436	library		region			
-0x52743f	9	FUN_0052743f	library		region			
-0x527448	37	AfxInternalProcessWndProcException	library		named			
-0x52746d	22	AfxProcessWndProcException	library		named			
-0x527491	141	CWinThread::Run	library		named			
-0x527527	118	CWinThread::DispatchThreadMessageEx	library		named			
-0x52759d	5	AfxInternalProcessWndProcException	library		named			
-0x5275a2	26	IsEnterKey	library		named			
-0x5275bc	108	AfxInternalPreTranslateMessage	library		named			
-0x527628	27	AfxPreTranslateMessage	library		named			
-0x527643	108	AfxInternalIsIdleMessage	library		named			
-0x527781	288	CWinThread::ProcessMessageFilter	library		named			
-0x5278a6	46	AfxInitThread	library		named			
-0x5278d4	265	CWinThread::OnIdle	library		named			
-0x5279dd	14	FUN_005279dd	library		region			
-0x5279eb	110	CException::ReportError	library		named			
-0x527a59	10	FUN_00527a59	library		region			
-0x527a63	12	FUN_00527a63	library		region			
-0x527a6f	124	FID_conflict:afxMapHMENU	library		named			
-0x527aeb	14	CMenu::FromHandle	library		named			
-0x527af9	26	FUN_00527af9	library		region			
-0x527b13	45	CMenu::Attach	library		named			
-0x527b40	42	Detach	library		named			
-0x527b6a	22	FID_conflict:DeleteObject	library		named			
-0x527b80	130	CChevronOwnerDrawMenu::CChevronOwnerDrawMenu	library		named			
-0x527c02	28	CChevronOwnerDrawMenu::`scalar_deleting_destructor'	library		named			
-0x527c1e	1094	CChevronOwnerDrawMenu::DrawItem	library		named			
-0x528064	312	CChevronOwnerDrawMenu::MeasureItem	library		named			
-0x52819c	75	AfxLoadString	library		named			
-0x5281e7	11	FUN_005281e7	library		region			
-0x5281f2	130	AfxExtractSubString	library		named			
-0x528274	6	FUN_00528274	library		region			
-0x52827a	59	FUN_0052827a	library		region			
-0x5282c2	47	FUN_005282c2	library		region			
-0x528332	68	AUX_DATA::UpdateSysColors	library		named			
-0x528376	90	AUX_DATA::UpdateSysMetrics	library		named			
-0x5283d0	56	CRuntimeClass::CreateObject	library		named			
-0x528408	14	Catch@00528408	library		region			
-0x528416	34	CRuntimeClass::IsDerivedFrom	library		named			
-0x528438	11	CObject::IsKindOf	library		named			
-0x528443	38	AfxClassInit	library		named			
-0x528469	9	FUN_00528469	library		region			
-0x528472	132	CHandleMap::CHandleMap	library		named			
-0x5284f6	176	CHandleMap::FromHandle	library		named			
-0x5285a6	17	Catch@005285a6	library		region			
-0x5285b8	99	CHandleMap::DeleteTemp	library		named			
-0x52861b	249	AfxUnlockTempMaps	library		named			
-0x528714	119	AfxWinMain	library		named			
-0x52879e	90	_AfxIsComboBoxControl	library		named			
-0x5287f8	104	AfxSetWindowText	library		named			
-0x528860	25	FUN_00528860	library		region			
-0x528879	119	AfxCancelModes	library		named			
-0x5288f0	48	AfxGlobalFree	library		named			
-0x52896d	114	_AfxChildWindowFromPoint	library		named			
-0x5289fd	49	CDC::SaveDC	library		named			
-0x528a2e	62	CDC::RestoreDC	library		named			
-0x528a6c	47	CDC::SetBkColor	library		named			
-0x528a9b	46	CDC::SetBkMode	library		named			
-0x528ac9	47	CDC::SetTextColor	library		named			
-0x528af8	46	FUN_00528af8	library		region			
-0x528b36	25	FUN_00528b36	library		region			
-0x528b50	25	FUN_00528b50	library		region			
-0x528b6a	20	FUN_00528b6a	library		region			
-0x528b7e	76	FID_conflict:OffsetWindowOrg	library		named			
-0x528bca	76	FID_conflict:OffsetWindowOrg	library		named			
-0x528c16	76	FID_conflict:OffsetWindowOrg	library		named			
-0x528c62	88	FID_conflict:ScaleWindowExt	library		named			
-0x528cba	76	FID_conflict:OffsetWindowOrg	library		named			
-0x528d06	88	FID_conflict:ScaleWindowExt	library		named			
-0x528d5e	60	FID_conflict:ScreenToClient	library		named			
-0x528d9a	60	FID_conflict:ScreenToClient	library		named			
-0x528dd6	124	afxMapHDC	library		named			
-0x528e52	14	CDC::FromHandle	library		named			
-0x528e60	55	CDC::Attach	library		named			
-0x528e97	49	CDC::Detach	library		named			
-0x528ec8	25	CDC::~CDC	library		named			
-0x528ee1	91	CClientDC::CClientDC	library		named			
-0x528f3c	66	CClientDC::~CClientDC	library		named			
-0x528f7e	91	CWindowDC::CWindowDC	library		named			
-0x528fd9	66	CWindowDC::~CWindowDC	library		named			
-0x52901b	124	FID_conflict:afxMapHMENU	library		named			
-0x529097	14	CGdiObject::FromHandle	library		named			
-0x5290a5	45	CImageList::Attach	library		named			
-0x5290d2	42	Detach	library		named			
-0x5290fc	22	CGdiObject::DeleteObject	library		named			
-0x529112	28	FUN_00529112	library		region			
-0x52912e	23	CDC::SelectGdiObject	library		named			
-0x529145	60	CDC::SelectStockObject	library		named			
-0x529181	70	CDC::SelectObject	library		named			
-0x5291c7	28	FUN_005291c7	library		region			
-0x5291e3	28	FUN_005291e3	library		region			
-0x5291ff	74	CBrush::CBrush	library		named			
-0x529249	644	AfxGetGrayBitmap	library		named			
-0x5294cd	749	AfxGetDitheredBitmap	library		named			
-0x5297ba	301	CArchive::Read	library		named			
-0x5298e7	119	CArchive::Flush	library		named			
-0x52995e	232	CArchive::FillBuffer	library		named			
-0x529a46	177	CArchive::Write	library		named			
-0x529af7	44	CArchive::WriteCount	library		named			
-0x529b23	47	CArchive::ReadCount	library		named			
-0x529b52	193	GetErrorMessage	library		named			
-0x529c00	6	Catch@00529c00	library		region			
-0x529c19	66	FUN_00529c19	library		region			
-0x529ce0	17	CWinApp::CloseAllDocuments	library		named			
-0x529d25	50	CWinApp::HideApplication	library		named			
-0x529d8d	12	FUN_00529d8d	library		region			
-0x529d99	45	CWinApp::EnableModeless	library		named			
-0x529dc6	158	CWnd::GetSafeOwner_	library		named			
-0x529e64	307	CWinApp::DoMessageBox	library		named			
-0x529f97	34	AfxMessageBox	library		named			
-0x529fb9	98	AfxMessageBox	library		named			
-0x52a01b	17	CWinApp::GetFirstDocTemplatePosition	library		named			
-0x52a02c	67	ATL::CSimpleStringT<char,0>::Concatenate	library		named			
-0x52a06f	126	ATL::operator+	library		named			
-0x52a0ed	31	CToolBar::_GetButton	library		named			
-0x52a10c	72	CToolBar::GetButtonInfo	library		named			
-0x52a154	130	CWinApp::WriteProfileInt	library		named			
-0x52a1d6	255	AfxFormatStrings	library		named			
-0x52a2d5	103	AfxFormatStrings	library		named			
-0x52a33c	23	AfxFormatString1	library		named			
-0x52a417	28	AfxIsDescendant	library		named			
-0x52a546	111	CFrameWnd::EndModalState	library		named			
-0x52a5b5	169	CFrameWnd::ShowOwnedWindows	library		named			
-0x52a65e	51	PreCreateWindow	library		named			
-0x52a6c7	55	CFrameWnd::OnNcActivate	library		named			
-0x52a732	32	FUN_0052a732	library		region			
-0x52a76f	47	CFrameWnd::BringToTop	library		named			
-0x52a79e	20	CControlBar::GetDockingFrame	library		named			
-0x52a7b2	51	CControlBar::IsFloating	library		named			
-0x52a7e5	38	LoadAccelTable	library		named			
-0x52a80b	27	FUN_0052a80b	library		region			
-0x52a826	34	CFrameWnd::OnQueryNewPalette	library		named			
-0x52a8b3	42	CFrameWnd::OnSetCursor	library		named			
-0x52a8dd	88	FUN_0052a8dd	library		region			
-0x52a935	119	CFrameWnd::OnCommand	library		named			
-0x52a9ac	173	CFrameWnd::NotifyFloatingWindows	library		named			
-0x52aa59	112	CFrameWnd::CreateView	library		named			
-0x52aaeb	79	OnCreateHelper	library		named			
-0x52ab3a	131	GetIconWndClass	library		named			
-0x52abbd	239	CFrameWnd::OnClose	library		named			
-0x52acac	150	CFrameWnd::OnCmdMsg	library		named			
-0x52ae1e	211	CFrameWnd::OnActivate	library		named			
-0x52aef1	149	CFrameWnd::OnSysCommand	library		named			
-0x52af86	142	CFrameWnd::OnDropFiles	library		named			
-0x52b014	36	CFrameWnd::OnQueryEndSession	library		named			
-0x52b070	219	CFrameWnd::OnDDEInitiate	library		named			
-0x52b14b	181	CFrameWnd::OnDDEExecute	library		named			
-0x52b211	252	CFrameWnd::ShowControlBar	library		named			
-0x52b30d	378	CFrameWnd::OnInitMenuPopup	library		named			
-0x52b487	273	CFrameWnd::OnMenuSelect	library		named			
-0x52b5cb	23	CFrameWnd::SetMessageText	library		named			
-0x52b5e2	229	CFrameWnd::DestroyDockBars	library		named			
-0x52b6c7	83	CFrameWnd::GetControlBar	library		named			
-0x52b71a	53	FUN_0052b71a	library		region			
-0x52b7d7	47	CFrameWnd::OnUpdateContextHelp	library		named			
-0x52b806	552	CFrameWnd::OnSetPreviewMode	library		named			
-0x52ba2e	121	CFrameWnd::OnIdleUpdateCmdUI	library		named			
-0x52baa7	229	CFrameWnd::RecalcLayout	library		named			
-0x52bb8c	109	CFrameWnd::NegotiateBorderSpace	library		named			
-0x52bbf9	31	FUN_0052bbf9	library		region			
-0x52bc2e	163	CFrameWnd::OnRegisteredMouseWheel	library		named			
-0x52bcd1	65	CChevronOwnerDrawMenu::~CChevronOwnerDrawMenu	library		named			
-0x52bd12	81	CFrameWnd::ActivateFrame	library		named			
-0x52bd63	185	CFrameWnd::OnEnable	library		named			
-0x52be1c	15	OnCreate	library		named			
-0x52be2b	88	CFrameWnd::OnDestroy	library		named			
-0x52beb4	36	CFrameWnd::AddFrameWnd	library		named			
-0x52bed8	36	CFrameWnd::RemoveFrameWnd	library		named			
-0x52befc	207	CFrameWnd::OnSetMessageString	library		named			
-0x52bfcb	283	CFrameWnd::OnToolTipText	library		named			
-0x52c0e6	197	CFrameWnd::CFrameWnd	library		named			
-0x52c1ab	161	CFrameWnd::~CFrameWnd	library		named			
-0x52c290	28	CFrameWnd::`scalar_deleting_destructor'	library		named			
-0x52c2ac	247	CFrameWnd::LoadFrame	library		named			
-0x52c3a3	1284	CFrameWnd::OnChevronPushed	library		named			
-0x52c8a7	170	Create	library		named			
-0x52c951	270	CFrameWnd::UpdateFrameTitleForDocument	library		named			
-0x52ca5f	69	CFrameWnd::OnUpdateFrameTitle	library		named			
-0x52cae9	16	AfxOleCanExitApp	library		named			
-0x52caf9	16	AfxOleLockApp	library		named			
-0x52cb09	15	AfxOleSetUserCtrl	library		named			
-0x52cb18	9	FUN_0052cb18	library		region			
-0x52cb6d	25	FUN_0052cb6d	library		region			
-0x52cb86	42	CDC::FillSolidRect	library		named			
-0x52cbb0	76	CDC::FillSolidRect	library		named			
-0x52cbfc	106	CDC::Draw3dRect	library		named			
-0x52ccb1	53	CFrameWnd::CreateObject	library		named			
-0x52cce6	24	ATL::CSimpleStringT<char,0>::operator+=	library		named			
-0x52ccfe	37	ATL::CSimpleStringT<char,0>::Append	library		named			
-0x52cd23	5	CThreadLocalObject::~CThreadLocalObject	library		named			
-0x52cd28	53	CTypeLibCache::Unlock	library		named			
-0x52cd5d	25	FUN_0052cd5d	library		region			
-0x52cd76	53	_AFX_THREAD_STATE::~_AFX_THREAD_STATE	library		named			
-0x52cdab	110	AFX_MODULE_STATE::~AFX_MODULE_STATE	library		named			
-0x52ce19	163	AFX_MODULE_THREAD_STATE::~AFX_MODULE_THREAD_STATE	library		named			
-0x52cebc	24	FUN_0052cebc	library		region			
-0x52ced4	27	_AFX_THREAD_STATE::`scalar_deleting_destructor'	library		named			
-0x52ceef	96	AFX_MODULE_STATE::AFX_MODULE_STATE	library		named			
-0x52cf4f	27	FID_conflict:`scalar_deleting_destructor'	library		named			
-0x52cf6a	39	AFX_MODULE_THREAD_STATE::AFX_MODULE_THREAD_STATE	library		named			
-0x52cf91	27	AFX_MODULE_THREAD_STATE::`scalar_deleting_destructor'	library		named			
-0x52cfc0	27	FID_conflict:`scalar_deleting_destructor'	library		named			
-0x52cfdb	5	AFX_MODULE_STATE::~AFX_MODULE_STATE	library		named			
-0x52cff8	16	AfxGetThreadState	library		named			
-0x52d008	38	AfxGetModuleState	library		named			
-0x52d02e	23	AfxGetModuleThreadState	library		named			
-0x52d0a9	44	ConstructDestruct<CWnd>::Construct	library		named			
-0x52d2fc	72	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::get_accHelpTopic	library		named			
-0x52d454	88	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accLocation	library		named			
-0x52d4ac	67	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accNavigate	library		named			
-0x52d4ef	54	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accHitTest	library		named			
-0x52d582	56	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::Invoke	library		named			
-0x52d5ba	47	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::GetIDsOfNames	library		named			
-0x52d648	45	CMFCComObject<ATL::CAccessibleProxy>::CMFCComObject<ATL::CAccessibleProxy>	library		named			
-0x52d675	28	FUN_0052d675	library		region			
-0x52d691	113	FUN_0052d691	library		region			
-0x52d736	83	FUN_0052d736	library		region			
-0x52d789	14	Catch@0052d789	library		region			
-0x52d79f	29	FUN_0052d79f	library		region			
-0x52d7bc	232	_AfxLoadDotBitmap	library		named			
-0x52d8e3	127	_AfxLoadLangDLL	library		named			
-0x52d978	476	AfxLoadLangResourceDLL	library		named			
-0x52db54	202	CWinApp::LoadSysPolicies	library		named			
-0x52dc5e	132	CWinApp::LoadAppLangResourceDLL	library		named			
-0x52dce2	296	CWinApp::~CWinApp	library		named			
-0x52de0a	53	CWinApp::SaveStdProfileSettings	library		named			
-0x52de3f	84	CWinApp::ExitInstance	library		named			
-0x52de99	28	CWinApp::`scalar_deleting_destructor'	library		named			
-0x52deb5	56	CWinApp::InitInstance	library		named			
-0x52deed	216	CWinApp::CWinApp	library		named			
-0x52dfc5	1	FUN_0052dfc5	library		region			
-0x52dfca	243	AfxDelRegTreeHelper	library		named			
-0x52e076	27	Catch@0052e076	library		region			
-0x52e0de	371	CWinApp::Unregister	library		named			
-0x52e251	55	CWinThread::CommonConstruct	library		named			
-0x52e28e	28	CWinThread::`scalar_deleting_destructor'	library		named			
-0x52e2aa	61	CWinThread::CWinThread	library		named			
-0x52e37a	24	CNoTrackObject::operator_new	library		named			
-0x52e392	16	FUN_0052e392	library		region			
-0x52e3a2	268	CThreadSlotData::AllocSlot	library		named			
-0x52e4ae	70	CThreadSlotData::GetThreadValue	library		named			
-0x52e4f4	26	CThreadLocalObject::GetDataNA	library		named			
-0x52e50e	75	CProcessLocalObject::GetData	library		named			
-0x52e559	16	Catch@0052e559	library		region			
-0x52e56a	37	CProcessLocalObject::~CProcessLocalObject	library		named			
-0x52e58f	19	CSimpleList::AddHead	library		named			
-0x52e5a2	62	CSimpleList::Remove	library		named			
-0x52e5e0	9	FUN_0052e5e0	library		region			
-0x52e5e9	66	CThreadSlotData::CThreadSlotData	library		named			
-0x52e62b	99	CThreadSlotData::FreeSlot	library		named			
-0x52e68e	263	CThreadSlotData::SetValue	library		named			
-0x52e795	27	FUN_0052e795	library		region			
-0x52e7b0	149	CThreadSlotData::DeleteValues	library		named			
-0x52e845	89	CThreadSlotData::DeleteValues	library		named			
-0x52e89e	122	CThreadLocalObject::GetData	library		named			
-0x52e918	30	CThreadLocalObject::~CThreadLocalObject	library		named			
-0x52e936	18	AfxTermLocalData	library		named			
-0x52e948	87	CThreadSlotData::~CThreadSlotData	library		named			
-0x52eb2f	85	AUX_DATA::AUX_DATA	library		named			
-0x52ebab	36	AfxCriticalInit	library		named			
-0x52ebcf	69	AfxCriticalTerm	library		named			
-0x52ec14	99	AfxLockGlobals	library		named			
-0x52ec77	24	AfxUnlockGlobals	library		named			
-0x52ec8f	51	_AfxInitDBCS	library		named			
-0x52eccd	145	CWinApp::GetAppRegistryKey	library		named			
-0x52ed5e	70	GetSectionKey	library		named			
-0x52edaa	47	AfxGetFileName	library		named			
-0x52edd9	334	CWinApp::SetCurrentHandles	library		named			
-0x52ef27	125	AfxWinInit	library		named			
-0x52efcb	86	COleException::GetErrorMessage	library		named			
-0x52f021	65	FUN_0052f021	library		region			
-0x52f063	41	CCmdTarget::InternalRelease	library		named			
-0x52f08c	21	CCmdTarget::ExternalRelease	library		named			
-0x52f0a1	174	CCmdTarget::GetInterface	library		named			
-0x52f14f	96	CCmdTarget::QueryAggregates	library		named			
-0x52f1af	27	FUN_0052f1af	library		region			
-0x52f20a	94	FUN_0052f20a	library		region			
-0x52f258	43	CAsyncSocket::AsyncSelect	library		named			
-0x52f286	36	CAsyncSocket::LookupHandle	library		named			
-0x52f2aa	31	FUN_0052f2aa	library		region			
-0x52f2c9	31	FUN_0052f2c9	library		region			
-0x52f338	18	CSocketWnd::CSocketWnd	library		named			
-0x52f350	16	_AFX_SOCK_STATE::~_AFX_SOCK_STATE	library		named			
-0x52f360	27	_AFX_SOCK_STATE::`scalar_deleting_destructor'	library		named			
-0x52f37b	13	FUN_0052f37b	library		region			
-0x52f388	144	CAsyncSocket::Bind	library		named			
-0x52f418	180	CAsyncSocket::Connect	library		named			
-0x52f4cc	199	CAsyncSocket::AttachHandle	library		named			
-0x52f593	161	CAsyncSocket::DetachHandle	library		named			
-0x52f634	63	CAsyncSocket::KillSocket	library		named			
-0x52f673	280	CAsyncSocket::DoCallBack	library		named			
-0x52f78b	57	CAsyncSocket::Socket	library		named			
-0x52f81b	28	CWnd::`scalar_deleting_destructor'	library		named			
-0x52f837	5	CWnd::~CWnd	library		named			
-0x52f874	78	CAsyncSocket::Create	library		named			
-0x52f8c2	147	CAsyncSocket::Accept	library		named			
-0x52f955	33	CAsyncSocket::Close	library		named			
-0x52f976	18	CAsyncSocket::~CAsyncSocket	library		named			
-0x52f988	28	CAsyncSocket::`scalar_deleting_destructor'	library		named			
-0x52f9d7	285	AfxSocketInit	library		named			
-0x52faf4	28	AfxPostQuitMessage	library		named			
-0x52fb10	79	CWinThread::~CWinThread	library		named			
-0x52fb5f	180	AfxWinTerm	library		named			
+0x50eae8	6	GLU32.DLL::gluOrtho2D	library	import thunks	range			
+0x50eaee	6	DDRAW.DLL::DirectDrawCreate	library	import thunks	range			
+0x50eb00	44	FUN_0050eb00	library	regexp.c	range			
+0x50eb30	28	FUN_0050eb30	library	regexp.c	range			
+0x50eb50	66	FUN_0050eb50	library	regexp.c	range			
+0x50eba0	225	FUN_0050eba0	library	regexp.c	range			
+0x50eca0	36	FUN_0050eca0	library	regexp.c	range			
+0x50ecd0	99	FUN_0050ecd0	library	regexp.c	range			
+0x50ed40	29	FUN_0050ed40	library	regexp.c	range			
+0x50ed60	631	FUN_0050ed60	library	regexp.c	range			
+0x50f040	443	FUN_0050f040	library	regexp.c	range			
+0x50f200	120	FUN_0050f200	library	regexp.c	range			
+0x50f280	210	FUN_0050f280	library	regexp.c	range			
+0x50f360	280	FUN_0050f360	library	regexp.c	range			
+0x50f480	491	FUN_0050f480	library	regexp.c	range			
+0x50f670	791	FUN_0050f670	library	regexp.c	range			
+0x50fa40	377	FUN_0050fa40	library	regexp.c	range			
+0x50fbb9	92	ATL::_AtlGetStringResourceImage	library	nafxcw.lib	range			
+0x50fc15	47	ATL::AtlGetStringResourceImage	library	nafxcw.lib	range			
+0x50fc44	26	FUN_0050fc44	library	nafxcw.lib	range			
+0x50fc5e	23	CRect::IsRectNull	library	nafxcw.lib	range			
+0x50fc75	25	CPtrList::GetNext	library	nafxcw.lib	range			
+0x50fc8e	36	CBitmap::CreateCompatibleBitmap	library	nafxcw.lib	range			
+0x50fcb2	33	CDC::CreateCompatibleDC	library	nafxcw.lib	range			
+0x50fcd3	11	FUN_0050fcd3	library	nafxcw.lib	range			
+0x50fcde	22	CMenu::GetSubMenu	library	nafxcw.lib	range			
+0x50fcf4	50	CPushRoutingFrame::CPushRoutingFrame	library	nafxcw.lib	range			
+0x50fd26	30	CPushRoutingFrame::~CPushRoutingFrame	library	nafxcw.lib	range			
+0x50fd44	19	CToolBarCtrl::GetButtonCount	library	nafxcw.lib	range			
+0x50fd57	39	CImageList::Draw	library	nafxcw.lib	range			
+0x50fd7e	25	CToolBarCtrl::GetImageList	library	nafxcw.lib	range			
+0x50fd97	38	FUN_0050fd97	library	nafxcw.lib	range			
+0x50fdbd	29	ATL::ChTraitsCRT<char>::GetBaseTypeLength	library	nafxcw.lib	range			
+0x50fdda	35	ATL::ChTraitsCRT<char>::ConvertToBaseType	library	nafxcw.lib	range			
+0x50fdfd	11	FUN_0050fdfd	library	nafxcw.lib	range			
+0x50fe08	90	ATL::CSimpleStringT<char,0>::CloneData	library	nafxcw.lib	range			
+0x50fe62	40	ATL::CSimpleStringT<char,0>::Reallocate	library	nafxcw.lib	range			
+0x50fe8a	28	FUN_0050fe8a	library	nafxcw.lib	range			
+0x50fea6	28	FUN_0050fea6	library	nafxcw.lib	range			
+0x50fec2	67	ATL::CSimpleStringT<char,0>::Empty	library	nafxcw.lib	range			
+0x50ff05	37	ATL::CSimpleStringT<char,0>::ReleaseBuffer	library	nafxcw.lib	range			
+0x50ff2a	23	FUN_0050ff2a	library	nafxcw.lib	range			
+0x50ff41	30	CSimpleStringT<>	library	nafxcw.lib	range			
+0x50ff5f	103	ATL::CSimpleStringT<char,0>::Fork	library	nafxcw.lib	range			
+0x50ffc6	71	ATL::CSimpleStringT<char,0>::PrepareWrite2	library	nafxcw.lib	range			
+0x51000d	20	FUN_0051000d	library	nafxcw.lib	range			
+0x510021	10	FUN_00510021	library	nafxcw.lib	range			
+0x51002b	42	ATL::CSimpleStringT<char,0>::PrepareWrite	library	nafxcw.lib	range			
+0x510055	89	ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::LoadStringA	library	nafxcw.lib	range			
+0x5100ae	103	ATL::CSimpleStringT<char,0>::SetString	library	nafxcw.lib	range			
+0x510115	32	ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::LoadStringA	library	nafxcw.lib	range			
+0x510135	76	ATL::CSimpleStringT<char,0>::Append	library	nafxcw.lib	range			
+0x510181	37	ATL::CSimpleStringT<char,0>::SetString	library	nafxcw.lib	range			
+0x5101a6	13	FUN_005101a6	library	nafxcw.lib	range			
+0x5101b3	77	_IsPlatformNT	library	nafxcw.lib	range			
+0x510200	250	_InitMultipleMonitorStubs	library	nafxcw.lib	range			
+0x5102fa	76	xMonitorFromRect	library	nafxcw.lib	range			
+0x510346	107	xMonitorFromWindow	library	nafxcw.lib	range			
+0x5103b1	149	xGetMonitorInfo	library	nafxcw.lib	range			
+0x510446	1435	ATL::AtlIAccessibleInvokeHelper	library	nafxcw.lib	range			
+0x510a2d	96	ATL::AtlIAccessibleGetIDsOfNamesHelper	library	nafxcw.lib	range			
+0x510aa5	13	FUN_00510aa5	library	nafxcw.lib	range			
+0x510abf	21	FUN_00510abf	library	nafxcw.lib	range			
+0x510ad4	206	ATL::AtlInternalQueryInterface	library	nafxcw.lib	range			
+0x510ba2	23	CWnd::GetOwner	library	nafxcw.lib	range			
+0x510bb9	33	ATL::CSimpleStringT<char,0>::GetBufferSetLength	library	nafxcw.lib	range			
+0x510be0	24	_IsEqualGUID	library	nafxcw.lib	range			
+0x510bf8	28	FID_conflict:ModifyMenuW	library	nafxcw.lib	range			
+0x510c14	30	CAsyncSocket::Bind	library	nafxcw.lib	range			
+0x510c32	32	CheckImplicitLoad	library	nafxcw.lib	range			
+0x510c52	75	ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>	library	nafxcw.lib	range			
+0x510c9d	27	CPoint::operator==	library	nafxcw.lib	range			
+0x510cb8	22	FUN_00510cb8	library	nafxcw.lib	range			
+0x510cce	28	FUN_00510cce	library	nafxcw.lib	range			
+0x510cea	7	FUN_00510cea	library	nafxcw.lib	range			
+0x510cf1	7	FUN_00510cf1	library	nafxcw.lib	range			
+0x510cf8	7	FUN_00510cf8	library	nafxcw.lib	range			
+0x510cff	7	FUN_00510cff	library	nafxcw.lib	range			
+0x510d06	24	CSimpleException::CSimpleException	library	nafxcw.lib	range			
+0x510d1e	28	FUN_00510d1e	library	nafxcw.lib	range			
+0x510d3a	34	FUN_00510d3a	library	nafxcw.lib	range			
+0x510d5c	28	FUN_00510d5c	library	nafxcw.lib	range			
+0x510d78	34	FUN_00510d78	library	nafxcw.lib	range			
+0x510d9a	28	FUN_00510d9a	library	nafxcw.lib	range			
+0x510db6	34	FUN_00510db6	library	nafxcw.lib	range			
+0x510dd8	34	FUN_00510dd8	library	nafxcw.lib	range			
+0x510dfa	7	FUN_00510dfa	library	nafxcw.lib	range			
+0x510e01	34	FUN_00510e01	library	nafxcw.lib	range			
+0x510e23	7	FUN_00510e23	library	nafxcw.lib	range			
+0x510e2a	48	CDC::BitBlt	library	nafxcw.lib	range			
+0x510e9a	37	FUN_00510e9a	library	nafxcw.lib	range			
+0x510ebf	56	FUN_00510ebf	library	nafxcw.lib	range			
+0x510f13	31	FUN_00510f13	library	nafxcw.lib	range			
+0x510f32	48	FUN_00510f32	library	nafxcw.lib	range			
+0x510f7e	28	FUN_00510f7e	library	nafxcw.lib	range			
+0x510f9a	28	FUN_00510f9a	library	nafxcw.lib	range			
+0x510fb6	11	FUN_00510fb6	library	nafxcw.lib	range			
+0x510fc1	33	CBrush::CreatePatternBrush	library	nafxcw.lib	range			
+0x510fe2	40	CBitmap::CreateBitmap	library	nafxcw.lib	range			
+0x51100a	25	FID_conflict:CreateFontIndirectA	library	nafxcw.lib	range			
+0x511023	45	GetTextExtent	library	nafxcw.lib	range			
+0x511050	20	ATL::CComCriticalSection::CComCriticalSection	library	nafxcw.lib	range			
+0x511064	38	FUN_00511064	library	nafxcw.lib	range			
+0x5110b4	28	CHandleMap::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x5110d0	84	CHandleMap::~CHandleMap	library	nafxcw.lib	range			
+0x511124	60	CArchive::operator<<	library	nafxcw.lib	range			
+0x511160	59	CArchive::operator<<	library	nafxcw.lib	range			
+0x51119b	67	CArchive::operator>>	library	nafxcw.lib	range			
+0x5111de	66	CArchive::operator>>	library	nafxcw.lib	range			
+0x511220	77	CArchiveException	library	nafxcw.lib	range			
+0x51126d	28	FUN_0051126d	library	nafxcw.lib	range			
+0x511289	17	FUN_00511289	library	nafxcw.lib	range			
+0x51129a	42	CFixedAllocNoSync::CFixedAllocNoSync	library	nafxcw.lib	range			
+0x5112c4	21	CFixedAllocNoSync::FreeAll	library	nafxcw.lib	range			
+0x5112d9	5	FUN_005112d9	library	nafxcw.lib	range			
+0x5112de	65	CFixedAllocNoSync::Alloc	library	nafxcw.lib	range			
+0x511320	672	_memmove	library	libcmt.lib	range			
+0x51165d	104	_free	library	libcmt.lib	range			
+0x5116b0	9	FUN_005116b0	library	libcmt.lib	range			
+0x5116ce	43	_JumpToContinuation	library	libcmt.lib	range			
+0x5116fe	7	FID_conflict:_CallMemberFunction1	library	libcmt.lib	range			
+0x511705	82	_UnwindNestedFrames	library	libcmt.lib	range			
+0x511757	54	___CxxFrameHandler	library	libcmt.lib	range			
+0x5117c8	199	_CallSETranslator	library	libcmt.lib	range			
+0x51188f	175	TranslatorGuardHandler	library	libcmt.lib	range			
+0x511941	122	_GetRangeOfTrysToCheck	library	libcmt.lib	range			
+0x5119bb	40	_CreateFrameInfo	library	libcmt.lib	range			
+0x5119e3	33	IsExceptionObjectToBeDestroyed	library	libcmt.lib	range			
+0x511a04	76	_FindAndUnlinkFrame	library	libcmt.lib	range			
+0x511a50	89	_CallCatchBlock2	library	libcmt.lib	range			
+0x511aac	32	__global_unwind2	library	libcmt.lib	range			
+0x511aee	104	__local_unwind2	library	libcmt.lib	range			
+0x511b56	35	__abnormal_termination	library	libcmt.lib	range			
+0x511b79	9	__NLG_Notify1	library	libcmt.lib	range			
+0x511b82	24	FUN_00511b82	library	libcmt.lib	range			
+0x511b9a	17	exception::exception	library	libcmt.lib	range			
+0x511bab	61	exception::exception	library	libcmt.lib	range			
+0x511be8	74	exception::exception	library	libcmt.lib	range			
+0x511c32	22	exception::~exception	library	libcmt.lib	range			
+0x511c55	25	FUN_00511c55	library	libcmt.lib	range			
+0x511c86	11	FUN_00511c86	library	libcmt.lib	range			
+0x511c91	28	FUN_00511c91	library	libcmt.lib	range			
+0x511cad	28	FUN_00511cad	library	libcmt.lib	range			
+0x511cc9	61	type_info::~type_info	library	libcmt.lib	range			
+0x511d06	9	FUN_00511d06	library	libcmt.lib	range			
+0x511d0f	28	type_info::`scalar_deleting_destructor'	library	libcmt.lib	range			
+0x511d2b	58	__CxxThrowException@8	library	libcmt.lib	range			
+0x511d65	6	FUN_00511d65	library	libcmt.lib	range			
+0x511d6b	88	_sprintf	library	libcmt.lib	range			
+0x511dd0	173	_memchr	library	libcmt.lib	range			
+0x511e7d	1	FUN_00511e7d	library	libcmt.lib	range			
+0x511e7e	56	FUN_00511e7e	library	libcmt.lib	range			
+0x511eb6	30	__fpmath	library	libcmt.lib	range			
+0x511ee0	70	_strcspn	library	libcmt.lib	range			
+0x511f26	13	FUN_00511f26	library	libcmt.lib	range			
+0x511f33	34	_rand	library	libcmt.lib	range			
+0x511f55	128	__onexit_lk	library	libcmt.lib	range			
+0x511fd5	40	___onexitinit	library	libcmt.lib	range			
+0x511ffd	50	__onexit	library	libcmt.lib	range			
+0x51202f	6	FUN_0051202f	library	libcmt.lib	range			
+0x512035	18	_atexit	library	libcmt.lib	range			
+0x512050	139	FUN_00512050	library	libcmt.lib	range			
+0x5120d6	76	__fclose_lk	library	libcmt.lib	range			
+0x512122	70	_fclose	library	libcmt.lib	range			
+0x51216b	8	FUN_0051216b	library	libcmt.lib	range			
+0x512173	84	_fprintf	library	libcmt.lib	range			
+0x5121c7	10	FUN_005121c7	library	libcmt.lib	range			
+0x5121d1	25	_ctime	library	libcmt.lib	range			
+0x5121ea	57	FID_conflict:__time32	library	libcmt.lib	range			
+0x512223	82	__fsopen	library	libcmt.lib	range			
+0x512275	10	FUN_00512275	library	libcmt.lib	range			
+0x51227f	19	_fopen	library	libcmt.lib	range			
+0x512292	86	_printf	library	libcmt.lib	range			
+0x5122ed	11	FUN_005122ed	library	libcmt.lib	range			
+0x512300	61	__chkstk	library	libcmt.lib	range			
+0x51233d	87	__snprintf	library	libcmt.lib	range			
+0x5123a0	292	_strncpy	library	libcmt.lib	range			
+0x5124c4	117	FUN_005124c4	library	libcmt.lib	range			
+0x512539	105	__stricmp	library	libcmt.lib	range			
+0x5125a2	136	_atol	library	libcmt.lib	range			
+0x51262a	5	_atol	library	libcmt.lib	range			
+0x512630	106	shortsort	library	libcmt.lib	range			
+0x5126a0	643	_qsort	library	libcmt.lib	range			
+0x512923	200	___tolower_mt	library	libcmt.lib	range			
+0x5129eb	34	_tolower	library	libcmt.lib	range			
+0x512a21	74	`eh_vector_constructor_iterator'	library	libcmt.lib	range			
+0x512a6b	24	FUN_00512a6b	library	libcmt.lib	range			
+0x512a83	47	__ArrayUnwind	library	libcmt.lib	range			
+0x512ae1	72	`eh_vector_destructor_iterator'	library	libcmt.lib	range			
+0x512b29	24	FUN_00512b29	library	libcmt.lib	range			
+0x512b50	289	FUN_00512b50	library	libcmt.lib	range			
+0x512c71	111	__heap_alloc	library	libcmt.lib	range			
+0x512ce3	9	FUN_00512ce3	library	libcmt.lib	range			
+0x512cec	44	__nh_malloc	library	libcmt.lib	range			
+0x512d18	18	_malloc	library	libcmt.lib	range			
+0x512d2a	47	___crtExitProcess	library	libcmt.lib	range			
+0x512d5a	9	FUN_00512d5a	library	libcmt.lib	range			
+0x512d63	9	FUN_00512d63	library	libcmt.lib	range			
+0x512d6c	24	__initterm	library	libcmt.lib	range			
+0x512d84	106	__cinit	library	libcmt.lib	range			
+0x512dee	181	doexit	library	libcmt.lib	range			
+0x512e9d	14	FUN_00512e9d	library	libcmt.lib	range			
+0x512eb1	17	_exit	library	libcmt.lib	range			
+0x512ec2	17	__exit	library	libcmt.lib	range			
+0x512ed3	15	__cexit	library	libcmt.lib	range			
+0x512ef1	210	_setvbuf	library	libcmt.lib	range			
+0x512fc3	10	FUN_00512fc3	library	libcmt.lib	range			
+0x512fcd	108	__ungetc_lk	library	libcmt.lib	range			
+0x513039	59	_ungetc	library	libcmt.lib	range			
+0x513074	10	FUN_00513074	library	libcmt.lib	range			
+0x51307e	93	__flush	library	libcmt.lib	range			
+0x5130db	46	__fflush_lk	library	libcmt.lib	range			
+0x513109	182	flsall	library	libcmt.lib	range			
+0x5131a9	17	FUN_005131a9	library	libcmt.lib	range			
+0x5131d5	9	FUN_005131d5	library	libcmt.lib	range			
+0x5131de	70	_fflush	library	libcmt.lib	range			
+0x513224	10	FUN_00513224	library	libcmt.lib	range			
+0x513237	69	FID_conflict:_getc	library	libcmt.lib	range			
+0x51327f	8	FUN_0051327f	library	libcmt.lib	range			
+0x513287	263	__fwrite_lk	library	libcmt.lib	range			
+0x51338e	66	_fwrite	library	libcmt.lib	range			
+0x5133d0	10	FUN_005133d0	library	libcmt.lib	range			
+0x5133da	77	FID_conflict:_fputc	library	libcmt.lib	range			
+0x51342a	8	FUN_0051342a	library	libcmt.lib	range			
+0x513432	34	_fgetpos	library	libcmt.lib	range			
+0x513454	143	__fseek_lk	library	libcmt.lib	range			
+0x5134e3	63	_fseek	library	libcmt.lib	range			
+0x513522	10	FUN_00513522	library	libcmt.lib	range			
+0x51352c	24	_fsetpos	library	libcmt.lib	range			
+0x513544	181	_strtok	library	libcmt.lib	range			
+0x5135f9	20	__execl	library	libcmt.lib	range			
+0x513620	190	FUN_00513620	library	libcmt.lib	range			
+0x5136de	246	__eof	library	libcmt.lib	range			
+0x5137b8	10	FUN_005137b8	library	libcmt.lib	range			
+0x5137de	354	__ftell_lk	library	libcmt.lib	range			
+0x513940	233	__fread_lk	library	libcmt.lib	range			
+0x513a29	66	_fread	library	libcmt.lib	range			
+0x513a6b	10	FUN_00513a6b	library	libcmt.lib	range			
+0x513a75	46	FUN_00513a75	library	libcmt.lib	range			
+0x513aa3	412	_realloc	library	libcmt.lib	range			
+0x513c0b	9	FUN_00513c0b	library	libcmt.lib	range			
+0x513c50	70	__access	library	libcmt.lib	range			
+0x513c96	42	FUN_00513c96	library	libcmt.lib	range			
+0x513cc0	5	thunk_FUN_00513c96	library	libcmt.lib	range			
+0x513cc5	227	__resetstkoflw	library	libcmt.lib	range			
+0x513e96	27	FUN_00513e96	library	libcmt.lib	range			
+0x513eb1	384	_localtime	library	libcmt.lib	range			
+0x514031	37	__amsg_exit	library	libcmt.lib	range			
+0x514056	36	fast_error_exit	library	libcmt.lib	range			
+0x51407a	426	entry	library	libcmt.lib	range			
+0x514250	57	_strncmp	library	libcmt.lib	range			
+0x514289	123	__mbschr	library	libcmt.lib	range			
+0x514304	41	report_failure	library	libcmt.lib	range			
+0x514335	14	__security_check_cookie	library	libcmt.lib	range			
+0x514343	148	__mbscmp	library	libcmt.lib	range			
+0x5143d8	31	FUN_005143d8	library	libcmt.lib	range			
+0x514400	672	_memcpy	library	libcmt.lib	range			
+0x514740	139	_strlen	library	libcmt.lib	range			
+0x5147d0	96	_memset	library	libcmt.lib	range			
+0x514830	184	_memcmp	library	libcmt.lib	range			
+0x5148e8	52	_sscanf	library	libcmt.lib	range			
+0x51491c	43	__strdup	library	libcmt.lib	range			
+0x514947	158	__expand	library	libcmt.lib	range			
+0x5149c5	9	FUN_005149c5	library	libcmt.lib	range			
+0x5149f1	106	__msize	library	libcmt.lib	range			
+0x514a5e	9	FUN_00514a5e	library	libcmt.lib	range			
+0x514a68	59	__SEH_prolog	library	libcmt.lib	range			
+0x514aa3	17	__SEH_epilog	library	libcmt.lib	range			
+0x514ab4	9	FUN_00514ab4	library	libcmt.lib	range			
+0x514abd	9	FUN_00514abd	library	libcmt.lib	range			
+0x514ac6	115	__dosmaperr	library	libcmt.lib	range			
+0x514b39	47	_CPtoLCID	library	libcmt.lib	range			
+0x514b68	41	setSBCS	library	libcmt.lib	range			
+0x514b91	396	setSBUpLow	library	libcmt.lib	range			
+0x514d1d	99	___updatetmbcinfo	library	libcmt.lib	range			
+0x514d83	9	FUN_00514d83	library	libcmt.lib	range			
+0x514d8c	400	__setmbcp_lk	library	libcmt.lib	range			
+0x514f1c	327	__setmbcp	library	libcmt.lib	range			
+0x515063	9	FUN_00515063	library	libcmt.lib	range			
+0x51506c	30	___initmbctable	library	libcmt.lib	range			
+0x51508a	107	__mbsrchr	library	libcmt.lib	range			
+0x515100	52	__allmul	library	libcmt.lib	range			
+0x5151ea	175	_calloc	library	libcmt.lib	range			
+0x515294	9	FUN_00515294	library	libcmt.lib	range			
+0x5152a5	26	___heap_select	library	libcmt.lib	range			
+0x5152bf	81	__heap_init	library	libcmt.lib	range			
+0x515310	73	__mtinitlocks	library	libcmt.lib	range			
+0x515359	85	__mtdeletelocks	library	libcmt.lib	range			
+0x5153ae	21	FUN_005153ae	library	libcmt.lib	range			
+0x5153c3	151	__mtinitlocknum	library	libcmt.lib	range			
+0x51545a	9	FUN_0051545a	library	libcmt.lib	range			
+0x515463	49	__lock	library	libcmt.lib	range			
+0x515494	72	___sbh_heap_init	library	libcmt.lib	range			
+0x5154dc	43	___sbh_find_block	library	libcmt.lib	range			
+0x515507	792	___sbh_free_block	library	libcmt.lib	range			
+0x51581f	183	___sbh_alloc_new_region	library	libcmt.lib	range			
+0x5158d6	262	___sbh_alloc_new_group	library	libcmt.lib	range			
+0x5159dc	735	___sbh_resize_block	library	libcmt.lib	range			
+0x515cbb	764	___sbh_alloc_block	library	libcmt.lib	range			
+0x515fb7	79	TypeMatch	library	libcmt.lib	range			
+0x516024	148	___FrameUnwindToState	library	libcmt.lib	range			
+0x5160d7	27	FUN_005160d7	library	libcmt.lib	range			
+0x5160f2	52	___DestructExceptionObject	library	libcmt.lib	range			
+0x516137	31	AdjustPointer	library	libcmt.lib	range			
+0x516156	19	FUN_00516156	library	libcmt.lib	range			
+0x516169	157	CallCatchBlock	library	libcmt.lib	range			
+0x5162be	111	FUN_005162be	library	libcmt.lib	range			
+0x51632d	368	BuildCatchObject	library	libcmt.lib	range			
+0x5164a9	103	CatchIt	library	libcmt.lib	range			
+0x516510	190	FindHandlerForForeignException	library	libcmt.lib	range			
+0x5165ce	516	FindHandler	library	libcmt.lib	range			
+0x5167d2	162	___InternalCxxFrameHandler	library	libcmt.lib	range			
+0x516874	9	FUN_00516874	library	libcmt.lib	range			
+0x51687d	29	__mtterm	library	libcmt.lib	range			
+0x51689a	113	__getptd	library	libcmt.lib	range			
+0x516a3d	9	FUN_00516a3d	library	libcmt.lib	range			
+0x516a49	9	FUN_00516a49	library	libcmt.lib	range			
+0x516a52	239	__mtinit	library	libcmt.lib	range			
+0x516b41	46	terminate	library	libcmt.lib	range			
+0x516b76	38	_inconsistency	library	libcmt.lib	range			
+0x516bb0	76	__CallSettingFrame@12	library	libcmt.lib	range			
+0x516c00	7	FUN_00516c00	library	libcmt.lib	range			
+0x516c10	232	FUN_00516c10	library	libcmt.lib	range			
+0x516d00	135	_strcmp	library	libcmt.lib	range			
+0x516d88	78	__CxxUnhandledExceptionFilter	library	libcmt.lib	range			
+0x516df6	281	__flsbuf	library	libcmt.lib	range			
+0x516f0f	51	write_char	library	libcmt.lib	range			
+0x516f42	36	write_multi_char	library	libcmt.lib	range			
+0x516f66	55	write_string	library	libcmt.lib	range			
+0x516f9d	2010	__output	library	libcmt.lib	range			
+0x517838	62	__fassign	library	libcmt.lib	range			
+0x517876	29	__shift	library	libcmt.lib	range			
+0x517893	174	__cftoe2	library	libcmt.lib	range			
+0x517941	108	__cftoe	library	libcmt.lib	range			
+0x5179ad	156	__cftof2	library	libcmt.lib	range			
+0x517a49	98	__cftof	library	libcmt.lib	range			
+0x517aab	154	__cftog	library	libcmt.lib	range			
+0x517b45	81	__cfltcvt	library	libcmt.lib	range			
+0x517b96	18	__setdefaultprecision	library	libcmt.lib	range			
+0x517ba8	64	__ms_p5_test_fdiv	library	libcmt.lib	range			
+0x517be8	41	__ms_p5_mp_test_fdiv	library	libcmt.lib	range			
+0x517c11	131	__close_lk	library	libcmt.lib	range			
+0x517c94	144	__close	library	libcmt.lib	range			
+0x517d0b	8	FUN_00517d0b	library	libcmt.lib	range			
+0x517d2f	43	__freebuf	library	libcmt.lib	range			
+0x517e17	47	__lock_file	library	libcmt.lib	range			
+0x517e46	35	__lock_file2	library	libcmt.lib	range			
+0x517e69	47	__unlock_file	library	libcmt.lib	range			
+0x517e98	35	__unlock_file2	library	libcmt.lib	range			
+0x517ebb	136	__stbuf	library	libcmt.lib	range			
+0x517f43	42	__ftbuf	library	libcmt.lib	range			
+0x517f6d	267	_asctime	library	libcmt.lib	range			
+0x518080	104	__aulldiv	library	libcmt.lib	range			
+0x5180e8	360	__openfile	library	libcmt.lib	range			
+0x518250	278	__getstream	library	libcmt.lib	range			
+0x518369	9	FUN_00518369	library	libcmt.lib	range			
+0x518380	78	___ascii_stricmp	library	libcmt.lib	range			
+0x5183ce	6	FUN_005183ce	library	libcmt.lib	range			
+0x5183d4	6	FUN_005183d4	library	libcmt.lib	range			
+0x5183da	208	___freetlocinfo	library	libcmt.lib	range			
+0x5184aa	193	___updatetlocinfo_lk	library	libcmt.lib	range			
+0x51856b	36	__strcats	library	libcmt.lib	range			
+0x51858f	220	___lc_strtolc	library	libcmt.lib	range			
+0x51866b	78	___lc_lctostr	library	libcmt.lib	range			
+0x5186b9	50	___updatetlocinfo	library	libcmt.lib	range			
+0x5186eb	9	FUN_005186eb	library	libcmt.lib	range			
+0x5186f4	191	__setlocale_get_all	library	libcmt.lib	range			
+0x5187b3	348	__expandlocale	library	libcmt.lib	range			
+0x51890f	655	__setlocale_set_cat	library	libcmt.lib	range			
+0x518b9e	473	__setlocale_lk	library	libcmt.lib	range			
+0x518d77	337	_setlocale	library	libcmt.lib	range			
+0x518ec0	9	FUN_00518ec0	library	libcmt.lib	range			
+0x518ed1	119	___isctype_mt	library	libcmt.lib	range			
+0x518f48	886	___crtLCMapStringA	library	libcmt.lib	range			
+0x519304	654	___libm_error_support	library	libcmt.lib	range			
+0x519592	46	FUN_00519592	library	libcmt.lib	range			
+0x5195c7	206	___sse2_available_init	library	libcmt.lib	range			
+0x519695	211	__floor_default	library	libcmt.lib	range			
+0x519768	27	__callnewh	library	libcmt.lib	range			
+0x519783	61	__RTC_Initialize	library	libcmt.lib	range			
+0x51980b	68	__getbuf	library	libcmt.lib	range			
+0x51984f	462	__write_lk	library	libcmt.lib	range			
+0x519a1d	160	__write	library	libcmt.lib	range			
+0x519aa4	8	FUN_00519aa4	library	libcmt.lib	range			
+0x519ac8	177	__commit	library	libcmt.lib	range			
+0x519b68	8	FUN_00519b68	library	libcmt.lib	range			
+0x519b84	225	__filbuf	library	libcmt.lib	range			
+0x519c65	405	__ftelli64_lk	library	libcmt.lib	range			
+0x519dfa	61	__ftelli64	library	libcmt.lib	range			
+0x519e37	10	FUN_00519e37	library	libcmt.lib	range			
+0x519e41	116	__lseek_lk	library	libcmt.lib	range			
+0x519eb5	160	__lseek	library	libcmt.lib	range			
+0x519f3c	8	FUN_00519f3c	library	libcmt.lib	range			
+0x519f60	147	__fseeki64_lk	library	libcmt.lib	range			
+0x519ff3	66	__fseeki64	library	libcmt.lib	range			
+0x51a035	10	FUN_0051a035	library	libcmt.lib	range			
+0x51a03f	82	comexecmd	library	libcmt.lib	range			
+0x51a091	320	__execve	library	libcmt.lib	range			
+0x51a1d1	124	__set_osfhnd	library	libcmt.lib	range			
+0x51a24d	127	__free_osfhnd	library	libcmt.lib	range			
+0x51a2cc	65	__get_osfhandle	library	libcmt.lib	range			
+0x51a30d	148	__lock_fhandle	library	libcmt.lib	range			
+0x51a3a4	9	FUN_0051a3a4	library	libcmt.lib	range			
+0x51a3ad	34	__unlock_fhandle	library	libcmt.lib	range			
+0x51a3cf	356	__alloc_osfhnd	library	libcmt.lib	range			
+0x51a4a8	9	FUN_0051a4a8	library	libcmt.lib	range			
+0x51a542	9	FUN_0051a542	library	libcmt.lib	range			
+0x51a54b	131	__lseeki64_lk	library	libcmt.lib	range			
+0x51a5ce	179	__lseeki64	library	libcmt.lib	range			
+0x51a666	8	FUN_0051a666	library	libcmt.lib	range			
+0x51a68c	510	__ioinit	library	libcmt.lib	range			
+0x51a88a	475	__read_lk	library	libcmt.lib	range			
+0x51aa65	160	__read	library	libcmt.lib	range			
+0x51aaec	8	FUN_0051aaec	library	libcmt.lib	range			
+0x51ab10	553	__ValidateEH3RN	library	libcmt.lib	range			
+0x51ad39	666	__tzset_lk	library	libcmt.lib	range			
+0x51af54	9	FUN_0051af54	library	libcmt.lib	range			
+0x51afe1	440	cvtdate	library	libcmt.lib	range			
+0x51b199	391	__isindst_lk	library	libcmt.lib	range			
+0x51b320	67	___tzset	library	libcmt.lib	range			
+0x51b363	9	FUN_0051b363	library	libcmt.lib	range			
+0x51b36c	53	__isindst	library	libcmt.lib	range			
+0x51b3a1	9	FUN_0051b3a1	library	libcmt.lib	range			
+0x51b3aa	263	_gmtime	library	libcmt.lib	range			
+0x51b4b1	375	__NMSG_WRITE	library	libcmt.lib	range			
+0x51b628	57	__FF_MSGBANNER	library	libcmt.lib	range			
+0x51b661	356	__XcptFilter	library	libcmt.lib	range			
+0x51b7c5	93	__wincmdln	library	libcmt.lib	range			
+0x51b822	199	__setenvp	library	libcmt.lib	range			
+0x51b8e9	364	parse_cmdline	library	libcmt.lib	range			
+0x51ba55	162	__setargv	library	libcmt.lib	range			
+0x51baf7	290	___crtGetEnvironmentStringsA	library	libcmt.lib	range			
+0x51bc19	102	___security_init_cookie	library	libcmt.lib	range			
+0x51bc7f	319	___security_error_handler	library	libcmt.lib	range			
+0x51bdc7	22	__inc	library	libcmt.lib	range			
+0x51bddd	3387	__input	library	libcmt.lib	range			
+0x51cc12	421	___crtGetStringTypeA	library	libcmt.lib	range			
+0x51cdd0	45	_strrchr	library	libcmt.lib	range			
+0x51ce00	70	_strspn	library	libcmt.lib	range			
+0x51ce46	58	_isupper	library	libcmt.lib	range			
+0x51ce80	58	_islower	library	libcmt.lib	range			
+0x51ceba	58	_isdigit	library	libcmt.lib	range			
+0x51cef4	63	_isxdigit	library	libcmt.lib	range			
+0x51cf33	58	_isspace	library	libcmt.lib	range			
+0x51cf70	64	_strpbrk	library	libcmt.lib	range			
+0x51cfb0	16	___crtInitCritSecNoSpinCount@8	library	libcmt.lib	range			
+0x51cfc0	103	___crtInitCritSecAndSpinCount	library	libcmt.lib	range			
+0x51d04b	28	_ValidateRead	library	libcmt.lib	range			
+0x51d067	28	_ValidateWrite	library	libcmt.lib	range			
+0x51d083	24	_ValidateExecute	library	libcmt.lib	range			
+0x51d09b	24	_abort	library	libcmt.lib	range			
+0x51d0b3	42	__isatty	library	libcmt.lib	range			
+0x51d0dd	96	___wctomb_mt	library	libcmt.lib	range			
+0x51d13d	39	_wctomb	library	libcmt.lib	range			
+0x51d164	6	FUN_0051d164	library	libcmt.lib	range			
+0x51d170	149	__aulldvrm	library	libcmt.lib	range			
+0x51d205	50	__ZeroTail	library	libcmt.lib	range			
+0x51d237	77	__IncMan	library	libcmt.lib	range			
+0x51d284	114	__RoundMan	library	libcmt.lib	range			
+0x51d2f6	27	__CopyMan	library	libcmt.lib	range			
+0x51d311	25	__IsZeroMan	library	libcmt.lib	range			
+0x51d32a	123	__ShrMan	library	libcmt.lib	range			
+0x51d3a5	344	__ld12cvt	library	libcmt.lib	range			
+0x51d4fd	22	FID_conflict:__ld12tod	library	libcmt.lib	range			
+0x51d513	22	FID_conflict:__ld12tod	library	libcmt.lib	range			
+0x51d529	61	FID_conflict:__atodbl	library	libcmt.lib	range			
+0x51d566	61	FID_conflict:__atodbl	library	libcmt.lib	range			
+0x51d5a3	119	__fptostr	library	libcmt.lib	range			
+0x51d61a	186	___dtold	library	libcmt.lib	range			
+0x51d6d4	108	__fltout2	library	libcmt.lib	range			
+0x51d740	9	FUN_0051d740	library	libcmt.lib	range			
+0x51d749	146	__abstract_cw	library	libcmt.lib	range			
+0x51d7db	142	__hw_cw	library	libcmt.lib	range			
+0x51d869	50	__control87	library	libcmt.lib	range			
+0x51d89b	22	__controlfp	library	libcmt.lib	range			
+0x51d94c	743	__tsopen_lk	library	libcmt.lib	range			
+0x51dc33	69	__sopen	library	libcmt.lib	range			
+0x51dc78	16	FUN_0051dc78	library	libcmt.lib	range			
+0x51dc88	871	__get_lc_time	library	libcmt.lib	range			
+0x51dfef	400	___free_lc_time	library	libcmt.lib	range			
+0x51e1de	95	___free_lconv_num	library	libcmt.lib	range			
+0x51e23d	461	___init_numeric	library	libcmt.lib	range			
+0x51e40a	217	___free_lconv_mon	library	libcmt.lib	range			
+0x51e4e3	575	___init_monetary	library	libcmt.lib	range			
+0x51e722	490	___init_ctype	library	libcmt.lib	range			
+0x51e90c	25	____lc_codepage_func	library	libcmt.lib	range			
+0x51e925	25	____lc_handle_func	library	libcmt.lib	range			
+0x51e93e	96	_TranslateName	library	libcmt.lib	range			
+0x51e99e	26	_GetLcidFromDefault	library	libcmt.lib	range			
+0x51e9b8	118	_ProcessCodePage	library	libcmt.lib	range			
+0x51ea2e	30	_TestDefaultCountry	library	libcmt.lib	range			
+0x51ea4c	227	crtGetLocaleInfoA	library	libcmt.lib	range			
+0x51eb2f	53	_LcidFromHexString	library	libcmt.lib	range			
+0x51eb64	29	_GetPrimaryLen	library	libcmt.lib	range			
+0x51eb81	148	_CountryEnumProc@4	library	libcmt.lib	range			
+0x51ec15	113	_TestDefaultLanguage	library	libcmt.lib	range			
+0x51ec86	538	_LangCountryEnumProc@4	library	libcmt.lib	range			
+0x51eea0	203	_LanguageEnumProc@4	library	libcmt.lib	range			
+0x51ef6b	55	_GetLcidFromCountry	library	libcmt.lib	range			
+0x51efa2	134	_GetLcidFromLangCountry	library	libcmt.lib	range			
+0x51f028	85	_GetLcidFromLanguage	library	libcmt.lib	range			
+0x51f07d	437	___get_qualified_locale	library	libcmt.lib	range			
+0x51f232	67	___ansicp	library	libcmt.lib	range			
+0x51f275	434	___convertcp	library	libcmt.lib	range			
+0x51f43e	3	FUN_0051f43e	library	libcmt.lib	range			
+0x51f441	677	__raise_exc	library	libcmt.lib	range			
+0x51f6e6	548	__handle_exc	library	libcmt.lib	range			
+0x51f90a	40	__set_errno	library	libcmt.lib	range			
+0x51f932	45	__errcode	library	libcmt.lib	range			
+0x51f95f	158	__umatherr	library	libcmt.lib	range			
+0x51f9fd	83	__handle_qnan1	library	libcmt.lib	range			
+0x51fa50	184	__except1	library	libcmt.lib	range			
+0x51fb08	17	__frnd	library	libcmt.lib	range			
+0x51fb19	42	__set_exp	library	libcmt.lib	range			
+0x51fb43	91	__sptype	library	libcmt.lib	range			
+0x51fb9e	188	__decomp	library	libcmt.lib	range			
+0x51fc5a	11	__statfp	library	libcmt.lib	range			
+0x51fc65	12	__clrfp	library	libcmt.lib	range			
+0x51fc71	36	__ctrlfp	library	libcmt.lib	range			
+0x51fc95	86	FUN_0051fc95	library	libcmt.lib	range			
+0x51fceb	474	__dospawn	library	libcmt.lib	range			
+0x51fec5	507	__cenvarg	library	libcmt.lib	range			
+0x5200c0	129	__getenv_lk	library	libcmt.lib	range			
+0x520141	249	___crtMessageBoxA	library	libcmt.lib	range			
+0x52023a	51	x_ismbbtype	library	libcmt.lib	range			
+0x52026d	17	__ismbblead	library	libcmt.lib	range			
+0x52027e	192	___mbtowc_mt	library	libcmt.lib	range			
+0x52033e	43	_mbtowc	library	libcmt.lib	range			
+0x520369	46	siglookup	library	libcmt.lib	range			
+0x520397	356	_raise	library	libcmt.lib	range			
+0x5204d2	13	FUN_005204d2	library	libcmt.lib	range			
+0x520510	33	___addl	library	libcmt.lib	range			
+0x520531	94	___add_12	library	libcmt.lib	range			
+0x52058f	46	___shl_12	library	libcmt.lib	range			
+0x5205bd	45	___shr_12	library	libcmt.lib	range			
+0x5205ea	222	___mtold12	library	libcmt.lib	range			
+0x5206c8	1028	___strgtold12	library	libcmt.lib	range			
+0x520afc	654	$I10_OUTPUT	library	libcmt.lib	range			
+0x520d8a	321	__chsize_lk	library	libcmt.lib	range			
+0x520ecb	295	___getlocaleinfo	library	libcmt.lib	range			
+0x520ff2	127	__strnicmp	library	libcmt.lib	range			
+0x521071	62	xtoa	library	libcmt.lib	range			
+0x5210af	42	__itoa	library	libcmt.lib	range			
+0x5210d9	78	__mbsnbicoll	library	libcmt.lib	range			
+0x521127	144	___wtomb_environ	library	libcmt.lib	range			
+0x5211b7	562	___ld12mul	library	libcmt.lib	range			
+0x5213e9	134	___multtenpow12	library	libcmt.lib	range			
+0x52146f	108	__setmode_lk	library	libcmt.lib	range			
+0x5214db	281	___crtGetLocaleInfoW	library	libcmt.lib	range			
+0x52160b	297	___crtGetLocaleInfoA	library	libcmt.lib	range			
+0x521750	97	___ascii_strnicmp	library	libcmt.lib	range			
+0x5217b1	28	_strncnt	library	libcmt.lib	range			
+0x5217cd	848	___crtCompareStringA	library	libcmt.lib	range			
+0x521b51	77	findenv	library	libcmt.lib	range			
+0x521b9e	97	copy_environ	library	libcmt.lib	range			
+0x521bff	469	___crtsetenv	library	libcmt.lib	range			
+0x521dd4	6	KERNEL32.DLL::RtlUnwind	library	import thunks	range			
+0x521dda	6	USER32.DLL::ReuseDDElParam	library	import thunks	range			
+0x521de0	6	USER32.DLL::UnpackDDElParam	library	import thunks	range			
+0x521de6	6	WINSPOOL.DRV::ClosePrinter	library	import thunks	range			
+0x521dec	6	WINSPOOL.DRV::DocumentPropertiesA	library	import thunks	range			
+0x521df2	6	WINSPOOL.DRV::OpenPrinterA	library	import thunks	range			
+0x521df8	233	__Tolower_lk	library	libcpmt.lib	range			
+0x521ee1	174	__Getctype	library	libcpmt.lib	range			
+0x521f8f	29	FUN_00521f8f	library	libcpmt.lib	range			
+0x521fac	143	__Tolower	library	libcpmt.lib	range			
+0x52203b	29	FUN_0052203b	library	libcpmt.lib	range			
+0x522058	110	__Getcvt	library	libcpmt.lib	range			
+0x5220c6	29	FUN_005220c6	library	libcpmt.lib	range			
+0x5220e3	47	std::_Init_locks::_Init_locks	library	libcpmt.lib	range			
+0x52213b	35	FUN_0052213b	library	libcpmt.lib	range			
+0x52215e	20	FUN_0052215e	library	libcpmt.lib	range			
+0x522172	21	std::_Fac_node::~_Fac_node	library	libcpmt.lib	range			
+0x522187	28	__Deletegloballocale	library	libcpmt.lib	range			
+0x5221a3	35	tidy_global	library	libcpmt.lib	range			
+0x5221c6	37	__Setgloballocale	library	libcpmt.lib	range			
+0x5221eb	53	std::locale::_Getfacet	library	libcpmt.lib	range			
+0x522220	67	__Fac_tidy	library	libcpmt.lib	range			
+0x522263	57	std::locale::facet::_Register	library	libcpmt.lib	range			
+0x52229c	136	std::locale::_Locimp::~_Locimp	library	libcpmt.lib	range			
+0x522324	87	std::_Locinfo::~_Locinfo	library	libcpmt.lib	range			
+0x52237b	28	std::locale::_Locimp::`scalar_deleting_destructor'	library	libcpmt.lib	range			
+0x522397	80	std::locale::_Locimp::_Locimp	library	libcpmt.lib	range			
+0x5223e7	138	std::_Locinfo::_Locinfo	library	libcpmt.lib	range			
+0x522471	162	std::locale::_Init	library	libcpmt.lib	range			
+0x522513	25	std::locale::locale	library	libcpmt.lib	range			
+0x52252c	34	std::ios_base::_Callfns	library	libcpmt.lib	range			
+0x52254e	66	std::ios_base::_Tidy	library	libcpmt.lib	range			
+0x522590	64	std::ios_base::~ios_base	library	libcpmt.lib	range			
+0x5225d0	29	FUN_005225d0	library	libcpmt.lib	range			
+0x5225ed	28	FUN_005225ed	library	libcpmt.lib	range			
+0x522609	60	std::runtime_error::runtime_error	library	libcpmt.lib	range			
+0x522645	28	FUN_00522645	library	libcpmt.lib	range			
+0x522661	11	FUN_00522661	library	libcpmt.lib	range			
+0x52266c	198	std::ios_base::clear	library	libcpmt.lib	range			
+0x522732	67	FUN_00522732	library	libcpmt.lib	range			
+0x52278d	70	std::ios_base::_Init	library	libcpmt.lib	range			
+0x5227d3	24	FUN_005227d3	library	libcpmt.lib	range			
+0x5227eb	21	FUN_005227eb	library	libcpmt.lib	range			
+0x522800	9	FUN_00522800	library	libcpmt.lib	range			
+0x522809	9	FUN_00522809	library	libcpmt.lib	range			
+0x522812	224	__Toupper_lk	library	libcpmt.lib	range			
+0x5228f2	143	__Toupper	library	libcpmt.lib	range			
+0x522981	29	FUN_00522981	library	libcpmt.lib	range			
+0x52299e	60	FUN_0052299e	library	libcpmt.lib	range			
+0x5229e8	29	FUN_005229e8	library	libcpmt.lib	range			
+0x522a05	28	FUN_00522a05	library	libcpmt.lib	range			
+0x522a21	28	FUN_00522a21	library	libcpmt.lib	range			
+0x522a3d	11	FUN_00522a3d	library	libcpmt.lib	range			
+0x522a48	28	FUN_00522a48	library	libcpmt.lib	range			
+0x522a64	11	FUN_00522a64	library	libcpmt.lib	range			
+0x522a6f	63	FUN_00522a6f	library	libcpmt.lib	range			
+0x522b0a	63	FUN_00522b0a	library	libcpmt.lib	range			
+0x522b62	5	thunk_FUN_00516156	library	libcpmt.lib	range			
+0x522b67	162	std::_Fiopen	library	libcpmt.lib	range			
+0x522c09	11	FUN_00522c09	library	libcpmt.lib	range			
+0x522c14	11	FUN_00522c14	library	libcpmt.lib	range			
+0x522c1f	11	FUN_00522c1f	library	libcpmt.lib	range			
+0x522c2a	11	FUN_00522c2a	library	libcpmt.lib	range			
+0x522c35	32	__Atexit	library	libcpmt.lib	range			
+0x522c75	29	ATL::CSimpleArray<HINSTANCE__*,ATL::CSimpleArrayEqualHelper<HINSTANCE__*>_>::RemoveAll	library	ATL 7.1	range			
+0x522c92	26	ATL::_ATL_BASE_MODULE70::_ATL_BASE_MODULE70	library	ATL 7.1	range			
+0x522cac	22	ATL::CAtlBaseModule::~CAtlBaseModule	library	ATL 7.1	range			
+0x522cc2	171	ATL::CAtlBaseModule::CAtlBaseModule	library	ATL 7.1	range			
+0x522d6d	10	DelayLoad_CreateStdAccessibleObject	library	delay-load	range			
+0x522d77	17	FUN_00522d77	library	delay-load	range			
+0x522d88	6	OLEACC.DLL::CreateStdAccessibleObject	library	delay-load	range			
+0x522d8e	10	DelayLoad_LresultFromObject	library	delay-load	range			
+0x522d98	6	OLEACC.DLL::LresultFromObject	library	delay-load	range			
+0x522d9e	579	___delayLoadHelper2@8	library	delay-load	range			
+0x522fe1	5	AfxWinMain	library	nafxcw.lib	range			
+0x522fe6	30	AfxInitialize	library	nafxcw.lib	range			
+0x523017	8	FUN_00523017	library	libcmt.lib	range			
+0x52301f	41	CSimpleException::InitString	library	nafxcw.lib	range			
+0x523048	80	CSimpleException::GetErrorMessage	library	nafxcw.lib	range			
+0x523098	25	FUN_00523098	library	nafxcw.lib	range			
+0x5230b2	25	FUN_005230b2	library	nafxcw.lib	range			
+0x5230cc	124	FID_conflict:afxMapHMENU	library	nafxcw.lib	range			
+0x523148	42	Detach	library	nafxcw.lib	range			
+0x523172	22	FUN_00523172	library	nafxcw.lib	range			
+0x523188	14	CImageList::FromHandle	library	nafxcw.lib	range			
+0x523196	11	FUN_00523196	library	nafxcw.lib	range			
+0x5231a1	28	FUN_005231a1	library	nafxcw.lib	range			
+0x5231bd	32	RemoveAll	library	nafxcw.lib	range			
+0x5231dd	34	FreeNode	library	nafxcw.lib	range			
+0x5231ff	36	CPtrList::RemoveHead	library	nafxcw.lib	range			
+0x523223	35	CPtrList::CPtrList	library	nafxcw.lib	range			
+0x523246	11	FUN_00523246	library	nafxcw.lib	range			
+0x523251	86	NewNode	library	nafxcw.lib	range			
+0x5232a7	41	CPtrList::AddTail	library	nafxcw.lib	range			
+0x5232d0	28	FUN_005232d0	library	nafxcw.lib	range			
+0x5232ec	48	FUN_005232ec	library	nafxcw.lib	range			
+0x52331d	22	CPlex::FreeDataChain	library	nafxcw.lib	range			
+0x523333	261	CByteArray::SetSize	library	nafxcw.lib	range			
+0x52344f	16	FUN_0052344f	library	nafxcw.lib	range			
+0x5234dc	28	FUN_005234dc	library	nafxcw.lib	range			
+0x5234f8	76	CMapPtrToPtr::InitHashTable	library	nafxcw.lib	range			
+0x523544	43	CMapPtrToPtr::RemoveAll	library	nafxcw.lib	range			
+0x52356f	25	FreeAssoc	library	nafxcw.lib	range			
+0x523588	56	CMapPtrToPtr::GetAssocAt	library	nafxcw.lib	range			
+0x5235c0	55	CMapPtrToPtr::GetValueAt	library	nafxcw.lib	range			
+0x5235f7	39	CMapPtrToPtr::Lookup	library	nafxcw.lib	range			
+0x52361e	67	CMapPtrToPtr::RemoveKey	library	nafxcw.lib	range			
+0x523661	122	CMapPtrToPtr::GetNextAssoc	library	nafxcw.lib	range			
+0x5236db	46	CMapPtrToPtr::CMapPtrToPtr	library	nafxcw.lib	range			
+0x523709	11	FUN_00523709	library	nafxcw.lib	range			
+0x523714	75	CMapPtrToPtr::NewAssoc	library	nafxcw.lib	range			
+0x52375f	85	CMapPtrToPtr::operator[]	library	nafxcw.lib	range			
+0x5237b4	28	FUN_005237b4	library	nafxcw.lib	range			
+0x5237d0	5	thunk_FUN_00523098	library	nafxcw.lib	range			
+0x5237d5	18	AfxSetNewHandler	library	nafxcw.lib	range			
+0x5237e7	43	operator_new	library	nafxcw.lib	range			
+0x523812	5	_free	library	nafxcw.lib	range			
+0x523817	5	operator_new	library	nafxcw.lib	range			
+0x523821	70	CWnd::CWnd	library	nafxcw.lib	range			
+0x523867	80	_AfxModifyStyle	library	nafxcw.lib	range			
+0x5238d1	26	CWnd::ModifyStyleEx	library	nafxcw.lib	range			
+0x523948	31	FUN_00523948	library	nafxcw.lib	range			
+0x523967	113	OnToolHitTest	library	nafxcw.lib	range			
+0x5239d8	23	FUN_005239d8	library	nafxcw.lib	range			
+0x5239ef	23	FUN_005239ef	library	nafxcw.lib	range			
+0x523a06	241	AfxRegisterClass	library	nafxcw.lib	range			
+0x523af7	16	Catch@00523af7	library	nafxcw.lib	range			
+0x523b08	21	FUN_00523b08	library	nafxcw.lib	range			
+0x523b1d	27	FUN_00523b1d	library	nafxcw.lib	range			
+0x523b3e	64	AfxFindMessageEntry	library	nafxcw.lib	range			
+0x523b7e	68	CWnd::WindowProc	library	nafxcw.lib	range			
+0x523bc2	25	CTestCmdUI::CTestCmdUI	library	nafxcw.lib	range			
+0x523bf4	140	AfxRepositionWindow	library	nafxcw.lib	range			
+0x523c80	45	CWnd::CalcWindowRect	library	nafxcw.lib	range			
+0x523ce8	9	FUN_00523ce8	library	nafxcw.lib	range			
+0x523cf1	27	CWnd::XAccessible::GetIDsOfNames	library	nafxcw.lib	range			
+0x523f37	49	CWnd::XAccessible::accLocation	library	nafxcw.lib	range			
+0x524272	44	CWnd::accLocation	library	nafxcw.lib	range			
+0x524330	120	_AfxInitCommonControls	library	nafxcw.lib	range			
+0x5243a8	31	CFrameWnd::IsTracking	library	nafxcw.lib	range			
+0x5243e1	67	CWnd::CWnd	library	nafxcw.lib	range			
+0x524424	35	_AfxPreInitDialog	library	nafxcw.lib	range			
+0x524447	73	CreateEx	library	nafxcw.lib	range			
+0x524490	78	Create	library	nafxcw.lib	range			
+0x52452f	84	CMenu::TrackPopupMenu	library	nafxcw.lib	range			
+0x524583	91	FUN_00524583	library	nafxcw.lib	range			
+0x5245de	178	AfxRegisterWndClass	library	nafxcw.lib	range			
+0x524690	81	CWnd::WinHelpInternal	library	nafxcw.lib	range			
+0x524700	13	FUN_00524700	library	nafxcw.lib	range			
+0x52470d	437	CWnd::CenterWindow	library	nafxcw.lib	range			
+0x5248e7	65	_AfxRegisterWithIcon	library	nafxcw.lib	range			
+0x524928	719	AfxEndDeferRegisterClass	library	nafxcw.lib	range			
+0x524bf7	53	CWnd::GetCurrentMessage	library	nafxcw.lib	range			
+0x524c2c	39	CWnd::Default	library	nafxcw.lib	range			
+0x524c53	124	afxMapHWND	library	nafxcw.lib	range			
+0x524ccf	39	CWnd::FromHandle	library	nafxcw.lib	range			
+0x524cf6	26	CWnd::FromHandlePermanent	library	nafxcw.lib	range			
+0x524d10	57	CWnd::Attach	library	nafxcw.lib	range			
+0x524d49	46	CWnd::Detach	library	nafxcw.lib	range			
+0x524d77	66	AfxUnhookWindowCreate	library	nafxcw.lib	range			
+0x524db9	32	FUN_00524db9	library	nafxcw.lib	range			
+0x524dd9	59	CWnd::OnDestroy	library	nafxcw.lib	range			
+0x524e14	273	CWnd::OnNcDestroy	library	nafxcw.lib	range			
+0x524f25	84	CWnd::DestroyWindow	library	nafxcw.lib	range			
+0x524f79	70	CWnd::OnNTCtlColor	library	nafxcw.lib	range			
+0x524fbf	119	CWnd::GetDescendantWindow	library	nafxcw.lib	range			
+0x525036	328	CWnd::RepositionBars	library	nafxcw.lib	range			
+0x52517e	66	CWnd::WalkPreTranslateTree	library	nafxcw.lib	range			
+0x5251c0	45	CWnd::SendChildNotifyLastMsg	library	nafxcw.lib	range			
+0x5251ed	35	FUN_005251ed	library	nafxcw.lib	range			
+0x525210	106	CWnd::OnHelpInfo	library	nafxcw.lib	range			
+0x52527a	58	CWnd::OnGetObject	library	nafxcw.lib	range			
+0x5252b4	33	FUN_005252b4	library	nafxcw.lib	range			
+0x5252d5	64	CWnd::OnEnterIdle	library	nafxcw.lib	range			
+0x525315	39	CWnd::OnCtlColor	library	nafxcw.lib	range			
+0x52533c	121	_AfxPostInitDialog	library	nafxcw.lib	range			
+0x5253b5	171	FUN_005253b5	library	nafxcw.lib	range			
+0x525460	32	Catch@00525460	library	nafxcw.lib	range			
+0x525483	31	FUN_00525483	library	nafxcw.lib	range			
+0x5254a2	75	AfxWndProc	library	nafxcw.lib	range			
+0x5254ed	6	FUN_005254ed	library	nafxcw.lib	range			
+0x5254f3	124	CWnd::~CWnd	library	nafxcw.lib	range			
+0x52556f	43	FID_conflict:OnCharToItem	library	nafxcw.lib	range			
+0x52559a	120	FUN_0052559a	library	nafxcw.lib	range			
+0x525612	63	CWnd::GetParentFrame	library	nafxcw.lib	range			
+0x525651	65	CWnd::GetTopLevelFrame	library	nafxcw.lib	range			
+0x525692	125	CWnd::SendMessageToDescendants	library	nafxcw.lib	range			
+0x52570f	175	CWnd::ReflectLastMsg	library	nafxcw.lib	range			
+0x5257eb	42	CWnd::OnDragList	library	nafxcw.lib	range			
+0x525815	28	CWnd::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x525831	61	FUN_00525831	library	nafxcw.lib	range			
+0x52586e	42	CWnd::OnCompareItem	library	nafxcw.lib	range			
+0x5258b8	115	AfxHtmlHelp	library	nafxcw.lib	range			
+0x52592b	140	CWnd::OnCommand	library	nafxcw.lib	range			
+0x5259b7	122	CWnd::OnNotify	library	nafxcw.lib	range			
+0x525a31	69	AfxGetParentOwner	library	nafxcw.lib	range			
+0x525a76	40	CWnd::GetTopLevelParent	library	nafxcw.lib	range			
+0x525a9e	70	CWnd::OnSysColorChange	library	nafxcw.lib	range			
+0x525ae4	75	CWnd::OnDevModeChange	library	nafxcw.lib	range			
+0x525b2f	73	CWnd::OnDisplayChange	library	nafxcw.lib	range			
+0x525b78	97	_AfxHandleActivate	library	nafxcw.lib	range			
+0x525bd9	118	_AfxHandleSetCursor	library	nafxcw.lib	range			
+0x525c4f	291	_AfxActivationWndProc	library	nafxcw.lib	range			
+0x525d72	53	Catch@00525d72	library	nafxcw.lib	range			
+0x525da7	543	_AfxCbtFilterHook	library	nafxcw.lib	range			
+0x525fc6	76	AfxHookWindowCreate	library	nafxcw.lib	range			
+0x526012	198	CreateEx	library	nafxcw.lib	range			
+0x5260d8	115	CWnd::PrepareForHelp	library	nafxcw.lib	range			
+0x52614b	1287	CWnd::OnWndMsg	library	nafxcw.lib	range			
+0x526756	232	CWnd::ReflectChildNotify	library	nafxcw.lib	range			
+0x52686a	200	CWnd::CreateAccessibleProxy	library	nafxcw.lib	range			
+0x526932	122	FID_conflict:WinHelpW	library	nafxcw.lib	range			
+0x5269ac	121	FID_conflict:HtmlHelpA	library	nafxcw.lib	range			
+0x526a25	81	CWnd::OnChildNotify	library	nafxcw.lib	range			
+0x526b2d	26	CWnd::GetExStyle	library	nafxcw.lib	range			
+0x526b47	26	CWnd::GetExStyle	library	nafxcw.lib	range			
+0x526b61	42	CWnd::ModifyStyle	library	nafxcw.lib	range			
+0x526b8b	42	CWnd::ModifyStyleEx	library	nafxcw.lib	range			
+0x526bb5	33	FID_conflict:SetWindowTextW	library	nafxcw.lib	range			
+0x526bd6	62	CWnd::MoveWindow	library	nafxcw.lib	range			
+0x526c14	33	CWnd::ShowWindow	library	nafxcw.lib	range			
+0x526c35	27	CWnd::IsWindowEnabled	library	nafxcw.lib	range			
+0x526c50	33	CWnd::EnableWindow	library	nafxcw.lib	range			
+0x526c92	60	CWnd::SetWindowPos	library	nafxcw.lib	range			
+0x526cce	65	CWnd::AttachControlSite	library	nafxcw.lib	range			
+0x526d0f	26	CCmdTarget::CCmdTarget	library	nafxcw.lib	range			
+0x526d29	13	CCmdTarget::~CCmdTarget	library	nafxcw.lib	range			
+0x526d36	230	_AfxDispatchCmdMsg	library	nafxcw.lib	range			
+0x526e4c	268	CCmdTarget::OnCmdMsg	library	nafxcw.lib	range			
+0x526fbb	38	CCmdUI::CCmdUI	library	nafxcw.lib	range			
+0x526fe1	97	CCmdUI::DoUpdate	library	nafxcw.lib	range			
+0x527042	21	CCmdTarget::BeginWaitCursor	library	nafxcw.lib	range			
+0x527057	21	CCmdTarget::EndWaitCursor	library	nafxcw.lib	range			
+0x52706c	127	CCmdUI::Enable	library	nafxcw.lib	range			
+0x5270eb	101	CCmdUI::SetCheck	library	nafxcw.lib	range			
+0x527150	86	CCmdUI::SetRadio	library	nafxcw.lib	range			
+0x5271a6	84	SetText	library	nafxcw.lib	range			
+0x527275	102	CWinApp::OnIdle	library	nafxcw.lib	range			
+0x5272db	158	CWinApp::DevModeChange	library	nafxcw.lib	range			
+0x527379	33	CWinApp::Run	library	nafxcw.lib	range			
+0x5273ce	52	FUN_005273ce	library	nafxcw.lib	range			
+0x527402	52	CWinApp::WinHelpInternal	library	nafxcw.lib	range			
+0x527436	9	FUN_00527436	library	nafxcw.lib	range			
+0x52743f	9	FUN_0052743f	library	nafxcw.lib	range			
+0x527448	37	AfxInternalProcessWndProcException	library	nafxcw.lib	range			
+0x52746d	22	AfxProcessWndProcException	library	nafxcw.lib	range			
+0x527491	141	CWinThread::Run	library	nafxcw.lib	range			
+0x527527	118	CWinThread::DispatchThreadMessageEx	library	nafxcw.lib	range			
+0x52759d	5	AfxInternalProcessWndProcException	library	nafxcw.lib	range			
+0x5275a2	26	IsEnterKey	library	nafxcw.lib	range			
+0x5275bc	108	AfxInternalPreTranslateMessage	library	nafxcw.lib	range			
+0x527628	27	AfxPreTranslateMessage	library	nafxcw.lib	range			
+0x527643	108	AfxInternalIsIdleMessage	library	nafxcw.lib	range			
+0x527781	288	CWinThread::ProcessMessageFilter	library	nafxcw.lib	range			
+0x5278a6	46	AfxInitThread	library	nafxcw.lib	range			
+0x5278d4	265	CWinThread::OnIdle	library	nafxcw.lib	range			
+0x5279dd	14	FUN_005279dd	library	nafxcw.lib	range			
+0x5279eb	110	CException::ReportError	library	nafxcw.lib	range			
+0x527a59	10	FUN_00527a59	library	nafxcw.lib	range			
+0x527a63	12	FUN_00527a63	library	nafxcw.lib	range			
+0x527a6f	124	FID_conflict:afxMapHMENU	library	nafxcw.lib	range			
+0x527aeb	14	CMenu::FromHandle	library	nafxcw.lib	range			
+0x527af9	26	FUN_00527af9	library	nafxcw.lib	range			
+0x527b13	45	CMenu::Attach	library	nafxcw.lib	range			
+0x527b40	42	Detach	library	nafxcw.lib	range			
+0x527b6a	22	FID_conflict:DeleteObject	library	nafxcw.lib	range			
+0x527b80	130	CChevronOwnerDrawMenu::CChevronOwnerDrawMenu	library	nafxcw.lib	range			
+0x527c02	28	CChevronOwnerDrawMenu::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x527c1e	1094	CChevronOwnerDrawMenu::DrawItem	library	nafxcw.lib	range			
+0x528064	312	CChevronOwnerDrawMenu::MeasureItem	library	nafxcw.lib	range			
+0x52819c	75	AfxLoadString	library	nafxcw.lib	range			
+0x5281e7	11	FUN_005281e7	library	nafxcw.lib	range			
+0x5281f2	130	AfxExtractSubString	library	nafxcw.lib	range			
+0x528274	6	FUN_00528274	library	nafxcw.lib	range			
+0x52827a	59	FUN_0052827a	library	nafxcw.lib	range			
+0x5282c2	47	FUN_005282c2	library	nafxcw.lib	range			
+0x528332	68	AUX_DATA::UpdateSysColors	library	nafxcw.lib	range			
+0x528376	90	AUX_DATA::UpdateSysMetrics	library	nafxcw.lib	range			
+0x5283d0	56	CRuntimeClass::CreateObject	library	nafxcw.lib	range			
+0x528408	14	Catch@00528408	library	nafxcw.lib	range			
+0x528416	34	CRuntimeClass::IsDerivedFrom	library	nafxcw.lib	range			
+0x528438	11	CObject::IsKindOf	library	nafxcw.lib	range			
+0x528443	38	AfxClassInit	library	nafxcw.lib	range			
+0x528469	9	FUN_00528469	library	nafxcw.lib	range			
+0x528472	132	CHandleMap::CHandleMap	library	nafxcw.lib	range			
+0x5284f6	176	CHandleMap::FromHandle	library	nafxcw.lib	range			
+0x5285a6	17	Catch@005285a6	library	nafxcw.lib	range			
+0x5285b8	99	CHandleMap::DeleteTemp	library	nafxcw.lib	range			
+0x52861b	249	AfxUnlockTempMaps	library	nafxcw.lib	range			
+0x528714	119	AfxWinMain	library	nafxcw.lib	range			
+0x52879e	90	_AfxIsComboBoxControl	library	nafxcw.lib	range			
+0x5287f8	104	AfxSetWindowText	library	nafxcw.lib	range			
+0x528860	25	FUN_00528860	library	nafxcw.lib	range			
+0x528879	119	AfxCancelModes	library	nafxcw.lib	range			
+0x5288f0	48	AfxGlobalFree	library	nafxcw.lib	range			
+0x52896d	114	_AfxChildWindowFromPoint	library	nafxcw.lib	range			
+0x5289fd	49	CDC::SaveDC	library	nafxcw.lib	range			
+0x528a2e	62	CDC::RestoreDC	library	nafxcw.lib	range			
+0x528a6c	47	CDC::SetBkColor	library	nafxcw.lib	range			
+0x528a9b	46	CDC::SetBkMode	library	nafxcw.lib	range			
+0x528ac9	47	CDC::SetTextColor	library	nafxcw.lib	range			
+0x528af8	46	FUN_00528af8	library	nafxcw.lib	range			
+0x528b36	25	FUN_00528b36	library	nafxcw.lib	range			
+0x528b50	25	FUN_00528b50	library	nafxcw.lib	range			
+0x528b6a	20	FUN_00528b6a	library	nafxcw.lib	range			
+0x528b7e	76	FID_conflict:OffsetWindowOrg	library	nafxcw.lib	range			
+0x528bca	76	FID_conflict:OffsetWindowOrg	library	nafxcw.lib	range			
+0x528c16	76	FID_conflict:OffsetWindowOrg	library	nafxcw.lib	range			
+0x528c62	88	FID_conflict:ScaleWindowExt	library	nafxcw.lib	range			
+0x528cba	76	FID_conflict:OffsetWindowOrg	library	nafxcw.lib	range			
+0x528d06	88	FID_conflict:ScaleWindowExt	library	nafxcw.lib	range			
+0x528d5e	60	FID_conflict:ScreenToClient	library	nafxcw.lib	range			
+0x528d9a	60	FID_conflict:ScreenToClient	library	nafxcw.lib	range			
+0x528dd6	124	afxMapHDC	library	nafxcw.lib	range			
+0x528e52	14	CDC::FromHandle	library	nafxcw.lib	range			
+0x528e60	55	CDC::Attach	library	nafxcw.lib	range			
+0x528e97	49	CDC::Detach	library	nafxcw.lib	range			
+0x528ec8	25	CDC::~CDC	library	nafxcw.lib	range			
+0x528ee1	91	CClientDC::CClientDC	library	nafxcw.lib	range			
+0x528f3c	66	CClientDC::~CClientDC	library	nafxcw.lib	range			
+0x528f7e	91	CWindowDC::CWindowDC	library	nafxcw.lib	range			
+0x528fd9	66	CWindowDC::~CWindowDC	library	nafxcw.lib	range			
+0x52901b	124	FID_conflict:afxMapHMENU	library	nafxcw.lib	range			
+0x529097	14	CGdiObject::FromHandle	library	nafxcw.lib	range			
+0x5290a5	45	CImageList::Attach	library	nafxcw.lib	range			
+0x5290d2	42	Detach	library	nafxcw.lib	range			
+0x5290fc	22	CGdiObject::DeleteObject	library	nafxcw.lib	range			
+0x529112	28	FUN_00529112	library	nafxcw.lib	range			
+0x52912e	23	CDC::SelectGdiObject	library	nafxcw.lib	range			
+0x529145	60	CDC::SelectStockObject	library	nafxcw.lib	range			
+0x529181	70	CDC::SelectObject	library	nafxcw.lib	range			
+0x5291c7	28	FUN_005291c7	library	nafxcw.lib	range			
+0x5291e3	28	FUN_005291e3	library	nafxcw.lib	range			
+0x5291ff	74	CBrush::CBrush	library	nafxcw.lib	range			
+0x529249	644	AfxGetGrayBitmap	library	nafxcw.lib	range			
+0x5294cd	749	AfxGetDitheredBitmap	library	nafxcw.lib	range			
+0x5297ba	301	CArchive::Read	library	nafxcw.lib	range			
+0x5298e7	119	CArchive::Flush	library	nafxcw.lib	range			
+0x52995e	232	CArchive::FillBuffer	library	nafxcw.lib	range			
+0x529a46	177	CArchive::Write	library	nafxcw.lib	range			
+0x529af7	44	CArchive::WriteCount	library	nafxcw.lib	range			
+0x529b23	47	CArchive::ReadCount	library	nafxcw.lib	range			
+0x529b52	193	GetErrorMessage	library	nafxcw.lib	range			
+0x529c00	6	Catch@00529c00	library	nafxcw.lib	range			
+0x529c19	66	FUN_00529c19	library	nafxcw.lib	range			
+0x529ce0	17	CWinApp::CloseAllDocuments	library	nafxcw.lib	range			
+0x529d25	50	CWinApp::HideApplication	library	nafxcw.lib	range			
+0x529d8d	12	FUN_00529d8d	library	nafxcw.lib	range			
+0x529d99	45	CWinApp::EnableModeless	library	nafxcw.lib	range			
+0x529dc6	158	CWnd::GetSafeOwner_	library	nafxcw.lib	range			
+0x529e64	307	CWinApp::DoMessageBox	library	nafxcw.lib	range			
+0x529f97	34	AfxMessageBox	library	nafxcw.lib	range			
+0x529fb9	98	AfxMessageBox	library	nafxcw.lib	range			
+0x52a01b	17	CWinApp::GetFirstDocTemplatePosition	library	nafxcw.lib	range			
+0x52a02c	67	ATL::CSimpleStringT<char,0>::Concatenate	library	nafxcw.lib	range			
+0x52a06f	126	ATL::operator+	library	nafxcw.lib	range			
+0x52a0ed	31	CToolBar::_GetButton	library	nafxcw.lib	range			
+0x52a10c	72	CToolBar::GetButtonInfo	library	nafxcw.lib	range			
+0x52a154	130	CWinApp::WriteProfileInt	library	nafxcw.lib	range			
+0x52a1d6	255	AfxFormatStrings	library	nafxcw.lib	range			
+0x52a2d5	103	AfxFormatStrings	library	nafxcw.lib	range			
+0x52a33c	23	AfxFormatString1	library	nafxcw.lib	range			
+0x52a417	28	AfxIsDescendant	library	nafxcw.lib	range			
+0x52a546	111	CFrameWnd::EndModalState	library	nafxcw.lib	range			
+0x52a5b5	169	CFrameWnd::ShowOwnedWindows	library	nafxcw.lib	range			
+0x52a65e	51	PreCreateWindow	library	nafxcw.lib	range			
+0x52a6c7	55	CFrameWnd::OnNcActivate	library	nafxcw.lib	range			
+0x52a732	32	FUN_0052a732	library	nafxcw.lib	range			
+0x52a76f	47	CFrameWnd::BringToTop	library	nafxcw.lib	range			
+0x52a79e	20	CControlBar::GetDockingFrame	library	nafxcw.lib	range			
+0x52a7b2	51	CControlBar::IsFloating	library	nafxcw.lib	range			
+0x52a7e5	38	LoadAccelTable	library	nafxcw.lib	range			
+0x52a80b	27	FUN_0052a80b	library	nafxcw.lib	range			
+0x52a826	34	CFrameWnd::OnQueryNewPalette	library	nafxcw.lib	range			
+0x52a8b3	42	CFrameWnd::OnSetCursor	library	nafxcw.lib	range			
+0x52a8dd	88	FUN_0052a8dd	library	nafxcw.lib	range			
+0x52a935	119	CFrameWnd::OnCommand	library	nafxcw.lib	range			
+0x52a9ac	173	CFrameWnd::NotifyFloatingWindows	library	nafxcw.lib	range			
+0x52aa59	112	CFrameWnd::CreateView	library	nafxcw.lib	range			
+0x52aaeb	79	OnCreateHelper	library	nafxcw.lib	range			
+0x52ab3a	131	GetIconWndClass	library	nafxcw.lib	range			
+0x52abbd	239	CFrameWnd::OnClose	library	nafxcw.lib	range			
+0x52acac	150	CFrameWnd::OnCmdMsg	library	nafxcw.lib	range			
+0x52ae1e	211	CFrameWnd::OnActivate	library	nafxcw.lib	range			
+0x52aef1	149	CFrameWnd::OnSysCommand	library	nafxcw.lib	range			
+0x52af86	142	CFrameWnd::OnDropFiles	library	nafxcw.lib	range			
+0x52b014	36	CFrameWnd::OnQueryEndSession	library	nafxcw.lib	range			
+0x52b070	219	CFrameWnd::OnDDEInitiate	library	nafxcw.lib	range			
+0x52b14b	181	CFrameWnd::OnDDEExecute	library	nafxcw.lib	range			
+0x52b211	252	CFrameWnd::ShowControlBar	library	nafxcw.lib	range			
+0x52b30d	378	CFrameWnd::OnInitMenuPopup	library	nafxcw.lib	range			
+0x52b487	273	CFrameWnd::OnMenuSelect	library	nafxcw.lib	range			
+0x52b5cb	23	CFrameWnd::SetMessageText	library	nafxcw.lib	range			
+0x52b5e2	229	CFrameWnd::DestroyDockBars	library	nafxcw.lib	range			
+0x52b6c7	83	CFrameWnd::GetControlBar	library	nafxcw.lib	range			
+0x52b71a	53	FUN_0052b71a	library	nafxcw.lib	range			
+0x52b7d7	47	CFrameWnd::OnUpdateContextHelp	library	nafxcw.lib	range			
+0x52b806	552	CFrameWnd::OnSetPreviewMode	library	nafxcw.lib	range			
+0x52ba2e	121	CFrameWnd::OnIdleUpdateCmdUI	library	nafxcw.lib	range			
+0x52baa7	229	CFrameWnd::RecalcLayout	library	nafxcw.lib	range			
+0x52bb8c	109	CFrameWnd::NegotiateBorderSpace	library	nafxcw.lib	range			
+0x52bbf9	31	FUN_0052bbf9	library	nafxcw.lib	range			
+0x52bc2e	163	CFrameWnd::OnRegisteredMouseWheel	library	nafxcw.lib	range			
+0x52bcd1	65	CChevronOwnerDrawMenu::~CChevronOwnerDrawMenu	library	nafxcw.lib	range			
+0x52bd12	81	CFrameWnd::ActivateFrame	library	nafxcw.lib	range			
+0x52bd63	185	CFrameWnd::OnEnable	library	nafxcw.lib	range			
+0x52be1c	15	OnCreate	library	nafxcw.lib	range			
+0x52be2b	88	CFrameWnd::OnDestroy	library	nafxcw.lib	range			
+0x52beb4	36	CFrameWnd::AddFrameWnd	library	nafxcw.lib	range			
+0x52bed8	36	CFrameWnd::RemoveFrameWnd	library	nafxcw.lib	range			
+0x52befc	207	CFrameWnd::OnSetMessageString	library	nafxcw.lib	range			
+0x52bfcb	283	CFrameWnd::OnToolTipText	library	nafxcw.lib	range			
+0x52c0e6	197	CFrameWnd::CFrameWnd	library	nafxcw.lib	range			
+0x52c1ab	161	CFrameWnd::~CFrameWnd	library	nafxcw.lib	range			
+0x52c290	28	CFrameWnd::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52c2ac	247	CFrameWnd::LoadFrame	library	nafxcw.lib	range			
+0x52c3a3	1284	CFrameWnd::OnChevronPushed	library	nafxcw.lib	range			
+0x52c8a7	170	Create	library	nafxcw.lib	range			
+0x52c951	270	CFrameWnd::UpdateFrameTitleForDocument	library	nafxcw.lib	range			
+0x52ca5f	69	CFrameWnd::OnUpdateFrameTitle	library	nafxcw.lib	range			
+0x52cae9	16	AfxOleCanExitApp	library	nafxcw.lib	range			
+0x52caf9	16	AfxOleLockApp	library	nafxcw.lib	range			
+0x52cb09	15	AfxOleSetUserCtrl	library	nafxcw.lib	range			
+0x52cb18	9	FUN_0052cb18	library	nafxcw.lib	range			
+0x52cb6d	25	FUN_0052cb6d	library	nafxcw.lib	range			
+0x52cb86	42	CDC::FillSolidRect	library	nafxcw.lib	range			
+0x52cbb0	76	CDC::FillSolidRect	library	nafxcw.lib	range			
+0x52cbfc	106	CDC::Draw3dRect	library	nafxcw.lib	range			
+0x52ccb1	53	CFrameWnd::CreateObject	library	nafxcw.lib	range			
+0x52cce6	24	ATL::CSimpleStringT<char,0>::operator+=	library	nafxcw.lib	range			
+0x52ccfe	37	ATL::CSimpleStringT<char,0>::Append	library	nafxcw.lib	range			
+0x52cd23	5	CThreadLocalObject::~CThreadLocalObject	library	nafxcw.lib	range			
+0x52cd28	53	CTypeLibCache::Unlock	library	nafxcw.lib	range			
+0x52cd5d	25	FUN_0052cd5d	library	nafxcw.lib	range			
+0x52cd76	53	_AFX_THREAD_STATE::~_AFX_THREAD_STATE	library	nafxcw.lib	range			
+0x52cdab	110	AFX_MODULE_STATE::~AFX_MODULE_STATE	library	nafxcw.lib	range			
+0x52ce19	163	AFX_MODULE_THREAD_STATE::~AFX_MODULE_THREAD_STATE	library	nafxcw.lib	range			
+0x52cebc	24	FUN_0052cebc	library	nafxcw.lib	range			
+0x52ced4	27	_AFX_THREAD_STATE::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52ceef	96	AFX_MODULE_STATE::AFX_MODULE_STATE	library	nafxcw.lib	range			
+0x52cf4f	27	FID_conflict:`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52cf6a	39	AFX_MODULE_THREAD_STATE::AFX_MODULE_THREAD_STATE	library	nafxcw.lib	range			
+0x52cf91	27	AFX_MODULE_THREAD_STATE::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52cfc0	27	FID_conflict:`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52cfdb	5	AFX_MODULE_STATE::~AFX_MODULE_STATE	library	nafxcw.lib	range			
+0x52cff8	16	AfxGetThreadState	library	nafxcw.lib	range			
+0x52d008	38	AfxGetModuleState	library	nafxcw.lib	range			
+0x52d02e	23	AfxGetModuleThreadState	library	nafxcw.lib	range			
+0x52d0a9	44	ConstructDestruct<CWnd>::Construct	library	nafxcw.lib	range			
+0x52d2fc	72	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::get_accHelpTopic	library	nafxcw.lib	range			
+0x52d454	88	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accLocation	library	nafxcw.lib	range			
+0x52d4ac	67	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accNavigate	library	nafxcw.lib	range			
+0x52d4ef	54	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accHitTest	library	nafxcw.lib	range			
+0x52d582	56	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::Invoke	library	nafxcw.lib	range			
+0x52d5ba	47	ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::GetIDsOfNames	library	nafxcw.lib	range			
+0x52d648	45	CMFCComObject<ATL::CAccessibleProxy>::CMFCComObject<ATL::CAccessibleProxy>	library	nafxcw.lib	range			
+0x52d675	28	FUN_0052d675	library	nafxcw.lib	range			
+0x52d691	113	FUN_0052d691	library	nafxcw.lib	range			
+0x52d736	83	FUN_0052d736	library	nafxcw.lib	range			
+0x52d789	14	Catch@0052d789	library	nafxcw.lib	range			
+0x52d79f	29	FUN_0052d79f	library	nafxcw.lib	range			
+0x52d7bc	232	_AfxLoadDotBitmap	library	nafxcw.lib	range			
+0x52d8e3	127	_AfxLoadLangDLL	library	nafxcw.lib	range			
+0x52d978	476	AfxLoadLangResourceDLL	library	nafxcw.lib	range			
+0x52db54	202	CWinApp::LoadSysPolicies	library	nafxcw.lib	range			
+0x52dc5e	132	CWinApp::LoadAppLangResourceDLL	library	nafxcw.lib	range			
+0x52dce2	296	CWinApp::~CWinApp	library	nafxcw.lib	range			
+0x52de0a	53	CWinApp::SaveStdProfileSettings	library	nafxcw.lib	range			
+0x52de3f	84	CWinApp::ExitInstance	library	nafxcw.lib	range			
+0x52de99	28	CWinApp::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52deb5	56	CWinApp::InitInstance	library	nafxcw.lib	range			
+0x52deed	216	CWinApp::CWinApp	library	nafxcw.lib	range			
+0x52dfc5	1	FUN_0052dfc5	library	nafxcw.lib	range			
+0x52dfca	243	AfxDelRegTreeHelper	library	nafxcw.lib	range			
+0x52e076	27	Catch@0052e076	library	nafxcw.lib	range			
+0x52e0de	371	CWinApp::Unregister	library	nafxcw.lib	range			
+0x52e251	55	CWinThread::CommonConstruct	library	nafxcw.lib	range			
+0x52e28e	28	CWinThread::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52e2aa	61	CWinThread::CWinThread	library	nafxcw.lib	range			
+0x52e37a	24	CNoTrackObject::operator_new	library	nafxcw.lib	range			
+0x52e392	16	FUN_0052e392	library	nafxcw.lib	range			
+0x52e3a2	268	CThreadSlotData::AllocSlot	library	nafxcw.lib	range			
+0x52e4ae	70	CThreadSlotData::GetThreadValue	library	nafxcw.lib	range			
+0x52e4f4	26	CThreadLocalObject::GetDataNA	library	nafxcw.lib	range			
+0x52e50e	75	CProcessLocalObject::GetData	library	nafxcw.lib	range			
+0x52e559	16	Catch@0052e559	library	nafxcw.lib	range			
+0x52e56a	37	CProcessLocalObject::~CProcessLocalObject	library	nafxcw.lib	range			
+0x52e58f	19	CSimpleList::AddHead	library	nafxcw.lib	range			
+0x52e5a2	62	CSimpleList::Remove	library	nafxcw.lib	range			
+0x52e5e0	9	FUN_0052e5e0	library	nafxcw.lib	range			
+0x52e5e9	66	CThreadSlotData::CThreadSlotData	library	nafxcw.lib	range			
+0x52e62b	99	CThreadSlotData::FreeSlot	library	nafxcw.lib	range			
+0x52e68e	263	CThreadSlotData::SetValue	library	nafxcw.lib	range			
+0x52e795	27	FUN_0052e795	library	nafxcw.lib	range			
+0x52e7b0	149	CThreadSlotData::DeleteValues	library	nafxcw.lib	range			
+0x52e845	89	CThreadSlotData::DeleteValues	library	nafxcw.lib	range			
+0x52e89e	122	CThreadLocalObject::GetData	library	nafxcw.lib	range			
+0x52e918	30	CThreadLocalObject::~CThreadLocalObject	library	nafxcw.lib	range			
+0x52e936	18	AfxTermLocalData	library	nafxcw.lib	range			
+0x52e948	87	CThreadSlotData::~CThreadSlotData	library	nafxcw.lib	range			
+0x52eb2f	85	AUX_DATA::AUX_DATA	library	nafxcw.lib	range			
+0x52ebab	36	AfxCriticalInit	library	nafxcw.lib	range			
+0x52ebcf	69	AfxCriticalTerm	library	nafxcw.lib	range			
+0x52ec14	99	AfxLockGlobals	library	nafxcw.lib	range			
+0x52ec77	24	AfxUnlockGlobals	library	nafxcw.lib	range			
+0x52ec8f	51	_AfxInitDBCS	library	nafxcw.lib	range			
+0x52eccd	145	CWinApp::GetAppRegistryKey	library	nafxcw.lib	range			
+0x52ed5e	70	GetSectionKey	library	nafxcw.lib	range			
+0x52edaa	47	AfxGetFileName	library	nafxcw.lib	range			
+0x52edd9	334	CWinApp::SetCurrentHandles	library	nafxcw.lib	range			
+0x52ef27	125	AfxWinInit	library	nafxcw.lib	range			
+0x52efcb	86	COleException::GetErrorMessage	library	nafxcw.lib	range			
+0x52f021	65	FUN_0052f021	library	nafxcw.lib	range			
+0x52f063	41	CCmdTarget::InternalRelease	library	nafxcw.lib	range			
+0x52f08c	21	CCmdTarget::ExternalRelease	library	nafxcw.lib	range			
+0x52f0a1	174	CCmdTarget::GetInterface	library	nafxcw.lib	range			
+0x52f14f	96	CCmdTarget::QueryAggregates	library	nafxcw.lib	range			
+0x52f1af	27	FUN_0052f1af	library	nafxcw.lib	range			
+0x52f20a	94	FUN_0052f20a	library	nafxcw.lib	range			
+0x52f258	43	CAsyncSocket::AsyncSelect	library	nafxcw.lib	range			
+0x52f286	36	CAsyncSocket::LookupHandle	library	nafxcw.lib	range			
+0x52f2aa	31	FUN_0052f2aa	library	nafxcw.lib	range			
+0x52f2c9	31	FUN_0052f2c9	library	nafxcw.lib	range			
+0x52f338	18	CSocketWnd::CSocketWnd	library	nafxcw.lib	range			
+0x52f350	16	_AFX_SOCK_STATE::~_AFX_SOCK_STATE	library	nafxcw.lib	range			
+0x52f360	27	_AFX_SOCK_STATE::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52f37b	13	FUN_0052f37b	library	nafxcw.lib	range			
+0x52f388	144	CAsyncSocket::Bind	library	nafxcw.lib	range			
+0x52f418	180	CAsyncSocket::Connect	library	nafxcw.lib	range			
+0x52f4cc	199	CAsyncSocket::AttachHandle	library	nafxcw.lib	range			
+0x52f593	161	CAsyncSocket::DetachHandle	library	nafxcw.lib	range			
+0x52f634	63	CAsyncSocket::KillSocket	library	nafxcw.lib	range			
+0x52f673	280	CAsyncSocket::DoCallBack	library	nafxcw.lib	range			
+0x52f78b	57	CAsyncSocket::Socket	library	nafxcw.lib	range			
+0x52f81b	28	CWnd::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52f837	5	CWnd::~CWnd	library	nafxcw.lib	range			
+0x52f874	78	CAsyncSocket::Create	library	nafxcw.lib	range			
+0x52f8c2	147	CAsyncSocket::Accept	library	nafxcw.lib	range			
+0x52f955	33	CAsyncSocket::Close	library	nafxcw.lib	range			
+0x52f976	18	CAsyncSocket::~CAsyncSocket	library	nafxcw.lib	range			
+0x52f988	28	CAsyncSocket::`scalar_deleting_destructor'	library	nafxcw.lib	range			
+0x52f9d7	285	AfxSocketInit	library	nafxcw.lib	range			
+0x52faf4	28	AfxPostQuitMessage	library	nafxcw.lib	range			
+0x52fb10	79	CWinThread::~CWinThread	library	nafxcw.lib	range			
+0x52fb5f	180	AfxWinTerm	library	nafxcw.lib	range			
 0x52fc20	11	Unwind@0052fc20	eh-funclet					
 0x52fc40	11	Unwind@0052fc40	eh-funclet					
 0x52fc60	8	Unwind@0052fc60	eh-funclet					
@@ -21321,4 +21321,4 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x559d5b	11	Unwind@00559d5b	eh-funclet					
 0x559d70	8	Unwind@00559d70	eh-funclet					
 0x559d82	8	Unwind@00559d82	eh-funclet					
-0x559ea0	55	FUN_00559ea0	library		region			
+0x559ea0	55	FUN_00559ea0	game	Inventory.cpp	range			

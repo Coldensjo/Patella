@@ -78,6 +78,15 @@ for i in range(1, len(parts), 2):
 	owncls[int(parts[i], 16)] = m.group(1) if m else None
 	own[int(parts[i], 16)] = body[body.index('{'):] if '{' in body else body
 clean = (ROOT / 'decomp' / 'clean' / (src.stem + '.c')).read_text(encoding='utf-8')
+# A library-region name (from 0x50eae8, issue #15) counts only when this file's pseudocode calls
+# it by that name: simplify.py names the FUN_ callees from names.tsv, but Ghidra's own library
+# names (_memcpy, __snprintf, operator_new, ...) stay as they are, and the string functions the
+# compiler inlines (strcpy, strcat) are no calls there.
+ghidra = {}
+for r in csv.DictReader(open(ROOT / 'symbols.tsv', encoding='utf-8'), delimiter='\t'):
+	ghidra[int(r['address'], 16)] = r['name']
+names = {n: a for n, a in names.items() if a < 0x50eae8
+	or (ghidra.get(a, '').startswith('FUN_') and re.search(r'\b' + re.escape(n) + r'\s*\(', clean))}
 dec = {}
 parts = re.split(r'^//// (0x[0-9a-f]+)  size \d+  (\w+).*$', clean, flags=re.M)
 for i in range(1, len(parts), 3):

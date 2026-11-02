@@ -226,8 +226,8 @@ address	name	kind	confidence	note
 0x4fcb90	GetMilliseconds	game	medium	timeGetTime() minus the start time (SurfaceGL/sysinc gap)
 0x4fcbc0	RemoveFile	game	medium	remove() == 0 (SurfaceGL/sysinc gap)
 0x4fd1b0	SetClipboardText	game	medium	sysinc.cpp lines 139-143, "textdata!=NULL"
-0x50fa40	regcomp	library	high	Henry Spencer regexp
-0x50f360	regexec	library	high	Henry Spencer regexp
+0x50fa40	regcomp	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regcomp(exp): compiles into a malloc'd regexp; used by Status.cpp InitStatus
+0x50f360	regexec	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regexec(prog, string): 1 on a match; used by Status.cpp CheckClipboardText
 0x4db2b0	SetTestServerLogin	game	high	Preferences.cpp
 0x4db2c0	SetViewMode	game	high	Preferences.cpp: "ViewMode" in a MainFrm.cpp catch block
 0x4db2d0	SetFullscreenMode	game	medium	Preferences.cpp: option "FullscreenMode", 4 ints
@@ -315,8 +315,8 @@ address	name	kind	confidence	note
 0x4a2b90	vector_int_ctor	game	high	Container.h vector<int>::vector(min, max, block), lines 369-370; not found by Ghidra
 0x452ac0	vector_int_at	game	high	Container.h vector<int>::operator()
 0x501400	ClearIgnoreList	game	medium	Frees every ignore filter and clears its vector entry; called by SetDefaultPreferences; inferred spelling, binary-verified role
-0x51262a	atol	library	high	CRT atol
-0x513620	strchr	library	high	CRT strchr
+0x51262a	atoi	stl	high	CRT: MSVC 7.1 libcmt.lib; atoi: jmp atol (0x5125a2), as atox.c's atoi returns (int)atol; the game calls this one (Dialogs, Player, Preferences, vlong)
+0x513620	strchr	stl	high	CRT: MSVC 7.1 libcmt.lib; CRT strchr
 0x404350	SendLogout	game	high	Communication.cpp line 178 (catch blocks); the body lies in the gap before the first assertion
 0x4044f0	TMyException_copy_ctor	stl	high	compiler-generated TMyException copy constructor, emitted into Communication.obj; not in the source
 0x404590	SendPing	game	high	Communication.cpp reconstruction; source order from assertion/catch evidence
@@ -1577,7 +1577,7 @@ address	name	kind	confidence	note
 0x4672d0	TMultiStateButton_ctor	game	medium	DialogElements.cpp: varargs (__cdecl) (x, y, Tooltip, States, first skins and TCallback, ...), vtable 0x560e10, 0x58 bytes; class name ours
 0x467b50	TEditLine_ctor	game	medium	DialogElements.cpp lines 1878-1900 (_MaxLength>=0): TWindow, vtable 0x560e98, 0x68 bytes, (TRect, MaxLength, ReadOnly); class name ours
 0x469a80	TScrollBar_ctor	game	medium	DialogElements.cpp lines 3462-3475 (_ButtonRange>0): TWindow, vtable 0x561f70, 0x38 bytes, (TRect, Min, Max, Value, Visible, ButtonRange); class name ours
-0x512050	strstr	stl	high	CRT strstr (ConsoleWindow.cpp's account data check)
+0x512050	strstr	stl	high	CRT: MSVC 7.1 libcmt.lib; CRT strstr (ConsoleWindow.cpp's account data check)
 0x425920	Limit	game	medium	common.h inline Limit(int *Value, int Min, int Max): clamps in either order; ContentWindows.obj's out-of-line copy (TTradeWindowBody::SetSize inlines it), called by DialogElements.cpp; name ours
 0x4259a0	TMark_ctor	game	medium	Map.h inline TMark(): clears x, y, Type and Text; out-of-line copy for the eh vector constructor iterator of vector<TMark> (0x426170)
 0x4259b0	TTradeWindowBody_Draw	game	medium	ContentWindows.h inline, vtable 0x55f370 +0x44: TWindow::Draw unless Minimized
@@ -2271,3 +2271,1100 @@ address	name	kind	confidence	note
 0x4fc6a0	TSurfaceGL_BlitRect	game	medium	SurfaceGL.cpp vtable +0x30, line 1086 (missed by Ghidra)
 0x4fc8a0	TSurfaceGL_GetSurfaceRect	game	medium	SurfaceGL.cpp vtable +0x94, line 1540 (missed by Ghidra)
 0x4fca30	TSurfaceGL_SurfaceRecreated	game	medium	SurfaceGL.cpp vtable +0x9c, line 1555, "Type>=0 && Type<3" (missed by Ghidra)
+0x50eae8	gluOrtho2D	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: GLU32.DLL::gluOrtho2D
+0x50eaee	DirectDrawCreate	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: DDRAW.DLL::DirectDrawCreate
+0x50eb00	regnode	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regnode(op): emits a node (3 bytes), or counts it in the first pass
+0x50eb30	regc	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regc(b), b in CL: emits a byte
+0x50eb50	reginsert	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; reginsert(op, opnd in ECX): inserts an operator in front of an operand
+0x50eba0	regrepeat	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regrepeat(p in EAX): how many times the simple node matches; jump table 0x50ec88
+0x50eca0	regnext	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regnext(p in EAX): the next node, or NULL
+0x50ecd0	regtail	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regtail(p in EAX, val in ECX): sets the next pointer of the last node of a chain
+0x50ed40	regoptail	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regoptail(p in EAX, val): regtail on the operand of a BRANCH
+0x50ed60	regmatch	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regmatch(prog): the matcher; jump tables 0x50efdc/0x50f010
+0x50f040	regpiece	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regpiece(flagp in EAX): something followed by *, + or ?
+0x50f200	regtry	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regtry(prog in ESI, string in EBX): one match attempt at a position
+0x50f280	regbranch	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regbranch(flagp in ESI): one alternative of |
+0x50f480	reg	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; reg(paren, flagp in EAX): a regular expression, parenthesized or the whole
+0x50f670	regatom	stl	high	third-party: Henry Spencer regexp (1986), src/Extern/regexp/regexp.c; regatom(flagp): the lowest level; jump tables 0x50f990/0x50f9b4
+0x50fbb9	_AtlGetStringResourceImage	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::_AtlGetStringResourceImage
+0x50fc15	AtlGetStringResourceImage	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::AtlGetStringResourceImage
+0x50fc44	CStringData_Release	stl	high	ATL 7.1 header code in MFC 7.1; ATL::CStringData::Release: InterlockedDecrement of nRefs (+0xc), frees through the string manager at 0
+0x50fc5e	CRect_IsRectNull	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CRect::IsRectNull
+0x50fc75	CPtrList_GetNext	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPtrList::GetNext
+0x50fc8e	CBitmap_CreateCompatibleBitmap	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CBitmap::CreateCompatibleBitmap
+0x50fcb2	CDC_CreateCompatibleDC	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::CreateCompatibleDC
+0x50fcd3	CMenu_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x574714 (CMenu)
+0x50fcde	CMenu_GetSubMenu	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMenu::GetSubMenu
+0x50fcf4	CPushRoutingFrame_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPushRoutingFrame::CPushRoutingFrame
+0x50fd26	CPushRoutingFrame_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPushRoutingFrame::~CPushRoutingFrame
+0x50fd44	CToolBarCtrl_GetButtonCount	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CToolBarCtrl::GetButtonCount
+0x50fd57	CImageList_Draw	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CImageList::Draw
+0x50fd7e	CToolBarCtrl_GetImageList	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CToolBarCtrl::GetImageList
+0x50fd97	CSimpleStringT_SetLength	stl	high	ATL 7.1 header code in MFC 7.1; ATL::CSimpleStringT<char>::SetLength: 0 <= nLength <= nAllocLength, else AtlThrow(E_INVALIDARG)
+0x50fdbd	ChTraitsCRT_GetBaseTypeLength	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::ChTraitsCRT<char>::GetBaseTypeLength
+0x50fdda	ChTraitsCRT_ConvertToBaseType	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::ChTraitsCRT<char>::ConvertToBaseType
+0x50fdfd	CSimpleStringT_ThrowMemoryException	stl	high	ATL 7.1 header code in MFC 7.1; ATL::CSimpleStringT::ThrowMemoryException: AtlThrow(E_OUTOFMEMORY) (0x4fce10)
+0x50fe08	CSimpleStringT_CloneData	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::CloneData
+0x50fe62	CSimpleStringT_Reallocate	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::Reallocate
+0x50fe8a	CGdiObject_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x5746f4 (CGdiObject)
+0x50fea6	CMenu_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x574714 (CMenu)
+0x50fec2	CSimpleStringT_Empty	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::Empty
+0x50ff05	CSimpleStringT_ReleaseBuffer	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::ReleaseBuffer
+0x50ff2a	CSimpleStringT_ctor_mgr	stl	high	ATL 7.1 header code in MFC 7.1; ATL::CSimpleStringT<char>::CSimpleStringT(IAtlStringMgr *): pStringMgr->GetNilString()
+0x50ff41	CSimpleStringT	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: CSimpleStringT<>
+0x50ff5f	CSimpleStringT_Fork	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::Fork
+0x50ffc6	CSimpleStringT_PrepareWrite2	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::PrepareWrite2
+0x51000d	CStringT_ctor_default	stl	high	ATL 7.1 header code in MFC 7.1; ATL::CStringT<char, StrTraitMFC>::CStringT(): CSimpleStringT(AfxGetStringManager())
+0x510021	CSimpleStringT_dtor	stl	high	ATL 7.1 header code in MFC 7.1; ATL::CSimpleStringT<char>::~CSimpleStringT: GetData()->Release()
+0x51002b	CSimpleStringT_PrepareWrite	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::PrepareWrite
+0x510055	CStringT_LoadStringA_510055	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::LoadStringA
+0x5100ae	CSimpleStringT_SetString_5100ae	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::SetString
+0x510115	CStringT_LoadStringA_510115	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::LoadStringA
+0x510135	CSimpleStringT_Append_510135	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::Append
+0x510181	CSimpleStringT_SetString_510181	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::SetString
+0x5101a6	CObject_operator_delete_2	stl	low	MFC 7.1: nafxcw.lib; PASCAL operator delete(void *, ...) of an MFC class (ret 8): free; used by an unwind funclet of a new-expression
+0x5101b3	_IsPlatformNT	stl	high	Windows SDK multimon.h stubs compiled into MFC 7.1; Ghidra FID: _IsPlatformNT
+0x510200	_InitMultipleMonitorStubs	stl	high	Windows SDK multimon.h stubs compiled into MFC 7.1; Ghidra FID: _InitMultipleMonitorStubs
+0x5102fa	xMonitorFromRect	stl	high	Windows SDK multimon.h stubs compiled into MFC 7.1; Ghidra FID: xMonitorFromRect
+0x510346	xMonitorFromWindow	stl	high	Windows SDK multimon.h stubs compiled into MFC 7.1; Ghidra FID: xMonitorFromWindow
+0x5103b1	xGetMonitorInfo	stl	high	Windows SDK multimon.h stubs compiled into MFC 7.1; Ghidra FID: xGetMonitorInfo
+0x510446	AtlIAccessibleInvokeHelper	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::AtlIAccessibleInvokeHelper
+0x510a2d	AtlIAccessibleGetIDsOfNamesHelper	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::AtlIAccessibleGetIDsOfNamesHelper
+0x510aa5	CWaitCursor_dtor	stl	high	MFC 7.1: nafxcw.lib; CWaitCursor::~CWaitCursor: AfxGetApp()->EndWaitCursor()
+0x510abf	ATL_510abf	stl	low	ATL 7.1 header code in MFC 7.1; ATL accessibility helper: releases the interface at +0xc; called by the CMFCComObject<CAccessibleProxy> destructor
+0x510ad4	AtlInternalQueryInterface	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::AtlInternalQueryInterface
+0x510ba2	CWnd_GetOwner	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetOwner
+0x510bb9	CSimpleStringT_GetBufferSetLength	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::GetBufferSetLength
+0x510be0	_IsEqualGUID	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _IsEqualGUID
+0x510bf8	ModifyMenuW	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:ModifyMenuW (FID found several library functions with this code)
+0x510c14	CAsyncSocket_Bind_510c14	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::Bind
+0x510c32	CheckImplicitLoad	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CheckImplicitLoad
+0x510c52	CStringT_ctor	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>::CStringT<char,StrTraitMFC<char,ATL::ChTraitsCRT<char>_>_>
+0x510c9d	CPoint_operator_eq	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPoint::operator==
+0x510cb8	COleException_ctor	stl	medium	MFC 7.1: nafxcw.lib; COleException::COleException: CException(), m_sc = 0, vtable 0x575998
+0x510cce	COleException_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575998 (COleException)
+0x510cea	COleException_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575998 (COleException)
+0x510cf1	CMemoryException_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575a70 (CMemoryException)
+0x510cf8	CNotSupportedException_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575a88 (CNotSupportedException)
+0x510cff	CInvalidArgException_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575aa0 (CInvalidArgException)
+0x510d06	CSimpleException_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CSimpleException::CSimpleException
+0x510d1e	CMemoryException_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575a70 (CMemoryException)
+0x510d3a	CMemoryException_ctor	stl	medium	MFC 7.1: nafxcw.lib; CMemoryException::CMemoryException(BOOL bAutoDelete, UINT nResourceID): CSimpleException, vtable 0x575a70
+0x510d5c	CNotSupportedException_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575a88 (CNotSupportedException)
+0x510d78	CNotSupportedException_ctor	stl	medium	MFC 7.1: nafxcw.lib; CNotSupportedException::CNotSupportedException(BOOL bAutoDelete, UINT nResourceID): CSimpleException, vtable 0x575a88
+0x510d9a	CInvalidArgException_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575aa0 (CInvalidArgException)
+0x510db6	CInvalidArgException_ctor	stl	medium	MFC 7.1: nafxcw.lib; CInvalidArgException::CInvalidArgException(BOOL bAutoDelete, UINT nResourceID): CSimpleException, vtable 0x575aa0
+0x510dd8	CResourceException_ctor	stl	medium	MFC 7.1: nafxcw.lib; CResourceException::CResourceException(BOOL bAutoDelete, UINT nResourceID): CSimpleException, vtable 0x575c64
+0x510dfa	CResourceException_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575c64 (CResourceException)
+0x510e01	CUserException_ctor	stl	medium	MFC 7.1: nafxcw.lib; CUserException::CUserException(BOOL bAutoDelete, UINT nResourceID): CSimpleException, vtable 0x575c7c
+0x510e23	CUserException_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575c7c (CUserException)
+0x510e2a	CDC_BitBlt	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::BitBlt
+0x510e9a	CDC_vslot_24	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 24 (+0x60) of CDC (vtable 0x575c94)
+0x510ebf	CDC_vslot_25	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 25 (+0x64) of CDC (vtable 0x575c94)
+0x510f13	CDC_vslot_27	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 27 (+0x6c) of CDC (vtable 0x575c94)
+0x510f32	CDC_vslot_28	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 28 (+0x70) of CDC (vtable 0x575c94)
+0x510f7e	CResourceException_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575c64 (CResourceException)
+0x510f9a	CUserException_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575c7c (CUserException)
+0x510fb6	CGdiObject_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x5746f4 (CGdiObject)
+0x510fc1	CBrush_CreatePatternBrush	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CBrush::CreatePatternBrush
+0x510fe2	CBitmap_CreateBitmap	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CBitmap::CreateBitmap
+0x51100a	CreateFontIndirectA	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:CreateFontIndirectA (FID found several library functions with this code)
+0x511023	GetTextExtent	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: GetTextExtent
+0x511050	CComCriticalSection_ctor	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CComCriticalSection::CComCriticalSection
+0x511064	CComCriticalSection_Init	stl	medium	ATL 7.1 header code in MFC 7.1; ATL::CComCriticalSection::Init: InitializeCriticalSection inside __try (out of memory returns E_OUTOFMEMORY)
+0x5110b4	CHandleMap_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CHandleMap::`scalar_deleting_destructor'
+0x5110d0	CHandleMap_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CHandleMap::~CHandleMap
+0x511124	CArchive_operator_shl_511124	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::operator<<
+0x511160	CArchive_operator_shl_511160	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::operator<<
+0x51119b	CArchive_operator_shr_51119b	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::operator>>
+0x5111de	CArchive_operator_shr_5111de	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::operator>>
+0x511220	CArchiveException	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchiveException
+0x51126d	CArchiveException_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x576024 (CArchiveException)
+0x511289	CArchiveException_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x576024 (CArchiveException)
+0x51129a	CFixedAllocNoSync_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFixedAllocNoSync::CFixedAllocNoSync
+0x5112c4	CFixedAllocNoSync_FreeAll	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFixedAllocNoSync::FreeAll
+0x5112d9	thunk_CFixedAllocNoSync_FreeAll	stl	medium	MFC 7.1: nafxcw.lib; jmp CFixedAllocNoSync_FreeAll (0x5112c4)
+0x5112de	CFixedAllocNoSync_Alloc	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFixedAllocNoSync::Alloc
+0x511320	memmove	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _memmove
+0x51165d	free	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _free
+0x5116b0	free_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of free
+0x5116ce	_JumpToContinuation	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _JumpToContinuation
+0x5116fe	_CallMemberFunction1	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:_CallMemberFunction1 (FID found several library functions with this code)
+0x511705	_UnwindNestedFrames	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _UnwindNestedFrames
+0x511757	__CxxFrameHandler	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___CxxFrameHandler
+0x5117c8	_CallSETranslator	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _CallSETranslator
+0x51188f	TranslatorGuardHandler	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: TranslatorGuardHandler
+0x511941	_GetRangeOfTrysToCheck	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _GetRangeOfTrysToCheck
+0x5119bb	_CreateFrameInfo	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _CreateFrameInfo
+0x5119e3	IsExceptionObjectToBeDestroyed	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: IsExceptionObjectToBeDestroyed
+0x511a04	_FindAndUnlinkFrame	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _FindAndUnlinkFrame
+0x511a50	_CallCatchBlock2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _CallCatchBlock2
+0x511aac	_global_unwind2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __global_unwind2
+0x511aee	_local_unwind2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __local_unwind2
+0x511b56	_abnormal_termination	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __abnormal_termination
+0x511b79	_NLG_Notify1	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __NLG_Notify1
+0x511b82	_NLG_Notify	stl	high	CRT: MSVC 7.1 libcmt.lib; _NLG_Notify: non-local goto notification for the debugger (exsup.asm)
+0x511b9a	exception_ctor_511b9a	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: exception::exception
+0x511bab	exception_ctor_511bab	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: exception::exception
+0x511be8	exception_ctor_511be8	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: exception::exception
+0x511c32	exception_dtor	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: exception::~exception
+0x511c55	bad_cast_ctor	stl	high	CRT: MSVC 7.1 libcmt.lib; bad_cast::bad_cast(const char *const &): exception(message), vtable 0x576100; thrown by use_facet
+0x511c86	bad_cast_dtor	stl	high	CRT: MSVC 7.1 libcmt.lib; bad_cast::~bad_cast: vtable 0x576100, then exception::~exception
+0x511c91	exception_scalar_deleting_dtor	stl	high	CRT: MSVC 7.1 libcmt.lib; scalar deleting destructor, vtable 0x5760e0 (exception)
+0x511cad	bad_cast_scalar_deleting_dtor	stl	high	CRT: MSVC 7.1 libcmt.lib; scalar deleting destructor, vtable 0x576100 (bad_cast)
+0x511cc9	type_info_dtor	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: type_info::~type_info
+0x511d06	type_info_dtor_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of type_info::~type_info: _unlock(_TYPEINFO_LOCK) (0xe)
+0x511d0f	type_info_scalar_deleting_dtor	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: type_info::`scalar_deleting_destructor'
+0x511d2b	_CxxThrowException	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __CxxThrowException@8
+0x511d65	localeconv	stl	high	CRT: MSVC 7.1 libcmt.lib; localeconv: returns __lconv (0x5c3190, pointing to the C locale lconv, "."); used by num_put::_Fput
+0x511d6b	sprintf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _sprintf
+0x511dd0	memchr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _memchr
+0x511e7d	CRT_nullsub_511e7d	stl	medium	CRT: MSVC 7.1 libcmt.lib; empty function (ret): a default handler slot of the CRT floating-point table
+0x511e7e	_cfltcvt_init	stl	high	CRT: MSVC 7.1 libcmt.lib; _cfltcvt_init: fills the floating-point conversion table _cfltcvt_tab (0x5c3588) for printf
+0x511eb6	_fpmath	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fpmath
+0x511ee0	strcspn	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strcspn
+0x511f26	srand	stl	high	CRT: MSVC 7.1 libcmt.lib; srand: _getptd()->_holdrand = seed (rand 0x511f33 reads the same +0x14)
+0x511f33	rand	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _rand
+0x511f55	_onexit_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __onexit_lk
+0x511fd5	__onexitinit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___onexitinit
+0x511ffd	_onexit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __onexit
+0x51202f	_onexit_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of _onexit: _unlockexit()
+0x512035	atexit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _atexit
+0x5120d6	_fclose_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fclose_lk
+0x512122	fclose	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fclose
+0x51216b	fclose_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of fclose
+0x512173	fprintf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fprintf
+0x5121c7	fprintf_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of fprintf
+0x5121d1	ctime	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _ctime
+0x5121ea	_time32	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:__time32 (FID found several library functions with this code)
+0x512223	_fsopen	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fsopen
+0x512275	_fsopen_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _fsopen
+0x51227f	fopen	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fopen
+0x512292	printf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _printf
+0x5122ed	printf_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of printf
+0x512300	_chkstk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __chkstk
+0x51233d	_snprintf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __snprintf
+0x5123a0	strncpy	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strncpy
+0x5124c4	_ftol2	stl	high	CRT: MSVC 7.1 libcmt.lib; _ftol2: float to 64-bit integer conversion (x87), compiler helper for (int) casts
+0x512539	_stricmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __stricmp
+0x5125a2	atol	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _atol
+0x512630	shortsort	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: shortsort
+0x5126a0	qsort	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _qsort
+0x512923	__tolower_mt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___tolower_mt
+0x5129eb	tolower	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _tolower
+0x512a21	eh_vector_constructor_iterator	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: `eh_vector_constructor_iterator'
+0x512a6b	eh_vector_constructor_iterator_finally	stl	high	CRT: MSVC 7.1 libcmt.lib; __finally of `eh vector constructor iterator': __ArrayUnwind when not completed
+0x512a83	_ArrayUnwind	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ArrayUnwind
+0x512ae1	eh_vector_destructor_iterator	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: `eh_vector_destructor_iterator'
+0x512b29	eh_vector_destructor_iterator_finally	stl	high	CRT: MSVC 7.1 libcmt.lib; __finally of `eh vector destructor iterator': __ArrayUnwind when not completed
+0x512b50	floor	stl	high	CRT: MSVC 7.1 libcmt.lib; floor: SSE2 version when __sse2_available (0x721760), else __floor_default 0x519695
+0x512c71	_heap_alloc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __heap_alloc
+0x512ce3	_heap_alloc_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _heap_alloc
+0x512cec	_nh_malloc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __nh_malloc
+0x512d18	malloc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _malloc
+0x512d2a	__crtExitProcess	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtExitProcess
+0x512d5a	_lockexit	stl	high	CRT: MSVC 7.1 libcmt.lib; _lockexit: _lock(_EXIT_LOCK1) (8)
+0x512d63	_unlockexit	stl	high	CRT: MSVC 7.1 libcmt.lib; _unlockexit: _unlock(_EXIT_LOCK1) (8)
+0x512d6c	_initterm	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __initterm
+0x512d84	_cinit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cinit
+0x512dee	doexit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: doexit
+0x512e9d	doexit_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of doexit
+0x512eb1	exit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _exit
+0x512ec2	_exit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __exit
+0x512ed3	_cexit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cexit
+0x512ef1	setvbuf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _setvbuf
+0x512fc3	setvbuf_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of setvbuf
+0x512fcd	_ungetc_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ungetc_lk
+0x513039	ungetc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _ungetc
+0x513074	ungetc_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of ungetc
+0x51307e	_flush	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __flush
+0x5130db	_fflush_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fflush_lk
+0x513109	flsall	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: flsall
+0x5131a9	flsall_finally_inner	stl	medium	CRT: MSVC 7.1 libcmt.lib; inner __finally of flsall: _unlock_file2 of the stream
+0x5131d5	flsall_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of flsall: _unlock(_IOB_SCAN_LOCK)
+0x5131de	fflush	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fflush
+0x513224	fflush_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of fflush
+0x513237	getc	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:_getc (FID found several library functions with this code)
+0x51327f	getc_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of getc
+0x513287	_fwrite_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fwrite_lk
+0x51338e	fwrite	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fwrite
+0x5133d0	fwrite_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of fwrite
+0x5133da	fputc	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:_fputc (FID found several library functions with this code)
+0x51342a	fputc_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of fputc
+0x513432	fgetpos	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fgetpos
+0x513454	_fseek_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fseek_lk
+0x5134e3	fseek	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fseek
+0x513522	fseek_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of fseek
+0x51352c	fsetpos	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fsetpos
+0x513544	strtok	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strtok
+0x5135f9	_execl	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __execl
+0x5136de	_eof	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __eof
+0x5137b8	_eof_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _eof
+0x5137de	_ftell_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ftell_lk
+0x513940	_fread_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fread_lk
+0x513a29	fread	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _fread
+0x513a6b	fread_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of fread
+0x513a75	rename	stl	high	CRT: MSVC 7.1 libcmt.lib; rename(old, new): MoveFileA, _dosmaperr on failure
+0x513aa3	realloc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _realloc
+0x513c0b	realloc_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of realloc
+0x513c50	_access	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __access
+0x513c96	remove	stl	high	CRT: MSVC 7.1 libcmt.lib; remove(path): DeleteFileA, _dosmaperr on failure
+0x513cc0	_unlink	stl	high	CRT: MSVC 7.1 libcmt.lib; _unlink: jmp remove
+0x513cc5	_resetstkoflw	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __resetstkoflw
+0x513e96	_seh_longjmp_unwind	stl	medium	CRT: MSVC 7.1 libcmt.lib; _seh_longjmp_unwind(jmpbuf): __local_unwind2 for longjmp (sehsupp)
+0x513eb1	localtime	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _localtime
+0x514031	_amsg_exit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __amsg_exit
+0x514056	fast_error_exit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: fast_error_exit
+0x51407a	WinMainCRTStartup	stl	high	CRT: MSVC 7.1 libcmt.lib; the entry point (Ghidra: entry): crt0.c WinMainCRTStartup, calls WinMain (MFC AfxWinMain thunk 0x522fe1)
+0x514250	strncmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strncmp
+0x514289	_mbschr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mbschr
+0x514304	report_failure	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: report_failure
+0x514335	_security_check_cookie	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __security_check_cookie
+0x514343	_mbscmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mbscmp
+0x5143d8	_EH_prolog	stl	high	CRT: MSVC 7.1 libcmt.lib; _EH_prolog: C++ EH frame set-up helper (ehprolg.asm)
+0x514400	memcpy	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _memcpy
+0x514740	strlen	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strlen
+0x5147d0	memset	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _memset
+0x514830	memcmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _memcmp
+0x5148e8	sscanf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _sscanf
+0x51491c	_strdup	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __strdup
+0x514947	_expand	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __expand
+0x5149c5	_expand_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _expand
+0x5149f1	_msize	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __msize
+0x514a5e	_msize_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _msize
+0x514a68	_SEH_prolog	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __SEH_prolog
+0x514aa3	_SEH_epilog	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __SEH_epilog
+0x514ab4	_errno	stl	high	CRT: MSVC 7.1 libcmt.lib; _errno: &_getptd()->_terrno
+0x514abd	__doserrno	stl	high	CRT: MSVC 7.1 libcmt.lib; __doserrno: &_getptd()->_tdoserrno
+0x514ac6	_dosmaperr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __dosmaperr
+0x514b39	_CPtoLCID	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _CPtoLCID
+0x514b68	setSBCS	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: setSBCS
+0x514b91	setSBUpLow	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: setSBUpLow
+0x514d1d	__updatetmbcinfo	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___updatetmbcinfo
+0x514d83	__updatetmbcinfo_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of __updatetmbcinfo
+0x514d8c	_setmbcp_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setmbcp_lk
+0x514f1c	_setmbcp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setmbcp
+0x515063	_setmbcp_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _setmbcp
+0x51506c	__initmbctable	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___initmbctable
+0x51508a	_mbsrchr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mbsrchr
+0x515100	_allmul	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __allmul
+0x5151ea	calloc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _calloc
+0x515294	calloc_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of calloc
+0x5152a5	__heap_select	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___heap_select
+0x5152bf	_heap_init	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __heap_init
+0x515310	_mtinitlocks	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mtinitlocks
+0x515359	_mtdeletelocks	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mtdeletelocks
+0x5153ae	_unlock	stl	high	CRT: MSVC 7.1 libcmt.lib; _unlock(locknum): LeaveCriticalSection of the lock table 0x5c3448
+0x5153c3	_mtinitlocknum	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mtinitlocknum
+0x51545a	_mtinitlocknum_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _mtinitlocknum
+0x515463	_lock	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lock
+0x515494	__sbh_heap_init	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sbh_heap_init
+0x5154dc	__sbh_find_block	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sbh_find_block
+0x515507	__sbh_free_block	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sbh_free_block
+0x51581f	__sbh_alloc_new_region	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sbh_alloc_new_region
+0x5158d6	__sbh_alloc_new_group	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sbh_alloc_new_group
+0x5159dc	__sbh_resize_block	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sbh_resize_block
+0x515cbb	__sbh_alloc_block	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sbh_alloc_block
+0x515fb7	TypeMatch	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: TypeMatch
+0x516024	__FrameUnwindToState	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___FrameUnwindToState
+0x5160d7	___FrameUnwindToState_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of __FrameUnwindToState: decrements _getptd()->_ProcessingThrow
+0x5160f2	__DestructExceptionObject	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___DestructExceptionObject
+0x516137	AdjustPointer	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: AdjustPointer
+0x516156	__uncaught_exception	stl	high	CRT: MSVC 7.1 libcmt.lib; __uncaught_exception: _getptd()->_ProcessingThrow != 0
+0x516169	CallCatchBlock	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: CallCatchBlock
+0x5162be	CallCatchBlock_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of CallCatchBlock: restores the frame info and _curexception
+0x51632d	BuildCatchObject	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: BuildCatchObject
+0x5164a9	CatchIt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: CatchIt
+0x516510	FindHandlerForForeignException	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FindHandlerForForeignException
+0x5165ce	FindHandler	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FindHandler
+0x5167d2	__InternalCxxFrameHandler	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___InternalCxxFrameHandler
+0x516874	__crtTlsAlloc	stl	high	CRT: MSVC 7.1 libcmt.lib; __crtTlsAlloc(callback): TlsAlloc, the FlsAlloc fallback of _mtinit (tidtable.c)
+0x51687d	_mtterm	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mtterm
+0x51689a	_getptd	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __getptd
+0x516a3d	_freefls_finally_mbc	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of _freefls (Ghidra merged _freefls into __getptd's body): _unlock(_MB_CP_LOCK)
+0x516a49	_freefls_finally_locale	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of _freefls: _unlock(_SETLOCALE_LOCK)
+0x516a52	_mtinit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mtinit
+0x516b41	terminate	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: terminate
+0x516b76	inconsistency	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _inconsistency
+0x516bb0	_CallSettingFrame	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __CallSettingFrame@12
+0x516c00	strcpy	stl	high	CRT: MSVC 7.1 libcmt.lib; strcpy: enters strcat's copy loop (strcat.asm)
+0x516c10	strcat	stl	high	CRT: MSVC 7.1 libcmt.lib; strcat (strcat.asm, shares its copy loop with strcpy)
+0x516d00	strcmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strcmp
+0x516d88	_CxxUnhandledExceptionFilter	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __CxxUnhandledExceptionFilter
+0x516df6	_flsbuf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __flsbuf
+0x516f0f	write_char	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: write_char
+0x516f42	write_multi_char	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: write_multi_char
+0x516f66	write_string	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: write_string
+0x516f9d	_output	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __output
+0x517838	_fassign	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fassign
+0x517876	_shift	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __shift
+0x517893	_cftoe2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cftoe2
+0x517941	_cftoe	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cftoe
+0x5179ad	_cftof2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cftof2
+0x517a49	_cftof	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cftof
+0x517aab	_cftog	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cftog
+0x517b45	_cfltcvt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cfltcvt
+0x517b96	_setdefaultprecision	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setdefaultprecision
+0x517ba8	_ms_p5_test_fdiv	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ms_p5_test_fdiv
+0x517be8	_ms_p5_mp_test_fdiv	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ms_p5_mp_test_fdiv
+0x517c11	_close_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __close_lk
+0x517c94	_close	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __close
+0x517d0b	_close_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _close
+0x517d2f	_freebuf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __freebuf
+0x517e17	_lock_file	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lock_file
+0x517e46	_lock_file2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lock_file2
+0x517e69	_unlock_file	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __unlock_file
+0x517e98	_unlock_file2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __unlock_file2
+0x517ebb	_stbuf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __stbuf
+0x517f43	_ftbuf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ftbuf
+0x517f6d	asctime	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _asctime
+0x518080	_aulldiv	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __aulldiv
+0x5180e8	_openfile	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __openfile
+0x518250	_getstream	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __getstream
+0x518369	_getstream_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _getstream
+0x518380	__ascii_stricmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___ascii_stricmp
+0x5183ce	___lc_codepage_func_5183ce	stl	medium	CRT: MSVC 7.1 libcmt.lib; returns __lc_codepage (0x721768); used by the C++ library's _Getctype/_Getcvt/_Tolower/_Toupper
+0x5183d4	___lc_handle_func_5183d4	stl	medium	CRT: MSVC 7.1 libcmt.lib; returns &__lc_handle (0x72176c); used by the C++ library's locale helpers
+0x5183da	__freetlocinfo	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___freetlocinfo
+0x5184aa	__updatetlocinfo_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___updatetlocinfo_lk
+0x51856b	_strcats	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __strcats
+0x51858f	__lc_strtolc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___lc_strtolc
+0x51866b	__lc_lctostr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___lc_lctostr
+0x5186b9	__updatetlocinfo	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___updatetlocinfo
+0x5186eb	__updatetlocinfo_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of __updatetlocinfo
+0x5186f4	_setlocale_get_all	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setlocale_get_all
+0x5187b3	_expandlocale	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __expandlocale
+0x51890f	_setlocale_set_cat	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setlocale_set_cat
+0x518b9e	_setlocale_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setlocale_lk
+0x518d77	setlocale	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _setlocale
+0x518ec0	setlocale_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of setlocale
+0x518ed1	__isctype_mt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___isctype_mt
+0x518f48	__crtLCMapStringA	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtLCMapStringA
+0x519304	__libm_error_support	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___libm_error_support
+0x519592	___sse2_available_init_seh	stl	medium	CRT: MSVC 7.1 libcmt.lib; part of ___sse2_available_init: the __try that tests an SSE2 instruction
+0x5195c7	__sse2_available_init	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___sse2_available_init
+0x519695	_floor_default	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __floor_default
+0x519768	_callnewh	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __callnewh
+0x519783	_RTC_Initialize	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __RTC_Initialize
+0x51980b	_getbuf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __getbuf
+0x51984f	_write_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __write_lk
+0x519a1d	_write	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __write
+0x519aa4	_write_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _write
+0x519ac8	_commit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __commit
+0x519b68	_commit_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _commit
+0x519b84	_filbuf	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __filbuf
+0x519c65	_ftelli64_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ftelli64_lk
+0x519dfa	_ftelli64	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ftelli64
+0x519e37	_ftelli64_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _ftelli64
+0x519e41	_lseek_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lseek_lk
+0x519eb5	_lseek	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lseek
+0x519f3c	_lseek_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _lseek
+0x519f60	_fseeki64_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fseeki64_lk
+0x519ff3	_fseeki64	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fseeki64
+0x51a035	_fseeki64_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _fseeki64
+0x51a03f	comexecmd	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: comexecmd
+0x51a091	_execve	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __execve
+0x51a1d1	_set_osfhnd	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __set_osfhnd
+0x51a24d	_free_osfhnd	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __free_osfhnd
+0x51a2cc	_get_osfhandle	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __get_osfhandle
+0x51a30d	_lock_fhandle	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lock_fhandle
+0x51a3a4	_lock_fhandle_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _lock_fhandle
+0x51a3ad	_unlock_fhandle	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __unlock_fhandle
+0x51a3cf	_alloc_osfhnd	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __alloc_osfhnd
+0x51a4a8	_alloc_osfhnd_finally_inner	stl	medium	CRT: MSVC 7.1 libcmt.lib; inner __finally of _alloc_osfhnd: _unlock(_OSFHND_LOCK) (0xa)
+0x51a542	_alloc_osfhnd_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally of _alloc_osfhnd: _unlock(0xb)
+0x51a54b	_lseeki64_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lseeki64_lk
+0x51a5ce	_lseeki64	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __lseeki64
+0x51a666	_lseeki64_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _lseeki64
+0x51a68c	_ioinit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ioinit
+0x51a88a	_read_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __read_lk
+0x51aa65	_read	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __read
+0x51aaec	_read_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _read
+0x51ab10	_ValidateEH3RN	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ValidateEH3RN
+0x51ad39	_tzset_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __tzset_lk
+0x51af54	_tzset_lk_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _tzset_lk
+0x51afe1	cvtdate	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: cvtdate
+0x51b199	_isindst_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __isindst_lk
+0x51b320	__tzset	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___tzset
+0x51b363	__tzset_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of __tzset
+0x51b36c	_isindst	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __isindst
+0x51b3a1	_isindst_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _isindst
+0x51b3aa	gmtime	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _gmtime
+0x51b4b1	_NMSG_WRITE	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __NMSG_WRITE
+0x51b628	_FF_MSGBANNER	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __FF_MSGBANNER
+0x51b661	_XcptFilter	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __XcptFilter
+0x51b7c5	_wincmdln	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __wincmdln
+0x51b822	_setenvp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setenvp
+0x51b8e9	parse_cmdline	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: parse_cmdline
+0x51ba55	_setargv	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setargv
+0x51baf7	__crtGetEnvironmentStringsA	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtGetEnvironmentStringsA
+0x51bc19	__security_init_cookie	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___security_init_cookie
+0x51bc7f	__security_error_handler	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___security_error_handler
+0x51bdc7	_inc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __inc
+0x51bddd	_input	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __input
+0x51cc12	__crtGetStringTypeA	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtGetStringTypeA
+0x51cdd0	strrchr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strrchr
+0x51ce00	strspn	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strspn
+0x51ce46	isupper	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _isupper
+0x51ce80	islower	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _islower
+0x51ceba	isdigit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _isdigit
+0x51cef4	isxdigit	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _isxdigit
+0x51cf33	isspace	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _isspace
+0x51cf70	strpbrk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strpbrk
+0x51cfb0	__crtInitCritSecNoSpinCount	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtInitCritSecNoSpinCount@8
+0x51cfc0	__crtInitCritSecAndSpinCount	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtInitCritSecAndSpinCount
+0x51d04b	_ValidateRead	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _ValidateRead
+0x51d067	_ValidateWrite	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _ValidateWrite
+0x51d083	_ValidateExecute	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _ValidateExecute
+0x51d09b	abort	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _abort
+0x51d0b3	_isatty	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __isatty
+0x51d0dd	__wctomb_mt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___wctomb_mt
+0x51d13d	wctomb	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _wctomb
+0x51d164	___mb_cur_max_func	stl	medium	CRT: MSVC 7.1 libcmt.lib; returns __mb_cur_max (0x5c3c90); used by _Getctype/_Tolower_lk/_Toupper_lk
+0x51d170	_aulldvrm	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __aulldvrm
+0x51d205	_ZeroTail	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ZeroTail
+0x51d237	_IncMan	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __IncMan
+0x51d284	_RoundMan	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __RoundMan
+0x51d2f6	_CopyMan	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __CopyMan
+0x51d311	_IsZeroMan	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __IsZeroMan
+0x51d32a	_ShrMan	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ShrMan
+0x51d3a5	_ld12cvt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ld12cvt
+0x51d4fd	_ld12tod_51d4fd	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:__ld12tod (FID found several library functions with this code)
+0x51d513	_ld12tod_51d513	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:__ld12tod (FID found several library functions with this code)
+0x51d529	_atodbl_51d529	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:__atodbl (FID found several library functions with this code)
+0x51d566	_atodbl_51d566	stl	medium	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: FID_conflict:__atodbl (FID found several library functions with this code)
+0x51d5a3	_fptostr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fptostr
+0x51d61a	__dtold	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___dtold
+0x51d6d4	_fltout2	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __fltout2
+0x51d740	_fptrap	stl	high	CRT: MSVC 7.1 libcmt.lib; _fptrap: _amsg_exit(_RT_FLOAT) (2), the default floating-point slots
+0x51d749	_abstract_cw	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __abstract_cw
+0x51d7db	_hw_cw	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __hw_cw
+0x51d869	_control87	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __control87
+0x51d89b	_controlfp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __controlfp
+0x51d94c	_tsopen_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __tsopen_lk
+0x51dc33	_sopen	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __sopen
+0x51dc78	_sopen_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of _sopen
+0x51dc88	_get_lc_time	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __get_lc_time
+0x51dfef	__free_lc_time	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___free_lc_time
+0x51e1de	__free_lconv_num	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___free_lconv_num
+0x51e23d	__init_numeric	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___init_numeric
+0x51e40a	__free_lconv_mon	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___free_lconv_mon
+0x51e4e3	__init_monetary	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___init_monetary
+0x51e722	__init_ctype	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___init_ctype
+0x51e90c	___lc_codepage_func_51e90c	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ____lc_codepage_func
+0x51e925	___lc_handle_func_51e925	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ____lc_handle_func
+0x51e93e	_TranslateName	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _TranslateName
+0x51e99e	_GetLcidFromDefault	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _GetLcidFromDefault
+0x51e9b8	_ProcessCodePage	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _ProcessCodePage
+0x51ea2e	_TestDefaultCountry	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _TestDefaultCountry
+0x51ea4c	crtGetLocaleInfoA	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: crtGetLocaleInfoA
+0x51eb2f	_LcidFromHexString	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _LcidFromHexString
+0x51eb64	_GetPrimaryLen	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _GetPrimaryLen
+0x51eb81	_CountryEnumProc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _CountryEnumProc@4
+0x51ec15	_TestDefaultLanguage	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _TestDefaultLanguage
+0x51ec86	_LangCountryEnumProc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _LangCountryEnumProc@4
+0x51eea0	_LanguageEnumProc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _LanguageEnumProc@4
+0x51ef6b	_GetLcidFromCountry	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _GetLcidFromCountry
+0x51efa2	_GetLcidFromLangCountry	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _GetLcidFromLangCountry
+0x51f028	_GetLcidFromLanguage	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _GetLcidFromLanguage
+0x51f07d	__get_qualified_locale	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___get_qualified_locale
+0x51f232	__ansicp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___ansicp
+0x51f275	__convertcp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___convertcp
+0x51f43e	CRT_return0_51f43e	stl	medium	CRT: MSVC 7.1 libcmt.lib; returns 0: the default _matherr (CRT matherr.c)
+0x51f441	_raise_exc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __raise_exc
+0x51f6e6	_handle_exc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __handle_exc
+0x51f90a	_set_errno	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __set_errno
+0x51f932	_errcode	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __errcode
+0x51f95f	_umatherr	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __umatherr
+0x51f9fd	_handle_qnan1	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __handle_qnan1
+0x51fa50	_except1	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __except1
+0x51fb08	_frnd	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __frnd
+0x51fb19	_set_exp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __set_exp
+0x51fb43	_sptype	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __sptype
+0x51fb9e	_decomp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __decomp
+0x51fc5a	_statfp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __statfp
+0x51fc65	_clrfp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __clrfp
+0x51fc71	_ctrlfp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ctrlfp
+0x51fc95	_set_statfp_ctrl	stl	low	CRT: MSVC 7.1 libcmt.lib; floating-point exception helper called by _handle_exc (fpexcept.c)
+0x51fceb	_dospawn	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __dospawn
+0x51fec5	_cenvarg	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __cenvarg
+0x5200c0	_getenv_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __getenv_lk
+0x520141	__crtMessageBoxA	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtMessageBoxA
+0x52023a	x_ismbbtype	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: x_ismbbtype
+0x52026d	_ismbblead	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __ismbblead
+0x52027e	__mbtowc_mt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___mbtowc_mt
+0x52033e	mbtowc	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _mbtowc
+0x520369	siglookup	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: siglookup
+0x520397	raise	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _raise
+0x5204d2	raise_finally	stl	medium	CRT: MSVC 7.1 libcmt.lib; __finally block (unlock) of raise
+0x520510	__addl	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___addl
+0x520531	__add_12	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___add_12
+0x52058f	__shl_12	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___shl_12
+0x5205bd	__shr_12	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___shr_12
+0x5205ea	__mtold12	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___mtold12
+0x5206c8	__strgtold12	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___strgtold12
+0x520afc	I10_OUTPUT	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: $I10_OUTPUT
+0x520d8a	_chsize_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __chsize_lk
+0x520ecb	__getlocaleinfo	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___getlocaleinfo
+0x520ff2	_strnicmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __strnicmp
+0x521071	xtoa	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: xtoa
+0x5210af	_itoa	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __itoa
+0x5210d9	_mbsnbicoll	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __mbsnbicoll
+0x521127	__wtomb_environ	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___wtomb_environ
+0x5211b7	__ld12mul	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___ld12mul
+0x5213e9	__multtenpow12	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___multtenpow12
+0x52146f	_setmode_lk	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: __setmode_lk
+0x5214db	__crtGetLocaleInfoW	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtGetLocaleInfoW
+0x52160b	__crtGetLocaleInfoA	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtGetLocaleInfoA
+0x521750	__ascii_strnicmp	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___ascii_strnicmp
+0x5217b1	strncnt	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: _strncnt
+0x5217cd	__crtCompareStringA	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtCompareStringA
+0x521b51	findenv	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: findenv
+0x521b9e	copy_environ	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: copy_environ
+0x521bff	__crtsetenv	stl	high	CRT: MSVC 7.1 libcmt.lib; Ghidra FID: ___crtsetenv
+0x521dd4	RtlUnwind	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: KERNEL32.DLL::RtlUnwind
+0x521dda	ReuseDDElParam	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: USER32.DLL::ReuseDDElParam
+0x521de0	UnpackDDElParam	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: USER32.DLL::UnpackDDElParam
+0x521de6	ClosePrinter	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: WINSPOOL.DRV::ClosePrinter
+0x521dec	DocumentPropertiesA	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: WINSPOOL.DRV::DocumentPropertiesA
+0x521df2	OpenPrinterA	stl	high	import thunk (jmp [IAT]) from the import library; Ghidra FID: WINSPOOL.DRV::OpenPrinterA
+0x521df8	__Tolower_lk	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Tolower_lk
+0x521ee1	__Getctype	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Getctype
+0x521f8f	__Getctype_finally	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; __finally block (unlock) of __Getctype
+0x521fac	__Tolower	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Tolower
+0x52203b	__Tolower_finally	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; __finally block (unlock) of __Tolower
+0x522058	__Getcvt	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Getcvt
+0x5220c6	__Getcvt_finally	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; __finally block (unlock) of __Getcvt
+0x5220e3	std__Init_locks_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::_Init_locks::_Init_locks
+0x52213b	std__Lockit_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_Lockit::_Lockit(int kind): EnterCriticalSection of the lock table 0x7214d8
+0x52215e	std__Lockit_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_Lockit::~_Lockit: LeaveCriticalSection
+0x522172	std__Fac_node_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::_Fac_node::~_Fac_node
+0x522187	__Deletegloballocale	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Deletegloballocale
+0x5221a3	tidy_global	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: tidy_global
+0x5221c6	__Setgloballocale	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Setgloballocale
+0x5221eb	std_locale__Getfacet	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::locale::_Getfacet
+0x522220	__Fac_tidy	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Fac_tidy
+0x522263	std_locale_facet__Register	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::locale::facet::_Register
+0x52229c	std_locale__Locimp_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::locale::_Locimp::~_Locimp
+0x522324	std__Locinfo_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::_Locinfo::~_Locinfo
+0x52237b	std_locale__Locimp_scalar_deleting_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::locale::_Locimp::`scalar_deleting_destructor'
+0x522397	std_locale__Locimp_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::locale::_Locimp::_Locimp
+0x5223e7	std__Locinfo_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::_Locinfo::_Locinfo
+0x522471	std_locale__Init	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::locale::_Init
+0x522513	std_locale_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::locale::locale
+0x52252c	std_ios_base__Callfns	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::ios_base::_Callfns
+0x52254e	std_ios_base__Tidy	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::ios_base::_Tidy
+0x522590	std_ios_base_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::ios_base::~ios_base
+0x5225d0	std_runtime_error_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::runtime_error::~runtime_error: vtable 0x5785bc, destroys the message string
+0x5225ed	std_runtime_error_scalar_deleting_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; scalar deleting destructor, vtable 0x5785bc (std::runtime_error)
+0x522609	std_runtime_error_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::runtime_error::runtime_error
+0x522645	std_ios_base_failure_scalar_deleting_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; scalar deleting destructor, vtable 0x5785c8 (std::ios_base::failure)
+0x522661	std_ios_base_failure_dtor	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; destructor body: sets the vtable 0x5785c8 (std::ios_base::failure)
+0x52266c	std_ios_base_clear	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::ios_base::clear
+0x522732	std_ios_base_failure_ctor	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; std::ios_base::failure::failure(const string &), thrown by ios_base::clear
+0x52278d	std_ios_base__Init	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::ios_base::_Init
+0x5227d3	std__Mutex_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_Mutex::_Mutex: new CRITICAL_SECTION (0x18 bytes), _Mtxinit
+0x5227eb	std__Mutex_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_Mutex::~_Mutex: _Mtxdst, delete
+0x522800	std__Mutex__Lock	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_Mutex::_Lock: _Mtxlock
+0x522809	std__Mutex__Unlock	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_Mutex::_Unlock: _Mtxunlock
+0x522812	__Toupper_lk	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Toupper_lk
+0x5228f2	__Toupper	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Toupper
+0x522981	__Toupper_finally	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; __finally block (unlock) of __Toupper
+0x52299e	std_logic_error_ctor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::logic_error::logic_error(const string &), vtable 0x578628
+0x5229e8	std_logic_error_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::logic_error::~logic_error: vtable 0x578628, destroys the message string
+0x522a05	std_logic_error_scalar_deleting_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; scalar deleting destructor, vtable 0x578628 (std::logic_error)
+0x522a21	std_length_error_scalar_deleting_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; scalar deleting destructor, vtable 0x578634 (std::length_error)
+0x522a3d	std_length_error_dtor	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; destructor body: sets the vtable 0x578634 (std::length_error)
+0x522a48	std_out_of_range_scalar_deleting_dtor	stl	high	C++ library: MSVC 7.1 libcpmt.lib; scalar deleting destructor, vtable 0x578640 (std::out_of_range)
+0x522a64	std_out_of_range_dtor	stl	medium	C++ library: MSVC 7.1 libcpmt.lib; destructor body: sets the vtable 0x578640 (std::out_of_range)
+0x522a6f	std__String_base__Xran	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_String_base::_Xran: throws out_of_range("invalid string position")
+0x522b0a	std__String_base__Xlen	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::_String_base::_Xlen: throws length_error("string too long")
+0x522b62	std_uncaught_exception	stl	high	C++ library: MSVC 7.1 libcpmt.lib; std::uncaught_exception: jmp __uncaught_exception
+0x522b67	std__Fiopen	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: std::_Fiopen
+0x522c09	_Mtxinit	stl	high	C++ library: MSVC 7.1 libcpmt.lib; _Mtxinit: InitializeCriticalSection (xmtx.c)
+0x522c14	_Mtxdst	stl	high	C++ library: MSVC 7.1 libcpmt.lib; _Mtxdst: DeleteCriticalSection (xmtx.c)
+0x522c1f	_Mtxlock	stl	high	C++ library: MSVC 7.1 libcpmt.lib; _Mtxlock: EnterCriticalSection (xmtx.c)
+0x522c2a	_Mtxunlock	stl	high	C++ library: MSVC 7.1 libcpmt.lib; _Mtxunlock: LeaveCriticalSection (xmtx.c)
+0x522c35	__Atexit	stl	high	C++ library: MSVC 7.1 libcpmt.lib; Ghidra FID: __Atexit
+0x522c75	CSimpleArray_RemoveAll	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleArray<HINSTANCE__*,ATL::CSimpleArrayEqualHelper<HINSTANCE__*>_>::RemoveAll
+0x522c92	_ATL_BASE_MODULE70_ctor	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::_ATL_BASE_MODULE70::_ATL_BASE_MODULE70
+0x522cac	CAtlBaseModule_dtor	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CAtlBaseModule::~CAtlBaseModule
+0x522cc2	CAtlBaseModule_ctor	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CAtlBaseModule::CAtlBaseModule
+0x522d6d	DelayLoad_CreateStdAccessibleObject	stl	high	delay-load code (linker-generated thunk or delayimp.lib); Ghidra FID: DelayLoad_CreateStdAccessibleObject
+0x522d77	__tailMerge_OLEACC_dll	stl	high	delay-load code (linker-generated thunk or delayimp.lib); linker-generated delay-load tail: __delayLoadHelper2(&descriptor 0x5bd1d8, &IAT slot), then jumps to the function
+0x522d88	CreateStdAccessibleObject	stl	high	delay-load code (linker-generated thunk or delayimp.lib); Ghidra FID: OLEACC.DLL::CreateStdAccessibleObject
+0x522d8e	DelayLoad_LresultFromObject	stl	high	delay-load code (linker-generated thunk or delayimp.lib); Ghidra FID: DelayLoad_LresultFromObject
+0x522d98	LresultFromObject	stl	high	delay-load code (linker-generated thunk or delayimp.lib); Ghidra FID: OLEACC.DLL::LresultFromObject
+0x522d9e	___delayLoadHelper2	stl	high	delay-load code (linker-generated thunk or delayimp.lib); Ghidra FID: ___delayLoadHelper2@8
+0x522fe1	AfxWinMain_522fe1	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxWinMain
+0x522fe6	AfxInitialize	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxInitialize
+0x523017	_fileno	stl	high	CRT: MSVC 7.1 libcmt.lib; _fileno: stream->_file (+0x10); used by Script.cpp
+0x52301f	CSimpleException_InitString	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CSimpleException::InitString
+0x523048	CSimpleException_GetErrorMessage	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CSimpleException::GetErrorMessage
+0x523098	AfxThrowMemoryException	stl	high	MFC 7.1: nafxcw.lib; AfxThrowMemoryException: throws the static CMemoryException 0x7209d8 (throw info 0x5bc95c)
+0x5230b2	AfxThrowInvalidArgException	stl	high	MFC 7.1: nafxcw.lib; AfxThrowInvalidArgException: throws the static CInvalidArgException 0x720b08 (throw info 0x5bc9a0)
+0x5230cc	afxMapHMENU_5230cc	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:afxMapHMENU (FID found several library functions with this code)
+0x523148	Detach_523148	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: Detach
+0x523172	CImageList_DeleteImageList	stl	high	MFC 7.1: nafxcw.lib; CImageList::DeleteImageList: Detach(), ImageList_Destroy
+0x523188	CImageList_FromHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CImageList::FromHandle
+0x523196	CImageList_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575ea8 (CImageList)
+0x5231a1	CImageList_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575ea8 (CImageList)
+0x5231bd	RemoveAll	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: RemoveAll
+0x5231dd	FreeNode	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: FreeNode
+0x5231ff	CPtrList_RemoveHead	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPtrList::RemoveHead
+0x523223	CPtrList_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPtrList::CPtrList
+0x523246	CPtrList_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575aec (CPtrList)
+0x523251	NewNode	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: NewNode
+0x5232a7	CPtrList_AddTail	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPtrList::AddTail
+0x5232d0	CPtrList_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575aec (CPtrList)
+0x5232ec	CPlex_Create	stl	high	MFC 7.1: nafxcw.lib; CPlex::Create(pHead, nMax, cbElement): new (nMax*cbElement + 4), linked at the head
+0x52331d	CPlex_FreeDataChain	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CPlex::FreeDataChain
+0x523333	CByteArray_SetSize	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CByteArray::SetSize
+0x52344f	CByteArray_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor of CByteArray (called by its scalar deleting destructor 0x5234dc)
+0x5234dc	CByteArray_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x576098 (CByteArray)
+0x5234f8	CMapPtrToPtr_InitHashTable	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::InitHashTable
+0x523544	CMapPtrToPtr_RemoveAll	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::RemoveAll
+0x52356f	FreeAssoc	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: FreeAssoc
+0x523588	CMapPtrToPtr_GetAssocAt	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::GetAssocAt
+0x5235c0	CMapPtrToPtr_GetValueAt	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::GetValueAt
+0x5235f7	CMapPtrToPtr_Lookup	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::Lookup
+0x52361e	CMapPtrToPtr_RemoveKey	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::RemoveKey
+0x523661	CMapPtrToPtr_GetNextAssoc	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::GetNextAssoc
+0x5236db	CMapPtrToPtr_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::CMapPtrToPtr
+0x523709	CMapPtrToPtr_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor body: sets the vtable 0x575fc8 (CMapPtrToPtr)
+0x523714	CMapPtrToPtr_NewAssoc	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::NewAssoc
+0x52375f	CMapPtrToPtr_operator_index	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMapPtrToPtr::operator[]
+0x5237b4	CMapPtrToPtr_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575fc8 (CMapPtrToPtr)
+0x5237d0	AfxNewHandler	stl	medium	MFC 7.1: nafxcw.lib; AfxNewHandler: jmp AfxThrowMemoryException; MFC's new handler (stored by the AFX_MODULE_THREAD_STATE constructor, 0x5c27e8)
+0x5237d5	AfxSetNewHandler	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxSetNewHandler
+0x5237e7	operator_new	stl	high	MFC 7.1: nafxcw.lib; operator new(size_t): MFC afxmem.cpp, calls _nh_malloc with the MFC new handler
+0x523812	operator_delete	stl	high	MFC 7.1: nafxcw.lib; operator delete: jmp free (Ghidra FID: _free); MFC afxmem.cpp
+0x523817	operator_new_array	stl	high	MFC 7.1: nafxcw.lib; operator new[] (jmp operator new; Ghidra FID: operator_new)
+0x523821	CWnd_ctor_523821	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::CWnd
+0x523867	_AfxModifyStyle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxModifyStyle
+0x5238d1	CWnd_ModifyStyleEx_5238d1	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::ModifyStyleEx
+0x523948	CWnd_vslot_64	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by AfxFormatString1; virtual slot 64 (+0x100) of CWnd (vtable 0x574f6c)
+0x523967	OnToolHitTest	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: OnToolHitTest
+0x5239d8	CWnd_GetWindowPlacement	stl	high	MFC 7.1: nafxcw.lib; CWnd::GetWindowPlacement (afxwin2.inl): length = 0x2c, ::GetWindowPlacement(m_hWnd, ...)
+0x5239ef	CWnd_SetWindowPlacement	stl	high	MFC 7.1: nafxcw.lib; CWnd::SetWindowPlacement (afxwin2.inl)
+0x523a06	AfxRegisterClass	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxRegisterClass
+0x523af7	AfxRegisterClass_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of AfxRegisterClass
+0x523b08	_AFX_HTMLHELP_STATE_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor of _AFX_HTMLHELP_STATE (called by its scalar deleting destructor 0x523b1d)
+0x523b1d	_AFX_HTMLHELP_STATE_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x5750a0 (_AFX_HTMLHELP_STATE)
+0x523b3e	AfxFindMessageEntry	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxFindMessageEntry
+0x523b7e	CWnd_WindowProc	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::WindowProc
+0x523bc2	CTestCmdUI_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CTestCmdUI::CTestCmdUI
+0x523bf4	AfxRepositionWindow	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxRepositionWindow
+0x523c80	CWnd_CalcWindowRect	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::CalcWindowRect
+0x523ce8	CWnd_XAccessible_vslot_3	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 3 (+0xc) of CWnd::XAccessible (vtable 0x574edc)
+0x523cf1	CWnd_XAccessible_GetIDsOfNames	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::XAccessible::GetIDsOfNames
+0x523f37	CWnd_XAccessible_accLocation	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::XAccessible::accLocation
+0x524272	CWnd_accLocation	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::accLocation
+0x524330	_AfxInitCommonControls	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxInitCommonControls
+0x5243a8	CFrameWnd_IsTracking	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::IsTracking
+0x5243e1	CWnd_ctor_5243e1	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::CWnd
+0x524424	_AfxPreInitDialog	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxPreInitDialog
+0x524447	CreateEx_524447	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CreateEx
+0x524490	Create_524490	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: Create
+0x52452f	CMenu_TrackPopupMenu	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMenu::TrackPopupMenu
+0x524583	MFC_524583	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by 0x52559a
+0x5245de	AfxRegisterWndClass	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxRegisterWndClass
+0x524690	CWnd_WinHelpInternal	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::WinHelpInternal
+0x524700	MFC_524700	stl	low	MFC 7.1: nafxcw.lib; calls the virtual +8 (Release) of the interface at [this] when set; used by an unwind funclet (a CComPtr-like destructor)
+0x52470d	CWnd_CenterWindow	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::CenterWindow
+0x5248e7	_AfxRegisterWithIcon	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxRegisterWithIcon
+0x524928	AfxEndDeferRegisterClass	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxEndDeferRegisterClass
+0x524bf7	CWnd_GetCurrentMessage	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetCurrentMessage
+0x524c2c	CWnd_Default	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::Default
+0x524c53	afxMapHWND	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: afxMapHWND
+0x524ccf	CWnd_FromHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::FromHandle
+0x524cf6	CWnd_FromHandlePermanent	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::FromHandlePermanent
+0x524d10	CWnd_Attach	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::Attach
+0x524d49	CWnd_Detach	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::Detach
+0x524d77	AfxUnhookWindowCreate	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxUnhookWindowCreate
+0x524db9	CWnd_vslot_25	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 25 (+0x64) of CWnd (vtable 0x574f6c)
+0x524dd9	CWnd_OnDestroy	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnDestroy
+0x524e14	CWnd_OnNcDestroy	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnNcDestroy
+0x524f25	CWnd_DestroyWindow	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::DestroyWindow
+0x524f79	CWnd_OnNTCtlColor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnNTCtlColor
+0x524fbf	CWnd_GetDescendantWindow	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetDescendantWindow
+0x525036	CWnd_RepositionBars	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::RepositionBars
+0x52517e	CWnd_WalkPreTranslateTree	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::WalkPreTranslateTree
+0x5251c0	CWnd_SendChildNotifyLastMsg	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::SendChildNotifyLastMsg
+0x5251ed	MFC_5251ed	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by CFrameWnd_OnNcActivate; message handler: message map entry 0x5749d8 (message 0x7)
+0x525210	CWnd_OnHelpInfo	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnHelpInfo
+0x52527a	CWnd_OnGetObject	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnGetObject
+0x5252b4	MFC_5252b4	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; message handler: message map entry 0x574a68 (message 0x114)
+0x5252d5	CWnd_OnEnterIdle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnEnterIdle
+0x525315	CWnd_OnCtlColor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnCtlColor
+0x52533c	_AfxPostInitDialog	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxPostInitDialog
+0x5253b5	MFC_5253b5	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by AfxWndProc, CWnd_SendMessageToDescendants, CWinThread_OnIdle
+0x525460	_AfxPostInitDialog_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of _AfxPostInitDialog
+0x525483	MFC_525483	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by MFC_5253b5
+0x5254a2	AfxWndProc	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxWndProc
+0x5254ed	AfxGetAfxWndProc	stl	high	MFC 7.1: nafxcw.lib; AfxGetAfxWndProc: returns AfxWndProc (0x5254a2)
+0x5254f3	CWnd_dtor_5254f3	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::~CWnd
+0x52556f	OnCharToItem	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:OnCharToItem (FID found several library functions with this code)
+0x52559a	MFC_52559a	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; message handler: message map entry 0x574a08 (message 0x2c)
+0x525612	CWnd_GetParentFrame	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetParentFrame
+0x525651	CWnd_GetTopLevelFrame	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetTopLevelFrame
+0x525692	CWnd_SendMessageToDescendants	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::SendMessageToDescendants
+0x52570f	CWnd_ReflectLastMsg	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::ReflectLastMsg
+0x5257eb	CWnd_OnDragList	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnDragList
+0x525815	CWnd_scalar_deleting_dtor_525815	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::`scalar_deleting_destructor'
+0x525831	MFC_525831	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; message handler: message map entry 0x5749f0 (message 0x2b)
+0x52586e	CWnd_OnCompareItem	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnCompareItem
+0x5258b8	AfxHtmlHelp	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxHtmlHelp
+0x52592b	CWnd_OnCommand	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnCommand
+0x5259b7	CWnd_OnNotify	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnNotify
+0x525a31	AfxGetParentOwner	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGetParentOwner
+0x525a76	CWnd_GetTopLevelParent	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetTopLevelParent
+0x525a9e	CWnd_OnSysColorChange	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnSysColorChange
+0x525ae4	CWnd_OnDevModeChange	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnDevModeChange
+0x525b2f	CWnd_OnDisplayChange	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnDisplayChange
+0x525b78	_AfxHandleActivate	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxHandleActivate
+0x525bd9	_AfxHandleSetCursor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxHandleSetCursor
+0x525c4f	_AfxActivationWndProc	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxActivationWndProc
+0x525d72	_AfxActivationWndProc_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of _AfxActivationWndProc
+0x525da7	_AfxCbtFilterHook	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxCbtFilterHook
+0x525fc6	AfxHookWindowCreate	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxHookWindowCreate
+0x526012	CreateEx_526012	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CreateEx
+0x5260d8	CWnd_PrepareForHelp	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::PrepareForHelp
+0x52614b	CWnd_OnWndMsg	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnWndMsg
+0x526756	CWnd_ReflectChildNotify	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::ReflectChildNotify
+0x52686a	CWnd_CreateAccessibleProxy	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::CreateAccessibleProxy
+0x526932	WinHelpW	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:WinHelpW (FID found several library functions with this code)
+0x5269ac	HtmlHelpA	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:HtmlHelpA (FID found several library functions with this code)
+0x526a25	CWnd_OnChildNotify	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::OnChildNotify
+0x526b2d	CWnd_GetExStyle_526b2d	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetExStyle
+0x526b47	CWnd_GetExStyle_526b47	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetExStyle
+0x526b61	CWnd_ModifyStyle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::ModifyStyle
+0x526b8b	CWnd_ModifyStyleEx_526b8b	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::ModifyStyleEx
+0x526bb5	SetWindowTextW	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:SetWindowTextW (FID found several library functions with this code)
+0x526bd6	CWnd_MoveWindow	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::MoveWindow
+0x526c14	CWnd_ShowWindow	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::ShowWindow
+0x526c35	CWnd_IsWindowEnabled	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::IsWindowEnabled
+0x526c50	CWnd_EnableWindow	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::EnableWindow
+0x526c92	CWnd_SetWindowPos	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::SetWindowPos
+0x526cce	CWnd_AttachControlSite	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::AttachControlSite
+0x526d0f	CCmdTarget_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::CCmdTarget
+0x526d29	CCmdTarget_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::~CCmdTarget
+0x526d36	_AfxDispatchCmdMsg	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxDispatchCmdMsg
+0x526e4c	CCmdTarget_OnCmdMsg	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::OnCmdMsg
+0x526fbb	CCmdUI_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdUI::CCmdUI
+0x526fe1	CCmdUI_DoUpdate	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdUI::DoUpdate
+0x527042	CCmdTarget_BeginWaitCursor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::BeginWaitCursor
+0x527057	CCmdTarget_EndWaitCursor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::EndWaitCursor
+0x52706c	CCmdUI_Enable	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdUI::Enable
+0x5270eb	CCmdUI_SetCheck	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdUI::SetCheck
+0x527150	CCmdUI_SetRadio	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdUI::SetRadio
+0x5271a6	SetText	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: SetText
+0x527275	CWinApp_OnIdle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::OnIdle
+0x5272db	CWinApp_DevModeChange	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::DevModeChange
+0x527379	CWinApp_Run	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::Run
+0x5273ce	CWinApp_vslot_42	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 42 (+0xa8) of CWinApp (vtable 0x5757fc)
+0x527402	CWinApp_WinHelpInternal	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::WinHelpInternal
+0x527436	AfxGetThread	stl	high	MFC 7.1: nafxcw.lib; AfxGetThread: AfxGetModuleThreadState()->m_pCurrentWinThread
+0x52743f	AfxGetCurrentMessage	stl	medium	MFC 7.1: nafxcw.lib; AfxGetCurrentMessage: &AfxGetThreadState()->m_msgCur (+0x30); CWinApp::ExitInstance returns its wParam
+0x527448	AfxInternalProcessWndProcException_527448	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxInternalProcessWndProcException
+0x52746d	AfxProcessWndProcException	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxProcessWndProcException
+0x527491	CWinThread_Run	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::Run
+0x527527	CWinThread_DispatchThreadMessageEx	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::DispatchThreadMessageEx
+0x52759d	AfxInternalProcessWndProcException_52759d	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxInternalProcessWndProcException
+0x5275a2	IsEnterKey	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: IsEnterKey
+0x5275bc	AfxInternalPreTranslateMessage	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxInternalPreTranslateMessage
+0x527628	AfxPreTranslateMessage	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxPreTranslateMessage
+0x527643	AfxInternalIsIdleMessage	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxInternalIsIdleMessage
+0x527781	CWinThread_ProcessMessageFilter	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::ProcessMessageFilter
+0x5278a6	AfxInitThread	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxInitThread
+0x5278d4	CWinThread_OnIdle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::OnIdle
+0x5279dd	CException_Delete	stl	high	MFC 7.1: nafxcw.lib; CException::Delete: deletes the exception if it is auto-deleting; called by MFC's catch blocks
+0x5279eb	CException_ReportError	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CException::ReportError
+0x527a59	CException_ctor	stl	high	MFC 7.1: nafxcw.lib; CException::CException(): m_bAutoDelete = TRUE
+0x527a63	CException_ctor_bool	stl	high	MFC 7.1: nafxcw.lib; CException::CException(BOOL bAutoDelete)
+0x527a6f	afxMapHMENU_527a6f	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:afxMapHMENU (FID found several library functions with this code)
+0x527aeb	CMenu_FromHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMenu::FromHandle
+0x527af9	MFC_527af9	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by MFC_524583, MFC_525831
+0x527b13	CMenu_Attach	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMenu::Attach
+0x527b40	Detach_527b40	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: Detach
+0x527b6a	DeleteObject_527b6a	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:DeleteObject (FID found several library functions with this code)
+0x527b80	CChevronOwnerDrawMenu_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CChevronOwnerDrawMenu::CChevronOwnerDrawMenu
+0x527c02	CChevronOwnerDrawMenu_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CChevronOwnerDrawMenu::`scalar_deleting_destructor'
+0x527c1e	CChevronOwnerDrawMenu_DrawItem	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CChevronOwnerDrawMenu::DrawItem
+0x528064	CChevronOwnerDrawMenu_MeasureItem	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CChevronOwnerDrawMenu::MeasureItem
+0x52819c	AfxLoadString	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxLoadString
+0x5281e7	AfxFindStringResourceHandle	stl	medium	MFC 7.1: nafxcw.lib; AfxFindStringResourceHandle(nID) (stdcall, ret 4): AfxGetModuleState()->m_hCurrentResourceHandle (+0xc); used by CString::LoadString
+0x5281f2	AfxExtractSubString	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxExtractSubString
+0x528274	AfxGetStringManager	stl	high	MFC 7.1: nafxcw.lib; AfxGetStringManager: returns the MFC string manager 0x720d10 (CString constructors)
+0x52827a	CAfxStringMgr_vslot_0	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 0 (+0x0) of CAfxStringMgr (vtable 0x575eb8)
+0x5282c2	CAfxStringMgr_vslot_2	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 2 (+0x8) of CAfxStringMgr (vtable 0x575eb8)
+0x528332	AUX_DATA_UpdateSysColors	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AUX_DATA::UpdateSysColors
+0x528376	AUX_DATA_UpdateSysMetrics	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AUX_DATA::UpdateSysMetrics
+0x5283d0	CRuntimeClass_CreateObject	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CRuntimeClass::CreateObject
+0x528408	CRuntimeClass_CreateObject_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of CRuntimeClass_CreateObject
+0x528416	CRuntimeClass_IsDerivedFrom	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CRuntimeClass::IsDerivedFrom
+0x528438	CObject_IsKindOf	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CObject::IsKindOf
+0x528443	AfxClassInit	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxClassInit
+0x528469	AfxLockTempMaps	stl	medium	MFC 7.1: nafxcw.lib; AfxLockTempMaps: ++AfxGetModuleThreadState()->m_nTempMapLock (+0x10); called by CWinThread::OnIdle
+0x528472	CHandleMap_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CHandleMap::CHandleMap
+0x5284f6	CHandleMap_FromHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CHandleMap::FromHandle
+0x5285a6	CHandleMap_FromHandle_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of CHandleMap_FromHandle
+0x5285b8	CHandleMap_DeleteTemp	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CHandleMap::DeleteTemp
+0x52861b	AfxUnlockTempMaps	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxUnlockTempMaps
+0x528714	AfxWinMain_528714	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxWinMain
+0x52879e	_AfxIsComboBoxControl	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxIsComboBoxControl
+0x5287f8	AfxSetWindowText	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxSetWindowText
+0x528860	MFC_528860	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by AUX_DATA_ctor
+0x528879	AfxCancelModes	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxCancelModes
+0x5288f0	AfxGlobalFree	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGlobalFree
+0x52896d	_AfxChildWindowFromPoint	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxChildWindowFromPoint
+0x5289fd	CDC_SaveDC	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::SaveDC
+0x528a2e	CDC_RestoreDC	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::RestoreDC
+0x528a6c	CDC_SetBkColor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::SetBkColor
+0x528a9b	CDC_SetBkMode	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::SetBkMode
+0x528ac9	CDC_SetTextColor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::SetTextColor
+0x528af8	CDC_vslot_13	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 13 (+0x34) of CDC (vtable 0x575c94)
+0x528b36	AfxThrowResourceException	stl	high	MFC 7.1: nafxcw.lib; AfxThrowResourceException: throws the static CResourceException 0x720be0 (throw info 0x5bca58)
+0x528b50	AfxThrowUserException	stl	high	MFC 7.1: nafxcw.lib; AfxThrowUserException: throws the static CUserException 0x720c78 (throw info 0x5bca9c)
+0x528b6a	MFC_528b6a	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by CWnd_OnWndMsg, CChevronOwnerDrawMenu_DrawItem, CFrameWnd_OnChevronPushed
+0x528b7e	OffsetWindowOrg_528b7e	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:OffsetWindowOrg (FID found several library functions with this code)
+0x528bca	OffsetWindowOrg_528bca	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:OffsetWindowOrg (FID found several library functions with this code)
+0x528c16	OffsetWindowOrg_528c16	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:OffsetWindowOrg (FID found several library functions with this code)
+0x528c62	ScaleWindowExt_528c62	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:ScaleWindowExt (FID found several library functions with this code)
+0x528cba	OffsetWindowOrg_528cba	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:OffsetWindowOrg (FID found several library functions with this code)
+0x528d06	ScaleWindowExt_528d06	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:ScaleWindowExt (FID found several library functions with this code)
+0x528d5e	ScreenToClient_528d5e	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:ScreenToClient (FID found several library functions with this code)
+0x528d9a	ScreenToClient_528d9a	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:ScreenToClient (FID found several library functions with this code)
+0x528dd6	afxMapHDC	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: afxMapHDC
+0x528e52	CDC_FromHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::FromHandle
+0x528e60	CDC_Attach	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::Attach
+0x528e97	CDC_Detach	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::Detach
+0x528ec8	CDC_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::~CDC
+0x528ee1	CClientDC_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CClientDC::CClientDC
+0x528f3c	CClientDC_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CClientDC::~CClientDC
+0x528f7e	CWindowDC_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWindowDC::CWindowDC
+0x528fd9	CWindowDC_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWindowDC::~CWindowDC
+0x52901b	afxMapHMENU_52901b	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:afxMapHMENU (FID found several library functions with this code)
+0x529097	CGdiObject_FromHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CGdiObject::FromHandle
+0x5290a5	CImageList_Attach	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CImageList::Attach
+0x5290d2	Detach_5290d2	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: Detach
+0x5290fc	CGdiObject_DeleteObject	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CGdiObject::DeleteObject
+0x529112	CDC_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575c94 (CDC)
+0x52912e	CDC_SelectGdiObject	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::SelectGdiObject
+0x529145	CDC_SelectStockObject	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::SelectStockObject
+0x529181	CDC_SelectObject	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::SelectObject
+0x5291c7	CClientDC_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575d14 (CClientDC)
+0x5291e3	CWindowDC_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575d94 (CWindowDC)
+0x5291ff	CBrush_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CBrush::CBrush
+0x529249	AfxGetGrayBitmap	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGetGrayBitmap
+0x5294cd	AfxGetDitheredBitmap	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGetDitheredBitmap
+0x5297ba	CArchive_Read	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::Read
+0x5298e7	CArchive_Flush	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::Flush
+0x52995e	CArchive_FillBuffer	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::FillBuffer
+0x529a46	CArchive_Write	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::Write
+0x529af7	CArchive_WriteCount	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::WriteCount
+0x529b23	CArchive_ReadCount	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CArchive::ReadCount
+0x529b52	GetErrorMessage_529b52	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: GetErrorMessage
+0x529c00	GetErrorMessage_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of GetErrorMessage
+0x529c19	AfxThrowArchiveException	stl	high	MFC 7.1: nafxcw.lib; AfxThrowArchiveException(cause, name): new CArchiveException (0x10 bytes); called by CArchive
+0x529ce0	CWinApp_CloseAllDocuments	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::CloseAllDocuments
+0x529d25	CWinApp_HideApplication	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::HideApplication
+0x529d8d	CCmdTarget_GetRoutingFrame_	stl	medium	MFC 7.1: nafxcw.lib; CCmdTarget::GetRoutingFrame_: AfxGetThreadState()->m_pRoutingFrame (+0xec); called by CWnd::GetSafeOwner_
+0x529d99	CWinApp_EnableModeless	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::EnableModeless
+0x529dc6	CWnd_GetSafeOwner_	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::GetSafeOwner_
+0x529e64	CWinApp_DoMessageBox	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::DoMessageBox
+0x529f97	AfxMessageBox_529f97	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxMessageBox
+0x529fb9	AfxMessageBox_529fb9	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxMessageBox
+0x52a01b	CWinApp_GetFirstDocTemplatePosition	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::GetFirstDocTemplatePosition
+0x52a02c	CSimpleStringT_Concatenate	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::Concatenate
+0x52a06f	operator_plus	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::operator+
+0x52a0ed	CToolBar__GetButton	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CToolBar::_GetButton
+0x52a10c	CToolBar_GetButtonInfo	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CToolBar::GetButtonInfo
+0x52a154	CWinApp_WriteProfileInt	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::WriteProfileInt
+0x52a1d6	AfxFormatStrings_52a1d6	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxFormatStrings
+0x52a2d5	AfxFormatStrings_52a2d5	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxFormatStrings
+0x52a33c	AfxFormatString1	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxFormatString1
+0x52a417	AfxIsDescendant	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxIsDescendant
+0x52a546	CFrameWnd_EndModalState	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::EndModalState
+0x52a5b5	CFrameWnd_ShowOwnedWindows	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::ShowOwnedWindows
+0x52a65e	CFrameWnd_PreCreateWindow	stl	high	MFC 7.1: nafxcw.lib; CFrameWnd::PreCreateWindow (Ghidra FID: PreCreateWindow); called by CMainFrame::PreCreateWindow
+0x52a6c7	CFrameWnd_OnNcActivate	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnNcActivate
+0x52a732	MFC_52a732	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; message handler: message map entry 0x574270 (message 0x116)
+0x52a76f	CFrameWnd_BringToTop	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::BringToTop
+0x52a79e	CControlBar_GetDockingFrame	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CControlBar::GetDockingFrame
+0x52a7b2	CControlBar_IsFloating	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CControlBar::IsFloating
+0x52a7e5	LoadAccelTable	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: LoadAccelTable
+0x52a80b	MFC_52a80b	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; message handler: message map entry 0x5744c8 (message 0x311)
+0x52a826	CFrameWnd_OnQueryNewPalette	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnQueryNewPalette
+0x52a8b3	CFrameWnd_OnSetCursor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnSetCursor
+0x52a8dd	MFC_52a8dd	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; message handler: message map entry 0x5744e0 (message 0x365)
+0x52a935	CFrameWnd_OnCommand	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnCommand
+0x52a9ac	CFrameWnd_NotifyFloatingWindows	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::NotifyFloatingWindows
+0x52aa59	CFrameWnd_CreateView	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::CreateView
+0x52aaeb	OnCreateHelper	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: OnCreateHelper
+0x52ab3a	GetIconWndClass	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: GetIconWndClass
+0x52abbd	CFrameWnd_OnClose	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnClose
+0x52acac	CFrameWnd_OnCmdMsg	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnCmdMsg
+0x52ae1e	CFrameWnd_OnActivate	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnActivate
+0x52aef1	CFrameWnd_OnSysCommand	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnSysCommand
+0x52af86	CFrameWnd_OnDropFiles	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnDropFiles
+0x52b014	CFrameWnd_OnQueryEndSession	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnQueryEndSession
+0x52b070	CFrameWnd_OnDDEInitiate	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnDDEInitiate
+0x52b14b	CFrameWnd_OnDDEExecute	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnDDEExecute
+0x52b211	CFrameWnd_ShowControlBar	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::ShowControlBar
+0x52b30d	CFrameWnd_OnInitMenuPopup	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnInitMenuPopup
+0x52b487	CFrameWnd_OnMenuSelect	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnMenuSelect
+0x52b5cb	CFrameWnd_SetMessageText	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::SetMessageText
+0x52b5e2	CFrameWnd_DestroyDockBars	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::DestroyDockBars
+0x52b6c7	CFrameWnd_GetControlBar	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::GetControlBar
+0x52b71a	MFC_52b71a	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; message handler: message map entry 0x574528 (message 0x111)
+0x52b7d7	CFrameWnd_OnUpdateContextHelp	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnUpdateContextHelp
+0x52b806	CFrameWnd_OnSetPreviewMode	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnSetPreviewMode
+0x52ba2e	CFrameWnd_OnIdleUpdateCmdUI	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnIdleUpdateCmdUI
+0x52baa7	CFrameWnd_RecalcLayout	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::RecalcLayout
+0x52bb8c	CFrameWnd_NegotiateBorderSpace	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::NegotiateBorderSpace
+0x52bbf9	CFrameWnd_OnSize	stl	high	MFC 7.1: nafxcw.lib; CFrameWnd::OnSize: Default(), RecalcLayout unless SIZE_MINIMIZED; called by CMainFrame::OnSize
+0x52bc2e	CFrameWnd_OnRegisteredMouseWheel	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnRegisteredMouseWheel
+0x52bcd1	CChevronOwnerDrawMenu_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CChevronOwnerDrawMenu::~CChevronOwnerDrawMenu
+0x52bd12	CFrameWnd_ActivateFrame	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::ActivateFrame
+0x52bd63	CFrameWnd_OnEnable	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnEnable
+0x52be1c	CFrameWnd_OnCreate	stl	high	MFC 7.1: nafxcw.lib; CFrameWnd::OnCreate (Ghidra FID: OnCreate): OnCreateHelper(lpcs, context)
+0x52be2b	CFrameWnd_OnDestroy	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnDestroy
+0x52beb4	CFrameWnd_AddFrameWnd	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::AddFrameWnd
+0x52bed8	CFrameWnd_RemoveFrameWnd	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::RemoveFrameWnd
+0x52befc	CFrameWnd_OnSetMessageString	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnSetMessageString
+0x52bfcb	CFrameWnd_OnToolTipText	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnToolTipText
+0x52c0e6	CFrameWnd_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::CFrameWnd
+0x52c1ab	CFrameWnd_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::~CFrameWnd
+0x52c290	CFrameWnd_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::`scalar_deleting_destructor'
+0x52c2ac	CFrameWnd_LoadFrame	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::LoadFrame
+0x52c3a3	CFrameWnd_OnChevronPushed	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnChevronPushed
+0x52c8a7	Create_52c8a7	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: Create
+0x52c951	CFrameWnd_UpdateFrameTitleForDocument	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::UpdateFrameTitleForDocument
+0x52ca5f	CFrameWnd_OnUpdateFrameTitle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::OnUpdateFrameTitle
+0x52cae9	AfxOleCanExitApp	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxOleCanExitApp
+0x52caf9	AfxOleLockApp	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxOleLockApp
+0x52cb09	AfxOleSetUserCtrl	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxOleSetUserCtrl
+0x52cb18	AfxOleGetUserCtrl	stl	medium	MFC 7.1: nafxcw.lib; AfxOleGetUserCtrl: AfxGetModuleState()->m_bUserCtrl (+0x30); CWinApp::Run posts WM_QUIT without a main window when it is set
+0x52cb6d	MFC_52cb6d	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by 0x52d691
+0x52cb86	CDC_FillSolidRect_52cb86	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::FillSolidRect
+0x52cbb0	CDC_FillSolidRect_52cbb0	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::FillSolidRect
+0x52cbfc	CDC_Draw3dRect	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CDC::Draw3dRect
+0x52ccb1	CFrameWnd_CreateObject	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CFrameWnd::CreateObject
+0x52cce6	CSimpleStringT_operator_plus_assign	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::operator+=
+0x52ccfe	CSimpleStringT_Append_52ccfe	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::CSimpleStringT<char,0>::Append
+0x52cd23	CThreadLocalObject_dtor_52cd23	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadLocalObject::~CThreadLocalObject
+0x52cd28	CTypeLibCache_Unlock	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CTypeLibCache::Unlock
+0x52cd5d	_AFX_THREAD_STATE_ctor	stl	medium	MFC 7.1: nafxcw.lib; _AFX_THREAD_STATE::_AFX_THREAD_STATE: vtable 0x5748d8
+0x52cd76	_AFX_THREAD_STATE_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AFX_THREAD_STATE::~_AFX_THREAD_STATE
+0x52cdab	AFX_MODULE_STATE_dtor_52cdab	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AFX_MODULE_STATE::~AFX_MODULE_STATE
+0x52ce19	AFX_MODULE_THREAD_STATE_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AFX_MODULE_THREAD_STATE::~AFX_MODULE_THREAD_STATE
+0x52cebc	_AFX_THREAD_STATE_CreateObject	stl	medium	MFC 7.1: nafxcw.lib; CThreadLocal<_AFX_THREAD_STATE>::CreateObject: new (0x104 bytes) _AFX_THREAD_STATE
+0x52ced4	_AFX_THREAD_STATE_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AFX_THREAD_STATE::`scalar_deleting_destructor'
+0x52ceef	AFX_MODULE_STATE_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AFX_MODULE_STATE::AFX_MODULE_STATE
+0x52cf4f	scalar_deleting_dtor_52cf4f	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:`scalar_deleting_destructor' (FID found several library functions with this code)
+0x52cf6a	AFX_MODULE_THREAD_STATE_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AFX_MODULE_THREAD_STATE::AFX_MODULE_THREAD_STATE
+0x52cf91	AFX_MODULE_THREAD_STATE_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AFX_MODULE_THREAD_STATE::`scalar_deleting_destructor'
+0x52cfc0	scalar_deleting_dtor_52cfc0	stl	medium	MFC 7.1: nafxcw.lib; Ghidra FID: FID_conflict:`scalar_deleting_destructor' (FID found several library functions with this code)
+0x52cfdb	AFX_MODULE_STATE_dtor_52cfdb	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AFX_MODULE_STATE::~AFX_MODULE_STATE
+0x52cff8	AfxGetThreadState	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGetThreadState
+0x52d008	AfxGetModuleState	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGetModuleState
+0x52d02e	AfxGetModuleThreadState	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGetModuleThreadState
+0x52d0a9	ConstructDestruct_Construct	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: ConstructDestruct<CWnd>::Construct
+0x52d2fc	IAccessibleProxyImpl_get_accHelpTopic	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::get_accHelpTopic
+0x52d454	IAccessibleProxyImpl_accLocation	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accLocation
+0x52d4ac	IAccessibleProxyImpl_accNavigate	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accNavigate
+0x52d4ef	IAccessibleProxyImpl_accHitTest	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::accHitTest
+0x52d582	IAccessibleProxyImpl_Invoke	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::Invoke
+0x52d5ba	IAccessibleProxyImpl_GetIDsOfNames	stl	high	ATL 7.1 header code in MFC 7.1; Ghidra FID: ATL::IAccessibleProxyImpl<ATL::CAccessibleProxy>::GetIDsOfNames
+0x52d648	CMFCComObject_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CMFCComObject<ATL::CAccessibleProxy>::CMFCComObject<ATL::CAccessibleProxy>
+0x52d675	CMFCComObject_CAccessibleProxy_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575154 (CMFCComObject<CAccessibleProxy>)
+0x52d691	CMFCComObject_CAccessibleProxy_dtor	stl	medium	MFC 7.1: nafxcw.lib; destructor of CMFCComObject<CAccessibleProxy> (called by its scalar deleting destructor 0x52d675)
+0x52d736	MFC_52d736	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by CWnd_CreateAccessibleProxy
+0x52d789	CMFCComObject_ctor_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of CMFCComObject_ctor
+0x52d79f	MFC_52d79f	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by MFC_52d736
+0x52d7bc	_AfxLoadDotBitmap	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxLoadDotBitmap
+0x52d8e3	_AfxLoadLangDLL	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxLoadLangDLL
+0x52d978	AfxLoadLangResourceDLL	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxLoadLangResourceDLL
+0x52db54	CWinApp_LoadSysPolicies	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::LoadSysPolicies
+0x52dc5e	CWinApp_LoadAppLangResourceDLL	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::LoadAppLangResourceDLL
+0x52dce2	CWinApp_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::~CWinApp
+0x52de0a	CWinApp_SaveStdProfileSettings	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::SaveStdProfileSettings
+0x52de3f	CWinApp_ExitInstance	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::ExitInstance
+0x52de99	CWinApp_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::`scalar_deleting_destructor'
+0x52deb5	CWinApp_InitInstance	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::InitInstance
+0x52deed	CWinApp_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::CWinApp
+0x52dfc5	CThreadData_dtor	stl	medium	MFC 7.1: nafxcw.lib; empty function (ret), folded: the destructor of CThreadData (called by its scalar deleting destructor 0x52e795) and empty virtual slots of the CWinApp vtables (0x575878, CPlayerApp 0x56de84)
+0x52dfca	AfxDelRegTreeHelper	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxDelRegTreeHelper
+0x52e076	AfxDelRegTreeHelper_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of AfxDelRegTreeHelper
+0x52e0de	CWinApp_Unregister	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::Unregister
+0x52e251	CWinThread_CommonConstruct	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::CommonConstruct
+0x52e28e	CWinThread_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::`scalar_deleting_destructor'
+0x52e2aa	CWinThread_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::CWinThread
+0x52e37a	CNoTrackObject_operator_new	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CNoTrackObject::operator_new
+0x52e392	CNoTrackObject_operator_delete	stl	high	MFC 7.1: nafxcw.lib; CNoTrackObject::operator delete: LocalFree
+0x52e3a2	CThreadSlotData_AllocSlot	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::AllocSlot
+0x52e4ae	CThreadSlotData_GetThreadValue	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::GetThreadValue
+0x52e4f4	CThreadLocalObject_GetDataNA	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadLocalObject::GetDataNA
+0x52e50e	CProcessLocalObject_GetData	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CProcessLocalObject::GetData
+0x52e559	CProcessLocalObject_GetData_catch	stl	medium	MFC 7.1: nafxcw.lib; catch block of CProcessLocalObject_GetData
+0x52e56a	CProcessLocalObject_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CProcessLocalObject::~CProcessLocalObject
+0x52e58f	CSimpleList_AddHead	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CSimpleList::AddHead
+0x52e5a2	CSimpleList_Remove	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CSimpleList::Remove
+0x52e5e0	CThreadData_ctor	stl	medium	MFC 7.1: nafxcw.lib; CThreadData constructor: vtable 0x575afc (CNoTrackObject)
+0x52e5e9	CThreadSlotData_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::CThreadSlotData
+0x52e62b	CThreadSlotData_FreeSlot	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::FreeSlot
+0x52e68e	CThreadSlotData_SetValue	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::SetValue
+0x52e795	CThreadData_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; scalar deleting destructor, vtable 0x575afc (CThreadData)
+0x52e7b0	CThreadSlotData_DeleteValues_52e7b0	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::DeleteValues
+0x52e845	CThreadSlotData_DeleteValues_52e845	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::DeleteValues
+0x52e89e	CThreadLocalObject_GetData	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadLocalObject::GetData
+0x52e918	CThreadLocalObject_dtor_52e918	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadLocalObject::~CThreadLocalObject
+0x52e936	AfxTermLocalData	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxTermLocalData
+0x52e948	CThreadSlotData_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CThreadSlotData::~CThreadSlotData
+0x52eb2f	AUX_DATA_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AUX_DATA::AUX_DATA
+0x52ebab	AfxCriticalInit	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxCriticalInit
+0x52ebcf	AfxCriticalTerm	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxCriticalTerm
+0x52ec14	AfxLockGlobals	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxLockGlobals
+0x52ec77	AfxUnlockGlobals	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxUnlockGlobals
+0x52ec8f	_AfxInitDBCS	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AfxInitDBCS
+0x52eccd	CWinApp_GetAppRegistryKey	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::GetAppRegistryKey
+0x52ed5e	GetSectionKey	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: GetSectionKey
+0x52edaa	AfxGetFileName	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxGetFileName
+0x52edd9	CWinApp_SetCurrentHandles	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinApp::SetCurrentHandles
+0x52ef27	AfxWinInit	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxWinInit
+0x52efcb	COleException_GetErrorMessage	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: COleException::GetErrorMessage
+0x52f021	AfxThrowOleException	stl	high	MFC 7.1: nafxcw.lib; AfxThrowOleException(SCODE): new COleException (0xc bytes), throw; called by AtlThrow 0x4fce10
+0x52f063	CCmdTarget_InternalRelease	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::InternalRelease
+0x52f08c	CCmdTarget_ExternalRelease	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::ExternalRelease
+0x52f0a1	CCmdTarget_GetInterface	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::GetInterface
+0x52f14f	CCmdTarget_QueryAggregates	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CCmdTarget::QueryAggregates
+0x52f1af	MFC_52f1af	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by CWnd_CalcWindowRect, CWnd_XAccessible_accLocation, 0x52f1af
+0x52f20a	MFC_52f20a	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; called by CWnd_CalcWindowRect, CWnd_XAccessible_accLocation
+0x52f258	CAsyncSocket_AsyncSelect	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::AsyncSelect
+0x52f286	CAsyncSocket_LookupHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::LookupHandle
+0x52f2aa	CAsyncSocket_vslot_14	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 14 (+0x38) of CAsyncSocket (vtable 0x575524)
+0x52f2c9	CAsyncSocket_vslot_15	stl	low	MFC 7.1: nafxcw.lib; unidentified helper; virtual slot 15 (+0x3c) of CAsyncSocket (vtable 0x575524)
+0x52f338	CSocketWnd_ctor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CSocketWnd::CSocketWnd
+0x52f350	_AFX_SOCK_STATE_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AFX_SOCK_STATE::~_AFX_SOCK_STATE
+0x52f360	_AFX_SOCK_STATE_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: _AFX_SOCK_STATE::`scalar_deleting_destructor'
+0x52f37b	CAsyncSocket_ctor	stl	high	MFC 7.1: nafxcw.lib; CAsyncSocket::CAsyncSocket: m_hSocket = INVALID_SOCKET, vtable 0x575524; called by Network.cpp TSocket
+0x52f388	CAsyncSocket_Bind_52f388	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::Bind
+0x52f418	CAsyncSocket_Connect	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::Connect
+0x52f4cc	CAsyncSocket_AttachHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::AttachHandle
+0x52f593	CAsyncSocket_DetachHandle	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::DetachHandle
+0x52f634	CAsyncSocket_KillSocket	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::KillSocket
+0x52f673	CAsyncSocket_DoCallBack	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::DoCallBack
+0x52f78b	CAsyncSocket_Socket	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::Socket
+0x52f81b	CWnd_scalar_deleting_dtor_52f81b	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::`scalar_deleting_destructor'
+0x52f837	CWnd_dtor_52f837	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWnd::~CWnd
+0x52f874	CAsyncSocket_Create	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::Create
+0x52f8c2	CAsyncSocket_Accept	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::Accept
+0x52f955	CAsyncSocket_Close	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::Close
+0x52f976	CAsyncSocket_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::~CAsyncSocket
+0x52f988	CAsyncSocket_scalar_deleting_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CAsyncSocket::`scalar_deleting_destructor'
+0x52f9d7	AfxSocketInit	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxSocketInit
+0x52faf4	AfxPostQuitMessage	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxPostQuitMessage
+0x52fb10	CWinThread_dtor	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: CWinThread::~CWinThread
+0x52fb5f	AfxWinTerm	stl	high	MFC 7.1: nafxcw.lib; Ghidra FID: AfxWinTerm
+0x559ea0	Inventory_Containers_initialiser	game	high	game code, not library: Inventory.obj's dynamic initialiser of Containers (0x5cedd8: 16 TContainer of 0x1ec bytes, each with 0x24 TObjects of 12 bytes built by the TObject constructor 0x4a4450 through vector_constructor_iterator); compiler-generated from Inventory.cpp's definition, after the EH funclets with the other initialisers (0x559df0-0x559f81)

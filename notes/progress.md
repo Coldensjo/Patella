@@ -22,6 +22,7 @@ Read this and `git log` first when resuming.
 7h. SurfaceDX.cpp with its trailing DirectDraw functions — **done** (issue #9, GPT-6.1-sol with Claude Opus 5.5 delegates; PR for review).
 7i. surfaceDX9.cpp and the surfaceDX9/SurfaceGL gap — **done** (issue #10, Claude Opus 5.5; the gap is SurfaceGL.obj, merged with #9).
 7j. SurfaceGL.cpp with its glh_extensions.h code (the surfaceDX9/SurfaceGL gap) — **done** (issue #11, Claude Opus 5.5).
+7k. The library region and its third-party code (Henry Spencer's regexp) — **done** (issue #15, Claude Opus 5.5).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
@@ -32,7 +33,8 @@ Read this and `git log` first when resuming.
 SurfaceGL.cpp done (issue #11, November 2, 2026): the three engines are reconstructed.
 The remaining header code done (issue #13, November 2, 2026): every header function of symbols.tsv is in its
 header (glh_extensions.h's with SurfaceGL.cpp, #11); containertest.cpp tests Container.h's instances.
-Next: the other open issues; see GitHub.
+The library region done (issue #15, November 2, 2026): every library function has a names.tsv row,
+the regexp is src/Extern/regexp. Next: the other open issues; see GitHub (#30: the atoi callers).
 
 ## Resources (issue #17)
 
@@ -53,8 +55,9 @@ None.
 
 ## Last difftest
 
-14,261,101 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11 and #13; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082, Container: 192,832).
+14,491,059 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(after merging #11, #13 and #15; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082, Container: 192,832,
+Regexp: 229,958).
 
 ## Notes for later files
 
@@ -269,3 +272,15 @@ None.
 - A temporary coverage build (issue #13, build/scratch/cover in the i13 worktree): INT3 on the first
   byte of the image's and our functions (ours from the link map), the first hit per test counted, re-armed
   at the next test. Hitting a breakpoint on every call makes the suite far too slow.
+- Library region (issue #15): names.tsv has a row for each of the 1,102 functions from 0x50eae8 (kind stl, the
+  library first in the note: "CRT: MSVC 7.1 libcmt.lib", "MFC 7.1: nafxcw.lib", "C++ library: MSVC 7.1 libcpmt.lib",
+  "ATL 7.1 header code in MFC 7.1", import/delay-load thunks, "third-party: Henry Spencer regexp"); file-ranges.tsv
+  has the blocks and tools/triage.py writes them into symbols.tsv's file column (a block that names a game file
+  makes its rows kind game: Inventory.cpp's initialiser 0x559ea0). The CRT names drop one leading underscore of
+  Ghidra's (memmove, _lock); 0x51262a is atoi (the sources' atol calls: #30).
+- tools/callcheck.py counts a library-region name only when Ghidra left the function unnamed and the file's
+  pseudocode calls it by that name (Ghidra's own names such as _memcpy stay in the pseudocode).
+- src/Extern/regexp is Henry Spencer's regexp (C, K&R): include "Extern/regexp/regexp.h" (extern "C"
+  prototypes). regerrorhandler (the image's 0x71f034) is NULL in the client; regexptest.cpp sets both sides'.
+  DIFFTEST_ONLY=Regexp runs regexptest.cpp alone (RX_SEED, RX_ROUNDS, RX_TRACE=1 prints the coverage);
+  it has its own random numbers and restores the image's hook. compile-check also compiles src/Extern/regexp/*.c.

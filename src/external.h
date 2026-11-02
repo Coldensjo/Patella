@@ -30,11 +30,6 @@ struct TObject {
 // sysinc.cpp
 #include "sysinc.h"
 
-// Library region: Henry Spencer's regexp ("regexp too big", "corrupted program").
-struct regexp;
-regexp *regcomp(char *exp);                     // 0x50fa40, the result is malloc'd
-int regexec(regexp *prog, char *string);        // 0x50f360, 1 on a match
-
 // --- added for Control.cpp ---
 
 struct TFullscreenMode; // Preferences.h
