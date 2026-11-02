@@ -1483,12 +1483,16 @@ void TEditLine::KeyPress(int Key)
 				else
 					HandleEvent(19);
 			}
-			if (((Key & 0x400) == 0 || (Key & 0x800) != 0) && Code > 0x1f && Code < 0x100
-			 && (int)strlen(Text) < MaxLength) {
-				if (HasSelection())
-					HandleEvent(19);
-				InsertChar(Cursor, (char)Code);
-				SetCursor(Cursor + 1);
+			// Past the modifier test the binary keeps the code in Key's stack slot
+			// (0x4682b2-0x4682b8): TEND1(Key) then prints the code.
+			if ((Key & 0x400) == 0 || (Key & 0x800) != 0) {
+				Key = Code;
+				if (Key > 0x1f && Key < 0x100 && (int)strlen(Text) < MaxLength) {
+					if (HasSelection())
+						HandleEvent(19);
+					InsertChar(Cursor, (char)Key);
+					SetCursor(Cursor + 1);
+				}
 			}
 		}
 	}

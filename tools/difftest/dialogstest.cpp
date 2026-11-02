@@ -1619,7 +1619,9 @@ static void Members(uint32 r)
 			if (s == OURS) {
 				TRuleViolationDialog *D = (TRuleViolationDialog *)Body(s);
 				D->UpdateActions();
-				Logf("Reason%d,Action%d;", D->GetReason(), D->GetAction());
+				// (two calls as on the image's side: the error round counts them)
+				Logf("Reason%d,", D->GetReason());
+				Logf("Action%d;", D->GetAction());
 			} else {
 				CallI<void>(0x47eae0, Body(s));
 				Logf("Reason%d,", CallI<int>(0x4776b0, Body(s)));

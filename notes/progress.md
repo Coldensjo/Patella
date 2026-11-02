@@ -118,6 +118,12 @@ statics 7,920; every other test's count as before).
   behind); DIFFTEST_FAILS=<n> prints n failures in every test. notes/decisions.md "Error paths of the window
   and surface files" lists what is covered and what is left (DialogElements, ConsoleWindow,
   ContentWindows, Dialogs, MainWindow, MapWindow, Surface.cpp).
+- Error rounds of Dialogs.cpp and DialogElements.cpp (issue #34, third part): Tick() in the getter fakes
+  too, failure counts per kind and action, Operation(Forced) for the target action (same random numbers, so
+  the counted part is unchanged), sweeps (a call failing at each of its fake calls). A wrapper of the test
+  that calls a ticking fake must not tick itself. Abandoned objects with timers must leave the timer lists
+  (dialogstest.cpp RemoveAbandonedTimers). With the image's exceptions enabled the image's error report
+  dialog constructor works (std::stringstream).
 - build.cmd (issue #23) gives the same result from cmd, PowerShell and Git Bash. The old silent
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
   which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with

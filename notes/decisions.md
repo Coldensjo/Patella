@@ -4138,3 +4138,96 @@ Claude Opus 5.5 (issue #34, second part), November 2, 2026.
   - Creatures.cpp NumberOfBuddies (errortest.cpp TestErrorStatics): FindStatic scans 256 bytes (the read
     comes after GetNumberOfBuddies' try block set-up) with BuddyHideOffline cleared on both sides (ours
     through SetBuddyHideOffline, the image's 0x719eac), restored after.
+
+### Third part: Dialogs.cpp and DialogElements.cpp
+
+Claude Opus 5.5 (issue #34, third part), November 2, 2026.
+
+- **The rounds** (high). dialogstest.cpp TestDialogsErrors ("Dialogs errors: ...") and dialogelementstest.cpp
+  TestDialogElementsErrors ("DialogElements errors: ..."), after the counted parts, whose counts are unchanged
+  (the round's checks subtracted, the operation counters saved and restored). The second part's pattern: Tick()
+  in Logf and in every getter fake (text metrics, action state, messages, clipboard, Preferences, Talk,
+  Creatures, Help, object flags, the surface's getters), the FailAt-th call throws ThrowSideAssertion of the
+  calling side; Both() gets an error mode (one target action per round fails at a count drawn from the most
+  and the last count that action made, now per kind and action: MaxTicks[kind][action], also recorded by the
+  counted part, which that does not change); a throw abandons the dialogs or controls and only the logs are
+  compared after it. New here: Operation(Forced) runs the target action in half of the round's operations with
+  the same random numbers as before (the counted part draws them unchanged), and the rounds go through every
+  pair of kind and target action (Dialogs 10 times, 6,650 rounds; DialogElements 40 times, 27,000 rounds;
+  DialogElements runs fast). Then direct calls for the assertions (constructors and creators with arguments the
+  game does not give, members outside their ranges) and sweeps: a call failing at each of its fake calls in
+  turn, each on new objects (Dialogs: TRuleViolationDialog::GetAction, THotkeyDialog::LeftButtonUp, the
+  character list's RightButtonUp and MouseWheel; DialogElements: TLabel's constructor, TCheckBox::SetEnabled).
+- **Dialogs.cpp specifics** (high). Action 18 is a key press straight to the body: TDialog::KeyPress keeps
+  Return and Escape, so the bodies' KeyPress TENDs need it. An abandoned dialog leaves its timers in both timer
+  lists, and UpdateTimers would call the deleted dialog: RemoveAbandonedTimers takes every live block of the
+  round's allocation table that starts with a timer vtable out of the lists (ours with RemoveTimer, the
+  image's with 0x49b0d0). The error report dialog is made by the image's creator (0x484400) in the round: its
+  std::stringstream works while the image's exceptions are enabled (the counted part keeps our constructor
+  with the image's vtable). World.NoPlayer and World.NoHelpTitles (zero in the counted part) give the new
+  channel dialog no player and the hints dialog no matching title.
+- **Hybrid vtables** (high). Dialogs: none needed. The image side's test objects are the receivers, which get
+  only HandleEvent (their own override), and the parent window, which the graphics dialog only passes to
+  AddMessageFirst as a value; the surface is no component. DialogElements: the round's image-side receiver
+  (TElement base, 0x5645c8) and target window (TWindow base, 0x564528) get ImageSideVtable (the frames and
+  resizers call the target's inherited TWindow methods); the counted part keeps our vtables.
+- **Reconstruction bugs found and fixed** (high, each from a failing comparison and the binary's code):
+  - Dialogs.cpp TDialog::MouseMove keeps the dragged position in values of its own (ebx and edi,
+    0x46d466-0x46d4fa) and never writes the parameters' stack slots; its catch block reads [ebp+0x8] and
+    [ebp+0xc] (0x46d572, 0x46d576), so TEND2(x, y) prints the mouse position. Ours wrote the position into x
+    and y.
+  - DialogElements.cpp TSkinButton::SetSkins: TASSERT1(_ButtonUp<NumberOfSkins, _ButtonUp) and the same for
+    _ButtonDown (0x458b20, lines 1228 and 1229: the binary's messages print the skin only); ours printed
+    NumberOfSkins as a second value.
+  - DialogElements.cpp THorizontalScrollBar's and TScrollBar's constructors end with TEND2(Min, Max), not
+    TEND: the binary's catch blocks print "(Min = ...) (Max = ...)" from the parameters (0x4692d0 reads
+    [ebp+0x8] and [ebp+0xc]; 0x469a80 the slots after the TRect), so the original's parameters were named Min
+    and Max (the range's assertion inside says _Min and _Max). The parameters are renamed in .cpp and .h.
+  - DialogElements.cpp TEditLine::KeyPress: once the modifier test of the character branch passes, the binary
+    stores the masked code into Key's stack slot (0x4682b2-0x4682b8, mov [ebp+0x8],edi), so TEND1(Key) prints
+    the code (97 for 0xc61, 'a' with the 0x400 and 0x800 bits) when the insertion throws. Ours kept Key. Seen only
+    in the full run (a different random sequence: the key 0x461|0x800 with a failing InsertChar).
+- **Test artifacts** (high): dialogelementstest.cpp's own GetClipboardText (sysinc.cpp is not linked) calls
+  the clipboard fake, so it must not tick itself (one paste counted two calls on our side only); dialogstest.cpp's
+  UpdateActions member logged the reason and action in one Logf on our side and two on the image's (and
+  evaluated GetAction first): two calls now, the same text (EH_SEED=2 showed it). Both test fixes; each test
+  passes alone with EH_SEED 1-8 (DialogElements) and 1-6 (Dialogs).
+- **Covered** (build/scratch/sites.py and cover.py of the worktree, from an EH_LINES=1 run of each test alone):
+  - Dialogs.cpp: 158 of 165. Not reachable: 772 (TWaitLabel::SetTimer: delete Timer and new TTimer, the
+    timer list only), 1004 and 1013 (TCharacterListDialog::RightButtonUp and MouseWheel: SetTimeout and
+    TWindow's dispatch to the list box, which makes no fake call; the sweeps counted none), 1021 and 1073
+    (PositionChanged and SetTimeout: the timer only), 1339 (TEditListDialog::Arrange: the drawing list only),
+    2415 (TRuleViolationDialog::GetReason: the inline selection and the Reasons array).
+  - DialogElements.cpp: 177 of 218. Not reachable (41): the Arrange functions that only fill the drawing list
+    or compute (54 TSeparator, 92 TResizer, 268 TBorder, 1215 TCheckBox, 1340 TEditLine, 2175
+    THorizontalScrollBarRange, 2443 TScrollBarRange, 3090 TProgressBar: its division by Maximum, which
+    SetMaximum keeps above 0); members without calls (868 TSkinButton::MouseMove, 921/1082/1122 the
+    IsPressed functions, 1577 TEditLine::SetActive, 1954 TEditText::SetActive and 2049 TFocusGroup::SetActive,
+    which call only TEditLine::SetActive, non-virtual; 2394 SetRange, 2405 SetValue, 2456 MouseMove, 2533
+    MouseWheel and 2548 KeyPress of TScrollBarRange, 2608 TScrollBar::HandleEvent, 3100 SetMaximum, 3110
+    SetCurrent, 3119 SetComplete of TProgressBar); 529 (GetToken: parsing only) and 650 (Arrange's
+    "unknown token type": GetToken gives only the types the switch has); 793 (TSkinIcon's constructor: a
+    skin's size is never negative); 973, 974 (TIconButton::Draw: TSkinButton::Draw, called first, asserts
+    x>=0 and y>=0, and the texture offset is +2); 1230 (TCheckBox::SetEnabled: the new label has its size and
+    is not shortened, so no text metrics; DeleteChild); 1283 (TEditLine's second constructor: no calls); 1625
+    (InsertText's second length assertion: the clamps before it make it hold); 1727, 2125, 2631 (the
+    constructors of TEditText, THorizontalScrollBarRange and TListBox: their scroll bars and ranges get valid
+    arguments, no fake call); 1803, 2597, 2753 (the MouseWheel functions of TEditText, TScrollBar and
+    TListBox: TWindow's dispatch to scroll bars and ranges, no fake call); 2326, 2587 (the scroll bars'
+    SetSize: the sizes are clamped to the range's minimum and the skin's fixed thickness); 3011
+    (TFontListBox::GetLine: the vector read after the range assertion).
+  The Dialogs run reaches 58 DialogElements.cpp sites, none that the DialogElements run does not.
+- **Mutation check** (high): 19 changes (build/scratch/mutate34c.py of the worktree, each test run alone): in
+  Dialogs.cpp the caption length, MouseMove's TEND2 swapped, TLoginDialog::KeyPress's and TWaitLabel::Draw's
+  TEND1 to TEND, THelpDialog's unknown event value, the move dialog's pile range, the new channel dialog's
+  channel count, the VIP assertion's values swapped, UpdateLine's range, the TEND1 of CreateCharacterListDialog
+  and CreateUpdateDialog; in DialogElements.cpp SetSkins' condition, THorizontalScrollBar's TEND2 swapped,
+  InsertText's TEND2 to TEND1, SetSelection's range, TFocusGroup::Previous's assertion removed, TLink::Arrange's
+  width condition, TEditLine::HandleEvent's TERROR text, TResizer::MouseMove's TEND2. All 19 detected, every
+  one by the error rounds' exception comparisons (2 to 148 failures); the removed Previous assertion also makes
+  our side read outside the member list (an access violation after the 2 failures).
+- **Totals** (full build.cmd, November 2, 2026): difftest.exe 16,642,851 checks, sysinctest.exe 67, vlong 3,201, no
+  failures; "DialogElements errors: 1,226,638 checks, 401,790 exceptions compared (12,810 calls that threw)",
+  "Dialogs errors: 200,285 checks, 61,097 exceptions compared (4,786 calls that threw)"; DialogElements 135,478 and
+  Dialogs 98,889 as before (alone: 134,736 and 98,474), every other test's count as in the second part's run. A
+  DIFFTEST_ONLY=Dialogs run takes about a minute (the round about 45 s), DialogElements about 7 s.
