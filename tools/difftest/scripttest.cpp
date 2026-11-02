@@ -552,6 +552,104 @@ static void TestPatches()
 	remove(NameOriginal.c_str());
 }
 
+// --- Length limits (issue #24) ---------------------------------------------
+
+// Its own random numbers, so that the later tests' inputs stay the same.
+static uint32 LongSeed = 24;
+static uint32 LongRandom()
+{
+	LongSeed = LongSeed * 1103515245 + 12345;
+	return LongSeed >> 8;
+}
+
+// nextToken's limits are compared with Size at the end of the loop body: the
+// identifier state's `cmp ebx,0x14` (0x4dfde1) right after its getc, and
+// `cmp [esp+0x10],0x3e7` (0x4e0203), the target of every state's break.
+// Identifiers of 19 characters and strings of 998 are the longest the image
+// accepts: both sides read them; one more must raise our error (the image
+// cannot throw in the child, so that case runs on our side only).
+static std::string LongToken(bool String, int Length)
+{
+	static const char Plain[] = "abcXYZ019 .,;:!?()[]{}<>=-#'\t";
+	static const char Alpha[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	static const char Rest[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+	if (!String) {
+		std::string s(1, Alpha[LongRandom() % (sizeof(Alpha) - 1)]);
+		while ((int)s.size() < Length)
+			s += Rest[LongRandom() % (sizeof(Rest) - 1)];
+		return s;
+	}
+	std::string s = "\"";
+	for (int i = 0; i < Length; i++) { // every element stores one character
+		switch (LongRandom() % 10) {
+		case 0: s += "\\\""; break;
+		case 1: s += "\\\\"; break;
+		case 2: s += "\\n"; break;
+		default: s += Plain[LongRandom() % (sizeof(Plain) - 1)]; break;
+		}
+	}
+	return s + "\"";
+}
+
+static void TestLongTokens()
+{
+	static uint8 Original[sizeof(TReadScriptFile)];
+	CHECK(*(const uint8 *)0x4dfde3 == MAX_IDENT_LENGTH, "identifier limit 0x%x", *(const uint8 *)0x4dfde3);
+	CHECK(*(const int *)0x4e0207 == MAX_STRING_LENGTH - 1, "string limit 0x%x", *(const int *)0x4e0207);
+	std::string Name = TempPath("script.txt");
+	for (int Round = 0; Round < 200; Round++) {
+		// Tokens at the limits, between short ones; the last one is the
+		// longest accepted string right at the end of the file.
+		std::string Text;
+		int n = 1 + LongRandom() % 6;
+		for (int i = 0; i < n; i++) {
+			bool String = LongRandom() % 2 != 0;
+			int Length = String ? MAX_STRING_LENGTH - 2 - LongRandom() % 3 : MAX_IDENT_LENGTH - 1 - LongRandom() % 2;
+			Text += LongToken(String, Length);
+			Text += LongRandom() % 2 ? " 7 " : "\n";
+		}
+		Text += LongToken(true, MAX_STRING_LENGTH - 2);
+		WriteFileText(Name, Text);
+		memset(Original, 0x55, sizeof(Original));
+		At<ThisFn>(0x4df550)(Original, NULL);
+		TReadScriptFile Ours;
+		Ours.open(Name.c_str());
+		At<ThisStrFn>(0x4df6d0)(Original, NULL, Name.c_str());
+		for (int i = 0; i < 40; i++) {
+			try {
+				Ours.nextToken();
+			} catch (TMyException &E) {
+				printf("FAIL Script (long tokens, round %d, token %d): our side raised %s\n", Round, i,
+					E.GetMessage().c_str());
+				exit(1);
+			}
+			At<ThisFn>(0x4dfb60)(Original, NULL);
+			CompareReader(Ours, Original, "long tokens", i);
+			if (Ours.Token != ((TReadScriptFile *)Original)->Token || Ours.Token == ENDOFFILE)
+				break;
+		}
+		Ours.close();
+		At<ThisFn>(0x4df5d0)(Original, NULL);
+		At<ThisFn>(0x4df5b0)(Original, NULL);
+
+		// One character more: our side only.
+		bool String = Round % 2 != 0;
+		WriteFileText(Name, "x " + LongToken(String, String ? MAX_STRING_LENGTH - 1 : MAX_IDENT_LENGTH) + " y");
+		TReadScriptFile Over;
+		Over.open(Name.c_str());
+		Over.nextToken();
+		bool Raised = false;
+		try {
+			Over.nextToken();
+		} catch (...) {
+			Raised = true;
+		}
+		CHECK(Raised, "%s one character over the limit accepted", String ? "string" : "identifier");
+		if (!Raised)
+			Over.close();
+	}
+}
+
 void TestScript()
 {
 	PatchScript();
@@ -560,6 +658,7 @@ void TestScript()
 	TempDir = std::string(Help) + "tibia-difftest\\";
 	CreateDirectoryA(TempDir.c_str(), NULL);
 	TestReader();
+	TestLongTokens();
 	TestWriter();
 	TestBinary();
 	TestPatches();

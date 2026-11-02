@@ -32,6 +32,9 @@ Read this and `git log` first when resuming.
 SurfaceGL.cpp done (issue #11, November 2, 2026): the three engines are reconstructed.
 The remaining header code done (issue #13, November 2, 2026): every header function of symbols.tsv is in its
 header (glh_extensions.h's with SurfaceGL.cpp, #11); containertest.cpp tests Container.h's instances.
+Review of the low-confidence decisions done (issue #24, November 2, 2026): 80 behaviour-relevant entries
+confirmed by the binary or a test, two static objects added (MainFrm.cpp's NoCallback, TRSA.h's vlong),
+scripttest.cpp tests nextToken's length limits; summary table at the end of notes/decisions.md.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -53,8 +56,8 @@ None.
 
 ## Last difftest
 
-14,261,101 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11 and #13; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082, Container: 192,832).
+14,262,722 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(issue #24, 1,621 new Script checks; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082, Container: 192,832).
 
 ## Notes for later files
 
@@ -269,3 +272,13 @@ None.
 - A temporary coverage build (issue #13, build/scratch/cover in the i13 worktree): INT3 on the first
   byte of the image's and our functions (ours from the link map), the first hit per test counted, re-armed
   at the next test. Hitting a breakpoint on every call makes the suite far too slow.
+- Issue #24 (review of the low-confidence decisions, notes/decisions.md's last section): static data and
+  their initialisers are checked by comparing our compiled dynamic initialisers (??__E) and atexit
+  destructors (??__F) per object (tools\listing.cmd) with the binary's __xc table 0x5c002c-0x5c00c4
+  (tools/xctable.py); they agree now. A new static object with a constructor or destructor must
+  match an entry there. TRSA.h has a header static (HeaderExponent): every includer constructs one.
+- Eliminated try blocks: tools\listing.cmd File.cpp, then python -I tools/ehcompare.py Name compares our
+  unwind states and try blocks with tools/ehinfo.py's; a catch whose try body
+  only calls C functions is removed by our compiler too, so a guessed catch body is never emitted (difftest
+  builds with /EHa, where it stays).
+- DIFFTEST_ONLY=Script runs scripttest.cpp alone; its TestLongTokens has its own random generator.

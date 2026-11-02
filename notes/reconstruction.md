@@ -82,6 +82,11 @@ the same time made each other crash. `vlongtest.cpp` and
   for every new pure function.
 - Before finishing a file, compare each function against its pseudocode once more: every
   branch, constant, call and side effect.
+- Static objects and removed try blocks (issue #24): `tools\listing.cmd File.cpp` writes our
+  assembly listing to build\listing; its dynamic initialisers (`??__E`) and atexit destructors
+  (`??__F`) must match the file's entries in `python -I tools/xctable.py` (the binary's __xc
+  table), and `python -I tools/ehcompare.py Name` must show the binary's unwind states and try
+  blocks (a catch the original compiler removed is removed from ours too).
 
 ## Status
 
@@ -125,6 +130,6 @@ the same time made each other crash. `vlongtest.cpp` and
 | Container.h | Complete for the image (issue #13, Claude Opus 5.5): vector<T> (both constructors, operator(), the destructor), array<T>, matrix<T> and matrix3d<T>, each written once; every instance in the image (13 vectors, two arrays, a matrix and a matrix3d, listed at the top of the header with their addresses) compiles from it, checked against the disassembly and exception tables (the four initialized constructors are the same code; eleven EH states where the element has a constructor). Tested through the users (a temporary coverage build found every image instance reached except the out-of-line destructors) and directly in containertest.cpp (DIFFTEST_ONLY=Container: every image instance next to ours, objects and whole arrays compared after each call, pattern-filled new[] memory; 192,832 checks; a mutation check of eight changes, all detected). Not run: the assertion and index-error paths (the image cannot throw in the child). |
 | Header inlines | GUI.h (GetFirstChild/GetLastChild 0x417de0/0x417f00), ConsoleWindow.h (TLineFormat 0x418020), Utils.h (TBuffer::SetSize 0x4ca300) and Talk.h (0x4fd5a0, 0x4fd6c0, 0x507060, 0x5075c0) are in their headers; issue #13 checked them again and tests TLineFormat, SetSize and GetChannelID in containertest.cpp (the others are covered by the Talk and ConsoleWindow tests or only throw). notes/source-map.md's header table lists only glh_extensions.h's 0x4f9260 (#11). |
 
-Last differential run (November 2, 2026, after merging issues #11 and #13): 14,261,101 checks against the
-original code (difftest.exe, including 1,213,366 SurfaceDX, 58,682 SurfaceDX9, 53,082 SurfaceGL and 192,832 Container
+Last differential run (November 2, 2026, issue #24): 14,262,722 checks against the
+original code (difftest.exe, including 1,621 new Script checks of nextToken's length limits, 1,213,366 SurfaceDX, 58,682 SurfaceDX9, 53,082 SurfaceGL and 192,832 Container
 checks), 67 in sysinctest.exe and 3,201 against exact arithmetic, no differences.
