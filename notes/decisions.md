@@ -3888,3 +3888,41 @@ repository) and from `tools\build-patella.cmd`, starts and shows its start scree
   (Process.CloseMainWindow): exit code 0 within the wait, so Stop-Process was not needed; it rewrote the copied
   Tibia.cfg with the same bytes. Screenshot (PrintWindow) build\run\started.png. Nothing was clicked and
   nothing connected.
+
+## Test server (issue #18)
+
+The server, the scripts and the results: notes/testserver.md. Decisions with a reasonable default:
+
+- **Patch copies of the clients rather than use the test-server setting** (high): `TestServer = yes` in
+  Tibia.cfg only switches the login to TestServer, and Player.cpp's InitInstance always sets its address
+  to test.cipsoft.com:7172 (the command line's "host"/"port" values are parsed and dropped), so no
+  supported setting reaches 127.0.0.1:7171. The hosts file and src/ stay untouched; tools/patch_client.py
+  rewrites the four login server names in copies, identically in both clients.
+- **Patch the clients' RSA modulus, not the server's key** (high): tibia.pem's public modulus is the
+  OpenTibia key, not CipSoft's, and only CipSoft has the private half of the client's key. Same digit
+  count (309), so the literal is replaced in place.
+- **All four server names, not one** (high): InitServerList starts at `rand() % 4` and moves to the next
+  server on failure; patching one would leave the login to chance.
+- **Only bind_address changed in config.cfg** (high): world_address was already 127.0.0.1, data_path
+  "../data" resolves through the server's fallback list to gameserver\data, the rest is gameplay. The game
+  port stays on 0.0.0.0 (hard-coded in the server); the existing firewall rules were not changed, the user
+  is told (notes/testserver.md).
+- **Plain-text Auth for the test account** (medium): schema.sql's CipSoft hash form was refused by the
+  server although it verifies in Python; the server accepts plain text (DB_VerifyPassword, path 1). A test
+  password on a loopback server; tools/testserver-account.sql documents both.
+- **Posted window messages, not SendInput** (high): the clients read the mouse and keys from their message
+  queue (MainFrm.cpp), with the modifiers tracked from WM_KEYDOWN/WM_KEYUP, so PostMessage drives them
+  without focus or the real mouse, and runs unattended (SendInput needs the foreground and touches the
+  user's input). Enter Game has no key, so its place is computed from the skin (GUI.cpp Style0D8).
+- **Game entry verified by the client's own TCP connection** (high): an established connection from the
+  client's PID to port 7172 (GetExtendedTcpTable) works on both clients without reading their memory or
+  the screen; memory reads (binary-specific addresses) were used once as extra evidence.
+- **Screen capture by BitBlt of the screen DC** (medium): PrintWindow, with or without
+  PW_RENDERFULLCONTENT, returned a white client area; a screen copy shows what DWM composed. With the
+  monitor off (as during this run) nothing helps: the screenshots stay white.
+- **Ctrl+C for a clean stop** (high): the server's documented shutdown (its SIGINT handler saves and logs
+  everyone out); a kill would lose the save. Sent from a helper process attached to the server's console.
+  run-testserver.ps1 clears an inherited "ignore Ctrl+C" flag before starting the server: started from
+  Git Bash, the server ignored the Ctrl+C.
+- **Run folders build\run-orig and build\run-patella** (high): copies of the data files; the WindowedMode
+  in their Tibia.cfg was set to (200,200,800,600,no), which the client only uses when it fits the screen.

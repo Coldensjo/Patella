@@ -50,6 +50,11 @@ table is src/Text.h (147 entries, one static copy per including object, as the i
 Patella.exe builds (issue #16, November 2, 2026): Patella.sln/Patella.vcxproj and tools\build-patella.cmd,
 real MFC 14 static, x86, no warnings; it starts from build\run and shows the start screen. compile-check uses
 real MFC (TIBIA_MFC_SHIM=1 forces the shim). The resource check of #17 passes on Patella.exe.
+Local test server (issue #18, November 2, 2026): C:\Tibia\gameserver on 127.0.0.1, started and stopped by
+tools\run-testserver.ps1 / stop-testserver.ps1; tools/patch_client.py points copies of both clients at it
+(server names and RSA modulus), tools/login_client.py logs in with account 772001. Tibia.exe and
+Patella.exe both reach the character list, enter the game and log out, with no difference; the
+screenshots of that run are white (the monitor was off). notes/testserver.md.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)

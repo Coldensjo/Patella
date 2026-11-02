@@ -92,6 +92,15 @@ Run it only from a folder with copies of the data files (Tibia.dat, Tibia.spr, T
 example build\run), never from the root: the client rewrites Tibia.cfg on exit, and the root's data files
 may be the user's own.
 
+## Test server
+
+A local 7.72 server (C:\Tibia\gameserver, not in the repository) that both clients log into (issue #18):
+`tools\run-testserver.ps1` / `tools\stop-testserver.ps1` start and stop it, `tools/patch_client.py`
+points copies of Tibia.exe and Patella.exe at 127.0.0.1 with the server's RSA key, and
+`tools/login_client.py` logs a client in (account 772001, password patella), enters the game and logs
+out, from build\run-orig or build\run-patella. Everything, including the server's configuration and
+backup: notes/testserver.md.
+
 ## Checking
 
 - `tools\compile-check.cmd` compiles every `src/*.cpp` with MSVC 14.51 for x86 (`/W3`, no
