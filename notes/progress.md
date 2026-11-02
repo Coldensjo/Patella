@@ -68,8 +68,9 @@ None.
 
 ## Last difftest
 
-14,492,680 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11, #13, #15, #30 and #24, unchanged by #29, #27, #31 and #14; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
+14,524,592 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(issue #22: main's 14,492,680 plus 31,912 error-path checks, 9,020 exceptions compared, 250 comparisons skipped in
+the full run because earlier tests redirected the functions; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
 Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 
 ## Notes for later files
@@ -87,7 +88,15 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 - The difftest image's static initialisers never run: call the original
   constructors of a file's static objects explicitly (maptest.cpp does it
   for Map.cpp's), and keep inputs away from paths that raise exceptions in
-  the original (e.g. opening a missing file).
+  the original (e.g. opening a missing file) unless the test enables the image's exceptions (next note).
+- Error paths (issue #22): tools/difftest/imageeh.cpp makes the image's exceptions work in the child
+  (EnableImageExceptions ... DisableImageExceptions around the calls); ImageThrow([&] { ... }) and
+  OurThrow([&] { ... }) return what escaped as a TThrown, errortest.cpp's Compare compares two of them (line
+  numbers mapped, see notes/decisions.md "Error paths (issue #22)"). With it the image's stringstream works
+  (TMyException messages, error.txt); its ofstream needs errortest.cpp's VC7.1 FILE fakes. A fake of a
+  function the original compiled as noreturn (FatalError) must not return. An unbound import the image calls
+  while it is enabled is named in a "crash:" line. DIFFTEST_ONLY=Errors runs errortest.cpp alone (ER_TRACE=1,
+  ER_LINES=1, ER_SEED=<n>, ER_WATCHDOG=<seconds> prints where a hung run is).
 - build.cmd (issue #23) gives the same result from cmd, PowerShell and Git Bash. The old silent
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
   which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with
@@ -225,7 +234,8 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   caller builds a 16-byte block). Pass a SkinProperties TRect itself, build TRect(...) for computed areas.
 - The image's iostreams cannot run in the test child (the CRT's static initialisers are not run and call
   imports): functions that build a std::stringstream in the image (the error report dialog's constructor,
-  Container.h's index errors) cannot be called on the image side.
+  Container.h's index errors) cannot be called on the image side, unless the test calls
+  EnableImageExceptions (imageeh.h, issue #22), which makes them work.
 - dialogstest.cpp's dump prints every member word with pointers named (tree components, receivers, timers)
   and strings only for the members listed as strings. A word is a pointer only by where it points, never by
   readability (issue #32): into a block of the round's allocations (H<size>+<offset>, D when freed; freed

@@ -640,6 +640,7 @@ static void EndTest()
 #define TestSurfaceGL(...) RUN_TEST(TestSurfaceGL, __VA_ARGS__)
 #define TestContainer(...) RUN_TEST(TestContainer, __VA_ARGS__)
 #define TestRegexp(...) RUN_TEST(TestRegexp, __VA_ARGS__)
+#define TestErrors(...) RUN_TEST(TestErrors, __VA_ARGS__)
 #define TestMapWindow(...) RUN_TEST(TestMapWindow, __VA_ARGS__)
 #define TestMainWindow(...) RUN_TEST(TestMainWindow, __VA_ARGS__)
 
@@ -720,6 +721,11 @@ int main(int argc, char **argv)
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
+	if (Only != NULL && strcmp(Only, "Errors") == 0) {
+		TestErrors(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
 	if (Only != NULL && strcmp(Only, "Script") == 0) {
 		TestScript();
 		printf("%d checks, %d failures\n", Checks, Failures);
@@ -756,6 +762,7 @@ int main(int argc, char **argv)
 	TestSurfaceGL();
 	TestContainer();
 	TestRegexp();
+	TestErrors(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif

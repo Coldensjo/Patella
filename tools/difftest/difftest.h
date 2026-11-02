@@ -57,6 +57,7 @@ void TestSurfaceDX9();                   // surfacedx9test.cpp, before TestMapWi
 void TestSurfaceGL();                    // surfacegltest.cpp, before TestMapWindow (restores its patches; own random numbers)
 void TestContainer();                    // containertest.cpp, Container.h's instances; before TestMapWindow (restores its patches)
 void TestRegexp();                       // regexptest.cpp, before TestMapWindow (own random numbers)
+void TestErrors(const char *ExePath);    // errortest.cpp, loads Tibia.dat;, the error paths (imageeh.cpp); before TestMapWindow (restores its patches; own random numbers)
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
 
 // dialogwindowtest.cpp defines the shared fakes of the classes DialogWindow.cpp

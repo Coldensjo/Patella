@@ -77,8 +77,9 @@ WNDPROC AfxGetAfxWndProc() STUB
 
 
 void OutputControlErrorInformations(std::ostream &) STUB
-const char *GetErrorText(int) STUB
-const char *GetErrorHint(int) STUB
+// Not folded into one function: errortest.cpp redirects each to its own fake.
+const char *GetErrorText(int) { printf("GetErrorText stub\n"); abort(); }
+const char *GetErrorHint(int) { printf("GetErrorHint stub\n"); abort(); }
 
 // sysinc.cpp's halves of the encoded window title and class name (sysinc.cpp is not
 // linked into difftest.exe).
