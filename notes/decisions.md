@@ -2481,3 +2481,37 @@ PR #28, merged first into this branch).
   NextFrame = Now - 1.0 assigns the value NextFrame already has, so `>` and `>=` agree). An earlier run's
   heap corruption was the test's own input (a cache surface shrunk below the 106-pixel writes).
   DIFFTEST_ONLY=SurfaceDX9 runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).
+
+## Resources (issue #17)
+
+- **The pictures are not committed.** The two cursors and the icon are CipSoft's artwork, the other
+  cursors and the two bitmaps Microsoft's (MFC). tools/extract_resources.py rebuilds them byte-exact
+  from a local Tibia.exe into build/res (gitignored); src/res/Patella.rc refers to them by file name
+  and is compiled with /I build\res. The text resources (version information, the MFC strings and
+  the MFC dialog) are written out in the script.
+- **MFC's resources are written out, not included.** Tibia.exe carries the afxres.rc of MFC 7.1 (with
+  the splitter, tracker, OLE and property sheet parts switched off and no afxprint.rc). Including the
+  installed MFC 14's afxres.rc would add resources and change texts, so Patella.rc has MFC 7.1's
+  entries as the image has them. They are kept even where no code of the image refers to them, so that
+  the resource set equals the original's.
+- **Names.** The original resource.h is unknown. src/res/resource.h names only the client's resources:
+  IDR_MAINFRAME (icon 128, AppWizard's usual name for it), IDC_CROSSHAIR (cursor 0x84) and
+  IDC_MAGNIFIER (cursor 0x89), named after their pictures (MainFrm.cpp calls the 0x89 cursor
+  HandCursor; left as it is, the picture is a magnifying glass). The MFC entries keep their numbers,
+  with afxres.h names in comments only, so the header cannot clash with afxres.h once MFC is installed;
+  the afxres.h names are from memory (MFC is not installed), the wheel cursors' names agree with their
+  pictures. src/*.cpp keep their literal IDs (MAKEINTRESOURCE(128), 0x84, 0x89), as the binary does.
+- **Order of the script.** rc.exe numbers the RT_CURSOR and RT_ICON images with one counter in script
+  order; the original numbers (cursors 1-2 German, icons 3-4, MFC cursors 5-20) come out with the
+  client's cursors first, then the icon, the version information and MFC's part in afxres.rc's order
+  (the wheel cursors are not in ID order). This is also the order of the data in Tibia.exe.
+- **Languages.** The two client cursors are German (1031), everything else English (US, 1033); the
+  version information's string block is 000004b0 (language neutral, Unicode) with Translation 0, 1200.
+- **No AFX_IDS_APP_TITLE (0xE000), no AFX_IDI_STD_FRAME/MDIFRAME (0x7A02/0x7A01).** MFC asks for them,
+  the original has none and falls back to the module name and IDI_APPLICATION; Patella keeps them out.
+- **Compare.** tools/compare_resources.py compares (type, name, language) and the data; not the
+  directory time stamp, the code page field (0 in the image), the order of the data or the .res memory
+  flags. The first compile with rc.exe 10.0.26100.0 matched all 55 entries; nothing in the script needed
+  a workaround for rc.exe's formats (the version information's padding is the same).
+- **Final check is #16's.** Patella.exe cannot be linked yet; notes/resources.md says how #16 adds the
+  .res (no afxres.rc, /MANIFEST:NO) and runs compare_resources.py on Patella.exe.
