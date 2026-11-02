@@ -1724,6 +1724,15 @@ static void TestConsoleWindowErrors()
 				"CloseChannel without a default tab", "SaveChannel without a tab", "SaveChannel without a caption"};
 			char Name[96];
 			snprintf(Name, sizeof(Name), "TConsoleWindow::%s without a text buffer", Names[What]);
+			// SaveChannel opens the channel's file before it asserts and leaves
+			// it open when it throws: in a folder of the round's own, not the
+			// working directory, nor Save()'s folder (an open file there cannot
+			// be removed, and Save() would append to it).
+			char OldDir[512];
+			_getcwd(OldDir, sizeof(OldDir));
+			std::string ErrorDir = TempDir + "\\errors";
+			_mkdir(ErrorDir.c_str());
+			_chdir(ErrorDir.c_str());
 			ConsoleCall(What <= 7 ? Name : Names[What], [&](int s) {
 				TConsoleWindow *W = C(s);
 				switch (What) {
@@ -1738,6 +1747,7 @@ static void TestConsoleWindowErrors()
 				default: if (s == OURS) W->SaveChannel(); else At<BoolFn>(0x420090)(W, NULL); break;
 				}
 			}, false);
+			_chdir(OldDir);
 			World.ConsoleChanged = false;
 			for (int s = 0; s < 2; s++) {
 				C(s)->CurrentConsole = SavedView[s];
