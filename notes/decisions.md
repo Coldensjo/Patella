@@ -4068,3 +4068,73 @@ Claude Opus 5.5 (issue #34), November 2, 2026.
   failures; the error rounds' checks: GUI 31,909, DialogWindow 9,501, ContextMenus 8,572, SurfaceDX 155,615, SurfaceDX9 4,934,
   SurfaceGL 2,620, statics 7,920. Every per-test count of the earlier full runs is unchanged (GUI 5,246,029, DialogWindow
   24,567, ContextMenus 33,088, SurfaceDX 1,213,366, SurfaceDX9 58,682, SurfaceGL 53,082, Errors 31,912).
+
+### Second part (MapWindow, MainWindow, ConsoleWindow, ContentWindows, NumberOfBuddies)
+
+Claude Opus 5.5 (issue #34, second part), November 2, 2026.
+
+- **Failure injection by call count** (high). The window tests' fakes all log through one Logf per test
+  with Side set: Tick() there (and in a few getters) counts the fake calls of one side's call, and the
+  FailAt-th throws ThrowSideAssertion of the calling side. Both sides make the same fake calls, so the
+  throw lands at the same place; every TEND whose try block reaches a fake is reachable this way. The
+  tests' Both() got an error mode: one target action per round fails at a call count drawn from the most
+  and the last count that action made (FailIndex: uniform, near the start or near the end, on a
+  logarithmic scale); a throw ends the round and the window trees are left as they are (a member may
+  point to a deleted window: the dumps are skipped after a throw, the logs compared). The counted parts
+  are unchanged (the counts are only recorded); each round's checks are reported apart and the action
+  counters saved and restored.
+- **Image-side test objects** (high). A test object on the image side whose class does not override a
+  method ran our base code (GUI.cpp's TWindow::HelpMouseMove...), whose TEND caught the image's exception,
+  read it with our layout and threw ours on. imageeh.h's ImageSideVtable gives such objects a vtable with
+  the image's TWindow/TElement entries for every slot the test class inherits unchanged (the rounds of
+  consolewindowtest.cpp and contentwindowstest.cpp; the counted parts keep our vtables). The console test's
+  button presses call the image's TCallback::Send (0x4a0f00) on the image side.
+- **imageeh.cpp** (high): the table of replaced SEH registrations is pruned to the live chain when it has
+  more than 192 entries (deep window trees left stale stack addresses: "more than 256 registrations").
+- **Destructors** (medium). VC7.1's destructors let exceptions out; ours were noexcept (C++11), so a TEND
+  in a destructor (~TTab, ~TConsoleWindow, ~TAutomapWindow, ~TContainerWindowBody, ~TSkillsWindowBody,
+  ~TTradeWindowBody: "the handlers rethrow out of the destructor") ended our client in terminate() where
+  the original reports the error. TComponent's virtual destructor is noexcept(false) now, so every window
+  class's destructor is potentially throwing as in the binary (as TTalkBuffer's, Talk.cpp). MainFrm.cpp's
+  CMainFrame destructor (MFC base, not in the difftest) is left as it was.
+- **Reconstruction bugs found and fixed** (high, each from a failing comparison and the binary's code):
+  MapWindow.cpp DrawField's object loop prints the object (TEND1(Obj): catch 0x4c72da, line 874, the type
+  at [ebp-0x4c]); MapWindow.cpp HelpMouseMove stores the help position in x and y before MoveHelpPosition
+  (the parameters' stack slots, 0x4c372a/0x4c3751, 0x4c3793/0x4c37bd), so its TEND2(x, y) prints them;
+  MainWindow.cpp ResizeConsole calls Console->getMinimumHeight() once (0x4ac642), ours twice;
+  ConsoleWindow.cpp TTextWindow::GetPosition keeps x - Indent in a value of its own (a register,
+  0x41a0d8-0x41a0e5): TEND2(x, y) prints the clamped x; ContentWindows.cpp TContainerWindowBody::GetSlotAt
+  turns x and y into grid positions in place (0x42e302, 0x42e30c), which its TEND2 prints.
+- **Covered** (build/scratch/cover.py of the worktree from an EH_LINES=1 run; a statement over several lines
+  counts with any of its lines):
+  - MapWindow.cpp (mapwindowtest.cpp TestMapWindowErrors, DIFFTEST_ONLY=MapWindow): 60 of 60. The fakes
+    fail by count (Draw, DrawField on the player's field, the objects, creatures, sprites, cache, light,
+    talkboxes, fields, the mouse, events, SetSize, the constructors, TMapFrame's SetSize and, with a
+    throwing map view, its minimum size); Draw's window bytes are restored before each try (a second Draw
+    makes fewer calls); the round has its own logging surface. The assertions get no player (the n-th
+    GetCreature finds nothing), maps wider or higher than the surface, unknown party and skull flags,
+    effect numbers outside the table, brightness and field indices outside, objects of type 0, creatures
+    without an outfit, unknown talkbox modes, use and trade objects of type 0 or CREATURE, hints outside
+    1..EVENTHELPS; AddLightSource's own catch block a ground type Tibia.dat does not have.
+  - MainWindow.cpp (mainwindowtest.cpp TestMainWindowErrors): 29 of 35. Not reachable: 491 (the binary has
+    no try block in GetConsoleWindowHeight), 549, 580 and 617 (CloseContainer, CloseTrade,
+    CloseContentWindow: their try blocks call only the real dialog window, GetContentWindow, DeleteChild and
+    Rearrange(32), which positions the remaining windows; no fake is called), 717 and 728 (TSplitter's
+    constructor and Arrange: new TDrawing[3], the drawing list from the skins).
+  - ConsoleWindow.cpp (consolewindowtest.cpp TestConsoleWindowErrors): 95 of 119; the assertions directly
+    (NULL text buffer, view, edit line, default tab, current tab or caption; unknown events and talk modes;
+    tabs without caption or buffer, a tab in no bar; reports without a tab, a buffer or the player; a
+    player's report without a name, whose tab's destructor asserts). Not reachable: 101, 102 (FormatLines
+    keeps a format with text for every line), 388, 402, 441, 469, 491, 543 (the try blocks access the
+    bounds-checked line formats, call GetLineFormat and new[] only), 690 (TConsole::Arrange: the text
+    window's Arrange, run through SetChildArea before the check, recomputes InvisibleLines; the range is
+    never inverted), 788, 872, 948 (TTab::Arrange reads the buffer's inline GetChanged/GetClosed and
+    GetActionNumber), 806 (Rearrange of a tab in the bar), 913 (TTabBar's constructor), 958 (GetContainer
+    throws before Container could be NULL), 1043 (TWindow::IsChild has no assertion), 1104 (moves valid
+    tabs between the bar's parts), 1124 (FindTab: loops only), 1712, 1741 (NewTab NULL: needs operator new
+    to return NULL), 1794 (SetServerMessages: HandleEvent(203) makes no fake call), 1911 (AddToHistory:
+    History->Append), 1975 (ParseInput stops only at '$', '*' or '@'), 2009 (GetTextBuffer asserts first).
+  - ContentWindows.cpp (contentwindowstest.cpp TestContentWindowsErrors): see the handover / later entry.
+  - Creatures.cpp NumberOfBuddies (errortest.cpp TestErrorStatics): FindStatic scans 256 bytes (the read
+    comes after GetNumberOfBuddies' try block set-up) with BuddyHideOffline cleared on both sides (ours
+    through SetBuddyHideOffline, the image's 0x719eac), restored after.

@@ -1079,9 +1079,11 @@ static void TestScript()
 // The int a getter returns: the first "mov eax, [address]" or "mov reg,
 // [address]" in the getter's first bytes whose int has the getter's value
 // and whose change the getter sees. Works for our functions and the image's.
+// (GetNumberOfBuddies reads its count after its try block's set-up, and only
+// while offline buddies are shown: 256 bytes, BuddyHideOffline cleared.)
 static int *FindStatic(const uint8 *Code, int (__cdecl *Get)())
 {
-	for (int i = 0; i < 96; i++) {
+	for (int i = 0; i < 256; i++) {
 		const uint8 *Op = Code + i;
 		uint32 Address;
 		if (Op[0] == 0xa1)
@@ -1127,6 +1129,9 @@ static void TestErrorStatics()
 		{"CounterOffer.Count", 0x4a4540, GetCounterOfferCount},
 	};
 	bool Found[5];
+	bool SavedHide[2] = {GetBuddyHideOffline(), Global<bool>(0x719eac)};
+	SetBuddyHideOffline(false);
+	Global<bool>(0x719eac) = false;
 	for (int k = 0; k < 5; k++) {
 		TStatic &S = Statics[k];
 		Found[k] = !ImageRedirected(S.ImageGetter) && !Redirected((const void *)S.OurGetter);
@@ -1214,6 +1219,8 @@ static void TestErrorStatics()
 		Both("GetMissileEffectX", 0x4b28e0, GetMissileEffectX, Effect);
 		Both("GetMissileEffectY", 0x4b2bb0, GetMissileEffectY, Effect);
 	}
+	SetBuddyHideOffline(SavedHide[0]);
+	Global<bool>(0x719eac) = SavedHide[1];
 	R.Finish();
 }
 
