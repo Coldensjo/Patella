@@ -1712,9 +1712,12 @@ void TContainerWindowBody::Update()
 int TContainerWindowBody::GetSlotAt(int x, int y, bool Occupied)
 {
 	TBEGIN
+	// x and y become positions in the slot grid in their own stack slots
+	// (0x42e302, 0x42e30c): TEND2(x, y) prints them (issue #34).
+	x -= SkinProperties.Data630.x;
 	y += ScrollBar->Range->Value - SkinProperties.Data630.y;
-	int Column = (x - SkinProperties.Data630.x) / SkinProperties.Data648;
-	if (Column < SkinProperties.Data62C && (x - SkinProperties.Data630.x) % SkinProperties.Data648 <= SkinProperties.Data638.x
+	int Column = x / SkinProperties.Data648;
+	if (Column < SkinProperties.Data62C && x % SkinProperties.Data648 <= SkinProperties.Data638.x
 	 && y % SkinProperties.Data64C <= SkinProperties.Data638.y) {
 		int Position = SkinProperties.Data62C * (y / SkinProperties.Data64C) + Column;
 		if (Occupied && GetContainerObjectCount(Container) <= Position)

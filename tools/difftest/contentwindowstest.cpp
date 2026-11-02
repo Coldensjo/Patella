@@ -34,6 +34,7 @@
 
 #include "difftest.h"
 #include "elementfakes.h"
+#include "imageeh.h"
 #include "../../src/ContentWindows.h"
 #include "../../src/Communication.h"
 #include "../../src/ContextMenus.h"
@@ -89,10 +90,21 @@ static int Side;
 static bool Testing; // the fakes log only while this test runs
 static std::string Log[2];
 
+// The error round (issue #34): the FailAt-th logged call of a fake throws an
+// assertion of the calling side (0: none); Ticks counts one side's calls.
+static int FailAt, Ticks;
+static void Tick()
+{
+	Ticks++;
+	if (FailAt > 0 && --FailAt == 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Ticks);
+}
+
 static void Logf(const char *Format, ...)
 {
 	if (!Testing)
 		return;
+	Tick();
 	char Buffer[1024];
 	va_list Args;
 	va_start(Args, Format);
@@ -262,6 +274,20 @@ public:
 };
 static void *ElementVtable, *ScrollVtable, *LabelVtable;
 
+// In the error round the image side's test objects call the image's TElement
+// or TWindow code for what they do not override (imageeh.h, ImageSideVtable).
+static TErrorRound *ContentRound;
+static void *OurElementBase, *OurWindowBase;
+static void *TestVtable(void *Ours)
+{
+	if (ContentRound == NULL || Side != ORIGINAL)
+		return Ours;
+	bool Window = Ours == ScrollVtable;
+	void *Hybrid = ImageSideVtable(Ours, Window ? OurWindowBase : OurElementBase, Window ? 0x564528 : 0x5645c8);
+	Kinds[ORIGINAL][Hybrid] = Kinds[ORIGINAL][Ours];
+	return Hybrid;
+}
+
 // Replaces "@<pointer>" in the reported arguments by the object's name.
 static std::string NamePointers(const char *Text)
 {
@@ -289,11 +315,11 @@ static void HookElement(void *Object, const char *Kind, const char *Args)
 	Role(Object, Kind);
 	Arguments[Side][Object] = std::string(Kind) + "(" + Text + ")";
 	if (strcmp(Kind, "ScrollBar") == 0) {
-		SetVtable(Object, ScrollVtable);
+		SetVtable(Object, TestVtable(ScrollVtable));
 	} else if (strcmp(Kind, "Label") == 0) {
-		SetVtable(Object, LabelVtable);
+		SetVtable(Object, TestVtable(LabelVtable));
 	} else {
-		SetVtable(Object, ElementVtable);
+		SetVtable(Object, TestVtable(ElementVtable));
 	}
 }
 static void HookSetSkins(TSkinButton *Button, int ButtonUp, int ButtonDown)
@@ -308,7 +334,7 @@ static void HookResizer(TResizer *Resizer, TComponent *ToResize, bool P2, bool P
 		return;
 	Role(Resizer, "Resizer");
 	Logf("NResizer%s,%d,%d,%d;", Name(ToResize).c_str(), P2 ? 1 : 0, P3 ? 1 : 0, P4 ? 1 : 0);
-	SetVtable(Resizer, ElementVtable);
+	SetVtable(Resizer, TestVtable(ElementVtable));
 }
 
 // --- The world and the fakes of the callees ----------------------------------------------
@@ -1012,9 +1038,53 @@ static TDialogWindow *Column[2], *Checked[2];
 static TContentWindow *Window[2];
 
 // Runs F for our side and then for the image's.
+// The error round: the action whose calls fail (CurrentAction; 12 the
+// construction, 13 the destructors), the most and the last fake calls one
+// call of each action made, whether a call threw (the windows are then left
+// as they are: members may point to deleted parts).
+static int CurrentAction, TargetAction = -1, MaxTicks[14], LastTicks[14];
+static bool Threw;
+
+static int FailIndex(int Count)
+{
+	int Choice = Random() % 3, Range = 1 << (Random() % 12);
+	Range = Range < Count ? Range : Count;
+	if (Choice == 0)
+		return 1 + (int)(Random() % Count);
+	if (Choice == 1)
+		return 1 + (int)(Random() % Range);
+	return Count - (int)(Random() % Range);
+}
+
 template <class F> static void Both(F Function)
 {
+	if (ContentRound != NULL) {
+		if (Threw)
+			return;
+		int Count = Random() % 2 == 0 ? MaxTicks[CurrentAction] : LastTicks[CurrentAction];
+		int Fail = Count > 0 && CurrentAction == TargetAction ? FailIndex(Count + 1) : 0;
+		char What[64];
+		sprintf(What, "action %d (fail at %d)", CurrentAction, Fail);
+		ContentRound->Calling(What, "ours");
+		FakeOurPrintf(true);
+		TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Function(OURS); });
+		FakeOurPrintf(false);
+		ContentRound->Calling(What, "the original");
+		TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Function(ORIGINAL); });
+		FailAt = 0;
+		Side = OURS;
+		ContentRound->Compare(What, A, B);
+		if (A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING) {
+			Threw = true;
+		} else {
+			LastTicks[CurrentAction] = Ticks;
+			if (Ticks > MaxTicks[CurrentAction])
+				MaxTicks[CurrentAction] = Ticks;
+		}
+		return;
+	}
 	for (int s = 0; s < 2; s++) {
+		Ticks = 0;
 		Side = s;
 		if (s == OURS) {
 			// An exception on our side would end the child without a message.
@@ -1037,6 +1107,8 @@ template <class F> static void Both(F Function)
 			Function(s);
 		}
 	}
+	if (Ticks > MaxTicks[CurrentAction])
+		MaxTicks[CurrentAction] = Ticks;
 	Side = OURS;
 }
 
@@ -1279,7 +1351,7 @@ static void Compare(const char *What)
 {
 	if (LogFile != NULL)
 		fprintf(LogFile, "%s %s: %s\n", ScenarioNames[Scenario], Stage, Log[OURS].c_str());
-	std::string D0 = Dump(OURS), D1 = Dump(ORIGINAL);
+	std::string D0 = Threw ? "" : Dump(OURS), D1 = Threw ? "" : Dump(ORIGINAL);
 	CHECK(Log[OURS] == Log[ORIGINAL], "ContentWindows %s (%s, %s): logs differ\n  ours: %s\n  orig: %s", What,
 		ScenarioNames[Scenario], Stage, Log[OURS].c_str(), Log[ORIGINAL].c_str());
 	CHECK(D0 == D1, "ContentWindows %s (%s, %s): windows differ\n  ours: %s\n  orig: %s", What, ScenarioNames[Scenario],
@@ -1289,6 +1361,8 @@ static void Compare(const char *What)
 }
 static void CompareResults(const std::string *Results, const char *What)
 {
+	if (Threw) // (the error round: a call that threw leaves no result)
+		return;
 	CHECK(Results[OURS] == Results[ORIGINAL], "ContentWindows %s (%s): %s, original %s", What, ScenarioNames[Scenario],
 		Results[OURS].c_str(), Results[ORIGINAL].c_str());
 }
@@ -1845,6 +1919,7 @@ static void Action()
 	RandomWorld(Random() % 6 == 0);
 	int A = Random() % 12;
 	ActionCount[A]++;
+	CurrentAction = A;
 	if (getenv("CT_TRACE") != NULL)
 		fprintf(stderr, "    kind %d\n", A);
 	switch (A) {
@@ -1885,6 +1960,58 @@ static void Build()
 		Window[s] = Create(s);
 		Column[s]->Rearrange(16, Window[s]);
 	});
+}
+
+// --- Error paths (issue #34) ---------------------------------------------------
+
+// Every TASSERT/TERROR of ContentWindows.cpp and the TEND blocks: the test's
+// actions on new windows, the calls of one action per round failing at one
+// of the fake calls such a call made before, until one throws.
+static void TestContentWindowsErrors()
+{
+	TErrorRound R("ContentWindows");
+	ContentRound = &R;
+	for (int Round = 0; Round < 3000; Round++) {
+		TargetAction = Round % 14;
+		Threw = false;
+		for (int s = 0; s < 2; s++) {
+			Roles[s].clear();
+			Arguments[s].clear();
+			LabelTexts[s].clear();
+		}
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+		RandomWorld(true);
+		Stage = "errors: constructor";
+		CurrentAction = 12;
+		Build();
+		Compare("errors: constructor");
+		if (Threw)
+			continue;
+		int Actions = 5 + Random() % 20;
+		for (int i = 0; i < Actions && !Threw; i++) {
+			Action();
+			Compare("errors: action");
+		}
+		if (Threw)
+			continue;
+		Stage = "errors: destructor";
+		CurrentAction = 13;
+		Both([&](int s) {
+			delete Column[s];
+			delete Checked[s];
+			Column[s] = Checked[s] = NULL;
+		});
+		CHECK(Log[OURS] == Log[ORIGINAL], "ContentWindows errors destructor (%s): logs differ\n  ours: %s\n  orig: %s",
+			ScenarioNames[Scenario], Log[OURS].c_str(), Log[ORIGINAL].c_str());
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+	}
+	TargetAction = -1;
+	Threw = false;
+	Column[OURS] = Column[ORIGINAL] = Checked[OURS] = Checked[ORIGINAL] = NULL;
+	ContentRound = NULL;
+	R.Finish();
 }
 
 void TestContentWindows()
@@ -2037,6 +2164,27 @@ void TestContentWindows()
 		}
 	}
 
+	// The error round (issue #34): its checks are reported apart.
+	int RoundChecks = Checks, SavedCounts[12], SavedMarks = MarksFound;
+	memcpy(SavedCounts, ActionCount, sizeof(SavedCounts));
+	{
+		TWindow *W = new TWindow;
+		OurWindowBase = VtableOf(W);
+		delete W;
+		TElement *E = new TElement;
+		OurElementBase = VtableOf(E);
+		delete E;
+	}
+	TestContentWindowsErrors();
+	memcpy(ActionCount, SavedCounts, sizeof(SavedCounts));
+	MarksFound = SavedMarks;
+	RoundChecks = Checks - RoundChecks;
+	for (int s = 0; s < 2; s++) {
+		Roles[s].clear();
+		Arguments[s].clear();
+		LabelTexts[s].clear();
+	}
+
 	Testing = false;
 	if (LogFile != NULL)
 		fclose(LogFile);
@@ -2052,5 +2200,5 @@ void TestContentWindows()
 	for (int i = 1; i < 12; i++)
 		Least = ActionCount[i] < Least ? ActionCount[i] : Least;
 	printf("ContentWindows: %d checks, %d failures (each action at least %d times, %d marks found)\n",
-		Checks - Before, Failures - BeforeFailures, Least, MarksFound);
+		Checks - Before - RoundChecks, Failures - BeforeFailures, Least, MarksFound);
 }
