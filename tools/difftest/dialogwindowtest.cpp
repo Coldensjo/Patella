@@ -31,6 +31,7 @@
 #include "../../src/Preferences.h"
 #include "../../src/Skins.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/graphics.h"
 #include "../../src/external.h"
 #include <map>
@@ -240,7 +241,7 @@ static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNu
 static void __cdecl FakeSetContentWindowSize(int ID, int Size) { Logf("CWSize%d,%d;", ID, Size); }
 static void __cdecl FakeAddOpenDialog(int Identifier) { Logf("Open%d;", Identifier); }
 
-class TDialogSurface : public TSurfaceGL {
+class TDialogSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{

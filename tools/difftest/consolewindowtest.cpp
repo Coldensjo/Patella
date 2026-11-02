@@ -44,6 +44,7 @@
 #include "../../src/Skins.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/Talk.h"
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
@@ -645,7 +646,7 @@ void SendLeaveChannel(int ChannelID) { FakeSendLeaveChannel(ChannelID); }
 void SendCancelRuleViolation() { FakeSendCancelRuleViolation(); }
 void SendRequestChannels() { FakeSendRequestChannels(); }
 
-class TConsoleSurface : public TSurfaceGL {
+class TConsoleSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{

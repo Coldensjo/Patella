@@ -44,6 +44,7 @@
 #include "../../src/Skins.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/Talk.h"
 #include "../../src/graphics.h"
 #include "../../src/external.h"
@@ -610,7 +611,7 @@ void SendRemoveBuddy(uint32 ID) { FakeSendRemoveBuddy(ID); }
 // sysinc.cpp is in sysinctest.exe only.
 bool IsClipboardEmpty() { return FakeIsClipboardEmpty(); }
 
-class TMenuSurface : public TSurfaceGL {
+class TMenuSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{

@@ -420,6 +420,11 @@ int main(int argc, char **argv)
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
+	if (Only != NULL && strcmp(Only, "SurfaceGL") == 0) {
+		TestSurfaceGL();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
 	TestXTEA();
 	TestCharacters();
 	TestColors();
@@ -448,6 +453,7 @@ int main(int argc, char **argv)
 	TestDialogs();
 	TestSurfaceDX();
 	TestSurfaceDX9();
+	TestSurfaceGL();
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif

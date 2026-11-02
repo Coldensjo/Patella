@@ -59,7 +59,8 @@ In link order. First and last are the outermost assigned functions. Assert lines
 | Surface.cpp | 8 | 1 | 831 | `0x4eaa80` | `0x4eae33` |  |
 | SurfaceDX.cpp | 24 | 2 | 8990 | `0x4eae90` | `0x4eed40` | 1106-1114 |
 | surfaceDX9.cpp | 29 | 2 | 8258 | `0x4efd10` | `0x4f2040` | 982-983 |
-| SurfaceGL.cpp | 32 | 4 | 28560 | `0x4f46f0` | `0x4fc130` | 767-1023 |
+| glh_extensions.h | 3 | 0 | 19361 | `0x4f46f0` | `0x4f9510` |  |
+| SurfaceGL.cpp | 29 | 4 | 9199 | `0x4f9550` | `0x4fc130` | 767-1023 |
 | sysinc.cpp | 16 | 0 | 2008 | `0x4fcb90` | `0x4fd1b0` | 63-143 |
 | Talk.cpp | 90 | 192 | 42314 | `0x4fd440` | `0x5081b5` | 81-1952 |
 | Talk.h | 3 | 0 | 90 | `0x4fd5a0` | `0x507060` |  |

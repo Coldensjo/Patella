@@ -1397,9 +1397,9 @@ static void DXPhaseDraw()
 					case 4: Result[Side] = Object->SurfaceRecreated(Index); break;
 					case 5: Result[Side] = Object->GetSurfaceMemory(Index); break;
 					case 6: Result[Side] = Object->TestEngine(); break;
-					case 7: Object->Unknown04(Value); break;
-					case 8: Object->Unknown08(Value); break;
-					case 9: Object->Unknown80(Value, 1, 2, 3); break;
+					case 7: Object->SelectSurface(Value); break;
+					case 8: Object->SetTextureFilter(Value); break;
+					case 9: Object->AddDirtyRect(TRect(Value, 1, 2, 3)); break;
 					case 10: Object->SetSurfaceRect(Value, 1, 2, 3, 4); break;
 					case 11: Object->SetFramerateLimit(Value); break;
 					}

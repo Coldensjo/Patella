@@ -4,7 +4,7 @@
 // sides load the real Tibia.spr and Tibia.pic (next to Tibia.exe): every
 // sprite and every picture tile is decoded on both sides and compared. The
 // surface is a recording fake: both sides' GetSurface return the same
-// TSurfaceGL object (the image's surface pointer 0x71d0cc is set to it), whose
+// TTestSurface object (the image's surface pointer 0x71d0cc is set to it), whose
 // slots write their arguments, and the tiles they get, to a log per side.
 // After each operation the logs, the memory cache, the video cache, their
 // hash tables and LRU lists are compared. The caches are small so that items
@@ -19,6 +19,7 @@
 #include "../../src/Objects.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include <direct.h>
 #include <string>
 #include <vector>
@@ -55,13 +56,13 @@ static void PutTile(const uint8 *Data)
 		Log[Side].append((const char *)Data, 32 * 32 * 3);
 }
 
-TSurfaceGL::TSurfaceGL() {}
-void TSurfaceGL::WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data)
+TTestSurface::TTestSurface() {}
+void TTestSurface::WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data)
 {
 	Writes += Side == OURS;
 	Put(0x28); Put(ToSurface); Put(x); Put(y); Put(Width); Put(Height); PutTile(Data);
 }
-void TSurfaceGL::WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data,
+void TTestSurface::WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data,
 	uint8 *Mask, TRGBColor *Colors)
 {
 	Writes += Side == OURS;
@@ -69,21 +70,21 @@ void TSurfaceGL::WriteMaskedImage(int ToSurface, int x, int y, int Width, int He
 	for (int i = 0; i < 4; i++)
 		PutColor(Colors[i]);
 }
-void TSurfaceGL::Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
+void TTestSurface::Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
 	int Height, TRGBColor ColorKey)
 {
 	Blits += Side == OURS;
 	Put(0x34); Put(ToSurface); Put(x); Put(y); Put(FromSurface); Put(FromX); Put(FromY); Put(Width);
 	Put(Height); PutColor(ColorKey);
 }
-void TSurfaceGL::BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY,
+void TTestSurface::BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY,
 	int Width, int Height, TRGBColor ColorKey, TRect Clip)
 {
 	Blits += Side == OURS;
 	Put(0x3c); Put(ToSurface); Put(x); Put(y); Put(FromSurface); Put(FromX); Put(FromY); Put(Width);
 	Put(Height); PutColor(ColorKey); PutRect(Clip);
 }
-void TSurfaceGL::StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface,
+void TTestSurface::StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface,
 	int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight,
 	TRect Clip)
 {
@@ -91,16 +92,16 @@ void TSurfaceGL::StretchBlit(int ToSurface, int x, int y, int Width, int Height,
 	Put(0x48); Put(ToSurface); Put(x); Put(y); Put(Width); Put(Height); Put(FromSurface); Put(FromX);
 	Put(FromY); Put(FromWidth); Put(FromHeight); PutColor(ColorKey); PutColor(Highlight); PutRect(Clip);
 }
-void TSurfaceGL::SetSourceColorKey(int Surface, TRGBColor ColorKey)
+void TTestSurface::SetSourceColorKey(int Surface, TRGBColor ColorKey)
 {
 	Put(0x54); Put(Surface); PutColor(ColorKey);
 }
-int TSurfaceGL::GetCacheSurfaces()
+int TTestSurface::GetCacheSurfaces()
 {
 	Put(0x90);
 	return GraphicsCacheSurfaces;
 }
-void TSurfaceGL::GetSurfaceRect(int Surface, TRect *Rect)
+void TTestSurface::GetSurfaceRect(int Surface, TRect *Rect)
 {
 	Put(0x94); Put(Surface); PutRect(*Rect);
 	Rect->Width = CacheWidth;
@@ -591,9 +592,24 @@ static void RandomDraw(int t)
 	CompareCaches(What);
 }
 
+// The recording surface. Our GetSurface returns it from the first video cache
+// test on, for good (it used to create external.h's TSurfaceGL sketch, which
+// was the recording surface; difftest.exe links the real TSurfaceGL now).
+// mapwindowtest.cpp takes the same object from GetSurface.
+static TSurface *RecordingSurface;
+static TSurface *__cdecl GetRecordingSurface() { return RecordingSurface; }
+
 static void TestVideoCache()
 {
-	SetEngine(1); // our GetSurface creates the (fake) OpenGL surface
+	SetEngine(1);
+	if (RecordingSurface == NULL) {
+		RecordingSurface = new TTestSurface;
+		DWORD Protection;
+		VirtualProtect((void *)GetSurface, 5, PAGE_EXECUTE_READWRITE, &Protection);
+		PatchJump((uint32)(uintptr_t)GetSurface, (void *)GetRecordingSurface);
+		VirtualProtect((void *)GetSurface, 5, Protection, &Protection);
+		FlushInstructionCache(GetCurrentProcess(), (void *)GetSurface, 5);
+	}
 	TSurface *Fake = GetSurface();
 	Global<TSurface *>(0x71d0cc) = Fake;
 	for (int Round = 0; Round < 6; Round++) {

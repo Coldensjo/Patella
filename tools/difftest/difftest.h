@@ -54,6 +54,7 @@ void TestDialogElements();               // dialogelementstest.cpp, after TestCo
 void TestSurfaceDX();                    // surfacedxtest.cpp, fake DirectDraw COM objects; restores its patches
 void TestDialogs();                      // dialogstest.cpp, after TestDialogElements (restores its patches)
 void TestSurfaceDX9();                   // surfacedx9test.cpp, before TestMapWindow (restores its patches)
+void TestSurfaceGL();                    // surfacegltest.cpp, before TestMapWindow (restores its patches; own random numbers)
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
 
 // dialogwindowtest.cpp defines the shared fakes of the classes DialogWindow.cpp
