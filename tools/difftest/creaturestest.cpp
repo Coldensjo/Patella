@@ -625,7 +625,7 @@ static void TestCreatureTable()
 		CheckPlayer(What);
 		if (Slot != 0)
 			TestMembers(Slot);
-		if (Failures > 20)
+		if (Failures > FailuresPrinted)
 			break;
 	}
 }
@@ -797,7 +797,7 @@ static void TestBuddies()
 		}
 		CheckRecords(What);
 		CheckBuddies(What);
-		if (Failures > 20)
+		if (Failures > FailuresPrinted)
 			break;
 	}
 	InitCreatures();

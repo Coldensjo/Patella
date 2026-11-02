@@ -30,6 +30,7 @@
 // "unknown event" errors are not exercised.
 
 #include "difftest.h"
+#include "imageeh.h"
 #include "elementfakes.h"
 #include "../../src/ContextMenus.h"
 #include "../../src/ContentWindows.h"
@@ -572,18 +573,29 @@ static bool __cdecl FakeIsClipboardEmpty() { Logf("ClipEmpty;"); return World.Cl
 static void __cdecl FakeDeleteAutomapMark(TMark &Mark, int z) { Logf("DelMark%d,%d,%d;", Mark.x, Mark.y, z); }
 static int __cdecl FakeGetFontLineHeight(int Font) { Logf("LineH%d;", Font); return 10 + Font; }
 static int __cdecl FakeGetFontHeight(int Font) { Logf("FontH%d;", Font); return 8 + Font % 3; }
+// The error round's throwing fakes (issue #34): a fake whose bit is set
+// throws an assertion of the side that calls it, with -Bit as its value.
+static int ThrowMask;
+static void MaybeThrow(int Bit)
+{
+	if ((ThrowMask & Bit) != 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Bit);
+}
 static int __cdecl FakeGetTextWidth(int Font, const char *Text)
 {
 	Logf("TextW%d,%s;", Font, Text);
+	MaybeThrow(1);
 	return (int)strlen(Text) * (5 + Font % 3);
 }
 static void __cdecl FakePrintText(int Surface, int x, int y, int Font, TRGBColor Color, const char *Text, int Alignment)
 {
 	Logf("Print%d,%d,%d,%d,%d,%d,%d,%s,%d;", Surface, x, y, Font, Color.R, Color.G, Color.B, Text, Alignment);
+	MaybeThrow(2);
 }
 static void __cdecl FakeDrawSkin(int Surface, int x, int y, int width, int height, int skin, int srcx, int srcy)
 {
 	Logf("Skin%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, width, height, skin, srcx, srcy);
+	MaybeThrow(4);
 }
 static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNumber, int srcx, int srcy, int Width,
 	int Height)
@@ -1016,7 +1028,7 @@ static void Compare(const char *What)
 	Checks++;
 	if (Log[OURS] != Log[ORIGINAL]) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			printf("FAIL ContextMenus %s (%s): logs differ\n  ours:     %.1500s\n  original: %.1500s\n", What,
 				KindNames[Kind], Log[OURS].c_str(), Log[ORIGINAL].c_str());
 		}
@@ -1026,7 +1038,7 @@ static void Compare(const char *What)
 		Checks++;
 		if (A != B) {
 			Failures++;
-			if (Failures <= 20)
+			if (Failures <= FailuresPrinted)
 				printf("FAIL ContextMenus %s (%s): windows differ\n--- ours\n%s--- original\n%s", What,
 					KindNames[Kind], A.c_str(), B.c_str());
 		}
@@ -1343,6 +1355,148 @@ static void Action()
 	Compare(What);
 }
 
+// --- Error paths (issue #34) ------------------------------------------------------------------
+
+template <class F> static void ErrorCall(TErrorRound &R, const char *What, F Call)
+{
+	ROUND_COMPARE(R, What, (Side = OURS, Call(OURS)), (Side = ORIGINAL, Call(ORIGINAL)));
+}
+
+typedef void (__fastcall *AddEntryFn)(void *, void *, int, const char *, const char *);
+
+// Every TASSERT/TERROR of ContextMenus.cpp that the menus can reach, and the
+// TEND blocks: the text and skin fakes throw (ThrowMask) while the menus are
+// built and drawn, HandleEvent gets events the menu does not know (and the
+// object menu's asserted ones), AddEntry texts that are too long, and the
+// constructors NULL for their windows.
+static void TestContextMenusErrors()
+{
+	TErrorRound R("ContextMenus");
+	static const int Masks[] = {0, 1, 2, 4, 7};
+	static const char Long[] = "0123456789012345678901234567890123456789012345678901234567890123456789";
+	char What[96];
+	for (int Round = 0; Round < 500; Round++) {
+		RandomSkinProperties();
+		RandomWorld();
+		SetSelection();
+		RandomEdit();
+		Kind = Random() % KINDS;
+		TArguments A = RandomArguments(Kind);
+		ThrowMask = Masks[Round % 5];
+		snprintf(What, sizeof(What), "%s constructor, mask %d", KindNames[Kind], ThrowMask);
+		Window[OURS] = Window[ORIGINAL] = NULL;
+		// A party flag the menus do not know (their TERROR1).
+		int SavedParty = World.PartyFlag;
+		if ((Kind == KIND_OBJECT || Kind == KIND_CREATURE) && Round % 4 == 3)
+			World.PartyFlag = 5 + (int)(Random() % 5);
+		ErrorCall(R, What, [&](int s) { Window[s] = Build(s, A); });
+		World.PartyFlag = SavedParty;
+		Compare("errors: constructor");
+		if (Window[OURS] != NULL && Window[ORIGINAL] != NULL) {
+			TWindow *O = Window[OURS];
+			int x = Random() % 50, y = Random() % 50;
+			World.MouseX = x + (int)(Random() % (O->Width + 20)) - 10;
+			World.MouseY = y + (int)(Random() % (O->Height + 20)) - 10;
+			snprintf(What, sizeof(What), "%s Draw, mask %d", KindNames[Kind], ThrowMask);
+			ErrorCall(R, What, [&](int s) { Window[s]->Draw(1, x, y); });
+			Compare("errors: draw");
+			ThrowMask = 0;
+			if (Kind != KIND_HELP && Kind != KIND_TEXT && Kind != KIND_REQUEST) {
+				int Event;
+				do
+					Event = RandomEvent();
+				while (KnownEvent(Kind, Event) && SafeEvent(Event));
+				if (Kind == KIND_OBJECT && Round % 2 == 0)
+					Event = 10010 + (int)(Random() % 2); // asserted unless SafeEvent
+				if (Kind == KIND_OBJECT && SafeEvent(Event) && (Event == 10010 || Event == 10011))
+					Event = 12345;
+				snprintf(What, sizeof(What), "%s HandleEvent(%d)", KindNames[Kind], Event);
+				ErrorCall(R, What, [&](int s) { Window[s]->HandleEvent(Event); });
+				Compare("errors: event");
+			}
+			if (Kind == KIND_CHANNEL) {
+				// Event 10105 with no text buffer behind the console.
+				TTestBuffer *SavedBuffer = Buffer;
+				Buffer = NULL;
+				ErrorCall(R, "channel HandleEvent(10105) without a buffer", [&](int s) { Window[s]->HandleEvent(10105); });
+				Buffer = SavedBuffer;
+				Compare("errors: event");
+			}
+			if (Kind != KIND_HELP) {
+				// AddEntry: no text, a text or a shortcut too long.
+				int Case = Random() % 3, Length = 48 + Random() % 6;
+				std::string Text(Long, Length);
+				const char *T = Case == 0 ? NULL : Case == 1 ? Text.c_str() : "entry";
+				const char *Shortcut = Case == 2 ? Text.c_str() : NULL;
+				snprintf(What, sizeof(What), "%s AddEntry case %d length %d", KindNames[Kind], Case, Length);
+				ErrorCall(R, What, [&](int s) {
+					if (s == OURS)
+						((TContextMenu *)Window[s])->AddEntry(10001, T, Shortcut);
+					else
+						At<AddEntryFn>(0x442910)(Window[s], NULL, 10001, T, Shortcut);
+				});
+				Compare("errors: entry");
+			}
+		}
+		ThrowMask = 0;
+		for (int s = 0; s < 2; s++) {
+			Side = s;
+			delete Window[s];
+			Window[s] = NULL;
+		}
+		Compare("errors: destructor");
+		FreeWorld();
+		// The constructors without their window (or text).
+		static const int NullKinds[] = {KIND_HELP, KIND_TEXT, KIND_REQUEST, KIND_CHANNEL, KIND_EDIT, KIND_SKILL,
+			KIND_CHANNEL, KIND_MARK};
+		int Case = Round % 8, K = NullKinds[Case];
+		RandomWorld();
+		Kind = K;
+		TArguments B = RandomArguments(K);
+		B.HelpText = NULL;
+		TTextWindow *SavedText = TextWindow;
+		TConsoleWindow *SavedConsole = Console;
+		TTestEdit *SavedEdit = Edit;
+		TSkillsWindowBody *SavedSkills[2] = {SkillsWindow[OURS], SkillsWindow[ORIGINAL]};
+		TTestBuffer *SavedBuffer = Buffer;
+		if (Case == 6) {
+			Buffer = NULL; // the console without a text buffer
+		} else {
+			TextWindow = NULL;
+			Console = NULL;
+			Edit = NULL;
+			SkillsWindow[OURS] = SkillsWindow[ORIGINAL] = NULL;
+		}
+		snprintf(What, sizeof(What), "%s constructor without its %s", KindNames[K], Case == 6 ? "buffer" : "window");
+		TWindow *Built[2] = {NULL, NULL};
+		if (K == KIND_MARK)
+			ErrorCall(R, What, [&](int s) {
+				void *M = operator new(sizeof(TMarkContextMenu));
+				memset(M, 0xa5, sizeof(TMarkContextMenu));
+				if (s == OURS)
+					Built[s] = new (M) TMarkContextMenu(NULL, B.x, B.y, B.ParentWidth, B.ParentHeight);
+				else
+					Built[s] = (TWindow *)At<PtrCtorFn>(0x4451e0)(M, NULL, NULL, B.x, B.y, B.ParentWidth, B.ParentHeight);
+			});
+		else
+			ErrorCall(R, What, [&](int s) { Built[s] = Build(s, B); });
+		Buffer = SavedBuffer;
+		TextWindow = SavedText;
+		Console = SavedConsole;
+		Edit = SavedEdit;
+		SkillsWindow[OURS] = SavedSkills[OURS];
+		SkillsWindow[ORIGINAL] = SavedSkills[ORIGINAL];
+		for (int s = 0; s < 2; s++) {
+			Side = s;
+			delete Built[s];
+		}
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+		FreeWorld();
+	}
+	R.Finish();
+}
+
 void TestContextMenus()
 {
 	int Before = Checks, BeforeFailures = Failures;
@@ -1415,6 +1569,9 @@ void TestContextMenus()
 		Compare("destructor");
 		FreeWorld();
 	}
+	int RoundChecks = Checks;
+	TestContextMenusErrors();
+	RoundChecks = Checks - RoundChecks;
 
 	RestoreAll();
 	Running = false;
@@ -1435,5 +1592,5 @@ void TestContextMenus()
 	for (int i = 1; i < 12; i++)
 		LeastAction = ActionCount[i] < LeastAction ? ActionCount[i] : LeastAction;
 	printf("ContextMenus: %d checks, %d failures (each window at least %d times, each action at least %d times)\n",
-		Checks - Before, Failures - BeforeFailures, Least, LeastAction);
+		Checks - Before - RoundChecks, Failures - BeforeFailures, Least, LeastAction);
 }

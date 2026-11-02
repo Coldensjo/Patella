@@ -17,9 +17,12 @@
 //   the deletion and then calls the original deleting destructor.
 // - Timers (the image's timer vector constructed by 0x4973f0) and hotkeys
 //   (0x4976f0), with probes as receivers.
-// Failing assertions are not exercised.
+// - Error paths (issue #34): the assertions and TEND blocks a mirrored tree
+//   can reach, with throwing leaves (TGuiThrower), compared through imageeh.h
+//   (TestGUIErrors, after the counted checks; "GUI errors: ...").
 
 #include "difftest.h"
+#include "imageeh.h"
 #include "../../src/GUI.h"
 #include "../../src/graphics.h"
 #include "../../src/Skins.h"
@@ -44,18 +47,33 @@ static void Logf(int Side, const char *Format, ...)
 
 // --- graphics.cpp recorders -------------------------------------------------
 
+// Set by TestGUIErrors: the recorders throw an assertion of their own side
+// (DrawSkin's "x>=0"), so the TEND blocks of the drawing functions wrap it.
+static bool PictureThrows = false;
+static void PictureThrow(int Side)
+{
+	if (!PictureThrows)
+		return;
+	if (Side == OURS)
+		DrawSkin(0, -9, 0, 1, 1, 1, 0, 0);
+	else
+		At<void (__cdecl *)(int, int, int, int, int, int, int, int)>(0x497a00)(0, -9, 0, 1, 1, 1, 0, 0);
+}
+
 // Our DrawPicturePart and DrawPicturePartClipped (graphics.cpp, tested in
 // graphicstest.cpp) jump to these recorders while TestGUI runs.
 static void OurPicture(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
 	int Height)
 {
 	Logf(OURS, "P%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY, Width, Height);
+	PictureThrow(OURS);
 }
 
 static void __cdecl ImagePicture(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY,
 	int Width, int Height)
 {
 	Logf(ORIGINAL, "P%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY, Width, Height);
+	PictureThrow(ORIGINAL);
 }
 
 static void OurClippedPicture(int Surface, int x, int y, int PictureNumber, int SourceX, int SourceY, int Width,
@@ -63,6 +81,7 @@ static void OurClippedPicture(int Surface, int x, int y, int PictureNumber, int 
 {
 	Logf(OURS, "C%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY, Width,
 		Height, Clip.x, Clip.y, Clip.width, Clip.height);
+	PictureThrow(OURS);
 }
 
 // Redirects one of our functions to a recorder (Restore = false) or puts
@@ -87,6 +106,7 @@ static void __cdecl ImageClippedPicture(int Surface, int x, int y, int PictureNu
 {
 	Logf(ORIGINAL, "C%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY,
 		Width, Height, ClipX, ClipY, ClipWidth, ClipHeight);
+	PictureThrow(ORIGINAL);
 }
 
 static void CheckLogs(const char *What)
@@ -94,9 +114,15 @@ static void CheckLogs(const char *What)
 	Checks++;
 	if (Log[OURS] != Log[ORIGINAL]) {
 		Failures++;
-		if (Failures <= 20)
-			printf("FAIL %s: log\n  ours     %.400s\n  original %.400s\n", What, Log[OURS].c_str(),
-				Log[ORIGINAL].c_str());
+		if (Failures <= FailuresPrinted) {
+			size_t First = 0;
+			while (First < Log[OURS].size() && First < Log[ORIGINAL].size() && Log[OURS][First] == Log[ORIGINAL][First])
+				First++;
+			size_t From = First > 200 ? First - 200 : 0;
+			printf("FAIL %s: log (lengths %d, %d, first difference at %d)\n  ours     %.400s\n  original %.400s\n",
+				What, (int)Log[OURS].size(), (int)Log[ORIGINAL].size(), (int)First, Log[OURS].c_str() + From,
+				Log[ORIGINAL].c_str() + From);
+		}
 	}
 	Log[OURS].clear();
 	Log[ORIGINAL].clear();
@@ -388,7 +414,7 @@ static void CompareTrees(const char *What)
 		}
 		if (!Same) {
 			Failures++;
-			if (Failures <= 20)
+			if (Failures <= FailuresPrinted)
 				printf("FAIL %s: node %d differs (parent %d/%d next %d/%d pos %d,%d/%d,%d size %d,%d/%d,%d)\n", What,
 					(int)i, IndexOf(OURS, A->Parent), IndexOf(ORIGINAL, B->Parent), IndexOf(OURS, A->Next),
 					IndexOf(ORIGINAL, B->Next), A->OffsetX, A->OffsetY, B->OffsetX, B->OffsetY, A->Width, A->Height,
@@ -951,6 +977,508 @@ static void TestHotkeys()
 	Log[1].clear();
 }
 
+// --- Error paths (issue #34) -------------------------------------------------
+
+void ThrowSideAssertion(bool Image, int Value)
+{
+	static uint8 Dummy[sizeof(TComponent)]; // the assertion comes before any write
+	if (Image)
+		At<void (__fastcall *)(void *, void *, int, int)>(0x49bee0)(Dummy, NULL, Value, 0);
+	else
+		((TComponent *)Dummy)->TComponent::SetSize(Value, 0);
+}
+
+// A leaf whose virtual methods throw on demand: an assertion of its own side
+// (DrawSkin's "x>=0"), so the callers' TEND blocks wrap it.
+class TGuiThrower : public TElement {
+public:
+	TGuiThrower(int Side, int Id) : Side(Side), Id(Id), Mask(0) {}
+	~TGuiThrower() { Logf(Side, "~%d;", Id); }
+	void Throw(int Bit)
+	{
+		if ((Mask & Bit) == 0)
+			return;
+		Logf(Side, "%d.T%d;", Id, Bit);
+		if (Side == OURS)
+			DrawSkin(0, -Id, 0, 1, 1, 1, 0, 0);
+		else
+			At<DrawSkinFn>(0x497a00)(0, -Id, 0, 1, 1, 1, 0, 0);
+	}
+	// The base code of the object's own side: an assertion of our code inside
+	// an original catch block would be caught there by the type's name and
+	// read with the image's layout.
+	void SetSize(int w, int h)
+	{
+		Throw(1);
+		if (Side == OURS)
+			TElement::SetSize(w, h);
+		else
+			At<void (__fastcall *)(void *, void *, int, int)>(0x49bee0)(this, NULL, w, h);
+	}
+	void SetPosition(int x, int y)
+	{
+		Throw(2);
+		if (Side == OURS)
+			TElement::SetPosition(x, y);
+		else
+			At<void (__fastcall *)(void *, void *, int, int)>(0x496060)(this, NULL, x, y);
+	}
+	void Draw(int Surface, int x, int y) { Throw(4); }
+	void Arrange() { Throw(8); }
+	bool MouseMove(int x, int y) { Throw(16); return false; }
+	bool LeftButtonDown(int x, int y, int f) { Throw(16); return false; }
+	bool LeftButtonUp(int x, int y, int f) { Throw(16); return false; }
+	bool LeftButtonDoubleClick(int x, int y, int f) { Throw(16); return false; }
+	bool RightButtonUp(int x, int y, int f) { Throw(16); return false; }
+	bool MouseWheel(int x, int y, int d) { Throw(16); return false; }
+	void MouseHover(int x, int y) { Throw(16); }
+	bool HelpMouseMove(int x, int y) { Throw(16); return false; }
+	void HandleEvent(int Event) { Throw(32); }
+	void StopDragging() { Throw(64); }
+	void PositionChanged() { Throw(2); }
+	void SetCapture(TComponent *C)
+	{
+		Throw(128);
+		if (Side == OURS)
+			TElement::SetCapture(C);
+		else
+			At<void (__fastcall *)(void *, void *, void *)>(0x4a0bc0)(this, NULL, C);
+	}
+	void ReleaseCapture(TComponent *C)
+	{
+		Throw(128);
+		if (Side == OURS)
+			TElement::ReleaseCapture(C);
+		else
+			At<void (__fastcall *)(void *, void *, void *)>(0x4a0d60)(this, NULL, C);
+	}
+	int Side, Id, Mask;
+};
+
+static int AddThrower(int Mask)
+{
+	int Id = (int)Nodes.size();
+	TNode N;
+	N.Kind = PROBE;
+	N.Alive = true;
+	for (int s = 0; s < 2; s++) {
+		TGuiThrower *T = new TGuiThrower(s, Id);
+		T->Mask = Mask;
+		T->OffsetX = 5;
+		T->OffsetY = 5;
+		T->Width = 20;
+		T->Height = 20;
+		N.Side[s] = T;
+		Index[s][T] = Id;
+	}
+	Nodes.push_back(N);
+	return Id;
+}
+
+// Every TASSERT/TERROR of GUI.cpp that a mirrored tree can reach, and the
+// TEND blocks above them: the inputs come from Random() (the round's own
+// seed), the calls run on both trees, and the trees are compared after each.
+// One comparison, then the trees and the logs (a call that throws on both
+// sides must have done the same before it threw).
+#define GUI_COMPARE(What, OurCall, ImageCall) \
+	do { \
+		ROUND_COMPARE(R, What, OurCall, ImageCall); \
+		CompareTrees(What); \
+	} while (0)
+
+static void TestGUIErrors()
+{
+	TErrorRound R("GUI");
+	char What[96];
+	// CheckHotkey's TEND2(Key, i): the original prints i = 0 wherever the key
+	// is (its counter lives in esi, the catch block reads the stack slot
+	// written once before the loop), ours the index. The tables still hold
+	// TestHotkeys' entries: emptied (InitHotkeys), so that the test's key is
+	// the first one.
+	InitHotkeys();
+	At<void (__cdecl *)()>(0x496150)();
+	std::vector<int> EmptySkins; // skins of no width or height (DrawSkin asserts, DrawSkinClipped reports)
+	for (int i = 1; i < NumberOfSkins && i < LASTSKIN; i++) {
+		if (i != 152 && (Skins[i].width <= 0 || Skins[i].height <= 0))
+			EmptySkins.push_back(i);
+	}
+	for (int Round = 0; Round < 25; Round++) {
+		Nodes.clear();
+		Index[0].clear();
+		Index[1].clear();
+		for (int i = 0; i < 3; i++)
+			AddNode(WINDOW);
+		AddNode(ELEMENT);
+		AddNode(PROBE);
+		int T1 = AddThrower(1 + (int)(Random() % 127)), T2 = AddThrower(0);
+		for (int i = 0; i < 3; i++) {
+			int w = 1 + (int)(Random() % 100), h = 1 + (int)(Random() % 100);
+			for (int s = 0; s < 2; s++) {
+				Nodes[i].Side[s]->Width = w;
+				Nodes[i].Side[s]->Height = h;
+			}
+		}
+		Log[0].clear();
+		Log[1].clear();
+		TWindow *W[2] = {(TWindow *)Nodes[0].Side[0], (TWindow *)Nodes[0].Side[1]};
+		TWindow *V[2] = {(TWindow *)Nodes[1].Side[0], (TWindow *)Nodes[1].Side[1]};
+		TComponent *E[2] = {Nodes[3].Side[0], Nodes[3].Side[1]}, *P[2] = {Nodes[4].Side[0], Nodes[4].Side[1]};
+		TComponent *A[2] = {Nodes[T1].Side[0], Nodes[T1].Side[1]}, *B[2] = {Nodes[T2].Side[0], Nodes[T2].Side[1]};
+		for (int s = 0; s < 2; s++) {
+			W[s]->AppendChild(E[s]);
+			W[s]->AppendChild(A[s]);
+			V[s]->AppendChild(B[s]);
+		}
+		CompareTrees("errors: set-up");
+		int x = (int)(Random() % 60) - 10, y = (int)(Random() % 60) - 10, f = (int)(Random() % 0x400);
+		int Bad = -1 - (int)(Random() % 5), Big = 1000 + (int)(Random() % 50);
+		bool Flag = Random() % 2 == 0; // never Random() inside a two-sided call
+		// The element's child functions ("not possible") and GetPrevious.
+		GUI_COMPARE("TComponent::InsertChild", E[0]->InsertChild(P[0]), E[1]->InsertChild(P[1]));
+		GUI_COMPARE("TComponent::AppendChild", E[0]->AppendChild(P[0]), E[1]->AppendChild(P[1]));
+		GUI_COMPARE("TComponent::RemoveChild", E[0]->RemoveChild(P[0]), E[1]->RemoveChild(P[1]));
+		GUI_COMPARE("TComponent::DeleteChild", E[0]->DeleteChild(P[0]), E[1]->DeleteChild(P[1]));
+		GUI_COMPARE("TComponent::InsertChildAfter", E[0]->InsertChildAfter(NULL, P[0]),
+			E[1]->InsertChildAfter(NULL, P[1]));
+		GUI_COMPARE("TComponent::SwapChildren", E[0]->SwapChildren(P[0], P[0]), E[1]->SwapChildren(P[1], P[1]));
+		GUI_COMPARE("TComponent::IsChild", E[0]->IsChild(P[0]), E[1]->IsChild(P[1]));
+		GUI_COMPARE("TComponent::GetFirstChild", E[0]->GetFirstChild(), E[1]->GetFirstChild());
+		GUI_COMPARE("TComponent::GetLastChild", E[0]->GetLastChild(), E[1]->GetLastChild());
+		// (P and the throwers are of our class on both sides: the image's methods by address.)
+		GUI_COMPARE("TComponent::GetPrevious", P[0]->TComponent::GetPrevious(),
+			At<void *(__fastcall *)(void *, void *)>(0x49bc30)(P[1], NULL));
+		for (int s = 0; s < 2; s++)
+			P[s]->Parent = E[s];
+		GUI_COMPARE("TComponent::GetPrevious under an element", P[0]->TComponent::GetPrevious(),
+			At<void *(__fastcall *)(void *, void *)>(0x49bc30)(P[1], NULL));
+		for (int s = 0; s < 2; s++)
+			P[s]->Parent = NULL;
+		GUI_COMPARE("TComponent::SetSize", P[0]->TComponent::SetSize(Bad, 3), At<void (__fastcall *)(void *, void *,
+			int, int)>(0x49bee0)(P[1], NULL, Bad, 3));
+		GUI_COMPARE("TComponent::SetSize height", P[0]->TComponent::SetSize(3, Bad), At<void (__fastcall *)(void *,
+			void *, int, int)>(0x49bee0)(P[1], NULL, 3, Bad));
+		CompareTrees("errors: elements");
+		// The window's child functions with children they cannot take.
+		GUI_COMPARE("TWindow::InsertChild NULL", V[0]->InsertChild(NULL), V[1]->InsertChild(NULL));
+		GUI_COMPARE("TWindow::InsertChild a child", V[0]->InsertChild(E[0]), V[1]->InsertChild(E[1]));
+		GUI_COMPARE("TWindow::AppendChild NULL", V[0]->AppendChild(NULL), V[1]->AppendChild(NULL));
+		GUI_COMPARE("TWindow::AppendChild a child", V[0]->AppendChild(E[0]), V[1]->AppendChild(E[1]));
+		GUI_COMPARE("TWindow::RemoveChild NULL", V[0]->RemoveChild(NULL), V[1]->RemoveChild(NULL));
+		GUI_COMPARE("TWindow::RemoveChild another's", V[0]->RemoveChild(E[0]), V[1]->RemoveChild(E[1]));
+		GUI_COMPARE("TWindow::DeleteChild NULL", V[0]->DeleteChild(NULL), V[1]->DeleteChild(NULL));
+		GUI_COMPARE("TWindow::InsertChildAfter NULL", V[0]->InsertChildAfter(B[0], NULL),
+			V[1]->InsertChildAfter(B[1], NULL));
+		GUI_COMPARE("TWindow::InsertChildAfter a child", V[0]->InsertChildAfter(B[0], E[0]),
+			V[1]->InsertChildAfter(B[1], E[1]));
+		GUI_COMPARE("TWindow::InsertChildAfter another's", V[0]->InsertChildAfter(E[0], P[0]),
+			V[1]->InsertChildAfter(E[1], P[1]));
+		GUI_COMPARE("TWindow::SwapChildren NULL", V[0]->SwapChildren(NULL, B[0]), V[1]->SwapChildren(NULL, B[1]));
+		GUI_COMPARE("TWindow::SwapChildren NULL 2", V[0]->SwapChildren(B[0], NULL), V[1]->SwapChildren(B[1], NULL));
+		GUI_COMPARE("TWindow::SwapChildren another's", V[0]->SwapChildren(E[0], B[0]),
+			V[1]->SwapChildren(E[1], B[1]));
+		GUI_COMPARE("TWindow::SwapChildren another's 2", V[0]->SwapChildren(B[0], E[0]),
+			V[1]->SwapChildren(B[1], E[1]));
+		GUI_COMPARE("TWindow::SwapChildren itself", V[0]->SwapChildren(B[0], B[0]), V[1]->SwapChildren(B[1], B[1]));
+		CompareTrees("errors: children");
+		// A child whose Parent is set but which is not in the list ("Search!=NULL").
+		for (int s = 0; s < 2; s++)
+			P[s]->Parent = V[s];
+		GUI_COMPARE("TWindow::RemoveChild unlisted", V[0]->RemoveChild(P[0]), V[1]->RemoveChild(P[1]));
+		GUI_COMPARE("TWindow::SwapChildren unlisted", V[0]->SwapChildren(P[0], B[0]), V[1]->SwapChildren(P[1], B[1]));
+		GUI_COMPARE("TWindow::SwapChildren unlisted 2", V[0]->SwapChildren(B[0], P[0]),
+			V[1]->SwapChildren(B[1], P[1]));
+		for (int s = 0; s < 2; s++)
+			P[s]->Parent = NULL;
+		GUI_COMPARE("TWindow::InsertChildAfter unlisted", V[0]->InsertChildAfter(P[0], E[0]),
+			V[1]->InsertChildAfter(P[1], E[1]));
+		TWindow *X[2] = {(TWindow *)Nodes[2].Side[0], (TWindow *)Nodes[2].Side[1]};
+		GUI_COMPARE("TWindow::InsertChildAfter empty", X[0]->InsertChildAfter(E[0], P[0]),
+			X[1]->InsertChildAfter(E[1], P[1]));
+		for (int s = 0; s < 2; s++)
+			P[s]->Parent = X[s];
+		GUI_COMPARE("TWindow::SwapChildren empty", X[0]->SwapChildren(P[0], P[0]), X[1]->SwapChildren(P[1], P[1]));
+		for (int s = 0; s < 2; s++)
+			P[s]->Parent = NULL;
+		CompareTrees("errors: unlisted");
+		// Capture.
+		GUI_COMPARE("TWindow::ReleaseCapture", W[0]->ReleaseCapture(E[0]), W[1]->ReleaseCapture(E[1]));
+		for (int s = 0; s < 2; s++)
+			W[s]->SetCapture(E[s]);
+		GUI_COMPARE("TWindow::SetCapture twice", W[0]->SetCapture(A[0]), W[1]->SetCapture(A[1]));
+		GUI_COMPARE("TElement::SetCapture", ((TElement *)A[0])->TElement::SetCapture(A[0]),
+			At<void (__fastcall *)(void *, void *, void *)>(0x4a0bc0)(A[1], NULL, A[1]));
+		GUI_COMPARE("TWindow::ReleaseCapture another", W[0]->ReleaseCapture(A[0]), W[1]->ReleaseCapture(A[1]));
+		GUI_COMPARE("TElement::ReleaseCapture", ((TElement *)A[0])->TElement::ReleaseCapture(A[0]),
+			At<void (__fastcall *)(void *, void *, void *)>(0x4a0d60)(A[1], NULL, A[1]));
+		for (int s = 0; s < 2; s++)
+			W[s]->ReleaseCapture(E[s]);
+		for (int s = 0; s < 2; s++) {
+			V[s]->Parent = B[s];
+			((TGuiThrower *)B[s])->Mask = 128;
+		}
+		GUI_COMPARE("TWindow::SetCapture parent", V[0]->SetCapture(P[0]), V[1]->SetCapture(P[1]));
+		GUI_COMPARE("TWindow::ReleaseCapture parent", V[0]->ReleaseCapture(P[0]), V[1]->ReleaseCapture(P[1]));
+		for (int s = 0; s < 2; s++) {
+			V[s]->Parent = NULL;
+			V[s]->Capture = NULL;
+			((TGuiThrower *)B[s])->Mask = 0;
+		}
+		CompareTrees("errors: capture");
+		// Areas and fitting.
+		TRect Area((int)(Random() % 40) - 20, (int)(Random() % 40) - 20, (int)(Random() % 300) - 150,
+			(int)(Random() % 300) - 150);
+		GUI_COMPARE("TWindow::SetChildArea another's", V[0]->SetChildArea(E[0], Area), V[1]->SetChildArea(E[1], Area));
+		GUI_COMPARE("TWindow::SetChildPosition another's", V[0]->SetChildPosition(E[0], x, y),
+			V[1]->SetChildPosition(E[1], x, y));
+		GUI_COMPARE("TWindow::SetChildArea", W[0]->SetChildArea(E[0], Area), W[1]->SetChildArea(E[1], Area));
+		GUI_COMPARE("TWindow::SetChildPosition thrower", W[0]->SetChildPosition(A[0], x, y),
+			W[1]->SetChildPosition(A[1], x, y));
+		GUI_COMPARE("TWindow::SetChildArea thrower", W[0]->SetChildArea(A[0], Area),
+			W[1]->SetChildArea(A[1], Area));
+		GUI_COMPARE("TWindow::FitToChild NULL", W[0]->FitToChild(NULL, Area, true), W[1]->FitToChild(NULL, Area, true));
+		GUI_COMPARE("TWindow::FitToChild", W[0]->FitToChild(E[0], Area, Flag),
+			W[1]->FitToChild(E[1], Area, Flag));
+		GUI_COMPARE("TWindow::FitToChild thrower", W[0]->FitToChild(A[0], Area, true), W[1]->FitToChild(A[1], Area, true));
+		for (int s = 0; s < 2; s++)
+			E[s]->Height = 0;
+		GUI_COMPARE("TWindow::FitToChild no height", W[0]->FitToChild(E[0], Area, Flag),
+			W[1]->FitToChild(E[1], Area, Flag));
+		for (int s = 0; s < 2; s++) {
+			E[s]->Height = 7;
+			E[s]->Width = INT_MAX;
+		}
+		TRect Wide(5 + (int)(Random() % 5), 0, 0, 0);
+		GUI_COMPARE("TWindow::FitToChild too wide", W[0]->FitToChild(E[0], Wide, true), W[1]->FitToChild(E[1], Wide, true));
+		for (int s = 0; s < 2; s++)
+			E[s]->Width = 9;
+		int Geometry = (int)(Random() % 4);
+		for (int s = 0; s < 2; s++) {
+			TComponent *C = B[s];
+			if (Geometry == 0) {
+				C->OffsetX = -30;
+				C->Width = 10;
+			} else if (Geometry == 1) {
+				C->OffsetY = -30;
+				C->Height = 10;
+			} else if (Geometry == 2) {
+				C->OffsetX = INT_MAX;
+				C->Width = 5 - INT_MAX;
+			} else {
+				C->OffsetY = INT_MAX;
+				C->Height = 5 - INT_MAX;
+			}
+		}
+		GUI_COMPARE("TWindow::FitToChildren geometry", V[0]->FitToChildren(Area, Flag), V[1]->FitToChildren(Area, Flag));
+		for (int s = 0; s < 2; s++) {
+			B[s]->OffsetX = B[s]->OffsetY = 5;
+			B[s]->Width = B[s]->Height = 20;
+			((TGuiThrower *)B[s])->Mask = 3;
+			B[s]->OffsetX = -3;
+		}
+		for (int s = 0; s < 2; s++)
+			V[s]->Width = V[s]->Height = 60; // ClipChildren keeps B
+		GUI_COMPARE("TWindow::ClipChildren thrower", V[0]->ClipChildren(false), V[1]->ClipChildren(false));
+		for (int s = 0; s < 2; s++) {
+			B[s]->OffsetX = 5;
+			((TGuiThrower *)B[s])->Mask = 0;
+		}
+		CompareTrees("errors: areas");
+		int Saved[2][2];
+		for (int s = 0; s < 2; s++) {
+			Saved[s][0] = W[s]->Width;
+			Saved[s][1] = W[s]->Height;
+		}
+		int Which = (int)(Random() % 3);
+		for (int s = 0; s < 2; s++) {
+			W[s]->Width = Which != 1 ? Bad + 1 : 50;
+			W[s]->Height = Which != 0 ? Bad + 1 : 50;
+			E[s]->Width = Which == 0 ? 0 : E[s]->Width;
+		}
+		GUI_COMPARE("TWindow::SetChildArea size", W[0]->SetChildArea(E[0], Area), W[1]->SetChildArea(E[1], Area));
+		GUI_COMPARE("TWindow::SetChildPosition size", W[0]->SetChildPosition(E[0], x, y),
+			W[1]->SetChildPosition(E[1], x, y));
+		GUI_COMPARE("TWindow::FitToChild size", W[0]->FitToChild(E[0], Area, false),
+			W[1]->FitToChild(E[1], Area, false));
+		GUI_COMPARE("TWindow::FitToChildren", W[0]->FitToChildren(Area, false), W[1]->FitToChildren(Area, false));
+		for (int s = 0; s < 2; s++) {
+			W[s]->Width = Saved[s][0];
+			W[s]->Height = Saved[s][1];
+		}
+		GUI_COMPARE("TWindow::FitToChildren empty", ((TWindow *)Nodes[2].Side[0])->Fit(true),
+			((TWindow *)Nodes[2].Side[1])->Fit(true));
+		GUI_COMPARE("TWindow::FitToChildren thrower", W[0]->FitToChildren(Area, true),
+			W[1]->FitToChildren(Area, true));
+		GUI_COMPARE("TWindow::ClipChildren", W[0]->ClipChildren(Flag),
+			W[1]->ClipChildren(Flag));
+		CompareTrees("errors: fitting");
+		// The thrower below the window: every event's TEND, first under the
+		// point, then as the capture. (ClipChildren may have deleted it.)
+		if (!Nodes[T1].Alive) {
+			T1 = AddThrower(0);
+			for (int s = 0; s < 2; s++) {
+				A[s] = Nodes[T1].Side[s];
+				W[s]->AppendChild(A[s]);
+			}
+		}
+		for (int s = 0; s < 2; s++) {
+			A[s]->OffsetX = A[s]->OffsetY = 0;
+			A[s]->Width = W[s]->Width;
+			A[s]->Height = W[s]->Height;
+			((TGuiThrower *)A[s])->Mask = 0x7f;
+		}
+		x = (int)(Random() % (uint32)(W[0]->Width > 0 ? W[0]->Width : 1));
+		y = (int)(Random() % (uint32)(W[0]->Height > 0 ? W[0]->Height : 1));
+		for (int Captured = 0; Captured < 2; Captured++) {
+			if (Captured == 1) {
+				for (int s = 0; s < 2; s++)
+					W[s]->Capture = A[s];
+				x += (int)(Random() % 300) - 150;
+			}
+			GUI_COMPARE("TWindow::MouseMove", W[0]->MouseMove(x, y), W[1]->MouseMove(x, y));
+			GUI_COMPARE("TWindow::LeftButtonDown", W[0]->LeftButtonDown(x, y, f), W[1]->LeftButtonDown(x, y, f));
+			GUI_COMPARE("TWindow::LeftButtonUp", W[0]->LeftButtonUp(x, y, f), W[1]->LeftButtonUp(x, y, f));
+			GUI_COMPARE("TWindow::LeftButtonDoubleClick", W[0]->LeftButtonDoubleClick(x, y, f),
+				W[1]->LeftButtonDoubleClick(x, y, f));
+			GUI_COMPARE("TWindow::RightButtonUp", W[0]->RightButtonUp(x, y, f), W[1]->RightButtonUp(x, y, f));
+			GUI_COMPARE("TWindow::MouseWheel", W[0]->MouseWheel(x, y, f & 7), W[1]->MouseWheel(x, y, f & 7));
+			GUI_COMPARE("TWindow::MouseHover", W[0]->MouseHover(x, y), W[1]->MouseHover(x, y));
+			GUI_COMPARE("TWindow::HelpMouseMove", W[0]->HelpMouseMove(x, y), W[1]->HelpMouseMove(x, y));
+		}
+		GUI_COMPARE("TWindow::StopDragging", W[0]->StopDragging(), W[1]->StopDragging());
+		for (int s = 0; s < 2; s++) {
+			W[s]->Capture = NULL;
+			A[s]->OffsetX = A[s]->OffsetY = 5;
+			A[s]->Width = A[s]->Height = 20;
+		}
+		GUI_COMPARE("TWindow::SetPosition", W[0]->SetPosition(x, y), W[1]->SetPosition(x, y));
+		GUI_COMPARE("TWindow::Draw", W[0]->Draw(Big, x, y), W[1]->Draw(Big, x, y));
+		GUI_COMPARE("TWindow::Arrange", W[0]->Arrange(), W[1]->Arrange());
+		GUI_COMPARE("TWindow::MouseMove", W[0]->MouseMove(x, y), W[1]->MouseMove(x, y));
+		GUI_COMPARE("TWindow::LeftButtonDown", W[0]->LeftButtonDown(x, y, f), W[1]->LeftButtonDown(x, y, f));
+		GUI_COMPARE("TWindow::LeftButtonUp", W[0]->LeftButtonUp(x, y, f), W[1]->LeftButtonUp(x, y, f));
+		GUI_COMPARE("TWindow::LeftButtonDoubleClick", W[0]->LeftButtonDoubleClick(x, y, f),
+			W[1]->LeftButtonDoubleClick(x, y, f));
+		GUI_COMPARE("TWindow::RightButtonUp", W[0]->RightButtonUp(x, y, f), W[1]->RightButtonUp(x, y, f));
+		GUI_COMPARE("TWindow::MouseWheel", W[0]->MouseWheel(x, y, f & 7), W[1]->MouseWheel(x, y, f & 7));
+		GUI_COMPARE("TWindow::MouseHover", W[0]->MouseHover(x, y), W[1]->MouseHover(x, y));
+		GUI_COMPARE("TWindow::HelpMouseMove", W[0]->HelpMouseMove(x, y), W[1]->HelpMouseMove(x, y));
+		GUI_COMPARE("TWindow::StopDragging", W[0]->StopDragging(), W[1]->StopDragging());
+		CompareTrees("errors: events");
+		// TComponent::Draw: a skin beyond the table, a drawing left of the origin.
+		int Length = 1 + (int)(Random() % 3);
+		for (int s = 0; s < 2; s++) {
+			P[s]->DrawingList = new TDrawing[Length];
+			P[s]->DrawingListLength = Length;
+		}
+		for (int i = 0; i < Length; i++) {
+			TDrawing D;
+			D.skin = i < Length - 1 ? RandomSkin() : (Random() % 2 == 0 ? NumberOfSkins + (int)(Random() % 3) : RandomSkin());
+			D.x = i < Length - 1 ? (int)(Random() % 20) : -(int)(Random() % 20) - 1;
+			D.y = (int)(Random() % 20);
+			D.width = 1 + (int)(Random() % 10);
+			D.height = 1 + (int)(Random() % 10);
+			// Offsets inside the skin: an offset of the skin's width or more
+			// makes DrawSkin's pieces 0 wide, and both versions tile forever
+			// (until the logs exhaust the heap: the first full runs).
+			D.srcx = D.srcy = (int)(Random() % 3);
+			if (D.skin < NumberOfSkins) {
+				D.srcx %= Skins[D.skin].width;
+				D.srcy %= Skins[D.skin].height;
+			}
+			for (int s = 0; s < 2; s++)
+				P[s]->DrawingList[i] = D;
+		}
+		GUI_COMPARE("TComponent::Draw", P[0]->TComponent::Draw(Big, x / 4, y / 4),
+			At<void (__fastcall *)(void *, void *, int, int, int)>(0x4a1fb0)(P[1], NULL, Big, x / 4, y / 4));
+		for (int s = 0; s < 2; s++)
+			W[s]->AppendChild(P[s]);
+		GUI_COMPARE("TWindow::Draw a drawing", W[0]->Draw(Big, 0, 0), W[1]->Draw(Big, 0, 0));
+		CompareTrees("errors: drawing");
+		// DrawSkin and DrawSkinClipped with each parameter out of range.
+		int Skin = RandomSkin(), Wd = 1 + (int)(Random() % 30), Ht = 1 + (int)(Random() % 30);
+		for (int k = 0; k < 8; k++) {
+			int Args[5] = {x & 63, y & 63, Wd, Ht, Skin};
+			if (k < 5)
+				Args[k] = Random() % 4 == 0 ? INT_MIN : Bad;
+			if (k == 4 && Random() % 2 == 0)
+				Args[4] = LASTSKIN + (int)(Random() % 5);
+			int Saved[2] = {Skins[Skin].width, Skins[Skin].height};
+			if (k == 5)
+				Skins[Skin].width = Random() % 2 == 0 ? 0 : Bad; // the table both sides read
+			if (k == 6)
+				Skins[Skin].height = Random() % 2 == 0 ? 0 : Bad;
+			PictureThrows = k == 7;
+			snprintf(What, sizeof(What), "DrawSkin(%d, %d, %d, %d, skin %d) case %d", Args[0], Args[1], Args[2], Args[3],
+				Args[4], k);
+			ROUND_COMPARE(R, What, DrawSkin(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0),
+				At<DrawSkinFn>(0x497a00)(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0));
+			// DrawSkinClipped has no assertions on x and y: with INT_MIN both
+			// sides' picture code asks for buffers of gigabytes (bad_alloc,
+			// "unknown exception" on both sides), and the heap that is left
+			// makes later allocations fail depending on the layout.
+			if (k >= 2)
+				ROUND_COMPARE(R, "DrawSkinClipped", DrawSkinClipped(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0, 100,
+				100, 1, 2), At<DrawSkinClippedFn>(0x4a1690)(Big, Args[0], Args[1], Args[2], Args[3], Args[4], 0, 0, 100, 100,
+				1, 2));
+			PictureThrows = false;
+			Skins[Skin].width = Saved[0];
+			Skins[Skin].height = Saved[1];
+		}
+		Log[0].clear();
+		Log[1].clear();
+		// Callbacks, hotkeys and timers with the thrower as the receiver.
+		if (!Nodes[T2].Alive) {
+			T2 = AddThrower(0);
+			for (int s = 0; s < 2; s++)
+				B[s] = Nodes[T2].Side[s];
+		}
+		int Event = (int)(Random() % 300);
+		TCallback C[2] = {TCallback(B[0], Event), TCallback(B[1], Event)};
+		for (int s = 0; s < 2; s++)
+			((TGuiThrower *)B[s])->Mask = 32;
+		GUI_COMPARE("TCallback::Send", C[0].Send(), At<void (__fastcall *)(void *, void *)>(0x4a0f00)(&C[1], NULL));
+		int Key = 0x1000 + Round;
+		AddHotkey(Key, C[0]);
+		At<void (__cdecl *)(int, TCallback)>(0x4a10a0)(Key, C[1]);
+		GUI_COMPARE("CheckHotkey", CheckHotkey(Key), At<int (__cdecl *)(int)>(0x4a1480)(Key));
+		RemoveHotkey(Key);
+		At<void (__cdecl *)(int)>(0x4a12a0)(Key);
+		TTimer *Timer[2];
+		int Time = (int)(Random() % 5);
+		Timer[OURS] = new TTimer(Time, C[0]);
+		void *Memory = operator new(0x14);
+		At<void (__fastcall *)(void *, void *, int, TCallback)>(0x49b290)(Memory, NULL, Time, C[1]);
+		Timer[ORIGINAL] = (TTimer *)Memory;
+		int Elapsed = (int)(Random() % 1000) + Time * 100;
+		GUI_COMPARE("TTimer::Update", Timer[0]->Update(Elapsed),
+			At<void (__fastcall *)(void *, void *, int)>(0x4a1df0)(Timer[1], NULL, Elapsed));
+		SetTestClock(1000000 + Round * 10000);
+		GUI_COMPARE("UpdateTimers (the clock)", UpdateTimers(), At<void (__cdecl *)()>(0x4a27c0)());
+		for (int s = 0; s < 2; s++) {
+			Timer[s]->Active = true;
+			Timer[s]->Remaining = 1 + Elapsed % 50;
+		}
+		SetTestClock(1000000 + Round * 10000 + 60 + Elapsed % 100);
+		GUI_COMPARE("UpdateTimers", UpdateTimers(), At<void (__cdecl *)()>(0x4a27c0)());
+		delete Timer[OURS];
+		At<void (__fastcall *)(void *, void *, int)>(0x4a1dc0)(Timer[ORIGINAL], NULL, 1);
+		for (int s = 0; s < 2; s++)
+			((TGuiThrower *)B[s])->Mask = 0;
+		CompareTrees("errors: callbacks");
+		// Delete what is left, roots first.
+		for (size_t i = 0; i < Nodes.size(); i++) {
+			if (Nodes[i].Alive && Nodes[i].Side[OURS]->Parent == NULL) {
+				for (int s = 0; s < 2; s++)
+					delete Nodes[i].Side[s];
+				CompareTrees("errors: deletion");
+			}
+		}
+	}
+	Log[0].clear();
+	Log[1].clear();
+	R.Finish();
+}
+
 void TestGUI()
 {
 	PatchImage();
@@ -971,6 +1499,7 @@ void TestGUI()
 		Least = Executed[i] < Least ? Executed[i] : Least;
 	printf("GUI: %d checks, %d failures (each of the 30 window operations at least %d times)\n", Checks - Before,
 		Failures - BeforeFailures, Least);
+	TestGUIErrors();
 	ExitSkins();
 	Global<TSkin *>(0x71c454) = NULL;
 	RedirectOurs(0, (void *)DrawPicturePart, NULL, true);

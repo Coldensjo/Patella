@@ -47,81 +47,7 @@ static int ComparedThrows = 0; // of them, calls that threw on both sides
 
 // --- Comparing messages ---------------------------------------------------
 
-typedef std::map<std::string, std::map<int, int>> TLineMap;
-static TLineMap OursToOriginal, OriginalToOurs;
-
-// "<file> <line>" at Start (a message's start or a "reason:\n"): the
-// position of the line number and its end, or false.
-static bool FindLine(const std::string &Text, size_t Start, size_t *Number, size_t *End)
-{
-	size_t Space = Start;
-	while (Space < Text.size() && Text[Space] != ' ' && Text[Space] != '\n')
-		Space++;
-	if (Space == Start || Space >= Text.size() || Text[Space] != ' ')
-		return false;
-	size_t Digits = Space + 1;
-	if (Digits < Text.size() && Text[Digits] == '-')
-		Digits++;
-	size_t Stop = Digits;
-	while (Stop < Text.size() && Text[Stop] >= '0' && Text[Stop] <= '9')
-		Stop++;
-	if (Stop == Digits || (Stop < Text.size() && Text[Stop] != ':'))
-		return false;
-	*Number = Space + 1;
-	*End = Stop;
-	return true;
-}
-
-struct TLineRef {
-	std::string File;
-	int Line;
-};
-
-// Replaces the line numbers of every "<file> <line>: " that starts the
-// message or follows ", reason:\n", and of the origin "<file> <line>".
-static std::string WithoutLines(const std::string &Text, std::vector<TLineRef> *Lines)
-{
-	std::string Result;
-	size_t Position = 0;
-	size_t Start = 0;
-	for (;;) {
-		size_t Number, End;
-		if (FindLine(Text, Start, &Number, &End)) {
-			Result.append(Text, Position, Number - Position);
-			Result += "#";
-			TLineRef Ref = {Text.substr(Start, Number - 1 - Start), atoi(Text.c_str() + Number)};
-			Lines->push_back(Ref);
-			Position = End;
-		}
-		size_t Next = Text.find(", reason:\n", (std::max)(Position, Start));
-		if (Next == std::string::npos)
-			break;
-		Start = Next + 10;
-	}
-	Result.append(Text, Position, std::string::npos);
-	return Result;
-}
-
-static void MapLines(const char *What, const std::vector<TLineRef> &Ours, const std::vector<TLineRef> &Original)
-{
-	for (size_t i = 0; i < Ours.size() && i < Original.size(); i++) {
-		if (Ours[i].File != Original[i].File)
-			continue; // the messages differ; reported there
-		const std::string &File = Ours[i].File;
-		std::map<int, int> &Forward = OursToOriginal[File];
-		std::map<int, int> &Backward = OriginalToOurs[File];
-		auto F = Forward.find(Ours[i].Line);
-		auto B = Backward.find(Original[i].Line);
-		CHECK((F == Forward.end() || F->second == Original[i].Line) && (B == Backward.end() || B->second == Ours[i].Line),
-			"Errors %s: our %s line %d stands for the original's line %d, earlier for %d; the original's line %d earlier for our %d",
-			What, File.c_str(), Ours[i].Line, Original[i].Line, F == Forward.end() ? -1 : F->second, Original[i].Line,
-			B == Backward.end() ? -1 : B->second);
-		Forward[Ours[i].Line] = Original[i].Line;
-		Backward[Original[i].Line] = Ours[i].Line;
-	}
-}
-
-// Compares what both sides threw.
+// Compares what both sides threw (imageeh.cpp's CompareThrown).
 static void Compare(const char *What, const TThrown &Ours, const TThrown &Original)
 {
 	Compared++;
@@ -129,15 +55,7 @@ static void Compare(const char *What, const TThrown &Ours, const TThrown &Origin
 		ComparedThrows++;
 	if (Trace)
 		printf("Errors %s: %s\n", What, Original.Describe().c_str());
-	std::vector<TLineRef> OurLines, OriginalLines;
-	TThrown A = Ours, B = Original;
-	A.Message = WithoutLines(Ours.Message, &OurLines);
-	A.Origin = WithoutLines(Ours.Origin + ":", &OurLines);
-	B.Message = WithoutLines(Original.Message, &OriginalLines);
-	B.Origin = WithoutLines(Original.Origin + ":", &OriginalLines);
-	CHECK(A == B && OurLines.size() == OriginalLines.size(), "Errors %s: ours %s, original %s", What,
-		Ours.Describe().c_str(), Original.Describe().c_str());
-	MapLines(What, OurLines, OriginalLines);
+	CompareThrown("Errors", What, Ours, Original);
 }
 
 // Both sides as two calls; returns what the original threw.
@@ -590,14 +508,6 @@ static void TestUtils()
 // starts with a jump now is a test's fake. Such comparisons are skipped and
 // counted (the full run reports them; DIFFTEST_ONLY=Errors has none).
 static int Skipped = 0;
-static bool Redirected(const void *Code)
-{
-	return *(const uint8 *)Code == 0xe9;
-}
-static bool ImageRedirected(uint32 Address)
-{
-	return Redirected((const void *)(uintptr_t)Address);
-}
 
 template <class R, class... A, class... B> static void Both(const char *What, uint32 Address, R (*Ours)(A...), B &&... Arguments)
 {
@@ -1164,6 +1074,149 @@ static void TestScript()
 	remove(Name.c_str());
 }
 
+// --- Assertions that print a file's statics (issue #34) --------------------
+
+// The int a getter returns: the first "mov eax, [address]" or "mov reg,
+// [address]" in the getter's first bytes whose int has the getter's value
+// and whose change the getter sees. Works for our functions and the image's.
+static int *FindStatic(const uint8 *Code, int (__cdecl *Get)())
+{
+	for (int i = 0; i < 96; i++) {
+		const uint8 *Op = Code + i;
+		uint32 Address;
+		if (Op[0] == 0xa1)
+			Address = *(const uint32 *)(Op + 1);
+		else if (Op[0] == 0x8b && (Op[1] & 0xc7) == 0x05)
+			Address = *(const uint32 *)(Op + 2);
+		else
+			continue;
+		MEMORY_BASIC_INFORMATION Memory;
+		if (VirtualQuery((void *)(uintptr_t)Address, &Memory, sizeof(Memory)) == 0 || Memory.State != MEM_COMMIT
+		 || (Memory.Protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE | PAGE_WRITECOPY)) == 0)
+			continue;
+		int *Value = (int *)(uintptr_t)Address;
+		int Old = *Value;
+		if (Get() != Old)
+			continue;
+		*Value = Old ^ 0x5a5a;
+		bool Seen = Get() == (Old ^ 0x5a5a);
+		*Value = Old;
+		if (Seen)
+			return Value;
+	}
+	return NULL;
+}
+
+// Each count is set on both sides for the calls (out-of-range arguments, so
+// that only the assertions run) and put back: NumberOfBuddies,
+// NumberOfPlayerSteps, AccountCharacters, the two offers' counts. The effect
+// getters run for every effect number with the status it has.
+static void TestErrorStatics()
+{
+	TErrorRound R("Statics");
+	struct TStatic {
+		const char *Name;
+		uint32 ImageGetter;
+		int (__cdecl *OurGetter)();
+		int *Ours, *Image;
+	} Statics[] = {
+		{"NumberOfBuddies", 0x44fba0, GetNumberOfBuddies},
+		{"NumberOfPlayerSteps", 0x44b870, GetNumberOfPlayerSteps},
+		{"AccountCharacters", 0x4e72a0, GetAccountCharacters},
+		{"OwnOffer.Count", 0x4a4530, GetOwnOfferCount},
+		{"CounterOffer.Count", 0x4a4540, GetCounterOfferCount},
+	};
+	bool Found[5];
+	for (int k = 0; k < 5; k++) {
+		TStatic &S = Statics[k];
+		Found[k] = !ImageRedirected(S.ImageGetter) && !Redirected((const void *)S.OurGetter);
+		if (Found[k]) {
+			S.Ours = FindStatic((const uint8 *)S.OurGetter, S.OurGetter);
+			S.Image = FindStatic((const uint8 *)(uintptr_t)S.ImageGetter, At<int (__cdecl *)()>(S.ImageGetter));
+			Found[k] = S.Ours != NULL && S.Image != NULL;
+		}
+		if (!Found[k])
+			printf("note: Statics: %s not found or its getter redirected; its assertions are not compared\n", S.Name);
+	}
+	for (int t = 0; t < 60; t++) {
+		int Saved[5][2];
+		for (int k = 0; k < 5; k++)
+			if (Found[k]) {
+				Saved[k][0] = *Statics[k].Ours;
+				Saved[k][1] = *Statics[k].Image;
+			}
+		auto Set = [&](int k, int Value) {
+			*Statics[k].Ours = Value;
+			*Statics[k].Image = Value;
+		};
+		if (Found[0]) { // the buddies: one index out of range at least
+			int N = (int)(ErRandom() % 201);
+			Set(0, N);
+			int i = Outside(0, N - 1), j = ErRandom() % 2 == 0 ? Outside(0, N - 1) : (N > 0 ? Inside(0, N - 1) : -1);
+			if (ErRandom() % 2 == 0)
+				std::swap(i, j);
+			Both("CompareBuddies", 0x44de20, CompareBuddies, i, j);
+			Both("SwapBuddies", 0x44e260, SwapBuddies, i, j);
+			Both("SortBuddy", 0x44e7d0, SortBuddy, Outside(0, N - 1));
+		}
+		if (Found[1]) {
+			int N = (int)(ErRandom() % 300);
+			Set(1, N);
+			Both("GetPlayerStep", 0x44c3c0, GetPlayerStep, Outside(0, N - 1));
+		}
+		if (Found[2]) {
+			int N = (int)(ErRandom() % 20);
+			Set(2, N);
+			int Number = Outside(0, N - 1);
+			static const uint8 Address[4] = {127, 0, 0, 1};
+			Both("SetCharacter", 0x4e96d0, SetCharacter, Number, "name", "world", Address, 7171);
+			Both("SetActiveCharacter", 0x4e9c50, SetActiveCharacter, Number);
+			Both("GetCharacterName", 0x4e9db0, GetCharacterName, Number);
+			Both("GetCharacterWorld", 0x4e9f20, GetCharacterWorld, Number);
+			Both("GetCharacterIPAddress", 0x4ea090, GetCharacterIPAddress, Number);
+			Both("GetCharacterPort", 0x4ea200, GetCharacterPort, Number);
+		}
+		if (Found[3] && Found[4]) {
+			// SetOwnOffer needs a count other than 0, the adders one of at least
+			// OBJECTS_PER_OFFER, the names one below 1.
+			int Full = OBJECTS_PER_OFFER + (int)(ErRandom() % 5), Some = 1 + (int)(ErRandom() % OBJECTS_PER_OFFER);
+			int Empty = -(int)(ErRandom() % 3);
+			Set(3, ErRandom() % 2 == 0 ? Some : Full);
+			Both("SetOwnOffer", 0x4a6eb0, SetOwnOffer, "name");
+			Set(3, Full);
+			Set(4, Full);
+			Both("AddOwnOfferObject", 0x4a7460, AddOwnOfferObject, TObject());
+			Both("AddCounterOfferObject", 0x4a75e0, AddCounterOfferObject, TObject());
+			Set(3, Empty);
+			Set(4, Empty);
+			Both("GetOwnOfferName", 0x4a7760, GetOwnOfferName);
+			Both("GetCounterOfferName", 0x4a78b0, GetCounterOfferName);
+			Set(3, Some);
+			Set(4, Some);
+			Both("GetOwnOfferObject", 0x4a7a00, GetOwnOfferObject, Outside(0, Some - 1));
+			Both("GetCounterOfferObject", 0x4a7b90, GetCounterOfferObject, Outside(0, Some - 1));
+		}
+		for (int k = 0; k < 5; k++)
+			if (Found[k]) {
+				*Statics[k].Ours = Saved[k][0];
+				*Statics[k].Image = Saved[k][1];
+			}
+	}
+	// The effect getters with every effect's status (read only).
+	for (int Effect = 0; Effect < EFFECTS; Effect++) {
+		Both("GetGraphicalEffectType", 0x4b15a0, GetGraphicalEffectType, Effect);
+		Both("GetGraphicalEffectPhase", 0x4b1860, GetGraphicalEffectPhase, Effect);
+		Both("GetTextualEffectColor", 0x4b1b20, GetTextualEffectColor, Effect);
+		Both("GetTextualEffectText", 0x4b1de0, GetTextualEffectText, Effect);
+		Both("GetTextualEffectPhase", 0x4b20a0, GetTextualEffectPhase, Effect);
+		Both("GetMissileEffectType", 0x4b2360, GetMissileEffectType, Effect);
+		Both("GetMissileEffectDirection", 0x4b2620, GetMissileEffectDirection, Effect);
+		Both("GetMissileEffectX", 0x4b28e0, GetMissileEffectX, Effect);
+		Both("GetMissileEffectY", 0x4b2bb0, GetMissileEffectY, Effect);
+	}
+	R.Finish();
+}
+
 void TestErrors(const char *ExePath)
 {
 	Trace = getenv("ER_TRACE") != NULL && atoi(getenv("ER_TRACE")) != 0;
@@ -1221,10 +1274,11 @@ void TestErrors(const char *ExePath)
 	TestGraphics();
 	DisableImageExceptions();
 	if (getenv("ER_LINES") != NULL) {
-		for (auto &File : OursToOriginal)
+		for (auto &File : ThrownLineMap())
 			for (auto &Line : File.second)
 				printf("Errors line: %s %d -> %d\n", File.first.c_str(), Line.first, Line.second);
 	}
 	printf("Errors: %d checks, %d exceptions compared (%d calls that threw), %d comparisons skipped (functions redirected by earlier tests)\n",
 		Checks - Before, Compared, ComparedThrows, Skipped);
+	TestErrorStatics(); // issue #34, reported apart ("Statics errors: ...")
 }

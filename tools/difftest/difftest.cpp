@@ -25,6 +25,7 @@
 
 int Failures = 0;
 int Checks = 0;
+int FailuresPrinted = 20;
 
 static uint32 Seed = 12345;
 uint32 Random()
@@ -32,6 +33,8 @@ uint32 Random()
 	Seed = Seed * 1103515245 + 12345;
 	return Seed >> 8;
 }
+uint32 GetRandomSeed() { return Seed; }
+void SetRandomSeed(uint32 Value) { Seed = Value; }
 
 // Original functions.
 typedef void (__cdecl *XTEAFn)(uint32 *Block, const uint32 *Key);
@@ -607,7 +610,30 @@ static void EndTest()
 	}
 	Status->State = CHILD_BETWEEN_TESTS;
 }
-#define RUN_TEST(Name, ...) (BeginTest(#Name), Name(__VA_ARGS__), EndTest())
+// DIFFTEST_SKIP=<names> (comma-separated, without "Test": SurfaceDX,GUI) leaves
+// those tests out of the full run, to find which earlier test leaves state
+// that a later one depends on.
+static bool Skipped(const char *Name)
+{
+	const char *List = getenv("DIFFTEST_SKIP");
+	if (List == NULL || strncmp(Name, "Test", 4) != 0)
+		return false;
+	Name += 4;
+	size_t Length = strlen(Name);
+	for (const char *p = List; *p != 0;) {
+		const char *End = strchr(p, ',');
+		size_t Item = End != NULL ? (size_t)(End - p) : strlen(p);
+		if (Item == Length && strncmp(p, Name, Length) == 0) {
+			printf("%s: skipped (DIFFTEST_SKIP)\n", Name);
+			return true;
+		}
+		p += Item;
+		if (*p == ',')
+			p++;
+	}
+	return false;
+}
+#define RUN_TEST(Name, ...) (Skipped(#Name) ? (void)0 : (BeginTest(#Name), Name(__VA_ARGS__), EndTest()))
 #define TestXTEA(...) RUN_TEST(TestXTEA, __VA_ARGS__)
 #define TestCharacters(...) RUN_TEST(TestCharacters, __VA_ARGS__)
 #define TestColors(...) RUN_TEST(TestColors, __VA_ARGS__)
@@ -661,6 +687,8 @@ int main(int argc, char **argv)
 	// (they need none of the earlier tests), for quick runs while working on
 	// them.
 	const char *Only = getenv("DIFFTEST_ONLY");
+	if (getenv("DIFFTEST_FAILS") != NULL)
+		FailuresPrinted = atoi(getenv("DIFFTEST_FAILS"));
 	if (Only != NULL && strcmp(Only, "MainWindow") == 0) {
 		TestMainWindow();
 		printf("%d checks, %d failures\n", Checks, Failures);
@@ -723,6 +751,11 @@ int main(int argc, char **argv)
 	}
 	if (Only != NULL && strcmp(Only, "Errors") == 0) {
 		TestErrors(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
+	if (Only != NULL && strcmp(Only, "GUI") == 0) {
+		TestGUI();
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}

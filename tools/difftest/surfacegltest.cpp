@@ -36,6 +36,7 @@
 // so the tests after it see the same sequence as before it existed.
 
 #include "difftest.h"
+#include "imageeh.h"
 #include "../../src/SurfaceGL.h"
 #include "../../src/Extern/glh/glh_genext.h"
 #include "../../src/GUI.h"
@@ -642,8 +643,20 @@ static void FindGlhStrings()
 		Code += 5 + *(int32_t *)(Code + 1);
 	std::vector<TGLRange> Ranges = WritableSections();
 	uint32 *Found[2] = {NULL, NULL};
+	// Only the absolute memory operands of the instructions such code uses
+	// (mov eax/moffs, mov/cmp/test/push/mov imm with a [disp32] ModRM): any
+	// four bytes taken as an address matched a misaligned window once the
+	// sections grew (issue #34).
 	for (int i = 0; i < 96 && Found[1] == NULL; i++) {
-		uint8 *Value = *(uint8 **)(Code + i);
+		int Operand = 0;
+		if (Code[i] == 0xa1 || Code[i] == 0xa3)
+			Operand = i + 1;
+		else if ((Code[i] == 0x8b || Code[i] == 0x89 || Code[i] == 0x39 || Code[i] == 0x3b || Code[i] == 0x85
+			|| Code[i] == 0x83 || Code[i] == 0xc7 || Code[i] == 0xff) && (Code[i + 1] & 0xc7) == 0x05)
+			Operand = i + 2;
+		if (Operand == 0)
+			continue;
+		uint8 *Value = *(uint8 **)(Code + Operand);
 		for (TGLRange &R : Ranges)
 			if (Value >= R.From && Value + 4 <= R.To && ((uintptr_t)Value & 3) == 0) {
 				if (Found[0] == NULL)
@@ -719,7 +732,7 @@ static void Compare()
 	Checks++;
 	if (Log[IMAGE] != Log[OURS]) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			size_t i = 0;
 			while (i < Log[IMAGE].size() && i < Log[OURS].size() && Log[IMAGE][i] == Log[OURS][i])
 				i++;
@@ -732,7 +745,7 @@ static void Compare()
 	Checks++;
 	if (A != B) {
 		Failures++;
-		if (Failures <= 20) {
+		if (Failures <= FailuresPrinted) {
 			size_t i = 0;
 			while (i < A.size() && i < B.size() && A[i] == B[i])
 				i++;
@@ -746,7 +759,7 @@ static void Compare()
 		if (Global<void *>(P.Image) != *(void **)P.Ours) {
 			Checks++;
 			Failures++;
-			if (Failures <= 20)
+			if (Failures <= FailuresPrinted)
 				printf("FAIL SurfaceGL %s: extension pointer %s differs: %p %p\n", What, P.Name, Global<void *>(P.Image),
 					*(void **)P.Ours);
 			break;
@@ -775,7 +788,7 @@ template <class F> static void Both(const char *Name, F Operation)
 	Checks++;
 	if (memcmp(&AfterImage, &World, sizeof(World)) != 0) {
 		Failures++;
-		if (Failures <= 20)
+		if (Failures <= FailuresPrinted)
 			printf("FAIL SurfaceGL %s: the worlds the sides leave differ\n", Name);
 	}
 }
@@ -1445,6 +1458,93 @@ static void RunRound(int Round)
 	DestroyObjects();
 }
 
+// --- Error paths (issue #34) ---------------------------------------------------------------
+
+// Both sides as Both does, each in ImageThrow/OurThrow: what they threw, then
+// the logs, the objects and the worlds.
+template <class F> static void BothThrown(TErrorRound &R, const char *Name, F Operation)
+{
+	TThrown Thrown[2];
+	Both(Name, [&](TSurface *T) {
+		if (Side == IMAGE)
+			Thrown[IMAGE] = ImageThrow([&] { Operation(T); });
+		else
+			Thrown[OURS] = OurThrow([&] { Operation(T); });
+	});
+	R.Compare(Name, Thrown[OURS], Thrown[IMAGE]);
+}
+
+// PROGRAM_ERROR 12 (no pbuffer: CreateSurfaces through Init, and through
+// RestoreSurfaces' catch) and the drawing functions' assertions. The test's
+// own random numbers (Rnd) are used after its counted rounds.
+static void TestSurfaceGLErrors()
+{
+	TErrorRound R("SurfaceGL");
+	for (int Round = 0; Round < 80; Round++) {
+		RandomWorld();
+		World.ChangeResult = World.ChangeBackResult = DISP_CHANGE_SUCCESSFUL;
+		World.PixelFormat = Between(1, 20);
+		CreateObjects();
+		Both("InitSurfaces", [&](TSurface *T) { T->InitSurfaces(); });
+		HWND Window = (HWND)(uintptr_t)0x10010;
+		int Mode = Chance(50) ? WINDOWED_MODE : FULLSCREEN_MODE;
+		TFullscreenMode Copies[2];
+		for (int s = 0; s < 2; s++) {
+			Copies[s].Width = 640;
+			Copies[s].Height = 480;
+			Copies[s].Depth = 32;
+			Copies[s].Frequency = 60;
+		}
+		int Case = Round % 3;
+		if (Case == 0) {
+			if (Chance(50))
+				World.PbufferFails = true;
+			else
+				World.PbufferCount = 0;
+		}
+		BothThrown(R, "Init", [&](TSurface *T) { T->Init(&Window, Mode, &Copies[Side], true); });
+		World.PbufferFails = false;
+		World.PbufferCount = Between(1, 3);
+		if (Case == 1) {
+			World.PbufferFails = true;
+			BothThrown(R, "RestoreSurfaces", [&](TSurface *T) { T->RestoreSurfaces(Mode, &Copies[Side]); });
+			World.PbufferFails = false;
+		}
+		if (Case == 2) {
+			static uint8 Data[64 * 64 * 4], Mask[64 * 64 * 4];
+			static TRGBColor Colors[8];
+			TRGBColor Key(1, 2, 3);
+			int Bad = Chance(50) ? Between(-5, -1) : Between(NUMBER_OF_SURFACES_GL, NUMBER_OF_SURFACES_GL + 5);
+			int Good = Between(0, NUMBER_OF_SURFACES_GL - 1);
+			int x = Chance(50) ? Between(-5, -1) : Between(0, 40), y = Chance(30) ? -1 : Between(0, 40);
+			int w = Chance(50) ? Between(-2, 0) : Between(1, 20), h = Chance(30) ? 0 : Between(1, 20);
+			TRect Empty(Between(0, 5), Between(0, 5), Between(-3, 0), Between(1, 5));
+			if (Chance(50))
+				std::swap(Empty.width, Empty.height);
+			TRect Some(Between(0, 5), Between(0, 5), Between(1, 30), Between(1, 30));
+			BothThrown(R, "WriteImage screen", [&](TSurface *T) { T->WriteImage(SCREEN_SURFACE, 0, 0, 4, 4, Data); });
+			BothThrown(R, "WriteImage area", [&](TSurface *T) { T->WriteImage(SPRITE_SURFACE, x, y, w, h, Data); });
+			BothThrown(R, "WriteMaskedImage screen", [&](TSurface *T) {
+				T->WriteMaskedImage(SCREEN_SURFACE, 0, 0, 4, 4, Data, Mask, Colors);
+			});
+			BothThrown(R, "WriteMaskedImage area", [&](TSurface *T) {
+				T->WriteMaskedImage(SPRITE_SURFACE, x, y, w, h, Data, Mask, Colors);
+			});
+			BothThrown(R, "BlitRectClipped screen", [&](TSurface *T) {
+				T->BlitRectClipped(Good, 1, 1, SCREEN_SURFACE, Some, TRect(0, 0, 800, 600));
+			});
+			BothThrown(R, "Blit", [&](TSurface *T) { T->Blit(SCREEN_SURFACE, 1, 1, Good, Empty, Key); });
+			BothThrown(R, "BlitRect", [&](TSurface *T) { T->BlitRect(SCREEN_SURFACE, 1, 1, Good, Empty); });
+			BothThrown(R, "GetSurfaceRect", [&](TSurface *T) { TRect Out; T->GetSurfaceRect(Bad, &Out); });
+			int Type = Chance(50) ? Between(-3, -1) : Between(3, 6);
+			BothThrown(R, "SurfaceRecreated", [&](TSurface *T) { T->SurfaceRecreated(Type); });
+		}
+		Both("ExitSurfaces", [&](TSurface *T) { T->ExitSurfaces(); });
+		DestroyObjects();
+	}
+	R.Finish();
+}
+
 void TestSurfaceGL()
 {
 	PatchImage();
@@ -1466,12 +1566,13 @@ void TestSurfaceGL()
 			printf("round %d\n", Round);
 		RunRound(Round);
 	}
-	RestoreAll();
-	if (LogFile != NULL)
-		fclose(LogFile);
 	int Least = 1 << 30;
 	for (int k = 0; k <= 45; k++)
 		Least = (std::min)(Least, OperationCounts[k]);
 	printf("SurfaceGL: %d checks, %d failures (each operation at least %d times, %d extension pointer comparisons)\n",
 		Checks - Before, Failures, Least, ExtPointerChecks);
+	TestSurfaceGLErrors();
+	RestoreAll();
+	if (LogFile != NULL)
+		fclose(LogFile);
 }
