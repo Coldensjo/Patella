@@ -3834,6 +3834,16 @@ Claude Opus 5.5 (issue #34), November 2, 2026.
     ReleaseCapture and LeftButtonUp; ShowUpButton, HideUpButton, SetMinimizeButton): the test objects sit one
     level lower, and a test element directly in a column would be read as a content window (its Identifier
     beyond the object).
+  - ContextMenus.cpp (contextmenustest.cpp TestContextMenusErrors): 44 of 70: the menus built and drawn with
+    throwing text and skin fakes (the constructors' and Draw's TENDs), unknown events to every HandleEvent (the
+    TERROR1s and TEND1s), the object menu's events 10010/10011 with their assertions, AddEntry's text checks,
+    unknown party flags, the constructors without their window, text, console buffer or mark data. Not
+    reached: THelpBubble's Place and FitsIn assertions and TENDs (the bubble is placed inside the help area by
+    the fakes' geometry), its constructor's and SetSize's TENDs, the entries' and the menu's mouse and key TENDs
+    (an entry click runs the menu's event: only safe clicks are made), Show's LastEntry assertion and
+    AddSeparator's TEND (no empty menu is shown), the object menu's LookedObject assertions, the text menu's
+    player assertion and the text and request menus' HandleEvent TENDs (every event is theirs) and the request
+    menu's buffer assertion.
   - errortest.cpp TestErrorStatics ("Statics errors: ..."): the assertions that print statics, with the statics
     set on both sides and restored (FindStatic finds a static through its getter's "mov reg, [address]" on both
     sides): GetPlayerStep (Creatures.cpp), the offers (Inventory.cpp), SetCharacter/SetActiveCharacter/
@@ -3841,7 +3851,7 @@ Claude Opus 5.5 (issue #34), November 2, 2026.
     NumberOfBuddies: not found (GetNumberOfBuddies has a try block before the read; not covered).
 - **Not covered** (open): Surface.cpp (SurfaceInitInstance is called by no test: engine probing through Windows,
   the window and every engine; its second throw has no handler in the binary), DialogElements.cpp,
-  ContextMenus.cpp, ConsoleWindow.cpp, ContentWindows.cpp, Dialogs.cpp, MainWindow.cpp and MapWindow.cpp (no
+  ConsoleWindow.cpp, ContentWindows.cpp, Dialogs.cpp, MainWindow.cpp and MapWindow.cpp (no
   error rounds yet: the same pattern applies, the throwing test objects of dialogwindowtest.cpp plus each
   test's own fakes; mapwindowtest.cpp's patches are for good, so its round must run inside that test).
 - **Findings** (high). CheckHotkey's TEND2(Key, i): the original prints i = 0 wherever the key is found (the
@@ -3860,3 +3870,13 @@ Claude Opus 5.5 (issue #34), November 2, 2026.
   Tools for such hunts: DIFFTEST_SKIP=<names> leaves tests out of the full run, DIFFTEST_FAILS=<n> now reaches
   every test's failure printing.
 - **Trap** (high): never call Random() inside a two-sided call (the two sides get different values).
+- **Mutation check** (high): 20 changes to assertion conditions, TEND parameter lists and PROGRAM_ERROR codes
+  of GUI.cpp, DialogWindow.cpp, SurfaceDX.cpp, surfaceDX9.cpp and SurfaceGL.cpp (build/scratch/mutate.py of the
+  issue's worktree, each test run alone); all 20 detected: 13 by the error rounds' exception comparisons, one
+  by SurfaceGL's log comparison, six (narrowed conditions that legitimate calls hit) by the counted tests. The first run let one survive: surfaceDX9.cpp's PROGRAM_ERROR
+  14 of the primary render target, never chosen by the random failure index; the round now fails every creation
+  call of Init in turn.
+- **Totals** (full build.cmd, November 2, 2026): difftest.exe 14,745,663 checks, sysinctest.exe 67, vlong 3,201, no
+  failures; the error rounds' checks: GUI 31,909, DialogWindow 9,501, ContextMenus 8,572, SurfaceDX 155,615, SurfaceDX9 4,934,
+  SurfaceGL 2,620, statics 7,920. Every per-test count of the earlier full runs is unchanged (GUI 5,246,029, DialogWindow
+  24,567, ContextMenus 33,088, SurfaceDX 1,213,366, SurfaceDX9 58,682, SurfaceGL 53,082, Errors 31,912).

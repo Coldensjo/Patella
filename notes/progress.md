@@ -104,7 +104,7 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   must not throw (noexcept). Clear what a throw leaves behind before the next call (TDialogWindow's Busy and
   Dragged). DIFFTEST_SKIP=<names> leaves tests out of the full run (find which earlier test leaves state
   behind); DIFFTEST_FAILS=<n> prints n failures in every test. notes/decisions.md "Error paths of the window
-  and surface files" lists what is covered and what is left (DialogElements, ContextMenus, ConsoleWindow,
+  and surface files" lists what is covered and what is left (DialogElements, ConsoleWindow,
   ContentWindows, Dialogs, MainWindow, MapWindow, Surface.cpp).
 - build.cmd (issue #23) gives the same result from cmd, PowerShell and Git Bash. The old silent
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
