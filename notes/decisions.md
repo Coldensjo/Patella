@@ -3926,3 +3926,51 @@ The server, the scripts and the results: notes/testserver.md. Decisions with a r
   Git Bash, the server ignored the Ctrl+C.
 - **Run folders build\run-orig and build\run-patella** (high): copies of the data files; the WindowedMode
   in their Tibia.cfg was set to (200,200,800,600,no), which the client only uses when it fits the screen.
+
+## Network traffic comparison (issue #19)
+
+The scripts, the session and the results: notes/traffic.md. Decisions with a reasonable default:
+
+- **Compare after decryption, not with a fixed seed and clock** (high): the XTEA key, the RSA block's tail
+  and the XTEA padding come from rand() (seeded with timeGetTime in sysinc.cpp); fixing them would mean
+  patching both clients' code. tibia.pem, the server's private key, decrypts the RSA block, which gives the
+  key for everything else. The masked bytes are checked instead of ignored: they must be one run of MSVC
+  rand() results in both clients (proxy.rand_stream).
+- **A proxy that rewrites the character list's game port** (high): the game server's address comes from the
+  login server, not from the client; the proxy puts its own port in (same length, same padding) for both
+  clients alike. The clients are patched only with patch_client.py's existing --port.
+- **Replay as the strict comparison of received packets** (high): live server streams cannot match (the
+  world moves on its own, the server cuts its frames by time), so "every received packet leads to the same
+  client state" is tested by feeding both clients the same recorded server stream (re-encrypted with each
+  client's key) and comparing their packets and memory after every step. The live sessions still compare
+  the clients' packets against a real server; their server packets are only listed.
+- **Replay paced by the client's packets** (medium): each recorded server packet is sent after the client
+  packet that preceded it, with the recorded delay; the driver waits until the replay waits for the client
+  (wait_idle). A step's state is then taken at the same point of the server stream in both clients.
+- **State from memory, not from the screen** (high): the display was off (white screenshots, #18); the
+  state is read field by field at the globals' addresses (Tibia.exe from src/ comments, Patella.exe from its
+  PDB), without times and animation fields. The window tree is compared too.
+- **Click places from the client's memory** (high): the window tree, the skin's slot areas and the map's
+  creature name positions give every place; Patella's RTTI names its classes, eight Tibia.exe vtables (from
+  src/ comments and the constructors) name the ones the driver needs.
+- **A helper client as trade partner, started with "gamemaster"** (medium): a player trade needs a second
+  player; a client refuses to start next to another Tibia window unless it is a gamemaster client
+  (Player.cpp), and this server ignores the flag (db_sqlite.cc). The helper is the original client and is
+  not compared; it is killed when it does not log out or close (it did not, in about half the runs).
+- **Trade request, inspect, cancel; no accepted trade** (medium): the cancel leaves both inventories as
+  they were; the session still sends 0x7d, 0x7e and 0x80 and opens and closes the trade window.
+- **Restore the test characters' player files before each live session and restart the server** (high):
+  the session eats the apple and the characters' positions and login order change; with the files put back
+  and a fresh server both live sessions start from the same state. Only the two test characters' files are
+  touched; a file that did not exist at the start (Patella Second's) is removed again.
+- **The character is chosen by name in the list** (high): the server orders the list by level and last
+  login, which the sessions change; the driver reads the names from the client's memory (Status.cpp
+  Characters).
+- **Restart the server when the login server listens on 0.0.0.0** (high): the server's start-up race
+  (notes/traffic.md) cannot be fixed without changing the user's server; the script detects it from
+  run-testserver.ps1's output and restarts.
+- **"hello world", not "hello patella"** (high): a text containing the password makes both clients show the
+  "Account Data Warning" instead of sending it.
+- **ShowNewHints = no and a fixed window in the run folders' Tibia.cfg** (high): hint dialogs would take
+  the driver's keys; the window (10,10,800,600) fits the 1024x768 screen of the monitor-off display, so the
+  layout, and every click place, is the same in all runs.

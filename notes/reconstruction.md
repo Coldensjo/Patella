@@ -101,6 +101,11 @@ points copies of Tibia.exe and Patella.exe at 127.0.0.1 with the server's RSA ke
 out, from build\run-orig or build\run-patella. Everything, including the server's configuration and
 backup: notes/testserver.md.
 
+`python -I tools/compare_traffic.py` (issue #19) plays a scripted session (walk, talk, look, containers,
+use, trade, logout) with both clients against that server through a recording proxy (tools/proxy.py,
+which decrypts with the server's key), replays each recording to both clients and compares their packets,
+their state in memory after every step and their Tibia.cfg: notes/traffic.md.
+
 ## Checking
 
 - `tools\compile-check.cmd` compiles every `src/*.cpp` with MSVC 14.51 for x86 (`/W3`, no

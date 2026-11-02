@@ -243,3 +243,7 @@ Issue #19 can reuse all of this: run-testserver.ps1/stop-testserver.ps1, the run
 login_client.py (`--keep-open` to keep a client in the game). tibia.pem is the private half of the key
 the patched clients encrypt with, so a recorder can decrypt the login packets' RSA block, take the XTEA
 key from it and decrypt the rest of both connections ("compare after decryption").
+
+Done in issue #19 (notes/traffic.md). Found there: the server's login thread sometimes binds 0.0.0.0:7171
+in spite of bind_address (a start-up race in the server's code, notes/traffic.md);
+tools/compare_traffic.py restarts the server when run-testserver.ps1 reports it.

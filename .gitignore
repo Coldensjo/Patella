@@ -26,3 +26,6 @@ build/
 .vs/
 *.vcxproj.user
 decomp/clean/
+
+# Python bytecode of the tools
+__pycache__/

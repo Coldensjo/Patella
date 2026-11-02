@@ -55,6 +55,10 @@ tools\run-testserver.ps1 / stop-testserver.ps1; tools/patch_client.py points cop
 (server names and RSA modulus), tools/login_client.py logs in with account 772001. Tibia.exe and
 Patella.exe both reach the character list, enter the game and log out, with no difference; the
 screenshots of that run are white (the monitor was off). notes/testserver.md.
+Network traffic compared (issue #19, November 2, 2026): tools/compare_traffic.py records both clients'
+sessions through tools/proxy.py (decrypted with the server's key), replays each recording to both
+clients and compares their packets, their memory state after every step (tools/client_state.py) and
+Tibia.cfg: no differences, no client bug. notes/traffic.md.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
