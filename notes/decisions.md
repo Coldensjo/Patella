@@ -1264,6 +1264,7 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
   pushes elsewhere, so the signature was left.
   Settled in #27: SetChildArea takes a TRect; Arrange passes TRect(Data140.x, Data140.y, Data148.x,
   Data148.y) (the two points may be one TRect, #31).
+  Settled in #31: SkinProperties.Data140 is one TRect (+0x140-+0x14f), and Arrange passes it.
 - **callcheck** (14 of 26 functions differ, all explained): constructor calls
   (TWindow's, TCallback's, TMapWindow's, TBlinkingButton's, the vector
   constructor iterator of DrawCreature's colours) are not lexical; qualified
@@ -3300,6 +3301,8 @@ Claude Opus 5.5, November 2, 2026.
     0x5cd108..0x5cd117), the same code a TRect copy gives. Whether these pairs are TRects is a SkinProperties
     retype: issue #31. The source builds TRect(P.x, P.y, Q.x, Q.y) (medium; the values and the layout are
     the binary's either way).
+    Settled in #31: each pair is one TRect, and the ten callers pass it (see "SkinProperties point pairs
+    (issue #31)" below).
 - **Tests**: no test fake overrides SetChildArea; guitest.cpp's call builds a TRect. Totals unchanged
   (14,492,680 checks in difftest.exe, 67 in sysinctest.exe, 3,201 vlong; 0 failures). tools\compile-check.cmd
   is clean. The first full run had 125 "dialogs differ" failures in the outfit dialog, caused by the
@@ -3313,3 +3316,56 @@ Claude Opus 5.5, November 2, 2026.
   DialogWindow.cpp (23 of 47), Dialogs.cpp (111 of 139) and MapWindow.cpp (14 of 26). SetChildArea is a
   virtual call (indirect) or a qualified TWindow:: call in the decompile, so the tool does not count it, and
   TRect's constructor is not a names.tsv function.
+
+## SkinProperties point pairs (issue #31)
+
+Claude Opus 5.5, November 2, 2026.
+
+- **Evidence** (build/scratch/i31/refs.py in the i31 worktree: every instruction of .text whose operand is an
+  absolute address inside one of the ten 16-byte pairs, with the function from names.tsv, and every dword
+  outside .text that points into them):
+  - Each pair has exactly eight references: InitSkinProperties' (0x498160) four stores, one per word, and the
+    four loads of its one SetChildArea call, which copy the words in order (+0, +4, +8, +c) into the
+    16-byte block (`sub esp,0x10`, four stores, the push of the child, the call through +0x8c). No other
+    function reads or writes any word of them, and no dword in .rdata, .data or .rsrc points into them.
+  - No code takes the address of SkinProperties (0x5ccfc8) or of the blocks Style194 (0x5cd15c) and
+    Style6FC (0x5cd6c4) except the static initialiser 0x559e50, which passes SkinProperties to its
+    constructor 0x496800. The block constructors 0x4954f0 and 0x495700 (and 0x496800 for +0x140) zero every
+    word of the pairs in order, which TRect's constructor and two TGUIPoint constructors give alike.
+  - No assertion string names them: the only "SkinProperties." strings name PlayerStates.NumberOfIcons,
+    StatusWindow.HitpointsBar/ManaBar, BuddylistWindow.Logo, Buttons.Texture and CheckBox.Item.
+  - So nothing in the binary uses either half of a pair as a point; the only use is the 16-byte copy that a
+    TRect passed by value gives, the same criterion as Dialogs.cpp's retype (issue #8) and the 118 TRects
+    passed to SetChildArea (#27).
+- **Each pair is one TRect** (medium-high for the type: the code is the same for either type, and the only
+  use is the TRect copy; low for the names, kept from the first member because no string names them). The
+  values are InitSkinProperties' (x, y, width, height); the calls are the call instructions:
+
+  | Member (address) | Was | Call | Area of | Values |
+  |---|---|---|---|---|
+  | Data140 (0x5cd108) | Data140/Data148 | 0x4bfe40 TMapWindow::Arrange | the hint button | -35, 5, 32, 32 |
+  | Style194.Data28 (0x5cd184) | Data28/Data30 | 0x48a333 TSubWindow::SetTitle | the title | 20, 4, -41, 10 |
+  | Style194.Data60 (0x5cd1bc) | Data60/Data68 | 0x488322 TSubWindow::SetSize | Resizer1 | 3, -16, 13, 13 |
+  | Style194.Data70 (0x5cd1cc) | Data70/Data78 | 0x48835c TSubWindow::SetSize | Resizer2 | 0, -4, 0, 0 |
+  | Style6FC.Data04 (0x5cd6c8) | Data04/Data0C | 0x434141 TTradeWindowBody::SetSize | Names | 0, 0, 0, 12 |
+  | Style6FC.Data34 (0x5cd6f8) | Data34/Data3C | 0x432bd8 TTradeNames::SetSize | its Separator | 0, -2, 0, 2 |
+  | Style6FC.Data58 (0x5cd71c) | Data58/Data60 | 0x43410b TTradeWindowBody::SetSize | Offers | 0, 12, 0, -26 |
+  | Style6FC.DataA8 (0x5cd76c) | DataA8/DataB0 | 0x43183e TTradeOffers::SetSize | its Separator | 77, 0, 2, 0 |
+  | Style6FC.DataB8 (0x5cd77c) | DataB8/DataC0 | 0x4340d5 TTradeWindowBody::SetSize | Buttons | 0, -26, 0, 0 |
+  | Style6FC.DataE8 (0x5cd7ac) | DataE8/DataF0 | 0x43353c TTradeButtons::SetSize | its Separator | 0, 0, 0, 2 |
+
+  No pair was kept as two points.
+- **The source**: GUI.h declares the ten TRects at the old offsets (the layout is the same: a TRect is two
+  TGUIPoints' 16 bytes, both int-aligned). InitSkinProperties stores the second point's x and y as the
+  TRect's width and height, in the old order (the binary interleaves the stores of neighbouring members as
+  its register allocation goes; only the bytes after the function matter, and guitest compares them). The
+  ten callers pass the TRect itself instead of TRect(P.x, P.y, Q.x, Q.y); no caller of SetChildArea builds
+  an area from two points any more (the 8 computed TRect(...) areas of #27 remain). DialogWindow.h's
+  comments of Resizer1/Resizer2 name the new members. dialogwindowtest.cpp's random Style194 values set
+  Data28/Data60/Data70.width and .height where they set the second points' x and y (the same statements in
+  the same order, so the same Random() sequence); no other test referred to the members.
+- **Tests**: totals unchanged (14,492,680 checks in difftest.exe, 67 in sysinctest.exe, 3,201 vlong;
+  0 failures) on the first complete run (the run before stopped at dialogwindowtest.cpp's compile errors,
+  which led to its change above). tools\compile-check.cmd is clean.
+- **callcheck**: identical output before and after for GUI.cpp (20 of 63 functions differ), MapWindow.cpp
+  (14 of 26), DialogWindow.cpp (23 of 47) and ContentWindows.cpp (82 of 140).

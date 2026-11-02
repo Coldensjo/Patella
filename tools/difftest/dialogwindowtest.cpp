@@ -588,8 +588,8 @@ static void RandomSkinProperties()
 	A.Data20.y = B.Data20.y = Random() % 4;
 	A.Data28.x = B.Data28.x = 18 + Random() % 6;
 	A.Data28.y = B.Data28.y = Random() % 6;
-	A.Data30.x = B.Data30.x = -(int)(36 + Random() % 8);
-	A.Data30.y = B.Data30.y = 8 + Random() % 6;
+	A.Data28.width = B.Data28.width = -(int)(36 + Random() % 8);
+	A.Data28.height = B.Data28.height = 8 + Random() % 6;
 	// A minimized window is as high as its frame (as in the game): lower, Shrink
 	// fails its assertion; higher, it loops for ever, in both versions.
 	A.Data4C = B.Data4C = Skins[133].height + Skins[132].height;
@@ -598,12 +598,12 @@ static void RandomSkinProperties()
 		-(int)(2 + Random() % 3));
 	A.Data60.x = B.Data60.x = Random() % 6;
 	A.Data60.y = B.Data60.y = -(int)(14 + Random() % 4);
-	A.Data68.x = B.Data68.x = 10 + Random() % 6;
-	A.Data68.y = B.Data68.y = 10 + Random() % 6;
+	A.Data60.width = B.Data60.width = 10 + Random() % 6;
+	A.Data60.height = B.Data60.height = 10 + Random() % 6;
 	A.Data70.x = B.Data70.x = 0;
 	A.Data70.y = B.Data70.y = -(int)(3 + Random() % 3);
-	A.Data78.x = B.Data78.x = 0;
-	A.Data78.y = B.Data78.y = 0;
+	A.Data70.width = B.Data70.width = 0;
+	A.Data70.height = B.Data70.height = 0;
 }
 
 // --- Operations ---------------------------------------------------------------------------

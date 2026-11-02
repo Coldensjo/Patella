@@ -634,11 +634,9 @@ void TSubWindow::SetSize(int Width, int Height)
 		SetChildArea(Body, SkinProperties.Style194.Data50);
 		FitToChild(Body, SkinProperties.Style194.Data50, false);
 		if (Resizer1 != NULL)
-			SetChildArea(Resizer1, TRect(SkinProperties.Style194.Data60.x, SkinProperties.Style194.Data60.y,
-				SkinProperties.Style194.Data68.x, SkinProperties.Style194.Data68.y));
+			SetChildArea(Resizer1, SkinProperties.Style194.Data60);
 		if (Resizer2 != NULL)
-			SetChildArea(Resizer2, TRect(SkinProperties.Style194.Data70.x, SkinProperties.Style194.Data70.y,
-				SkinProperties.Style194.Data78.x, SkinProperties.Style194.Data78.y));
+			SetChildArea(Resizer2, SkinProperties.Style194.Data70);
 	}
 	Arrange();
 	if (Column != NULL) {
@@ -881,7 +879,6 @@ void TSubWindow::SetTitle(TComponent *_Title)
 	}
 	Title = _Title;
 	InsertChild(_Title);
-	SetChildArea(Title, TRect(SkinProperties.Style194.Data28.x, SkinProperties.Style194.Data28.y,
-		SkinProperties.Style194.Data30.x, SkinProperties.Style194.Data30.y));
+	SetChildArea(Title, SkinProperties.Style194.Data28);
 	TEND
 }

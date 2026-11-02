@@ -2492,8 +2492,7 @@ void TTradeOffers::SetSize(int Width, int Height)
 	TWindow::SetSize(Width, Height);
 	ScrollBar->SetPosition(Width - ScrollBarWidth, 0);
 	ScrollBar->SetSize(ScrollBar->Width, Height);
-	SetChildArea(Separator, TRect(SkinProperties.Style6FC.DataA8.x, SkinProperties.Style6FC.DataA8.y,
-		SkinProperties.Style6FC.DataB0.x, SkinProperties.Style6FC.DataB0.y));
+	SetChildArea(Separator, SkinProperties.Style6FC.DataA8);
 	Arrange();
 	TEND2(Width, Height)
 }
@@ -2648,8 +2647,7 @@ void TTradeNames::SetSize(int Width, int Height)
 	TWindow::SetSize(Width, Height);
 	SetChildArea(OwnName, SkinProperties.Style6FC.Data14);
 	SetChildArea(CounterName, SkinProperties.Style6FC.Data24);
-	SetChildArea(Separator, TRect(SkinProperties.Style6FC.Data34.x, SkinProperties.Style6FC.Data34.y,
-		SkinProperties.Style6FC.Data3C.x, SkinProperties.Style6FC.Data3C.y));
+	SetChildArea(Separator, SkinProperties.Style6FC.Data34);
 	TEND2(Width, Height)
 }
 
@@ -2699,8 +2697,7 @@ void TTradeButtons::SetSize(int Width, int Height)
 {
 	TBEGIN
 	TWindow::SetSize(Width, Height);
-	SetChildArea(Separator, TRect(SkinProperties.Style6FC.DataE8.x, SkinProperties.Style6FC.DataE8.y,
-		SkinProperties.Style6FC.DataF0.x, SkinProperties.Style6FC.DataF0.y));
+	SetChildArea(Separator, SkinProperties.Style6FC.DataE8);
 	if (CancelButton != NULL)
 		SetChildPosition(CancelButton, SkinProperties.Style6FC.DataC8.width, SkinProperties.Style6FC.DataC8.height);
 	if (WaitLabel != NULL)
@@ -2800,12 +2797,9 @@ void TTradeWindowBody::SetSize(int Width, int Height)
 	TBEGIN
 	Limit(&Height, (std::min)(GetMaximumHeight(), getMinimumHeight()), (std::max)(GetMaximumHeight(), getMinimumHeight()));
 	TWindow::SetSize(Width, Height);
-	SetChildArea(Buttons, TRect(SkinProperties.Style6FC.DataB8.x, SkinProperties.Style6FC.DataB8.y,
-		SkinProperties.Style6FC.DataC0.x, SkinProperties.Style6FC.DataC0.y));
-	SetChildArea(Offers, TRect(SkinProperties.Style6FC.Data58.x, SkinProperties.Style6FC.Data58.y,
-		SkinProperties.Style6FC.Data60.x, SkinProperties.Style6FC.Data60.y));
-	SetChildArea(Names, TRect(SkinProperties.Style6FC.Data04.x, SkinProperties.Style6FC.Data04.y,
-		SkinProperties.Style6FC.Data0C.x, SkinProperties.Style6FC.Data0C.y));
+	SetChildArea(Buttons, SkinProperties.Style6FC.DataB8);
+	SetChildArea(Offers, SkinProperties.Style6FC.Data58);
+	SetChildArea(Names, SkinProperties.Style6FC.Data04);
 	Arrange();
 	TEND2(Width, Height)
 }

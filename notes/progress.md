@@ -43,6 +43,8 @@ TRect FromRect/ToRect, both from the assertion texts and the callers' 16-byte bl
 SetChildArea (issue #27, November 2, 2026): TWindow::SetChildArea(TComponent *Child, TRect Area); all 136
 calls in the binary build the area as a 16-byte block. Ten areas built from two SkinProperties points are
 #31.
+SkinProperties point pairs (issue #31, November 2, 2026): the ten pairs of TGUIPoints that SetChildArea
+took as one area are TRects (nothing else in the binary reads them); the callers pass them.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -260,6 +262,11 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 - Settled in #27: SetChildArea takes TRect Area, the callers pass SkinProperties' TRects themselves.
   build/scratch/areacalls.py (i27 worktree) lists the argument pattern of every +0x8c slot call and of
   every direct call of 0x49f5d0.
+- Settled in #31: SkinProperties.Data140, Style194.Data28/Data60/Data70 and Style6FC.Data04/Data34/Data58/
+  DataA8/DataB8/DataE8 are TRects (they were pairs of TGUIPoints; each is used only by InitSkinProperties'
+  stores and one SetChildArea call). Every SetChildArea caller now passes a SkinProperties TRect or a
+  computed TRect(...). build/scratch/i31/refs.py (i31 worktree) lists every absolute reference into a range
+  of SkinProperties, for checking a member's other uses before a retype.
 - Unknown-owner data (issue #12, notes/decisions.md): every object that includes the text header has
   a full copy of its table (147 entries, 0x24c bytes, "You are poisoned" ... "Report Rule Violation");
   the object whose code reads an entry owns that copy (Player.obj 0x5c22cc, MapWindow.obj 0x5c2064,

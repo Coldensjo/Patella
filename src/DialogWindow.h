@@ -82,8 +82,8 @@ public:
 	TSubWindowBody *getBody() { return Body; }
 
 	TSubWindowBody *Body;        // +0x44
-	TResizer *Resizer1;          // +0x48, area Style194.Data60/Data68
-	TResizer *Resizer2;          // +0x4c, area Style194.Data70/Data78
+	TResizer *Resizer1;          // +0x48, area Style194.Data60
+	TResizer *Resizer2;          // +0x4c, area Style194.Data70
 	TComponent *UpButton;        // +0x50, a container's "up" button, shown while it has a parent
 	TComponent *CloseButton;     // +0x54, event 10
 	TSkinButton *MinimizeButton; // +0x58, event 9

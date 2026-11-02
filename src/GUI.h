@@ -259,15 +259,12 @@ struct TSkinProperties194 {
 	TGUIPoint Data10; // +0x10
 	TGUIPoint Data18; // +0x18
 	TGUIPoint Data20; // +0x20
-	TGUIPoint Data28; // +0x28
-	TGUIPoint Data30; // +0x30
+	TRect Data28; // +0x28, the title's area (TSubWindow::SetTitle, DialogWindow.cpp)
 	TFont Data38; // +0x38
 	int Data4C; // +0x4c
 	TRect Data50; // +0x50, the area passed to FitToChild (0x4882c0)
-	TGUIPoint Data60; // +0x60
-	TGUIPoint Data68; // +0x68
-	TGUIPoint Data70; // +0x70
-	TGUIPoint Data78; // +0x78
+	TRect Data60; // +0x60, the area of the first resizer (TSubWindow::SetSize)
+	TRect Data70; // +0x70, the area of the second resizer
 	TRGBColor Data80; // +0x80
 };
 
@@ -319,15 +316,12 @@ struct TSkinProperties688 {
 // GUIStyle+0x6fc (0x5cd6c4); compiler-generated constructor 0x495700.
 struct TSkinProperties6FC {
 	int Data00; // +0x00
-	TGUIPoint Data04; // +0x04
-	TGUIPoint Data0C; // +0x0c
+	TRect Data04; // +0x04, the names' area in the trade window's body (TTradeWindowBody::SetSize, ContentWindows.cpp)
 	TRect Data14; // +0x14
 	TRect Data24; // +0x24
-	TGUIPoint Data34; // +0x34
-	TGUIPoint Data3C; // +0x3c
+	TRect Data34; // +0x34, the area of the names' separator (TTradeNames::SetSize)
 	TFont Data44; // +0x44
-	TGUIPoint Data58; // +0x58
-	TGUIPoint Data60; // +0x60
+	TRect Data58; // +0x58, the offers' area in the body
 	TRect Data68; // +0x68
 	TRect Data78; // +0x78
 	TRect Data88; // +0x88
@@ -335,14 +329,11 @@ struct TSkinProperties6FC {
 	int Data9C; // +0x9c
 	int DataA0; // +0xa0
 	int DataA4; // +0xa4
-	TGUIPoint DataA8; // +0xa8
-	TGUIPoint DataB0; // +0xb0
-	TGUIPoint DataB8; // +0xb8
-	TGUIPoint DataC0; // +0xc0
+	TRect DataA8; // +0xa8, the area of the offers' separator (TTradeOffers::SetSize)
+	TRect DataB8; // +0xb8, the buttons' area in the body
 	TRect DataC8; // +0xc8
 	TRect DataD8; // +0xd8
-	TGUIPoint DataE8; // +0xe8
-	TGUIPoint DataF0; // +0xf0
+	TRect DataE8; // +0xe8, the area of the buttons' separator (TTradeButtons::SetSize)
 	TFont DataF8; // +0xf8
 };
 
@@ -617,8 +608,7 @@ struct TSkinProperties {
 	int Data134; // +0x134, the border of the start window's frame
 	int Data138; // +0x138, the height of MainWindow.cpp's splitter
 	int Data13C; // +0x13c
-	TGUIPoint Data140; // +0x140
-	TGUIPoint Data148; // +0x148
+	TRect Data140; // +0x140, the area of the map window's hint button (TMapWindow::Arrange)
 	int Data150; // +0x150, the help bubble's minimum width and height (ContextMenus.cpp)
 	int Data154; // +0x154
 	int Data158; // +0x158, its maximum width and height
