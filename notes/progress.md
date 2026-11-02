@@ -97,6 +97,15 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   function the original compiled as noreturn (FatalError) must not return. An unbound import the image calls
   while it is enabled is named in a "crash:" line. DIFFTEST_ONLY=Errors runs errortest.cpp alone (ER_TRACE=1,
   ER_LINES=1, ER_SEED=<n>, ER_WATCHDOG=<seconds> prints where a hung run is).
+- Error paths of the window and surface files (issue #34): a test's error round is a TErrorRound
+  (imageeh.h) after its counted checks, with its own "<Test> errors: ..." line (the test's own count stays
+  unchanged: subtract the round's checks if it runs before the test's print). Test objects throw on demand
+  with ThrowSideAssertion (the image's exception on the image side); a fake that a destructor of ours calls
+  must not throw (noexcept). Clear what a throw leaves behind before the next call (TDialogWindow's Busy and
+  Dragged). DIFFTEST_SKIP=<names> leaves tests out of the full run (find which earlier test leaves state
+  behind); DIFFTEST_FAILS=<n> prints n failures in every test. notes/decisions.md "Error paths of the window
+  and surface files" lists what is covered and what is left (DialogElements, ContextMenus, ConsoleWindow,
+  ContentWindows, Dialogs, MainWindow, MapWindow, Surface.cpp).
 - build.cmd (issue #23) gives the same result from cmd, PowerShell and Git Bash. The old silent
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
   which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with

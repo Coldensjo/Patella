@@ -3786,3 +3786,77 @@ Claude Opus 5.5 (issue #22), November 2, 2026.
 - **Totals**: DIFFTEST_ONLY=Errors 32,822 checks (9,270 exceptions compared, 8,045 of the calls threw on the
   original's side); in the full run 31,912 (250 skipped), difftest.exe 14,524,592, sysinctest.exe 67, vlong
   3,201, no failures; the later tests' counts are unchanged. A DIFFTEST_ONLY=Errors run takes about a second.
+
+## Error paths of the window and surface files (issue #34)
+
+Claude Opus 5.5 (issue #34), November 2, 2026.
+
+- **The shared round** (high). errortest.cpp's comparison moved to imageeh.cpp: `CompareThrown` (kind, type,
+  PROGRAM_ERROR value, message and origin exactly, line numbers through one map for the whole run; lines are
+  mapped only from comparisons that match otherwise, so one difference does not cascade), and `TErrorRound`:
+  the constructor saves Random()'s state and seeds it from the test's name (EH_SEED=<n> changes it), enables the
+  image's exceptions; Finish disables them, restores Random() and prints "<Test> errors: N checks, M
+  exceptions compared (K calls that threw)". `ROUND_COMPARE(R, What, ours, original)` runs our call, then the
+  original's. The round's checks are counted apart from the test's own line, so every existing per-test count
+  is unchanged. EH_TRACE=1 prints each comparison, EH_TRACE=2 names each call first, EH_LINES=1 the line pairs,
+  EH_SEH=1 every exception that is not a TMyException or PROGRAM_ERROR.
+- **Throwing test objects** (high). The window tests' bodies, elements and fakes are our classes on both sides;
+  in the error rounds their methods throw on demand (a mask per batch), each with an assertion of the side that
+  called it: `ThrowSideAssertion` (guitest.cpp) calls TComponent::SetSize with a negative width, ours or the
+  image's 0x49bee0 (no test redirects it). An object of a test class on the image side must throw the image's
+  exception: ours passes through image frames into the image's `catch (TMyException &)` (matched by type name)
+  and is read with the image's layout (crash in the wrapping constructor 0x5086a0). A test object that calls
+  base code which may assert must call the image's base code by address on the image side (guitest.cpp's
+  TGuiThrower). Our destructors are noexcept (C++11; VC7.1's were not): a fake that a destructor calls must not
+  throw (dialogwindowtest.cpp's SetContentWindowSize, called by ~TSubWindow), or the child ends in terminate().
+- **Failure injection for the surfaces** (high). SurfaceDX.cpp: the fake DirectDraw makes the n-th
+  DirectDrawCreate, QueryInterface, CreateClipper, SetCooperativeLevel, SetDisplayMode, CreateSurface or
+  GetAttachedSurface fail (DXScript.FailCall, masks for the offscreen requests); surfaceDX9.cpp: the n-th
+  DirectDrawCreate, QueryInterface, Direct3DCreate9, CreateDevice or CreateTexture (World.FailCall); SurfaceGL.cpp:
+  no pbuffer. 0 means none, so the counted rounds are unchanged. SurfaceDX's DXOperation/DXCoverage statistics are
+  saved around the round.
+- **Covered** (sites: every TASSERT/TERROR/TEND/PROGRAM_ERROR throw of the file; build/scratch/sites.py and
+  cover.py of the issue's worktree count them from an EH_LINES=1 run):
+  - GUI.cpp (guitest.cpp TestGUIErrors): 89 of 96. Not reachable: the TENDs of InitSkinProperties, AddTimer,
+    RemoveTimer, TTimer::TTimer, AddHotkey and RemoveHotkey (nothing in their try blocks can throw with a
+    consistent table) and FitToChild's (the window's own SetSize/getMinimum* would have to throw; the mirrored
+    windows are the real classes).
+  - SurfaceDX.cpp (surfacedxtest.cpp TestSurfaceDXErrors): all 31 assertion sites, PROGRAM_ERROR 7-18.
+  - surfaceDX9.cpp (surfacedx9test.cpp TestSurfaceDX9Errors): all 25 assertion sites, PROGRAM_ERROR 7, 8, 12,
+    14-18 (the others are not thrown by this file).
+  - SurfaceGL.cpp (surfacegltest.cpp TestSurfaceGLErrors): all 9 assertion sites, PROGRAM_ERROR 12 (no pbuffer,
+    through Init and RestoreSurfaces). Not reachable: 15-18 (CreateTexture always returns true), ResetDisplay's
+    two 12s (InitDisplay throws nothing).
+  - DialogWindow.cpp (dialogwindowtest.cpp TestDialogWindowErrors): 38 of 51 (every assertion and TERROR site;
+    TENDs of the columns' and sub-windows' functions over throwing bodies, elements, parts and AddOpenDialog).
+    Not reached: the TENDs whose try blocks call only the real window classes (the column's getMinimumHeight,
+    Arrange, DeleteChild, GetContentWindow, PositionChildren, MakeRoom, Grow, GetFreeHeight; TContentWindow's
+    ReleaseCapture and LeftButtonUp; ShowUpButton, HideUpButton, SetMinimizeButton): the test objects sit one
+    level lower, and a test element directly in a column would be read as a content window (its Identifier
+    beyond the object).
+  - errortest.cpp TestErrorStatics ("Statics errors: ..."): the assertions that print statics, with the statics
+    set on both sides and restored (FindStatic finds a static through its getter's "mov reg, [address]" on both
+    sides): GetPlayerStep (Creatures.cpp), the offers (Inventory.cpp), SetCharacter/SetActiveCharacter/
+    GetCharacter* (Status.cpp, AccountCharacters), the effect getters for every effect number (Map.cpp).
+    NumberOfBuddies: not found (GetNumberOfBuddies has a try block before the read; not covered).
+- **Not covered** (open): Surface.cpp (SurfaceInitInstance is called by no test: engine probing through Windows,
+  the window and every engine; its second throw has no handler in the binary), DialogElements.cpp,
+  ContextMenus.cpp, ConsoleWindow.cpp, ContentWindows.cpp, Dialogs.cpp, MainWindow.cpp and MapWindow.cpp (no
+  error rounds yet: the same pattern applies, the throwing test objects of dialogwindowtest.cpp plus each
+  test's own fakes; mapwindowtest.cpp's patches are for good, so its round must run inside that test).
+- **Findings** (high). CheckHotkey's TEND2(Key, i): the original prints i = 0 wherever the key is found (the
+  counter lives in esi, the catch block reads the stack slot [ebp-0x14] written once before the loop, 0x4a14af),
+  ours the index: a compiler artifact of the class of "Locals that the catch blocks print" (Map.cpp), not fixed
+  in the source; the test empties the hotkey tables so that the key is the first entry. No reconstruction bugs
+  found in the covered files.
+- **Full-run failures of the first runs** (high). (1) GUI: a TComponent::Draw drawing with a skin offset of the
+  skin's width or more makes DrawSkin's pieces 0 wide, and both versions tile forever (until the logs exhaust
+  the heap); DrawSkinClipped with x or y = INT_MIN (it has no assertions on them) made both sides' picture code
+  ask for gigabyte buffers (bad_alloc, "unknown exception occurred" on both sides); the heap left behind made
+  DrawSkin case 7's allocations fail depending on the layout (on one side or the other, depending on which tests
+  ran before). The inputs keep the offsets inside the skin and give DrawSkinClipped no INT_MIN. (2) SurfaceGL
+  failed alone as well: FindGlhStrings took any four code bytes of glh_shutdown_extensions as an address and
+  matched a misaligned window once difftest.exe's sections grew; it reads only absolute memory operands now.
+  Tools for such hunts: DIFFTEST_SKIP=<names> leaves tests out of the full run, DIFFTEST_FAILS=<n> now reaches
+  every test's failure printing.
+- **Trap** (high): never call Random() inside a two-sided call (the two sides get different values).

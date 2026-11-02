@@ -1334,7 +1334,9 @@ static void TestSurfaceDX9Errors()
 		bool Ready = World.FailCall == 0;
 		if (Ready) {
 			World.Calls = 0;
-			World.FailCall = Case == 1 ? Between(1, 26) : 0;
+			// Every creation call of Init in turn (at random, some were never
+			// chosen: the mutation check found the primary render target's 14).
+			World.FailCall = Case == 1 ? 1 + (Round / 4) % 26 : 0;
 			if (Case == 2) {
 				if (Chance(50))
 					World.DesktopDepth = Between(1, 15);
