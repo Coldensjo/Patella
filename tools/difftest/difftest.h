@@ -64,6 +64,15 @@ void TestContainer();                    // containertest.cpp, Container.h's ins
 void TestRegexp();                       // regexptest.cpp, before TestMapWindow (own random numbers)
 void TestErrors(const char *ExePath);    // errortest.cpp, loads Tibia.dat;, the error paths (imageeh.cpp); before TestMapWindow (restores its patches; own random numbers)
 void TestMapWindow(const char *ExePath); // mapwindowtest.cpp, loads Tibia.dat
+// communicationtest.exe (issue #36, DIFFTEST_COMMUNICATION): Communication.cpp and Control.cpp with every
+// callee faked on both sides; in an executable of their own, because difftest.exe's other tests define
+// fakes under the names of their functions.
+// A test that divides by zero on purpose sets it (communicationtest.cpp: a patch
+// block of a zero-sized patch, caught by both sides' catch (...)): the crash
+// report then leaves such exceptions out.
+extern bool ExpectDivideByZero;
+void TestCommunication(const char *ExePath);// communicationtest.cpp: the server packets, the senders, ReceivePackets
+void TestControl(const char *ExePath);   // controltest.cpp: input, events, the timer, start-up and shutdown
 
 // dialogwindowtest.cpp defines the shared fakes of the classes DialogWindow.cpp
 // uses from files that are not reconstructed (TSubWindowBody's members,

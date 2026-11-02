@@ -2,6 +2,8 @@
 rem Builds and runs the base-layer tests:
 rem   difftest.exe   reconstructed functions against the original machine code (including Talk.cpp, Objects.cpp, Creatures.cpp, Map.cpp, graphics.cpp, GUI.cpp, DialogWindow.cpp, ContextMenus.cpp, ConsoleWindow.cpp, ContentWindows.cpp, DialogElements.cpp, Dialogs.cpp, surfaceDX9.cpp, SurfaceGL.cpp, MapWindow.cpp, MainWindow.cpp and the regexp of src\Extern\regexp)
 rem   sysinctest.exe sysinc.cpp against the original (separate: difftest.exe stubs some of its functions)
+rem   communicationtest.exe Communication.cpp and Control.cpp with every callee faked (separate: difftest.exe's
+rem                  tests define fakes under their functions' names)
 rem   vlongtest.exe  vlong and TRSA against exact integer arithmetic (vlongcheck.py)
 setlocal
 rem A step that fails stops the script with exit code 1 and a message: the
@@ -42,6 +44,18 @@ cl %BASEFLAGS% /Fo"%OUT%\sysinc\\" /EHa /DDIFFTEST_SYSINC /Fe"%OUT%\sysinctest.e
 	"%ROOT%\src\Utils.cpp" "%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" "%ROOT%\src\sysinc.cpp" ^
 	/link user32.lib /BASE:0x20000000 /DYNAMICBASE:NO /FIXED >"%OUT%\cl.txt" 2>&1 || (call :failed "compiling sysinctest.exe" "%OUT%\cl.txt" & exit /b 1)
 "%OUT%\sysinctest.exe" "%ROOT%\Tibia.exe" || (call :failed "sysinctest.exe" & exit /b 1)
+
+rem Communication.cpp and Control.cpp in their own executable (issue #36): difftest.exe's other tests define
+rem fakes under the names of their functions. Every callee is faked on both sides (commworld.cpp); MainFrm.cpp
+rem and Player.cpp are not linked (MFC's frame and application classes, which the shim only declares).
+if not exist "%OUT%\comm" mkdir "%OUT%\comm"
+call :remove communicationtest.exe || exit /b 1
+cl %BASEFLAGS% /Fo"%OUT%\comm\\" /EHa /DDIFFTEST_COMMUNICATION /Fe"%OUT%\communicationtest.exe" "%~dp0difftest.cpp" "%~dp0communicationtest.cpp" "%~dp0controltest.cpp" "%~dp0commworld.cpp" "%~dp0imageeh.cpp" "%OUT%\imageehseh.obj" ^
+	"%ROOT%\src\Communication.cpp" "%ROOT%\src\Control.cpp" "%ROOT%\src\Network.cpp" "%ROOT%\src\sysinc.cpp" "%ROOT%\src\TRSA.cpp" "%ROOT%\src\vlong.cpp" ^
+	"%ROOT%\src\Utils.cpp" "%ROOT%\src\TXTEA.cpp" "%ROOT%\src\TMyException.cpp" "%ROOT%\src\Skins.cpp" "%ROOT%\src\Status.cpp" "%ROOT%\src\Preferences.cpp" ^
+	"%ROOT%\src\Script.cpp" "%ROOT%\src\Talk.cpp" "%ROOT%\src\Objects.cpp" "%ROOT%\src\Surface.cpp" "%ROOT%\src\SurfaceDX.cpp" "%ROOT%\src\surfaceDX9.cpp" "%ROOT%\src\SurfaceGL.cpp" "%ROOT%\src\Help.cpp" "%ROOT%\src\Inventory.cpp" "%ROOT%\src\Creatures.cpp" "%ROOT%\src\Map.cpp" "%ROOT%\src\graphics.cpp" "%ROOT%\src\GUI.cpp" "%ROOT%\src\DialogWindow.cpp" "%ROOT%\src\ContextMenus.cpp" "%ROOT%\src\ConsoleWindow.cpp" "%ROOT%\src\ContentWindows.cpp" "%ROOT%\src\DialogElements.cpp" "%ROOT%\src\Dialogs.cpp" "%ROOT%\src\MapWindow.cpp" "%ROOT%\src\MainWindow.cpp" "%ROOT%\src\Extern\regexp\regexp.c" ^
+	/link ddraw.lib dxguid.lib winmm.lib user32.lib ws2_32.lib gdi32.lib opengl32.lib glu32.lib shell32.lib /BASE:0x20000000 /DYNAMICBASE:NO /FIXED /OPT:NOICF >"%OUT%\cl.txt" 2>&1 || (call :failed "compiling communicationtest.exe" "%OUT%\cl.txt" & exit /b 1)
+"%OUT%\communicationtest.exe" "%ROOT%\Tibia.exe" || exit /b 1
 
 call :remove vlongtest.exe || exit /b 1
 cl %FLAGS% /EHsc /Fe"%OUT%\vlongtest.exe" "%~dp0vlongtest.cpp" "%ROOT%\src\vlong.cpp" ^

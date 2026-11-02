@@ -446,9 +446,13 @@ static bool MapImage(const char *Path)
 // Reports where a crash happened; the original code has no symbols. This
 // vectored handler sees each exception first, also the ones a test catches
 // (none of these codes in a passing run).
+bool ExpectDivideByZero;
+
 static LONG CALLBACK ReportCrash(EXCEPTION_POINTERS *Info)
 {
 	DWORD Code = Info->ExceptionRecord->ExceptionCode;
+	if (Code == EXCEPTION_INT_DIVIDE_BY_ZERO && ExpectDivideByZero)
+		return EXCEPTION_CONTINUE_SEARCH;
 	if (Code == EXCEPTION_ACCESS_VIOLATION || Code == EXCEPTION_ILLEGAL_INSTRUCTION
 	 || Code == EXCEPTION_STACK_OVERFLOW || Code == EXCEPTION_INT_DIVIDE_BY_ZERO
 	 || Code == EXCEPTION_PRIV_INSTRUCTION || Code == EXCEPTION_IN_PAGE_ERROR
@@ -669,6 +673,8 @@ static bool Skipped(const char *Name)
 #define TestErrors(...) RUN_TEST(TestErrors, __VA_ARGS__)
 #define TestMapWindow(...) RUN_TEST(TestMapWindow, __VA_ARGS__)
 #define TestMainWindow(...) RUN_TEST(TestMainWindow, __VA_ARGS__)
+#define TestCommunication(...) RUN_TEST(TestCommunication, __VA_ARGS__)
+#define TestControl(...) RUN_TEST(TestControl, __VA_ARGS__)
 
 int main(int argc, char **argv)
 {
@@ -679,6 +685,15 @@ int main(int argc, char **argv)
 		return 2;
 #ifdef DIFFTEST_SYSINC
 	TestSysinc();
+#elif defined(DIFFTEST_COMMUNICATION)
+	// communicationtest.exe (issue #36): DIFFTEST_ONLY=Communication or Control runs one of its two tests.
+	const char *Only = getenv("DIFFTEST_ONLY");
+	if (getenv("DIFFTEST_FAILS") != NULL)
+		FailuresPrinted = atoi(getenv("DIFFTEST_FAILS"));
+	if (Only == NULL || strcmp(Only, "Communication") == 0)
+		TestCommunication(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+	if (Only == NULL || strcmp(Only, "Control") == 0)
+		TestControl(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 #else
 	// DIFFTEST_ONLY=MainWindow, MapWindow, DialogWindow, ContextMenus, ConsoleWindow,
 	// ContentWindows, DialogElements, Dialogs, SurfaceDX9 or Container runs only mainwindowtest.cpp,

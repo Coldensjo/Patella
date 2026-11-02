@@ -363,19 +363,25 @@ void MouseMove(int x, int y)
 		TASSERT1(461, ModalWindow!=NULL, GetActionState());
 		ModalWindow->MouseMove(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY);
 		break;
-	case 9:
+	case 9: {
 		SetHelpPosition(0, 0);
 		SetHelpSize(0, 0);
 		MainWindow->HelpMouseMove(x, y);
+		// The bubble is kept in a local: ModalWindow is read after
+		// HelpMouseMove and written only after Place (0x446b2a, 0x446b8f), so
+		// an exception before that leaves it as it was (issue #36).
+		THelpBubble *Bubble = (THelpBubble *)ModalWindow;
 		if (GetHelpHandleChanged()) {
-			delete ModalWindow;
-			ModalWindow = NULL;
+			delete Bubble;
+			Bubble = NULL;
 			if (GetHelpHandle() != 0)
-				ModalWindow = new THelpBubble(GetCurrentHelpText());
+				Bubble = new THelpBubble(GetCurrentHelpText());
 		}
-		if (ModalWindow != NULL)
-			((THelpBubble *)ModalWindow)->Place(MainWindow);
+		if (Bubble != NULL)
+			Bubble->Place(MainWindow);
+		ModalWindow = Bubble;
 		break;
+	}
 	}
 	LastMouseMove = GetActionNumber();
 	SetMouseOverText(NULL);

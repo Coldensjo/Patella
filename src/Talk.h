@@ -65,8 +65,11 @@ public:
 	virtual bool SetWriteEnabled(bool Value) { (void)Value; return true; }
 	virtual void Append(TTalkLine *line);
 	virtual void AddText(int Mode, const char *text, int DiffTime);
-	virtual void Remove(int lineNumber);
+	// The binary's vtable (0x573738) has Remove(int) at +0x1c and
+	// Remove(TTalkLine *) at +0x20; MSVC puts overloaded virtuals in reverse
+	// order of declaration, so Remove(TTalkLine *) is declared first (issue #36).
 	virtual void Remove(TTalkLine *line);
+	virtual void Remove(int lineNumber);
 	virtual void Clear();
 	// isDefault: ConsoleWindow.cpp's assertion "getTextBuffer()->isDefault()==false".
 	virtual bool isDefault() { return this == DefaultTextBuffer; }

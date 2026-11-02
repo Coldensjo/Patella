@@ -442,3 +442,25 @@ no total. Full build.cmd, November 2, 2026).
   runs any session(driver, wait, proxy) against recorded or crafted server packets (connection(),
   s2c(), c2s_expected(), close_event() build a script). tools/client_state.py names more Tibia.exe vtables
   (option and mark dialogs, TCheckBox, TAutomapView/Window, TTab, TStartWindow) and reads TTextButton's text.
+- Communication.cpp and Control.cpp (issue #36): tools\difftest\build.cmd builds communicationtest.exe (difftest.cpp
+  with DIFFTEST_COMMUNICATION, communicationtest.cpp, controltest.cpp, commworld.cpp, imageeh.cpp and every src file but
+  MainFrm.cpp and Player.cpp); DIFFTEST_ONLY=Communication or Control runs one test. commworld.cpp fakes every callee
+  on both sides (a fake logs into the log of Side and answers from that side's world); Network.cpp's buffer
+  functions stay real on buffers the test sets (ReceiveBufferOf/SendBufferOf, SetReceiveData), SendCommand logs the
+  packet. CM_TRACE/CT_TRACE=1 (=2 names each comparison before it runs), CM_LOGS/CT_LOGS=<file>, CM_ROUNDS/CT_ROUNDS,
+  CM_SEED/CT_SEED, CM_LIVE=<text> prints the calls of the comparisons whose name contains it as they happen,
+  CM_HEAPCHK=1 runs _heapchk() after every comparison. The seeds (commseeds.h) come from issue #19's recordings
+  through commseeds.py. When Network.cpp gets linked into difftest.exe (issue #37), communicationtest.exe is not
+  affected; when Communication.cpp or Control.cpp change, both tests must still pass, and a new callee needs a fake
+  in commworld.cpp (an unfaked callee runs real code and usually crashes the image side).
+- A test whose fakes stand in for a whole layer can reach the original's error paths through the fakes: a fake that
+  throws the side's own exception on its n-th call (commworld.cpp Tick/FailAt; controltest.cpp also a structured
+  exception and the image's PROGRAM_ERROR through _CxxThrowException 0x511d2b with ThrowInfo 0x57b3c4, a const char *
+  with 0x5bb5d0). Fill the stack with a pattern before each side's call (commworld.h FillStack) so locals the catch
+  blocks print before they are assigned compare equal, and locals the original zero-initialises show up.
+- VC7.1 overload order in vtables: MSVC places overloaded virtual functions in reverse order of declaration (both
+  compilers); a class with an overloaded virtual must declare them in the reverse of the binary's slot order (Talk.h
+  TTalkBuffer::Remove, issue #36; it was the only pair in src/).
+- Communication.cpp keeps the original's heap overflow: ReceivePatch and ReceiveWholeFile store the new size before
+  they assert that no transfer is running; a later block writes past the old buffer. Any test that feeds patch
+  messages must not send a block after a second start (communicationtest.cpp Mutate).

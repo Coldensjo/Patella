@@ -103,7 +103,8 @@ void SendLogin(uint32 AccountID, const char *Password)
 			sprintf(Byte, "%03d ", (unsigned)Data[i]);
 			Text << Byte;
 		}
-		Text << std::endl;
+		// No std::endl after the bytes here, unlike the first catch block (the
+		// binary goes from the loop to str(), issue #36).
 		TERROR(84, Text.str().c_str());
 	}
 	BeginCommand(1);
@@ -163,7 +164,8 @@ void SendGameLogin(uint32 AccountID, const char *Name, const char *Password)
 			sprintf(Byte, "%03d ", (unsigned)Data[i]);
 			Text << Byte;
 		}
-		Text << std::endl;
+		// No std::endl after the bytes here, unlike the first catch block (the
+		// binary goes from the loop to str(), issue #36).
 		TERROR(157, Text.str().c_str());
 	}
 	BeginCommand(10);
@@ -1036,7 +1038,7 @@ void ReceiveGameLogin()
 void ReceiveGamemasterActions()
 {
 	int i;
-	uint8 value;
+	uint8 value = 0;
 	TBEGIN
 	for (i = 0; i < 32; i++) {
 		value = GetByte();
@@ -1251,8 +1253,8 @@ void ReadMap(int xmin, int ymin, int xmax, int ymax)
 // 0x415200, lines 1460-1460
 void ReceiveMap()
 {
-	uint16 PlayerX;
-	uint16 PlayerY;
+	uint16 PlayerX = 0;
+	uint16 PlayerY = 0;
 	TBEGIN
 	PlayerX = GetWord();
 	PlayerY = GetWord();
@@ -1392,8 +1394,8 @@ void ReceiveChangeObject()
 	rx = GetWord();
 	ry = GetWord();
 	rz = GetByte();
+	int Position = GetByte(); // read before the conversion (0x40cff3)
 	AbsoluteToRelative(&rx, &ry, &rz);
-	int Position = GetByte();
 	TObject OldObject = GetMapObject(rx, ry, rz, Position);
 	if (OldObject.Type == NoObject.Type) {
 		TASSERT2(1594, FieldRefreshRequested(rx,ry,rz), rx, ry);
@@ -1724,7 +1726,7 @@ void ReceiveInventoryObject()
 // 0x40e440, lines 2024-2024
 void ReceiveDeleteInventoryObject()
 {
-	int Position;
+	int Position = 0;
 	TBEGIN
 	Position = GetByte();
 	DeleteBodyObject(Position);
@@ -1851,7 +1853,7 @@ void ReceiveDistanceEffect()
 // 0x40f380, lines 2170-2170
 void ReceiveCreatureMark()
 {
-	uint32 CreatureID;
+	uint32 CreatureID = 0;
 	TBEGIN
 	CreatureID = GetQuad();
 	TCreature *Creature = GetCreature(CreatureID);
@@ -1867,7 +1869,7 @@ void ReceiveCreatureMark()
 // 0x40f550, lines 2185-2185
 void ReceiveCreatureHealth()
 {
-	uint32 CreatureID;
+	uint32 CreatureID = 0;
 	TBEGIN
 	CreatureID = GetQuad();
 	TCreature *Creature = GetCreature(CreatureID);
@@ -1883,7 +1885,7 @@ void ReceiveCreatureHealth()
 // 0x40f710, lines 2205-2205
 void ReceiveCreatureLight()
 {
-	uint32 CreatureID;
+	uint32 CreatureID = 0;
 	TBEGIN
 	CreatureID = GetQuad();
 	TCreature *Creature = GetCreature(CreatureID);
@@ -1900,7 +1902,7 @@ void ReceiveCreatureLight()
 // 0x40f8e0, lines 2235-2235
 void ReceiveCreatureOutfit()
 {
-	uint32 CreatureID;
+	uint32 CreatureID = 0;
 	TBEGIN
 	CreatureID = GetQuad();
 	TCreature *Creature = GetCreature(CreatureID);
@@ -1931,7 +1933,7 @@ void ReceiveCreatureOutfit()
 // 0x40fb20, lines 2250-2250
 void ReceiveCreatureSpeed()
 {
-	uint32 CreatureID;
+	uint32 CreatureID = 0;
 	TBEGIN
 	CreatureID = GetQuad();
 	TCreature *Creature = GetCreature(CreatureID);
@@ -1947,7 +1949,7 @@ void ReceiveCreatureSpeed()
 // 0x40fce0, lines 2267-2267
 void ReceiveCreatureSkull()
 {
-	uint32 CreatureID;
+	uint32 CreatureID = 0;
 	TBEGIN
 	CreatureID = GetQuad();
 	TCreature *Creature = GetCreature(CreatureID);
@@ -1964,7 +1966,7 @@ void ReceiveCreatureSkull()
 // 0x40fec0, lines 2283-2283
 void ReceiveCreatureShield()
 {
-	uint32 CreatureID;
+	uint32 CreatureID = 0;
 	TBEGIN
 	CreatureID = GetQuad();
 	TCreature *Creature = GetCreature(CreatureID);
@@ -2160,7 +2162,7 @@ void ReceiveChannelList()
 // 0x411230, lines 2502-2502
 void ReceiveOpenChannel()
 {
-	int ChannelID;
+	int ChannelID = 0;
 	TBEGIN
 	ChannelID = GetWord();
 	char *Name = new char[30];
@@ -2182,7 +2184,7 @@ void ReceiveOpenPrivateConversation()
 // 0x4115a0, lines 2530-2530
 void ReceiveRuleViolationChannel()
 {
-	int ChannelID;
+	int ChannelID = 0;
 	TBEGIN
 	ChannelID = GetWord();
 	TTalkBuffer *Channel = CreateTextBuffer(6, 1, NULL, ChannelID);
@@ -2246,7 +2248,7 @@ void ReceiveLockRuleViolation()
 // 0x411ce0, lines 2606-2606
 void ReceiveOwnChannel()
 {
-	int ChannelID;
+	int ChannelID = 0;
 	TBEGIN
 	ChannelID = GetWord();
 	char *Name = new char[40];
@@ -2258,7 +2260,7 @@ void ReceiveOwnChannel()
 // 0x411ea0, lines 2623-2623
 void ReceiveCloseChannel()
 {
-	int ChannelID;
+	int ChannelID = 0;
 	TBEGIN
 	ChannelID = GetWord();
 	TTalkBuffer *Channel = GetTextBuffer(5, NULL, ChannelID);
@@ -2432,7 +2434,7 @@ void ReceiveBuddy()
 // 0x412720, lines 2798-2798
 void ReceiveBuddyLogin()
 {
-	uint32 CharacterID;
+	uint32 CharacterID = 0;
 	TBEGIN
 	CharacterID = GetQuad();
 	SetBuddyState(CharacterID, true);
@@ -2442,7 +2444,7 @@ void ReceiveBuddyLogin()
 // 0x4128c0, lines 2811-2811
 void ReceiveBuddyLogout()
 {
-	uint32 CharacterID;
+	uint32 CharacterID = 0;
 	TBEGIN
 	CharacterID = GetQuad();
 	SetBuddyState(CharacterID, false);
