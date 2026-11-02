@@ -556,6 +556,20 @@ void CompareThrown(const char *Test, const char *What, const TThrown &Ours, cons
 		MapLines(Test, What, OurLines, OriginalLines);
 }
 
+void *ImageSideVtable(const void *OurVtable, const void *OurBase, uint32 ImageBase, int BaseSlots, int Slots)
+{
+	static std::map<std::pair<const void *, uint32>, void **> Copies;
+	void **&Copy = Copies[std::make_pair(OurVtable, ImageBase)];
+	if (Copy == NULL) {
+		Copy = new void *[Slots];
+		void *const *Ours = (void *const *)OurVtable, *const *Base = (void *const *)OurBase;
+		void *const *Image = (void *const *)(uintptr_t)ImageBase;
+		for (int i = 0; i < Slots; i++)
+			Copy[i] = i < BaseSlots && Ours[i] == Base[i] ? Image[i] : Ours[i];
+	}
+	return Copy;
+}
+
 bool Redirected(const void *Code)
 {
 	return *(const uint8 *)Code == 0xe9;

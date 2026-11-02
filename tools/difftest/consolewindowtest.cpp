@@ -35,6 +35,7 @@
 
 #include "difftest.h"
 #include "elementfakes.h"
+#include "imageeh.h"
 #include "../../src/ConsoleWindow.h"
 #include "../../src/Communication.h"
 #include "../../src/Creatures.h"
@@ -84,10 +85,21 @@ static int Side;
 static bool Testing; // the DialogElements fakes log only while this test runs
 static std::string Log[2];
 
+// The error round (issue #34): the FailAt-th logged call of a fake throws an
+// assertion of the calling side (0: none); Ticks counts one side's calls.
+static int FailAt, Ticks;
+static void Tick()
+{
+	Ticks++;
+	if (FailAt > 0 && --FailAt == 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Ticks);
+}
+
 static void Logf(const char *Format, ...)
 {
 	if (!Testing)
 		return;
+	Tick();
 	char Buffer[1024];
 	va_list Args;
 	va_start(Args, Format);
@@ -119,6 +131,20 @@ static void Role(const void *Object, const char *Base)
 static void *TestEditVtable, *TestScrollVtable, *TestButtonVtable, *TestToggleVtable, *TestMultiVtable;
 static int ScrollMinimumHeight;
 
+// The vtable a fake gets: in the error round the image side's fakes call the
+// image's TWindow or TElement code for what they do not override (imageeh.h,
+// ImageSideVtable), named like ours.
+static TErrorRound *ConsoleRound;
+static void *OurWindowVtable, *OurElementVtable;
+static void *FakeVtable(void *Ours, bool Window)
+{
+	if (ConsoleRound == NULL || Side != ORIGINAL)
+		return Ours;
+	void *Hybrid = ImageSideVtable(Ours, Window ? OurWindowVtable : OurElementVtable, Window ? 0x564528 : 0x5645c8);
+	Kinds[ORIGINAL][Hybrid] = Kinds[ORIGINAL][Ours];
+	return Hybrid;
+}
+
 TFakeEditLine::TFakeEditLine(TRect Area, int MaxLength, int Param)
 {
 	Text = new char[256];
@@ -132,7 +158,7 @@ TFakeEditLine::TFakeEditLine(TRect Area, int MaxLength, int Param)
 	if (Testing) {
 		Role(this, "Edit");
 		Logf("NEdit%d,%d,%d,%d,%d,%d;", Area.x, Area.y, Area.width, Area.height, MaxLength, Param);
-		SetVtable(this, TestEditVtable);
+		SetVtable(this, FakeVtable(TestEditVtable, true));
 	}
 }
 void TFakeEditLine::SetActive(bool Active)
@@ -202,7 +228,7 @@ TFakeScrollBar::TFakeScrollBar(TRect Area, int Param2, int Param3, int Param4, i
 		Role(this, "Scroll");
 		Logf("NScroll%d,%d,%d,%d,%d,%d,%d,%d,%d;", Area.x, Area.y, Area.width, Area.height, Param2, Param3, Param4,
 			Param5, Step);
-		SetVtable(this, TestScrollVtable);
+		SetVtable(this, FakeVtable(TestScrollVtable, true));
 	}
 	ReportElement(this, "ScrollBar", "%d,%d,%d,%d,%d,%d,%d,%d,%d", Area.x, Area.y, Area.width, Area.height, Param2,
 		Param3, Param4, Param5, Step);
@@ -250,7 +276,7 @@ TFakeSkinButton::TFakeSkinButton(int x, int y, int _ButtonUp, int _ButtonDown, T
 		Role(this, "Button");
 		Logf("NButton%d,%d,%d,%d,%s,%d,%s,%d;", x, y, _ButtonUp, _ButtonDown, Name(Callback.Receiver).c_str(),
 			Callback.Event, Tooltip == NULL ? "-" : Tooltip, Param);
-		SetVtable(this, TestButtonVtable);
+		SetVtable(this, FakeVtable(TestButtonVtable, false));
 	}
 	ReportElement(this, "SkinButton", "%d,%d,%d,%d,@%p/%d,%s,%d", x, y, _ButtonUp, _ButtonDown, (void *)Callback.Receiver,
 		Callback.Event, Tooltip == NULL ? "-" : Tooltip, Param);
@@ -264,7 +290,7 @@ TFakeToggleButton::TFakeToggleButton(int x, int y, int _ButtonUp, int _ButtonDow
 	memset(Data45, 0, sizeof(Data45));
 	if (Testing) {
 		Logf("NToggle%s;", Tooltip2);
-		SetVtable(this, TestToggleVtable);
+		SetVtable(this, FakeVtable(TestToggleVtable, false));
 	}
 	ReportElement(this, "ToggleButton", "%s,%s", Tooltip1 == NULL ? "-" : Tooltip1, Tooltip2 == NULL ? "-" : Tooltip2);
 }
@@ -291,7 +317,7 @@ TFakeMultiStateButton::TFakeMultiStateButton(int x, int y, const char *Tooltip, 
 	InitStates(this, _States, Arguments);
 	va_end(Arguments);
 	if (Testing)
-		SetVtable(this, TestMultiVtable);
+		SetVtable(this, FakeVtable(TestMultiVtable, false));
 }
 class TTestSkinButtonC : public TFakeSkinButton {
 public:
@@ -600,7 +626,12 @@ static void __cdecl FakeSetConsoleHeight(int Height) { Logf("SetCH%d;", Height);
 static const char *__cdecl FakeGetAccountNumberString() { Logf("Acc;"); return World.Account; }
 static const char *__cdecl FakeGetAccountPassword() { Logf("Pw;"); return World.Password; }
 static uint32 __cdecl FakeGetPlayerID() { Logf("PID;"); return Player.CreatureID; }
-static TCreature *__cdecl FakeGetCreature(uint32 ID) { Logf("Cr%u;", ID); return ID == Player.CreatureID ? &Player : NULL; }
+static bool NoPlayer; // the error round: the player is not in the table
+static TCreature *__cdecl FakeGetCreature(uint32 ID)
+{
+	Logf("Cr%u;", ID);
+	return ID == Player.CreatureID && !NoPlayer ? &Player : NULL;
+}
 static void __cdecl FakeSendTalk1(int Mode, const char *Text) { Logf("Talk%d,%s;", Mode, Text); }
 static void __cdecl FakeSendTalk2(int Mode, const char *Addressee, const char *Text) { Logf("TalkTo%d,%s,%s;", Mode, Addressee, Text); }
 static void __cdecl FakeSendTalk3(int Mode, int Channel, const char *Text) { Logf("TalkIn%d,%d,%s;", Mode, Channel, Text); }
@@ -822,10 +853,55 @@ static void NameParts(int s)
 	Roles[s][W->MoveLeftButton] = "MoveLeft";
 }
 
-// Runs F for our side and then for the image's.
+// The error round: the action whose calls fail (CurrentAction; 22 the
+// constructor, 23 the default channel, 24 the destructor), the most fake calls
+// one call of each action made, whether a call threw (the console is then
+// left as it is: members may point to deleted parts).
+static int CurrentAction, TargetAction = -1, MaxTicks[25], LastTicks[25];
+static bool Threw;
+
+static int FailIndex(int Count)
+{
+	int Choice = Random() % 3, Range = 1 << (Random() % 12);
+	Range = Range < Count ? Range : Count;
+	if (Choice == 0)
+		return 1 + (int)(Random() % Count);
+	if (Choice == 1)
+		return 1 + (int)(Random() % Range);
+	return Count - (int)(Random() % Range);
+}
+
+// Runs F for our side and then for the image's. In the error round the calls
+// of the round's action fail at one of the fake calls such a call made
+// before, and what both sides threw is compared; after a throw nothing runs.
 template <class F> static void Both(F Function)
 {
+	if (ConsoleRound != NULL) {
+		if (Threw)
+			return;
+		// Within the most calls of the action, or of its last call.
+		int Count = Random() % 2 == 0 ? MaxTicks[CurrentAction] : LastTicks[CurrentAction];
+		int Fail = Count > 0 && CurrentAction == TargetAction ? FailIndex(Count + 1) : 0;
+		char What[64];
+		sprintf(What, "action %d (fail at %d)", CurrentAction, Fail);
+		ConsoleRound->Calling(What, "ours");
+		TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Function(OURS); });
+		ConsoleRound->Calling(What, "the original");
+		TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Function(ORIGINAL); });
+		FailAt = 0;
+		Side = OURS;
+		ConsoleRound->Compare(What, A, B);
+		if (A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING) {
+			Threw = true;
+		} else {
+			LastTicks[CurrentAction] = Ticks;
+			if (Ticks > MaxTicks[CurrentAction])
+				MaxTicks[CurrentAction] = Ticks;
+		}
+		return;
+	}
 	for (int s = 0; s < 2; s++) {
+		Ticks = 0;
 		Side = s;
 		if (s == OURS) {
 			// An exception on our side would end the child without a message.
@@ -844,6 +920,8 @@ template <class F> static void Both(F Function)
 			Function(s);
 		}
 	}
+	if (Ticks > MaxTicks[CurrentAction])
+		MaxTicks[CurrentAction] = Ticks;
 	Side = OURS;
 }
 
@@ -987,7 +1065,7 @@ static std::string Dump(int s)
 static const char *Stage = "";
 static void Compare(const char *What)
 {
-	std::string D0 = Dump(OURS), D1 = Dump(ORIGINAL);
+	std::string D0 = Threw ? "" : Dump(OURS), D1 = Threw ? "" : Dump(ORIGINAL);
 	CHECK(Log[OURS] == Log[ORIGINAL], "ConsoleWindow %s (%s): logs differ\n  ours: %s\n  orig: %s", What, Stage,
 		Log[OURS].c_str(), Log[ORIGINAL].c_str());
 	CHECK(D0 == D1, "ConsoleWindow %s (%s): windows differ\n  ours: %s\n  orig: %s", What, Stage, D0.c_str(), D1.c_str());
@@ -1174,8 +1252,9 @@ static void ServerMessages()
 		Both([&](int s) {
 			Results[s] = s == OURS ? C(s)->GetServerMessages() : At<BoolFn>(0x41f1c0)(C(s), NULL);
 		});
-		CHECK(Results[OURS] == Results[ORIGINAL], "ConsoleWindow GetServerMessages %d, original %d", Results[OURS],
-			Results[ORIGINAL]);
+		if (!Threw) // (the error round: a call that threw leaves no result)
+			CHECK(Results[OURS] == Results[ORIGINAL], "ConsoleWindow GetServerMessages %d, original %d", Results[OURS],
+				Results[ORIGINAL]);
 	} else {
 		bool Show = Random() % 2 == 0;
 		Both([&](int s) {
@@ -1194,8 +1273,9 @@ static void TextBufferQuery()
 		TTalkBuffer *B = s == OURS ? C(s)->GetTextBuffer() : At<BufferFn>(0x41f7f0)(C(s), NULL);
 		Results[s] = BufferIndex(B);
 	});
-	CHECK(Results[OURS] == Results[ORIGINAL], "ConsoleWindow GetTextBuffer %d, original %d", Results[OURS],
-		Results[ORIGINAL]);
+	if (!Threw)
+		CHECK(Results[OURS] == Results[ORIGINAL], "ConsoleWindow GetTextBuffer %d, original %d", Results[OURS],
+			Results[ORIGINAL]);
 }
 
 static std::string TempDir;
@@ -1228,6 +1308,8 @@ static void Save()
 		remove(File.c_str());
 	});
 	_chdir(Old);
+	if (Threw)
+		return;
 	CHECK(Results[OURS] == Results[ORIGINAL], "ConsoleWindow SaveChannel %d, original %d", Results[OURS],
 		Results[ORIGINAL]);
 	CHECK(Contents[OURS] == Contents[ORIGINAL], "ConsoleWindow SaveChannel file\n  ours: %s\n  orig: %s",
@@ -1346,7 +1428,12 @@ static void Press()
 		TSkinButton *B = Buttons[Which];
 		if (B == W->CloseButton && W->TabBar->CurrentTab == W->DefaultTab)
 			return;
-		ButtonCallback(B).Send();
+		// The side's own TCallback::Send (in the error round ours would catch
+		// the image's exception and read it with our layout).
+		if (s == OURS)
+			ButtonCallback(B).Send();
+		else
+			At<void (__fastcall *)(void *, void *)>(0x4a0f00)(&ButtonCallback(B), NULL);
 	});
 }
 
@@ -1385,8 +1472,9 @@ static void TextQueries()
 			break;
 		}
 	});
-	CHECK(Results[OURS] == Results[ORIGINAL], "ConsoleWindow text query %d: %s, original %s", What,
-		Results[OURS].c_str(), Results[ORIGINAL].c_str());
+	if (!Threw)
+		CHECK(Results[OURS] == Results[ORIGINAL], "ConsoleWindow text query %d: %s, original %s", What,
+			Results[OURS].c_str(), Results[ORIGINAL].c_str());
 }
 
 static void Size()
@@ -1401,6 +1489,7 @@ static void Action()
 	RandomWorld();
 	int A = Random() % 22;
 	ActionCount[A]++;
+	CurrentAction = A;
 	if (getenv("CW_TRACE") != NULL)
 		fprintf(stderr, "    kind %d\n", A);
 	switch (A) {
@@ -1425,6 +1514,435 @@ static void Action()
 	case 20: BarEvent(); Stage = "bar"; break;
 	case 21: TextQueries(); Stage = "text"; break;
 	}
+}
+
+// --- Error paths (issue #34) ---------------------------------------------------
+
+// A console pair as the test builds it: the constructor, the size, the
+// default channel (each can be the round's failing action).
+static bool NewConsoles()
+{
+	Console[OURS] = Console[ORIGINAL] = NULL;
+	for (int s = 0; s < 2; s++) {
+		Roles[s].clear();
+		Buffers[s].clear();
+		Deleted[s].clear();
+	}
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+	Threw = false;
+	RandomWorld();
+	World.ConsoleChanged = false;
+	ScrollMinimumHeight = Random() % 120;
+	CurrentAction = 22;
+	Build();
+	DumpChanged = false;
+	Compare("errors: constructor");
+	DumpChanged = true;
+	if (Threw)
+		return false;
+	CurrentAction = 0;
+	Size();
+	int Default = NewBufferPair(0);
+	CurrentAction = 23;
+	Both([&](int s) {
+		if (s == OURS)
+			C(s)->OpenDefaultChannel(Buffers[s][Default], "Default");
+		else
+			At<BufferStringFn>(0x422e70)(C(s), NULL, Buffers[s][Default], "Default");
+	});
+	Compare("errors: default channel");
+	return !Threw;
+}
+
+// One call on both sides without failures (the assertions), what they threw
+// compared; the console is left after a throw.
+template <class F> static void ConsoleCall(const char *What, F Call, bool Dump = true, int Fail = 0)
+{
+	ConsoleRound->Calling(What, "ours");
+	TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Call(OURS); });
+	ConsoleRound->Calling(What, "the original");
+	TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Call(ORIGINAL); });
+	FailAt = 0;
+	Side = OURS;
+	ConsoleRound->Compare(What, A, B);
+	bool Thrown = A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING;
+	Threw = Threw || Thrown || !Dump; // (no dump of a console with a member cleared for the call)
+	Compare(What);
+	Threw = Threw && (Thrown || Dump);
+}
+
+// Every TASSERT/TERROR of ConsoleWindow.cpp and the TEND blocks: the test's
+// actions on new consoles, the calls of one action per round failing at one
+// of the fake calls it made before, until one throws; then the assertions.
+static void TestConsoleWindowErrors()
+{
+	TErrorRound R("ConsoleWindow");
+	ConsoleRound = &R;
+	for (int Round = 0; Round < 5000; Round++) {
+		TargetAction = Round % 25;
+		if (!NewConsoles())
+			continue;
+		int Actions = 5 + Random() % 20;
+		for (int i = 0; i < Actions && !Threw; i++) {
+			Action();
+			Compare("errors: action");
+		}
+		if (Threw)
+			continue;
+		CurrentAction = 24;
+		Both([&](int s) {
+			delete C(s);
+			Console[s] = NULL;
+		});
+		CHECK(Log[OURS] == Log[ORIGINAL], "ConsoleWindow errors destructor: logs differ\n  ours: %s\n  orig: %s",
+			Log[OURS].c_str(), Log[ORIGINAL].c_str());
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+	}
+	TargetAction = -1;
+	// The assertions, on new consoles: each comes before any change (the
+	// members set for one are restored after it).
+	typedef void (__fastcall *TabFn)(void *, void *, void *);
+	typedef void *(__fastcall *TabCtorFn)(void *, void *, const char *, TTalkBuffer *, TCallback);
+	for (int Round = 0; Round < 40; Round++) {
+		TargetAction = -1;
+		if (!NewConsoles())
+			continue;
+		int Actions = Random() % 15;
+		for (int i = 0; i < Actions && !Threw; i++) {
+			Action();
+			Compare("errors: action");
+		}
+		if (Threw)
+			continue;
+		int Bad = Random() % 2 ? -1 - (int)(Random() % 5) : 1000 + (int)(Random() % 5);
+		ConsoleCall("TTextWindow::HandleEvent unknown", [&](int s) { C(s)->CurrentConsole->TextWindow->HandleEvent(Bad); });
+		ConsoleCall("TTextWindow::SetCurrentLineNumber", [&](int s) {
+			TTextWindow *T = C(s)->CurrentConsole->TextWindow;
+			if (s == OURS) T->SetCurrentLineNumber(Bad);
+			else At<void (__fastcall *)(void *, void *, int)>(0x4193d0)(T, NULL, Bad); });
+		ConsoleCall("TConsoleWindow::HandleEvent unknown", [&](int s) { C(s)->HandleEvent(Bad); });
+		Threw = false;
+		// Tabs without a caption or a buffer, and one that is in no bar.
+		int Index = NewBufferPair(1 + Random() % (NSPECS - 1));
+		ConsoleCall("TTab::TTab without a caption", [&](int s) {
+			if (s == OURS) new TTab(NULL, Buffers[s][Index], TCallback());
+			else At<TabCtorFn>(0x41a870)(operator new(sizeof(TTab)), NULL, NULL, Buffers[s][Index], TCallback()); });
+		ConsoleCall("TTab::TTab without a buffer", [&](int s) {
+			if (s == OURS) new TTab("x", NULL, TCallback());
+			else At<TabCtorFn>(0x41a870)(operator new(sizeof(TTab)), NULL, "x", NULL, TCallback()); });
+		Threw = false;
+		TTab *Stranger[2];
+		CurrentAction = 9;
+		Both([&](int s) {
+			if (s == OURS) Stranger[s] = new TTab("Stranger", Buffers[s][Index], TCallback());
+			else Stranger[s] = (TTab *)At<TabCtorFn>(0x41a870)(operator new(sizeof(TTab)), NULL, "Stranger",
+				Buffers[s][Index], TCallback());
+		});
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+		ConsoleCall("TTabBar::SetCurrentTab NULL", [&](int s) {
+			if (s == OURS) C(s)->TabBar->SetCurrentTab(NULL); else At<TabFn>(0x421d10)(C(s)->TabBar, NULL, NULL); });
+		ConsoleCall("TTabBar::SetCurrentTab not in the bar", [&](int s) {
+			if (s == OURS) C(s)->TabBar->SetCurrentTab(Stranger[s]);
+			else At<TabFn>(0x421d10)(C(s)->TabBar, NULL, Stranger[s]); });
+		ConsoleCall("TTabBar::GetContainer not in the bar", [&](int s) {
+			if (s == OURS) C(s)->TabBar->GetContainer(Stranger[s]);
+			else At<TabFn>(0x41cb20)(C(s)->TabBar, NULL, Stranger[s]); });
+		ConsoleCall("TTabBar::Rearrange not in the bar", [&](int s) {
+			if (s == OURS) C(s)->TabBar->Rearrange(Stranger[s]);
+			else At<TabFn>(0x41d810)(C(s)->TabBar, NULL, Stranger[s]); });
+		// The child functions with children TWindow's refuse (NULL, a stranger).
+		ConsoleCall("TTabBar::InsertChild NULL", [&](int s) { C(s)->TabBar->InsertChild(NULL); });
+		ConsoleCall("TTabBar::AppendChild NULL", [&](int s) { C(s)->TabBar->AppendChild(NULL); });
+		ConsoleCall("TTabBar::InsertChildAfter NULL", [&](int s) {
+			C(s)->TabBar->InsertChildAfter(C(s)->TabBar->CurrentTab, NULL); });
+		ConsoleCall("TTabBar::DeleteChild stranger", [&](int s) { C(s)->TabBar->DeleteChild(Stranger[s]); });
+		ConsoleCall("TTabBar::RemoveChild stranger", [&](int s) { C(s)->TabBar->RemoveChild(Stranger[s]); });
+		ConsoleCall("TTabBar::SwapChildren NULL", [&](int s) { C(s)->TabBar->SwapChildren(NULL, Stranger[s]); });
+		ConsoleCall("TTabBar::IsChild NULL", [&](int s) { C(s)->TabBar->IsChild(NULL); });
+		Threw = false;
+		int Neg = -1 - (int)(Random() % 9);
+		bool NegX = Random() % 2 != 0;
+		ConsoleCall("TTab::Draw outside", [&](int s) {
+			C(s)->TabBar->CurrentTab->Draw(1, NegX ? Neg : 0, NegX ? 0 : Neg); });
+		Threw = false;
+		{
+			decltype(C(OURS)->TabBar->Parent) Parent[2] = {C(OURS)->TabBar->Parent, C(ORIGINAL)->TabBar->Parent};
+			for (int s = 0; s < 2; s++)
+				C(s)->TabBar->Parent = NULL;
+			ConsoleCall("TTabBar::HelpMouseMove without a parent", [&](int s) { C(s)->TabBar->HelpMouseMove(3, 3); });
+			for (int s = 0; s < 2; s++)
+				C(s)->TabBar->Parent = Parent[s];
+			Threw = false;
+		}
+		// The default channel's server messages.
+		ConsoleCall("TConsoleWindow::GetServerMessages default", [&](int s) {
+			if (s == OURS) C(s)->GetServerMessages(); else At<BoolFn>(0x41f1c0)(C(s), NULL); });
+		ConsoleCall("TConsoleWindow::SetServerMessages default", [&](int s) {
+			if (s == OURS) C(s)->SetServerMessages(true); else At<BoolArgFn>(0x41f470)(C(s), NULL, true); });
+		ConsoleCall("TConsoleWindow::AddChannel NULL", [&](int s) {
+			if (s == OURS) C(s)->AddChannel(NULL, "x");
+			else At<BufferStringFn>(0x423060)(C(s), NULL, NULL, "x"); });
+		ConsoleCall("TConsoleWindow::ReportRuleViolation NULL", [&](int s) {
+			if (s == OURS) C(s)->ReportRuleViolation(NULL); else At<StringFn>(0x425330)(C(s), NULL, NULL); });
+		ConsoleCall("TConsoleWindow::ReportRuleViolation empty", [&](int s) {
+			if (s == OURS) C(s)->ReportRuleViolation(""); else At<StringFn>(0x425330)(C(s), NULL, ""); });
+		Threw = false;
+		// Without the text buffer, the view, the edit line, the default tab, the
+		// current tab or its caption.
+		for (int What = 0; What < 13; What++) {
+			TTalkBuffer *SavedBuffer[2];
+			TConsole *SavedView[2];
+			decltype(C(OURS)->Input) SavedInput[2];
+			TTab *SavedDefault[2], *SavedCurrent[2];
+			char *SavedCaption[2];
+			for (int s = 0; s < 2; s++) {
+				SavedBuffer[s] = C(s)->CurrentConsole->TextWindow->TextBuffer;
+				SavedView[s] = C(s)->CurrentConsole;
+				SavedInput[s] = C(s)->Input;
+				SavedDefault[s] = C(s)->DefaultTab;
+				SavedCurrent[s] = C(s)->TabBar->CurrentTab;
+				SavedCaption[s] = SavedCurrent[s]->Caption;
+				World.ConsoleChanged = What == 0 || What == 8; // (Draw asserts only then)
+				if (What <= 7)
+					C(s)->CurrentConsole->TextWindow->TextBuffer = NULL;
+				else if (What == 8)
+					C(s)->CurrentConsole = NULL;
+				else if (What == 9)
+					C(s)->Input = NULL;
+				else if (What == 10)
+					C(s)->DefaultTab = NULL;
+				else if (What == 11)
+					C(s)->TabBar->CurrentTab = NULL;
+				else
+					SavedCurrent[s]->Caption = NULL;
+			}
+			static const char *const Names[] = {"Draw", "KeyPress", "SetActive", "UpdateButtons", "GetServerMessages",
+				"SetServerMessages", "GetTextBuffer", "SaveChannel", "Draw without a view", "SetActive without an edit line",
+				"CloseChannel without a default tab", "SaveChannel without a tab", "SaveChannel without a caption"};
+			char Name[96];
+			snprintf(Name, sizeof(Name), "TConsoleWindow::%s without a text buffer", Names[What]);
+			ConsoleCall(What <= 7 ? Name : Names[What], [&](int s) {
+				TConsoleWindow *W = C(s);
+				switch (What) {
+				case 0: case 8: W->Draw(1, 0, 0); break;
+				case 1: W->KeyPress('a'); break;
+				case 2: case 9: if (s == OURS) W->SetActive(true); else At<BoolArgFn>(0x41e960)(W, NULL, true); break;
+				case 3: if (s == OURS) W->UpdateButtons(); else At<VoidFn>(0x41ed00)(W, NULL); break;
+				case 4: if (s == OURS) W->GetServerMessages(); else At<BoolFn>(0x41f1c0)(W, NULL); break;
+				case 5: if (s == OURS) W->SetServerMessages(true); else At<BoolArgFn>(0x41f470)(W, NULL, true); break;
+				case 6: if (s == OURS) W->GetTextBuffer(); else At<BufferFn>(0x41f7f0)(W, NULL); break;
+				case 10: if (s == OURS) W->CloseChannel(); else At<VoidFn>(0x4234b0)(W, NULL); break;
+				default: if (s == OURS) W->SaveChannel(); else At<BoolFn>(0x420090)(W, NULL); break;
+				}
+			}, false);
+			World.ConsoleChanged = false;
+			for (int s = 0; s < 2; s++) {
+				C(s)->CurrentConsole = SavedView[s];
+				C(s)->CurrentConsole->TextWindow->TextBuffer = SavedBuffer[s];
+				C(s)->Input = SavedInput[s];
+				C(s)->DefaultTab = SavedDefault[s];
+				C(s)->TabBar->CurrentTab = SavedCurrent[s];
+				SavedCurrent[s]->Caption = SavedCaption[s];
+			}
+			Threw = false;
+		}
+		// Sending with talk modes the default channel's volume does not give.
+		static const int Modes[] = {99, TALK_CHANNEL_CALL, TALK_PRIVATE_MESSAGE, TALK_GAMEMASTER_ANSWER,
+			TALK_PRIVATE_MESSAGE, TALK_PLAYER_ANSWER};
+		int Which = Round % 6;
+		SetInput(Which == 4 ? "*Seymour* hi" : "hello there");
+		NoPlayer = Which >= 4;
+		int Mode = Modes[Which];
+		ConsoleCall("TConsoleWindow::SendInput talk mode", [&](int s) {
+			C(s)->TalkMode = Mode;
+			C(s)->KeyPress(13);
+		});
+		NoPlayer = false;
+		Threw = false; // (the assertions come before any change but the history)
+		Both([&](int s) { C(s)->TalkMode = 1; });
+		// The text window's release while selecting, a tab's while dragging,
+		// without the capture; the bar with a negative width; a tab that is in
+		// no bar shown; the console's scroll range with more invisible lines.
+		ConsoleCall("TTextWindow::LeftButtonUp selecting", [&](int s) {
+			TTextWindow *T = C(s)->CurrentConsole->TextWindow;
+			T->Selecting = true;
+			T->LeftButtonUp(0, 0, 0);
+		});
+		Both([&](int s) { C(s)->CurrentConsole->TextWindow->Selecting = false; });
+		ConsoleCall("TTab::LeftButtonUp dragging", [&](int s) {
+			TTab *T = C(s)->TabBar->CurrentTab;
+			T->Dragging = true;
+			T->LeftButtonUp(0, 0, 0);
+		});
+		Both([&](int s) { C(s)->TabBar->CurrentTab->Dragging = false; });
+		int NegWidth = -1 - (int)(Random() % 9);
+		ConsoleCall("TTabBar::SetSize negative", [&](int s) { C(s)->TabBar->SetSize(NegWidth, 20); });
+		ConsoleCall("TTabBar::ShowTab not in the bar", [&](int s) {
+			if (s == OURS) C(s)->TabBar->ShowTab(Stranger[s]);
+			else At<TabFn>(0x41d450)(C(s)->TabBar, NULL, Stranger[s]); });
+		Threw = false;
+		{
+			int Saved[2];
+			ConsoleCall("TConsole::Arrange scroll range", [&](int s) {
+				TTextWindow *T = C(s)->CurrentConsole->TextWindow;
+				Saved[s] = T->InvisibleLines;
+				T->InvisibleLines = T->getFirstLineNumber() - 1;
+				C(s)->CurrentConsole->Arrange();
+			}, false);
+			for (int s = 0; s < 2; s++)
+				C(s)->CurrentConsole->TextWindow->InvisibleLines = Saved[s];
+			Threw = false;
+		}
+		// Reports: a buffer without a tab, no buffer after opening it.
+		{
+			int Tabless = NewBufferPair(8);
+			World.Lookup = Tabless;
+			World.LookupCount = 0;
+			ConsoleCall("TConsoleWindow::ReportRuleViolation without a tab", [&](int s) {
+				if (s == OURS) C(s)->ReportRuleViolation("x"); else At<StringFn>(0x425330)(C(s), NULL, "x"); });
+			World.Lookup = -1;
+			Threw = false;
+		}
+		if (TabCount(OURS) < 10) {
+			World.PendingSpec = 8;
+			World.CreateFails = false;
+			ConsoleCall("TConsoleWindow::ReportRuleViolation lost buffer", [&](int s) {
+				World.LookupQueue[0] = World.LookupQueue[1] = -1;
+				World.LookupCount = 2;
+				World.LookupNext = 0;
+				if (s == OURS) C(s)->ReportRuleViolation("x"); else At<StringFn>(0x425330)(C(s), NULL, "x");
+			});
+			World.LookupCount = 0;
+			Threw = false; // (the new channel is open, the assertion follows)
+		}
+		// A gamemaster's answer without the player.
+		if (TabCount(OURS) < 10) {
+			int Index = NewBufferPair(9);
+			ConsoleCall("errors: answer channel", [&](int s) {
+				if (s == OURS) C(s)->AddChannel(Buffers[s][Index], "Answer");
+				else At<BufferStringFn>(0x423060)(C(s), NULL, Buffers[s][Index], "Answer"); });
+			if (Threw)
+				continue;
+			ConsoleCall("errors: answer tab", [&](int s) {
+				TTab *Tab = s == OURS ? C(s)->TabBar->FindTab(Buffers[s][Index])
+					: At<TTab *(__fastcall *)(void *, void *, void *)>(0x41d270)(C(s)->TabBar, NULL, Buffers[s][Index]);
+				if (s == OURS) C(s)->TabBar->SetCurrentTab(Tab); else At<TabFn>(0x421d10)(C(s)->TabBar, NULL, Tab); });
+			if (Threw)
+				continue;
+			// Its server messages, failing at the second fake call (the first in
+			// HandleEvent(203), after isDefault).
+			for (int Fail = 2; Fail <= 5; Fail++) {
+				ConsoleCall("TConsoleWindow::SetServerMessages", [&](int s) {
+					if (s == OURS) C(s)->SetServerMessages(true); else At<BoolArgFn>(0x41f470)(C(s), NULL, true); }, true, Fail);
+				Threw = false;
+			}
+			SetInput("an answer");
+			NoPlayer = true;
+			ConsoleCall("TConsoleWindow::SendInput answer without a player", [&](int s) { C(s)->KeyPress(13); });
+			NoPlayer = false;
+			Threw = false;
+		}
+		// The mouse over a shortened tab caption (the current tab's, marked so),
+		// failing at SetMouseOverText.
+		{
+			bool Saved[2] = {C(OURS)->TabBar->CurrentTab->Shortened, C(ORIGINAL)->TabBar->CurrentTab->Shortened};
+			ConsoleCall("TTab::MouseHover", [&](int s) {
+				TTab *Tab = C(s)->TabBar->CurrentTab;
+				Tab->Shortened = true;
+				Tab->MouseHover(1, 1);
+			}, false, 1);
+			for (int s = 0; s < 2; s++)
+				C(s)->TabBar->CurrentTab->Shortened = Saved[s];
+			Threw = false;
+		}
+		// No buffer for a new channel or a report; no player for a report.
+		World.CreateFails = true;
+		World.Lookup = -1;
+		World.LookupCount = 0;
+		World.PendingSpec = 1;
+		ConsoleCall("TConsoleWindow::OpenChannel without a buffer", [&](int s) {
+			if (s == OURS) C(s)->OpenChannel(5, 5, NULL, 4, "Game-Chat");
+			else At<OpenChannelFn>(0x425070)(C(s), NULL, 5, 5, NULL, 4, "Game-Chat"); });
+		ConsoleCall("TConsoleWindow::ReportRuleViolation without a buffer", [&](int s) {
+			if (s == OURS) C(s)->ReportRuleViolation("x"); else At<StringFn>(0x425330)(C(s), NULL, "x"); });
+		World.CreateFails = false;
+		Threw = false;
+		if (TabCount(OURS) < 10) {
+			// A new report (no request open) without the player.
+			World.PendingSpec = 8;
+			World.CreateFails = false;
+			int New = (int)Buffers[OURS].size();
+			NoPlayer = true;
+			ConsoleCall("TConsoleWindow::ReportRuleViolation without a player", [&](int s) {
+				World.LookupQueue[0] = -1;
+				World.LookupQueue[1] = New;
+				World.LookupCount = 2;
+				World.LookupNext = 0;
+				if (s == OURS) C(s)->ReportRuleViolation("x"); else At<StringFn>(0x425330)(C(s), NULL, "x");
+			});
+			NoPlayer = false;
+			World.LookupCount = 0;
+			if (Threw)
+				continue;
+		}
+		// A player's report without a name: its tab's destructor asserts.
+		if (Round % 4 == 0 && TabCount(OURS) < 10) {
+			static const TBufferSpec Nameless = {8, 7, false, true, false, false, true, -1, NULL, "Nameless Report"};
+			int Index = (int)Buffers[OURS].size();
+			for (int s = 0; s < 2; s++) {
+				Buffers[s].push_back(new TConsoleBuffer(Index, Nameless));
+				Deleted[s].push_back(false);
+			}
+			ConsoleCall("TConsoleWindow::AddChannel nameless report", [&](int s) {
+				if (s == OURS) C(s)->AddChannel(Buffers[s][Index], "Nameless");
+				else At<BufferStringFn>(0x423060)(C(s), NULL, Buffers[s][Index], "Nameless"); });
+			if (Threw)
+				continue;
+			ConsoleCall("TConsoleWindow::~TConsoleWindow nameless report", [&](int s) { delete C(s); });
+			continue;
+		}
+	}
+	// A chat channel's server messages, failing in HandleEvent(203); a player's
+	// report without a name, whose tab's destructor asserts.
+	for (int Round = 0; Round < 8; Round++) {
+		if (!NewConsoles())
+			continue;
+		static const TBufferSpec Nameless = {8, 7, false, true, false, false, true, -1, NULL, "Nameless Report"};
+		int Index = Round % 2 == 0 ? NewBufferPair(1) : (int)Buffers[OURS].size();
+		if (Round % 2 != 0) {
+			for (int s = 0; s < 2; s++) {
+				Buffers[s].push_back(new TConsoleBuffer(Index, Nameless));
+				Deleted[s].push_back(false);
+			}
+		}
+		ConsoleCall("errors: channel", [&](int s) {
+			if (s == OURS) C(s)->AddChannel(Buffers[s][Index], "Channel");
+			else At<BufferStringFn>(0x423060)(C(s), NULL, Buffers[s][Index], "Channel");
+			TTab *Tab = s == OURS ? C(s)->TabBar->FindTab(Buffers[s][Index])
+				: At<TTab *(__fastcall *)(void *, void *, void *)>(0x41d270)(C(s)->TabBar, NULL, Buffers[s][Index]);
+			if (s == OURS) C(s)->TabBar->SetCurrentTab(Tab);
+			else At<void (__fastcall *)(void *, void *, void *)>(0x421d10)(C(s)->TabBar, NULL, Tab);
+		});
+		if (Threw)
+			continue;
+		if (Round % 2 != 0) {
+			ConsoleCall("TConsoleWindow::~TConsoleWindow nameless report", [&](int s) { delete C(s); }, false);
+			continue;
+		}
+		for (int Fail = 2; Fail <= 6; Fail++) {
+			ConsoleCall("TConsoleWindow::SetServerMessages", [&](int s) {
+				if (s == OURS) C(s)->SetServerMessages(Fail % 2 == 0);
+				else At<BoolArgFn>(0x41f470)(C(s), NULL, Fail % 2 == 0); }, true, Fail);
+			Threw = false;
+		}
+	}
+	Console[OURS] = Console[ORIGINAL] = NULL;
+	Threw = false;
+	ConsoleRound = NULL;
+	R.Finish();
 }
 
 void TestConsoleWindow()
@@ -1464,7 +1982,11 @@ void TestConsoleWindow()
 		delete M;
 		TWindow *W = new TWindow;
 		Kinds[OURS][VtableOf(W)] = "Window";
+		OurWindowVtable = VtableOf(W);
 		delete W;
+		TElement *E2 = new TElement;
+		OurElementVtable = VtableOf(E2);
+		delete E2;
 	}
 	for (int s = 0; s < 2; s++) {
 		Kinds[s][TestEditVtable] = "Edit";
@@ -1544,6 +2066,20 @@ void TestConsoleWindow()
 		}
 	}
 
+	// The error round (issue #34): its checks are reported apart.
+	int RoundChecks = Checks, SavedCounts[24];
+	memcpy(SavedCounts, ActionCount, sizeof(SavedCounts));
+	TestConsoleWindowErrors();
+	memcpy(ActionCount, SavedCounts, sizeof(SavedCounts));
+	RoundChecks = Checks - RoundChecks;
+	for (int s = 0; s < 2; s++) {
+		Roles[s].clear();
+		Buffers[s].clear();
+		Deleted[s].clear();
+	}
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+
 	Testing = false;
 	DialogFakes.SetSkins = NULL;
 	RestoreAll();
@@ -1553,6 +2089,6 @@ void TestConsoleWindow()
 	int Least = ActionCount[0];
 	for (int i = 1; i < 22; i++)
 		Least = ActionCount[i] < Least ? ActionCount[i] : Least;
-	printf("ConsoleWindow: %d checks, %d failures (each action at least %d times)\n", Checks - Before,
+	printf("ConsoleWindow: %d checks, %d failures (each action at least %d times)\n", Checks - Before - RoundChecks,
 		Failures - BeforeFailures, Least);
 }
