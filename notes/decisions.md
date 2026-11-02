@@ -1432,6 +1432,13 @@ Reconstructed by Claude Opus 5.5 (issue #4), November 1, 2026.
   every caller of the gap's functions is in ContextMenus.cpp. The object ends
   at 0x4458ff (Control.cpp's 0x445900 follows, already settled). No data of
   its own (all texts are string literals).
+- **NoCallback** (high for the datum, medium for the form; issue #26). Besides
+  the texts, the object has one datum: the unused TCallback 0x5c4508,
+  constructed as TCallback(NULL, 0) (0x496130) by the static initialiser
+  0x559de0 (no atexit; its only reference is the initialiser). It sits right
+  after ContentWindows.obj's 0x5c4500 (initialiser 0x559dd0) and before
+  Control.obj's .bss (0x5c4510). Written as a static NoCallback after the
+  includes, like DialogWindow.cpp's.
 - **Classes** (high for layouts and vtables, low-medium for names).
   THelpBubble (vtable 0x55f8b8, 0x30 bytes) is a TWindow, not a
   TContextMenu as Control.cpp's sketch had it: its constructor calls TWindow's
@@ -1562,6 +1569,13 @@ Reconstructed by Claude Opus 5.5 (issue #5), November 1, 2026.
   header evidence win over file-ranges.tsv as assertion evidence does (the
   three header functions of the first gap stay header code; four Container.h
   functions of older ranges changed from "range" to "header", same file).
+- **NoCallback** (high for the datum, medium for the form; issue #26). The
+  object's only .bss datum is the unused TCallback 0x5c4390, constructed as
+  TCallback(NULL, 0) (0x496130) by the static initialiser 0x559dc0 (between
+  Communication.obj's 0x559da0 and ContentWindows.obj's 0x559dd0; no atexit;
+  its only reference is the initialiser). It follows Communication.obj's .bss
+  (0x5c4340-0x5c438f) and comes before ContentWindows.obj's (0x5c4398).
+  Written as a static NoCallback after the includes, like DialogWindow.cpp's.
 - **Classes** (high for layouts and vtables, low-medium for names).
   TConsoleWindow (0x6c bytes, vtable 0x55e1a0; Data30 is never used),
   TTabBar (0x40, 0x55dcd8, a new slot +0xa0 Rearrange), TTab (0x58,
