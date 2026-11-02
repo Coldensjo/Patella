@@ -18,6 +18,15 @@
 #include "../../src/Surface.h"
 #include "../../src/Control.h"
 #include "../../src/sysinc.h"
+#include "../../src/Map.h"
+#include "../../src/Creatures.h"
+#include "../../src/Inventory.h"
+#include "../../src/Talk.h"
+#include "../../src/Objects.h"
+#include "../../src/Status.h"
+#include "../../src/Preferences.h"
+#include "../../src/Help.h"
+#include "../../src/graphics.h"
 #include <direct.h>
 #include <time.h>
 #include <map>
@@ -563,7 +572,381 @@ static void TestUtils()
 	}
 }
 
-void TestErrors()
+// --- Calls with arguments that fail the leading assertions ----------------
+
+// Calls our function and the image's at Address (cdecl) with the same
+// arguments, converted to our parameter types.
+template <class R, class... A, class... B> static void Both(const char *What, uint32 Address, R (*Ours)(A...), B &&... Arguments)
+{
+	if (Trace)
+		printf("Errors: calling %s\n", What);
+	TThrown OurResult = OurThrow([&] { Ours((A)Arguments...); });
+	if (Trace)
+		printf("Errors: calling the original %s\n", What);
+	Compare(What, OurResult,
+		ImageThrow([&] { At<R (__cdecl *)(A...)>(Address)((A)Arguments...); }));
+}
+
+// A value outside Min..Max (the edges, near them, the extremes).
+static int Outside(int Min, int Max)
+{
+	switch (ErRandom() % 5) {
+	case 0: return Min - 1;
+	case 1: return Max + 1;
+	case 2: return Min - 2 - (int)(ErRandom() % 1000);
+	case 3: return Max + 2 + (int)(ErRandom() % 1000);
+	default: return ErRandom() % 2 == 0 ? INT_MIN : INT_MAX;
+	}
+}
+static int Inside(int Min, int Max)
+{
+	return Min + (int)(ErRandom() % (uint32)(Max - Min + 1));
+}
+// Out of range for the parameter to fail, in range for the others.
+static void Coordinates(int *x, int *y, int *z, int MaxX, int MaxY, int MaxZ)
+{
+	int Bad = (int)(ErRandom() % 3);
+	*x = Bad == 0 ? Outside(0, MaxX) : Inside(0, MaxX);
+	*y = Bad == 1 ? Outside(0, MaxY) : Inside(0, MaxY);
+	*z = Bad == 2 ? Outside(0, MaxZ) : Inside(0, MaxZ);
+}
+static const char *LongText(int Length)
+{
+	static char Text[400];
+	memset(Text, 'x', Length);
+	Text[Length] = 0;
+	return Text;
+}
+
+static void TestMap()
+{
+	typedef TObject (*ObjectAt)(int, int, int);
+	for (int t = 0; t < 30; t++) {
+		int x, y, z, Position = 0;
+		Coordinates(&x, &y, &z, MAPSIZE_X - 1, MAPSIZE_Y - 1, MAPSIZE_Z - 1);
+		Both("GetFirstObject", 0x4b6140, (ObjectAt)GetFirstObject, x, y, z);
+		Both("GetMapObject", 0x4b6580, GetMapObject, x, y, z, 0);
+		Both("GetTopMoveObject", 0x4b6a00, GetTopMoveObject, x, y, z, Position);
+		Both("GetTopLookObject", 0x4b6ee0, GetTopLookObject, x, y, z, Position);
+		Both("GetTopUseObject", 0x4b73a0, GetTopUseObject, x, y, z, Position);
+		Both("GetTopMultiUseObject", 0x4b78d0, GetTopMultiUseObject, x, y, z, Position);
+		Both("AddObject", 0x4b88f0, AddObject, x, y, z, TObject());
+		Both("AppendObject", 0x4b8ec0, AppendObject, x, y, z, TObject());
+		Both("DeleteObject", 0x4b9420, DeleteObject, x, y, z, 0);
+		Both("ChangeObject", 0x4b9940, ChangeObject, x, y, z, 0, TObject());
+		Both("GetFirstEffect", 0x4ba100, GetFirstEffect, x, y, z);
+		Both("ClearField", 0x4bc720, ClearField, x, y, z, false);
+		int Effect = Outside(0, EFFECTS - 1);
+		Both("GetEffectStatus", 0x4b1440, GetEffectStatus, Effect);
+		Both("GetGraphicalEffectType", 0x4b15a0, GetGraphicalEffectType, Effect);
+		Both("GetGraphicalEffectPhase", 0x4b1860, GetGraphicalEffectPhase, Effect);
+		Both("GetTextualEffectColor", 0x4b1b20, GetTextualEffectColor, Effect);
+		Both("GetTextualEffectText", 0x4b1de0, GetTextualEffectText, Effect);
+		Both("GetTextualEffectPhase", 0x4b20a0, GetTextualEffectPhase, Effect);
+		Both("GetMissileEffectType", 0x4b2360, GetMissileEffectType, Effect);
+		Both("GetMissileEffectDirection", 0x4b2620, GetMissileEffectDirection, Effect);
+		Both("GetMissileEffectX", 0x4b28e0, GetMissileEffectX, Effect);
+		Both("GetMissileEffectY", 0x4b2bb0, GetMissileEffectY, Effect);
+		Both("AddTextualEffect", 0x4bad00, AddTextualEffect, 1, 2, 3, 4, t % 2 == 0 ? NULL : LongText(10 + t));
+		Both("AddMissileEffect", 0x4bb0c0, AddMissileEffect, 1, 2, 3, 4, 5, 6, -(int)(ErRandom() % 5));
+		int Floor = Outside(0, 15);
+		Both("GetAutomapColor", 0x4b4370, GetAutomapColor, 100, 200, Floor);
+		int Count = 0;
+		Both("GetAutomapMarks", 0x4b4680, GetAutomapMarks, 100, 200, Floor, (vector<TMark> *)NULL, &Count);
+		TCoordinate Coordinate;
+		memset(&Coordinate, 0, sizeof(Coordinate));
+		Coordinate.x = t % 3 == 0 ? 100 : -(int)(ErRandom() % 3);
+		Coordinate.y = t % 3 == 1 ? 100 : -(int)(ErRandom() % 3);
+		Both("AddAutomapMark", 0x4b4f60, AddAutomapMark, Coordinate, t % 4 == 0 ? NULL : "mark", 1);
+	}
+}
+
+static void TestCreatures()
+{
+	for (int t = 0; t < 30; t++) {
+		int Skill = Outside(0, SKILLS - 1);
+		Both("GetPlayerSkillValue", 0x44d1c0, GetPlayerSkillValue, Skill);
+		Both("GetPlayerSkillProgress", 0x44d320, GetPlayerSkillProgress, Skill);
+		Both("GetSkillName", 0x44d480, GetSkillName, Skill);
+		Both("SetPlayerSkill", 0x44cf10, SetPlayerSkill, Inside(0, SKILLS - 1), 10, Outside(0, 100));
+		Both("SetPlayerExperience", 0x44cc00, SetPlayerExperience, 100, 2, Outside(-1, 100));
+		Both("AddCreature", 0x44c530, AddCreature, 5, 0);
+		Both("GetCreature", 0x44c6e0, GetCreature, 0);
+		Both("CheckMonsterHint", 0x451db0, CheckMonsterHint, (TCreature *)NULL);
+		Both("IsOpponent", 0x44d740, IsOpponent, (TCreature *)NULL);
+		Both("GetOpponent", 0x44dc70, GetOpponent, Outside(0, INT_MAX - 3) < 0 ? -1 - (int)(ErRandom() % 9) : INT_MIN);
+		int Buddy = (int)(ErRandom() % 50);
+		Both("CompareBuddies", 0x44de20, CompareBuddies, Buddy, Buddy);
+		Both("SwapBuddies", 0x44e260, SwapBuddies, Buddy, Buddy);
+		Both("AddBuddy", 0x44eab0, AddBuddy, 7, t % 2 == 0 ? NULL : LongText(30 + t), true);
+		Both("EditBuddy", 0x44f230, EditBuddy, t % 2 == 0 ? 0 : 7, 1, (const char *)NULL, false);
+	}
+}
+
+static void TestInventory()
+{
+	for (int t = 0; t < 30; t++) {
+		int Container = Outside(0, OPEN_CONTAINERS - 1);
+		Both("OpenContainer", 0x4a4b00, OpenContainer, Container, TObject(), "bag", 8, false);
+		Both("CloseContainer", 0x4a4f70, CloseContainer, Container);
+		Both("IsContainerOpen", 0x4a5220, IsContainerOpen, Container);
+		Both("InsertContainerObject", 0x4a7f00, InsertContainerObject, Container, TObject());
+		Both("AppendContainerObject", 0x4a5380, AppendContainerObject, Container, TObject());
+		Both("ChangeContainerObject", 0x4a5630, ChangeContainerObject, Container, 0, TObject());
+		Both("DeleteContainerObject", 0x4a58e0, DeleteContainerObject, Container, 0);
+		Both("GetContainerObjectCount", 0x4a5bd0, GetContainerObjectCount, Container);
+		Both("GetContainerObject", 0x4a5e80, GetContainerObject, Container);
+		Both("GetContainerContent", 0x4a6150, GetContainerContent, Container, 0);
+		Both("GetContainerName", 0x4a64e0, GetContainerName, Container);
+		Both("GetContainerCapacity", 0x4a6790, GetContainerCapacity, Container);
+		Both("GetContainerHasParent", 0x4a6a40, GetContainerHasParent, Container);
+	}
+}
+
+static void TestTalk()
+{
+	alignas(8) static uint8 NoList[64]; // never read: the assertion comes first
+	vector<TTalkFilter *> &List = *(vector<TTalkFilter *> *)NoList;
+	for (int t = 0; t < 30; t++) {
+		Both("RemoveTalkbox", 0x4fe960, RemoveTalkbox, Outside(0, TALKBOXES - 1));
+		int Mode = t % 3 == 0 ? 0 : (t % 3 == 1 ? 100 + t : -t);
+		Both("AddTalkbox", 0x5052e0, AddTalkbox, Mode, "Name", 1, 2, 3, "text");
+		Both("AddMessageTalkbox", 0x505ac0, AddMessageTalkbox, t % 2 == 0 ? TALK_SAY : (int)TALK_INFO_MESSAGE,
+			t % 2 == 0 ? "text" : NULL);
+		Both("FindTextBuffer", 0x4ffb90, FindTextBuffer, (TTalkBuffer *)NULL, List);
+		Both("AddConsoleText", 0x5061f0, AddConsoleText, 1, (const char *)NULL, TALK_SAY, "Name", 0, 0);
+		Both("ClearTextBuffer", 0x502340, ClearTextBuffer, (TTalkBuffer *)NULL);
+	}
+}
+
+static void TestObjects()
+{
+	for (int t = 0; t < 30; t++) {
+		Both("GetMissileSpriteNumber", 0x4d6460, GetMissileSpriteNumber, 1, 0, 0, 0, Outside(0, 7));
+		Both("LoadObjects", 0x4d7380, LoadObjects, (const char *)NULL);
+	}
+}
+
+static void TestStatus()
+{
+	static void (*const Handler)() = [] {};
+	for (int t = 0; t < 30; t++) {
+		int Right = Outside(0, RIGHT_ANY - 1);
+		Both("SetRight", 0x4e8580, SetRight, Right, 1);
+		Both("CheckRight", 0x4e86e0, CheckRight, Right, 1);
+		int Type = t % 2 == 0 ? -1 - (int)(ErRandom() % 5) : 1000 + t;
+		Both("AddMessage", 0x4e9020, AddMessage, Type, 0, 0);
+		Both("AddMessageFirst", 0x4e91d0, AddMessageFirst, Type, 0, 0);
+		Both("SetAccount", 0x4e93d0, SetAccount, 1, t % 2 == 0 ? NULL : LongText(30 + t));
+		int Character = -1 - (int)(ErRandom() % 9);
+		Both("SetCharacter", 0x4e96d0, SetCharacter, Character, "Name", "World", (const uint8 *)"\1\2\3\4", 7171);
+		Both("SetActiveCharacter", 0x4e9c50, SetActiveCharacter, Character);
+		Both("GetCharacterName", 0x4e9db0, GetCharacterName, Character);
+		Both("GetCharacterWorld", 0x4e9f20, GetCharacterWorld, Character);
+		Both("GetCharacterIPAddress", 0x4ea090, GetCharacterIPAddress, Character);
+		Both("GetCharacterPort", 0x4ea200, GetCharacterPort, Character);
+		Both("CopyToClipboard", 0x4ea5b0, CopyToClipboard, (const char *)NULL);
+		Both("InitStatus", 0x4ea860, InitStatus, t % 2 == 0, (void (*)())NULL);
+	}
+	(void)Handler;
+}
+
+static void TestPreferences()
+{
+	bool AutoSend = false;
+	for (int t = 0; t < 30; t++) {
+		int Hotkey = Outside(0, HOTKEYS - 1);
+		Both("SetHotkey", 0x4dc450, SetHotkey, t % 3 == 0 ? Hotkey : Inside(0, HOTKEYS - 1),
+			t % 3 == 1 ? NULL : LongText(t % 3 == 0 ? 5 : 300), false);
+		Both("GetHotkey", 0x4dc7e0, GetHotkey, Hotkey, &AutoSend);
+		int Negative = -1 - (int)(ErRandom() % 100);
+		Both("AddOpenDialog", 0x4dc950, AddOpenDialog, Negative);
+		Both("SetMotD", 0x4dcac0, SetMotD, (const char *)NULL);
+		Both("AddOpenChannel", 0x4dccb0, AddOpenChannel, Negative);
+		Both("FindBuddy", 0x4dce20, FindBuddy, 0);
+		Both("SetBuddy", 0x4dcfb0, SetBuddy, t % 3 == 0 ? 0 : 5, 1, t % 3 == 1 ? NULL : LongText(200 + t), false);
+		Both("DeleteBuddy", 0x4dd360, DeleteBuddy, 0);
+		Both("GetBuddyIcon", 0x4dd4c0, GetBuddyIcon, 0);
+		Both("GetBuddyDescription", 0x4dd640, GetBuddyDescription, 0);
+		Both("GetBuddyNotify", 0x4dd7c0, GetBuddyNotify, 0);
+		int Skill = Outside(0, SKILLS - 1);
+		Both("GetSkillBar", 0x4dd940, GetSkillBar, Skill);
+		Both("SetSkillBar", 0x4ddaa0, SetSkillBar, Skill, true);
+	}
+}
+
+static void TestHelp()
+{
+	for (int t = 0; t < 30; t++) {
+		int Number = Outside(1, EVENTHELPS);
+		Both("AddEventHelp", 0x4a32e0, AddEventHelp, Number);
+		Both("CheckEventHelpName", 0x4a3460, CheckEventHelpName, (const char *)NULL);
+		Both("GetEventHelpTitle", 0x4a3b60, GetEventHelpTitle, Number);
+		Both("GetEventHelpText", 0x4a3fd0, GetEventHelpText, Number);
+	}
+}
+
+static void TestGraphics()
+{
+	// The counts the assertions print, the same on both sides for the test.
+	struct { int *Ours; uint32 Original; int Value; } Counts[] = {
+		{&NumberOfFonts, 0x5cc750, 4}, {&NumberOfPictures, 0x5cc754, 3}, {&NumberOfSprites, 0x5ccb60, 2000},
+		{&MemoryCacheSize, 0x5ccf70, 500}, {&VideoCacheSize, 0x5ccf80, 300},
+	};
+	int Saved[5][2];
+	for (int i = 0; i < 5; i++) {
+		Saved[i][0] = *Counts[i].Ours;
+		Saved[i][1] = Global<int>(Counts[i].Original);
+		*Counts[i].Ours = Global<int>(Counts[i].Original) = Counts[i].Value;
+	}
+	uint8 Buffer[16];
+	for (int t = 0; t < 30; t++) {
+		Both("LoadSprites", 0x48b550, LoadSprites, t % 2 == 0 ? NULL : LongText(260 + t));
+		Both("LoadPictures", 0x48bea0, LoadPictures, t % 2 == 0 ? NULL : LongText(260 + t));
+		int Sprite = Outside(1, 2000);
+		Both("LoadSprite", 0x48b9a0, LoadSprite, t % 2 == 0 ? Sprite : 5, t % 2 == 0 ? Buffer : NULL);
+		Both("LoadPictureTile", 0x48c3b0, LoadPictureTile, t % 2 == 0 ? Outside(1, 3) : 2, 0, 0, t % 2 == 0 ? Buffer : NULL);
+		Both("TouchMemoryItem", 0x48cc30, TouchMemoryItem, Outside(0, 499));
+		Both("RemoveMemoryItem", 0x48cef0, RemoveMemoryItem, Outside(0, 499));
+		Both("InsertMemoryItem", 0x48d0a0, InsertMemoryItem, t % 2 == 0 ? Outside(0, 499) : 7, Outside(0, HASH_TABLE_SIZE - 1));
+		Both("GetMemorySprite", 0x48d440, GetMemorySprite, Sprite);
+		Both("GetMemoryPicture", 0x48d740, GetMemoryPicture, Outside(1, 3), 0, 0);
+		Both("TouchVideoItem", 0x48dd70, TouchVideoItem, Outside(0, 299));
+		Both("InsertVideoItem", 0x48e410, InsertVideoItem, t % 2 == 0 ? Outside(0, 299) : 9, Outside(0, HASH_TABLE_SIZE - 1));
+		Both("GetVideoSprite", 0x48e7b0, GetVideoSprite, Sprite);
+		Both("GetVideoMaskedSprite", 0x48eb30, GetVideoMaskedSprite, t % 2 == 0 ? Sprite : 5, Sprite, (TRGBColor *)NULL);
+		Both("GetVideoPicture", 0x48f020, GetVideoPicture, Outside(1, 3), 0, 0);
+		Both("GetVideoFontChar", 0x48f430, GetVideoFontChar, Outside(1, 4), 0, 0, TRGBColor());
+		Both("DrawPicture", 0x490920, DrawPicture, 0, 0, 0, Outside(1, 3));
+		int Font = Outside(1, 4);
+		Both("GetFontHeight", 0x491710, GetFontHeight, Font);
+		Both("GetTextHeight", 0x491880, GetTextHeight, t % 2 == 0 ? Font : 2, (const char *)NULL);
+		Both("GetTextWidth", 0x494570, GetTextWidth, t % 2 == 0 ? Font : 2, (const char *)NULL);
+	}
+	for (int i = 0; i < 5; i++) {
+		*Counts[i].Ours = Saved[i][0];
+		Global<int>(Counts[i].Original) = Saved[i][1];
+	}
+}
+
+// --- TEND: errors raised in a callee, wrapped by the TBEGIN/TEND callers ---
+
+typedef void (__cdecl *LoadFn)(const char *FileName);
+
+static void TestWrapping(const char *ExePath)
+{
+	// Map.cpp: the field queries call GetFirstObject (and others), which
+	// asserts the coordinates; TEND2(rx, ry) wraps it. The image's field
+	// matrix and object vector need their constructors (as in maptest.cpp;
+	// a second construction leaks the first one's memory). IsFieldPassable
+	// only without CheckHeight, which reads the field (8, 6, GetMapLevel()).
+	static bool MapConstructed = false;
+	if (!MapConstructed) {
+		MapConstructed = true;
+		At<void (__fastcall *)(void *, void *, int, int)>(0x4b0bc0)((void *)(uintptr_t)0x5d4c18, NULL, 0, 0x7df);
+		At<void (__fastcall *)(void *, void *, int, int, int, int, int, int)>(0x4b0d70)((void *)(uintptr_t)0x5d4c24, NULL,
+			0, 17, 0, 13, 0, 7);
+	}
+	for (int t = 0; t < 40; t++) {
+		int x, y, z;
+		Coordinates(&x, &y, &z, MAPSIZE_X - 1, MAPSIZE_Y - 1, MAPSIZE_Z - 1);
+		Both("GetFieldHeight", 0x4bdf30, GetFieldHeight, x, y, z);
+		Both("IsFieldPassable", 0x4be130, IsFieldPassable, x, y, z, false);
+		Both("IsFieldThrowable", 0x4be390, IsFieldThrowable, x, y, z);
+		Both("IsFieldTranslucent", 0x4be570, IsFieldTranslucent, x, y, z);
+		Both("RequestFieldRefresh", 0x4bdd70, RequestFieldRefresh, x, y, z);
+		Both("FieldRefreshRequested", 0x4be750, FieldRefreshRequested, x, y, z);
+		// Inventory.cpp: the body positions 1..BODY_POSITIONS.
+		int Body = Outside(1, BODY_POSITIONS);
+		Both("GetBodyObject", 0x4a4880, GetBodyObject, Body);
+		Both("DeleteBodyObject", 0x4a46d0, DeleteBodyObject, Body);
+		Both("SetBodyObject", 0x4a4550, SetBodyObject, Body, TObject());
+		// Creatures.cpp: GetCreature(0) asserts.
+		Both("HideCreature", 0x44c8c0, HideCreature, 0);
+	}
+
+	// Talk.cpp: the talkbox getters call GetTalkbox, which asserts
+	// In(Number,1,GetNumberOfTalkboxes()) and prints the count: the same on
+	// both sides when the earlier tests left both sides alike.
+	int OurTalkboxes = GetNumberOfTalkboxes(), OriginalTalkboxes = At<int (__cdecl *)()>(0x4fd450)();
+	if (OurTalkboxes == OriginalTalkboxes) {
+		for (int t = 0; t < 40; t++) {
+			int Number = Outside(1, OurTalkboxes > 0 ? OurTalkboxes : 1);
+			if (OurTalkboxes == 0 && t % 4 == 0)
+				Number = 1;
+			int a, b, c, d;
+			Both("GetTalkbox", 0x4fdd80, GetTalkbox, Number);
+			Both("GetTalkboxMode", 0x4fdf10, GetTalkboxMode, Number);
+			Both("GetTalkboxPosition", 0x4fe0b0, GetTalkboxPosition, Number, &a, &b, &c);
+			Both("GetTalkboxRectangle", 0x4fe2b0, GetTalkboxRectangle, Number, &a, &b, &c, &d);
+			TRGBColor Color;
+			Both("GetTalkboxColor", 0x4fe470, GetTalkboxColor, &Color, Number);
+			Both("GetTalkboxLines", 0x4fe620, GetTalkboxLines, Number);
+			Both("GetTalkboxLine", 0x4fe7c0, GetTalkboxLine, Number, 0);
+			Both("SetTalkboxRectangle", 0x4fef70, SetTalkboxRectangle, Number, 1, 2, 3, 4);
+		}
+	} else {
+		printf("note: Errors: %d talkboxes, the original %d; the talkbox getters are not compared\n", OurTalkboxes,
+			OriginalTalkboxes);
+	}
+
+	// Objects.cpp on the real Tibia.dat: the getters index the property
+	// tables through Container.h's array operator(), whose index error is
+	// wrapped with the type (TEND1, TEND2) or by GetObjectFlag's own assertion.
+	std::string Dat = ExePath;
+	size_t Slash = Dat.find_last_of("\\/");
+	Dat = (Slash == std::string::npos ? std::string() : Dat.substr(0, Slash + 1)) + "Tibia.dat";
+	FILE *Probe = fopen(Dat.c_str(), "rb");
+	if (Probe == NULL) {
+		printf("note: Errors: %s not found, the Objects.cpp getters are not compared\n", Dat.c_str());
+		return;
+	}
+	fclose(Probe);
+	LoadObjects(Dat.c_str());
+	At<LoadFn>(0x4d7380)(Dat.c_str());
+	typedef int (*IntOf)(int);
+	struct { const char *Name; uint32 Address; IntOf Ours; int Kind; } Getters[] = {
+		{"GetObjectWaypoints", 0x4d1f30, GetObjectWaypoints, 0}, {"GetObjectBrightness", 0x4d20d0, GetObjectBrightness, 0},
+		{"GetObjectLightColor", 0x4d2270, GetObjectLightColor, 0}, {"GetObjectShiftX", 0x4d2410, GetObjectShiftX, 0},
+		{"GetObjectShiftY", 0x4d25b0, GetObjectShiftY, 0}, {"GetObjectElevation", 0x4d2750, GetObjectElevation, 0},
+		{"GetObjectAutomapColor", 0x4d28f0, GetObjectAutomapColor, 0}, {"GetObjectLensHelp", 0x4d2a90, GetObjectLensHelp, 0},
+		{"GetObjectWidth", 0x4d2c30, GetObjectWidth, 0}, {"GetObjectHeight", 0x4d2dd0, GetObjectHeight, 0},
+		{"GetObjectExactSize", 0x4d2f70, GetObjectExactSize, 0}, {"GetObjectLayers", 0x4d3110, GetObjectLayers, 0},
+		{"GetObjectPatternWidth", 0x4d32b0, GetObjectPatternWidth, 0}, {"GetObjectPatternHeight", 0x4d3450, GetObjectPatternHeight, 0},
+		{"GetObjectPatternDepth", 0x4d35f0, GetObjectPatternDepth, 0}, {"GetObjectPhases", 0x4d3790, GetObjectPhases, 0},
+		{"GetOutfitBrightness", 0x4d3cc0, GetOutfitBrightness, 1}, {"GetOutfitLightColor", 0x4d3e60, GetOutfitLightColor, 1},
+		{"GetOutfitShiftX", 0x4d4000, GetOutfitShiftX, 1}, {"GetOutfitShiftY", 0x4d41a0, GetOutfitShiftY, 1},
+		{"GetOutfitWidth", 0x4d4340, GetOutfitWidth, 1}, {"GetOutfitExactSize", 0x4d44e0, GetOutfitExactSize, 1},
+		{"GetOutfitHeight", 0x4d4680, GetOutfitHeight, 1}, {"GetOutfitLayers", 0x4d4820, GetOutfitLayers, 1},
+		{"GetOutfitPhases", 0x4d49c0, GetOutfitPhases, 1}, {"GetEffectBrightness", 0x4d4ef0, GetEffectBrightness, 2},
+		{"GetEffectLightColor", 0x4d5090, GetEffectLightColor, 2}, {"GetEffectWidth", 0x4d5230, GetEffectWidth, 2},
+		{"GetEffectHeight", 0x4d53d0, GetEffectHeight, 2}, {"GetEffectLayers", 0x4d5570, GetEffectLayers, 2},
+		{"GetEffectPhases", 0x4d5710, GetEffectPhases, 2}, {"GetMissileBrightness", 0x4d5c40, GetMissileBrightness, 3},
+		{"GetMissileLightColor", 0x4d5de0, GetMissileLightColor, 3}, {"GetMissileWidth", 0x4d5f80, GetMissileWidth, 3},
+		{"GetMissileHeight", 0x4d6120, GetMissileHeight, 3}, {"GetMissileLayers", 0x4d62c0, GetMissileLayers, 3},
+	};
+	array<TProperties> *Tables[4] = {ObjectProperties, OutfitProperties, EffectProperties, MissileProperties};
+	for (int t = 0; t < 400; t++) {
+		auto &G = Getters[ErRandom() % (sizeof(Getters) / sizeof(Getters[0]))];
+		array<TProperties> *Table = Tables[G.Kind];
+		// Mostly outside the table; inside, the Entry getters assert their flag.
+		int Type = ErRandom() % 3 == 0 ? Inside(Table->low(), Table->high()) : Outside(Table->low(), Table->high());
+		Both(G.Name, G.Address, G.Ours, Type);
+		int Flag = (int)(ErRandom() % 40);
+		switch (G.Kind) {
+		case 0: Both("GetObjectFlag", 0x4d1c40, (bool (*)(int, int))GetObjectFlag, Type, Flag); break;
+		case 1: Both("GetOutfitFlag", 0x4d3af0, GetOutfitFlag, Type, Flag); break;
+		case 2: Both("GetEffectFlag", 0x4d4d20, GetEffectFlag, Type, Flag); break;
+		default: Both("GetMissileFlag", 0x4d5a70, GetMissileFlag, Type, Flag); break;
+		}
+		Both("GetOutfitSpriteNumber", 0x4d4b60, GetOutfitSpriteNumber, Type, 0, 0, 0, 0, 0);
+		Both("GetEffectSpriteNumber", 0x4d58b0, GetEffectSpriteNumber, Type, 0, 0, 0, 0);
+	}
+	ExitObjects();
+	At<void (__cdecl *)()>(0x4d79b0)();
+}
+
+void TestErrors(const char *ExePath)
 {
 	Trace = getenv("ER_TRACE") != NULL && atoi(getenv("ER_TRACE")) != 0;
 	if (getenv("ER_SEED") != NULL)
@@ -579,11 +962,42 @@ void TestErrors()
 		printf("Errors: %s\n", "TestMyException");
 	TestMyException();
 	if (Trace)
+		printf("Errors: %s\n", "TestWrapping");
+	PatchScript(); // the image's stdio, for LoadObjects
+	TestWrapping(ExePath);
+	if (Trace)
 		printf("Errors: %s\n", "TestPlayer");
 	TestPlayer();
 	if (Trace)
 		printf("Errors: %s\n", "TestUtils");
 	TestUtils();
+	if (Trace)
+		printf("Errors: %s\n", "TestMap");
+	TestMap();
+	if (Trace)
+		printf("Errors: %s\n", "TestCreatures");
+	TestCreatures();
+	if (Trace)
+		printf("Errors: %s\n", "TestInventory");
+	TestInventory();
+	if (Trace)
+		printf("Errors: %s\n", "TestTalk");
+	TestTalk();
+	if (Trace)
+		printf("Errors: %s\n", "TestObjects");
+	TestObjects();
+	if (Trace)
+		printf("Errors: %s\n", "TestStatus");
+	TestStatus();
+	if (Trace)
+		printf("Errors: %s\n", "TestPreferences");
+	TestPreferences();
+	if (Trace)
+		printf("Errors: %s\n", "TestHelp");
+	TestHelp();
+	if (Trace)
+		printf("Errors: %s\n", "TestGraphics");
+	TestGraphics();
 	DisableImageExceptions();
 	if (getenv("ER_LINES") != NULL) {
 		for (auto &File : OursToOriginal)
