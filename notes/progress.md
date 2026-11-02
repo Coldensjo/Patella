@@ -92,9 +92,9 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
   which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with
   output were dialogstest.cpp's dump, which took a heap pointer 0x02abab30 for the 0xab fill
-  pattern (fixed: pattern bytes must include the top or low byte), or a number both sides hold that
-  was readable memory for the second dump only (fixed: Compare keeps each page's readability for both
-  dumps, reads check again). Git Bash's larger environment block moves the heap. A test that is
+  pattern, or a number both sides hold that was readable memory for the second dump only
+  (#23 patched both rules; #32 replaced them: the dump classifies words by the round's allocations,
+  never by readability or byte patterns). Git Bash's larger environment block moves the heap. A test that is
   suspected of depending on the layout: run it alone (DIFFTEST_ONLY) many times with an environment
   variable of growing length (issue #23 did 30-100 such runs of each window test). From Git Bash run `cmd //c 'tools\difftest\build.cmd'` (`cmd /c` becomes
   `cmd C:/`: an interactive cmd that runs nothing and exits 0). A locked difftest.exe no longer
@@ -225,9 +225,13 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   imports): functions that build a std::stringstream in the image (the error report dialog's constructor,
   Container.h's index errors) cannot be called on the image side.
 - dialogstest.cpp's dump prints every member word with pointers named (tree components, receivers, timers)
-  and strings only for the members listed as strings; values with two 0xab bytes are pattern, not pointers.
-  Event 31 only with a timer, event 11 of the hotkey dialog only with a selection.
-- DIFFTEST_ONLY=Dialogs runs dialogstest.cpp alone (DG_TRACE=1, DG_LOGS=<file>).
+  and strings only for the members listed as strings. A word is a pointer only by where it points, never by
+  readability (issue #32): into a block of the round's allocations (H<size>+<offset>, D when freed; freed
+  blocks stay allocated until the round ends), into an image or module (S) or into the stack (K); otherwise
+  it is a number. The fill pattern needs no rule (0xabababab is no address). Event 31 only with a timer,
+  event 11 of the hotkey dialog only with a selection.
+- DIFFTEST_ONLY=Dialogs runs dialogstest.cpp alone (DG_TRACE=1, DG_LOGS=<file>, DG_HEAPSHIFT=<bytes> moves the
+  heap layout, DG_BLOCKS=1 counts the blocks left in the table).
 - SurfaceDX.cpp (issue #9): the engine uses DirectDraw4/Surface4 and
   Direct3D3/Device3/Viewport3 despite its DirectX 5 name. TSurface is 0x70
   bytes (8-byte alignment), TSurfaceDX is 0x250. Base Window is now hWindow;
