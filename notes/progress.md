@@ -66,6 +66,13 @@ compares every file they write: Tibia.cfg, the *.map files, Default.txt, error.t
 Tibia.bak are byte-identical, apart from the times (masked, two runs of Tibia.exe as evidence) and error.txt's
 line numbers (mapped; issue #35). One client bug fixed: the UCRT's ctime pads the day with a space, MSVC 7.1's
 with 0 (src/compat/crt71.h). notes/written-files.md.
+Rendering compared (issue #20, November 2, 2026): tools/compare_rendering.py plays issue #19's session (replayed)
+with both clients and every engine (DirectX 5, DirectX 9, OpenGL), windowed and fullscreen, and compares the
+frames pixel by pixel; tools/capture/patcap.c reads each frame from the engine's own surfaces (no display
+needed) and makes time virtual (timeGetTime, the wall clock and the main timer's ticks move only by the
+script's steps). Every scene of every engine and mode is pixel-identical, except the measured frame rate in the
+advanced graphics options (masked: two runs of Tibia.exe differ there). No client bug, no change to src/.
+notes/rendering.md.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -96,6 +103,12 @@ SurfaceDX9 4,934, SurfaceGL 2,620 as before; every per-test count as before; #21
 no total. Full build.cmd, November 2, 2026).
 
 ## Notes for later files
+
+- Rendering (issue #20): `python -I tools/compare_rendering.py` compares what both clients draw; a change to
+  drawing code (GUI, dialogs, map window, the surfaces) can be checked with it (`--engines dx5 --modes windowed
+  --no-repeat` takes a few minutes). patcap.dll (tools/capture/patcap.c) also makes a client's time fully
+  virtual: useful for any comparison that must not depend on timing. Do not inject DLLs with a remote thread on
+  this machine: Windows Defender stops the injector; an import entry in the run folder's copy (add_import) works.
 
 - The Bash tool expands `\n` inside heredocs and sed replacements: write
   C/C++ escapes with the Edit/Write tools, not through shell commands.

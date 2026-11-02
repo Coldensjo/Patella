@@ -111,6 +111,11 @@ their state in memory after every step and their Tibia.cfg: notes/traffic.md.
 error.txt after forced errors and the error report flow, the files a patch from the login server writes):
 notes/written-files.md.
 
+`python -I tools/compare_rendering.py` (issue #20) compares what both clients draw: issue #19's session
+replayed with each engine (DirectX 5, DirectX 9, OpenGL), windowed and fullscreen, every frame read from the
+engine's own surfaces by a DLL the run folders' copies import (tools/capture/patcap.c, no display needed),
+with time made virtual so both clients draw the same moment: notes/rendering.md.
+
 ## Checking
 
 - `tools\compile-check.cmd` compiles every `src/*.cpp` with MSVC 14.51 for x86 (`/W3`, no

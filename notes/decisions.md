@@ -4346,3 +4346,63 @@ Claude Opus 5.5 (issue #34, third part), November 2, 2026.
   "Dialogs errors: 200,285 checks, 61,097 exceptions compared (4,786 calls that threw)"; DialogElements 135,478 and
   Dialogs 98,889 as before (alone: 134,736 and 98,474), every other test's count as in the second part's run. A
   DIFFTEST_ONLY=Dialogs run takes about a minute (the round about 45 s), DialogElements about 7 s.
+## Rendering comparison (issue #20)
+
+The script, the method and the results: notes/rendering.md. Decisions with a reasonable default:
+
+- **Read the frame from the engine's own surfaces, not from the screen** (high): the monitor is off (issue #18's
+  screenshots were white, DWM composes nothing), but every engine composes the frame in a surface of its own before
+  it shows it. A DLL in the client reads that surface at the moment the client shows it (DirectDraw Blt into the
+  primary or Flip, Direct3D 9 Present through GetRenderTargetData, SwapBuffers through glReadPixels): the same
+  method for both clients, no display needed, windowed and fullscreen. It is what the client drew, before the
+  desktop composition (which would add nothing of the client's).
+- **Load the DLL through an import entry in the run folders' copies, not by injection** (high): the first
+  version started the client suspended and injected the DLL with CreateRemoteThread/LoadLibraryA from a small
+  injector; Windows Defender's behaviour monitoring stopped the injector (Behavior:Win32/DefenseEvasion.A!ml,
+  November 2, 2026, 13:20). It was deleted and not worked around. The copies are patched anyway (issue #18's
+  patch_client.py); one more import descriptor in a new section is an ordinary dependency for the loader, which
+  runs the DLL's DllMain before the client's entry point (so the hooks see StartTime's static initialiser). The
+  original Tibia.exe and build\Release\Patella.exe are not changed. Nothing in Defender was changed.
+- **Virtual time instead of choosing a capture moment** (high): animations follow two clocks, timeGetTime
+  (GetMilliseconds: steps, effects, talk boxes, blinking buttons) and the main timer's ticks (ActionNumber:
+  object and outfit phases, the edit cursor, hover, ambient light). Two runs cannot be made to capture at the same
+  real moment, and waiting for everything to settle would lose talk boxes and effects. The DLL makes both stand
+  still and the script moves them by the same amounts after every step (2000 ms, 20 ticks), so packets and input
+  are always handled at the same virtual time. The wall clock follows the same virtual time from a fixed date.
+  The timer is not created (SetTimer/KillTimer of id 1 recorded only) and its ticks are sent as WM_TIMER by the
+  DLL in the main thread: the client's own OnTimer/TimerEvent runs, nothing of the client is replaced.
+- **GetCursorPos fixed** (medium): OnIdle polls the real cursor and feeds moves into the client; a fixed point
+  outside the window makes the runs independent of the machine's mouse. The driver's posted mouse messages are
+  the only moves, as in issues #18-#21.
+- **The measured frame rate is masked** (high): "Current framerate: %2.2f" in the advanced graphics options
+  (Dialogs.cpp TAdvancedGraphicsDialog::Draw, GetFPS) is the number of frames the engine drew per second of the
+  clock (WaitForNextFrame); with the clock standing still between steps it is how many frames the machine
+  drew in real time, so it differs between two runs of the same client (the repeat runs of Tibia.exe show it).
+  The mask covers only the number: 100x16 pixels from 112 pixels right of the text's point
+  (SkinProperties.Style1394.Data70 from the dialog's corner, read from memory in each run; the colon ends at
+  +110, the number starts at +113: measured in the pictures). Low-medium for the pixel offsets; the script fails
+  if a difference falls outside the mask, so a wrong mask cannot hide anything else.
+- **Fullscreen in the desktop's own mode** (high): the fullscreen check box switches the display mode
+  (SetDisplayMode/ChangeDisplaySettings, Direct3D 9 Reset); with FullscreenMode = (1024,768,32), the mode the
+  monitor-off desktop has, no mode really changes. The script refuses fullscreen runs when the desktop is in
+  another mode, checks the mode before and after every run and stops when it changed. Other fullscreen
+  resolutions (a real mode switch) were not tried.
+- **The frame rate is a measurement, not a reconstruction difference** (high): Patella.exe shows about 1.5 % more
+  frames per second than Tibia.exe on every engine, and draws about as many more frames over a whole session;
+  Tibia.exe alone varies by one frame between runs (125.50/126.00). WaitForNextFrame and GetFPS are compared by the
+  difftest against a scripted clock in all three engines; the systematic part is the faster build (MSVC 14). Not
+  fixed (nothing to fix in src/), masked as above.
+- **One recorded session for all game scenes** (high): issue #19's live session of Tibia.exe (orig-live.jsonl)
+  has the scenes the issue asks for (game view, side bar with inventory, container, trade, battle, skills and
+  VIP windows, the automap, talk boxes, look texts, a context menu); replayed, both clients get the same server
+  bytes and the proxy checks every client packet against the recording. No server run was needed. The start
+  screen, the option dialogs and the login dialog come before any packet.
+- **The option dialogs closed with Cancel/Ok, not changed** (medium): issue #21 drove every option; here they
+  are only shown (the advanced dialog shows the engine selected). The engine is chosen in Tibia.cfg (Engine =
+  0/1/2), and the script checks that the frames came from that engine's API (the client would fall back
+  silently).
+- **The side windows at the end of the session** (medium): opening Skills, Battle and VIP before the game steps
+  and closing them again left the Battle window open in one try (the second click on its toggle did not close
+  it; not investigated, the same in both clients) and the trade window then pushed the bag window out; at the end
+  of the session they need no closing. The toggle buttons are placed from the Logout button's node and
+  TButtonsWindow's skin points (Tibia.exe has no name for TTextToggleButton).
