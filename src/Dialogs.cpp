@@ -149,11 +149,11 @@ TDialog *CreateInfoDialog(void (*OpenURL)(const char *URL))
 	Window->InsertChild(Separator);
 	Window->InsertChild(Link);
 	Window->SetChildArea(Label, SkinProperties.StyleE68.Data34.x, SkinProperties.StyleE68.Data34.y,
-		SkinProperties.StyleE68.Data34.Width, SkinProperties.StyleE68.Data34.Height);
+		SkinProperties.StyleE68.Data34.width, SkinProperties.StyleE68.Data34.height);
 	Window->SetChildArea(Separator, SkinProperties.StyleE68.Data54.x, SkinProperties.StyleE68.Data54.y,
-		SkinProperties.StyleE68.Data54.Width, SkinProperties.StyleE68.Data54.Height);
+		SkinProperties.StyleE68.Data54.width, SkinProperties.StyleE68.Data54.height);
 	Window->SetChildArea(Link, SkinProperties.StyleE68.Data44.x, SkinProperties.StyleE68.Data44.y,
-		SkinProperties.StyleE68.Data44.Width, SkinProperties.StyleE68.Data44.Height);
+		SkinProperties.StyleE68.Data44.width, SkinProperties.StyleE68.Data44.height);
 	TBorder *Border = new TBorder(Window, 0, 9, 0, 11, 10, 0, 8, 0, SkinProperties.StyleE68.Data30);
 	Border->FitToWindow();
 	TDialog *Dialog = new TDialog("Info", Border);
@@ -632,11 +632,11 @@ void TDialog::Arrange()
 {
 	TBEGIN
 	SetChildArea(Dialog, SkinProperties.StyleB08.Data54.x, SkinProperties.StyleB08.Data54.y,
-		SkinProperties.StyleB08.Data54.Width, SkinProperties.StyleB08.Data54.Height);
+		SkinProperties.StyleB08.Data54.width, SkinProperties.StyleB08.Data54.height);
 	SetChildArea(CaptionLabel, SkinProperties.StyleB08.Data08.x, SkinProperties.StyleB08.Data08.y,
-		SkinProperties.StyleB08.Data08.Width, SkinProperties.StyleB08.Data08.Height);
+		SkinProperties.StyleB08.Data08.width, SkinProperties.StyleB08.Data08.height);
 	SetChildArea(Separator, SkinProperties.StyleB08.Data44.x, SkinProperties.StyleB08.Data44.y,
-		SkinProperties.StyleB08.Data44.Width, SkinProperties.StyleB08.Data44.Height);
+		SkinProperties.StyleB08.Data44.width, SkinProperties.StyleB08.Data44.height);
 	int Button = 0;
 	if (CancelButton != NULL) {
 		SetChildPosition(CancelButton, SkinProperties.StyleB08.Data2C[Button].x,
@@ -889,22 +889,22 @@ TLoginDialog::TLoginDialog(void (*OpenURL)(const char *URL))
 	TLink *Link = new TLink(TextNoAccountYet, "Create Account", "http://www.tibia.com/home/?subtopic=signup",
 		OpenURL, SkinProperties.StyleB08.Data78);
 	InsertChild(Account);
-	SetChildArea(Account, SkinProperties.DataBAC.x, SkinProperties.DataBAC.y, SkinProperties.DataBAC.Width,
-		SkinProperties.DataBAC.Height);
+	SetChildArea(Account, SkinProperties.DataBAC.x, SkinProperties.DataBAC.y, SkinProperties.DataBAC.width,
+		SkinProperties.DataBAC.height);
 	InsertChild(Password);
-	SetChildArea(Password, SkinProperties.DataBCC.x, SkinProperties.DataBCC.y, SkinProperties.DataBCC.Width,
-		SkinProperties.DataBCC.Height);
+	SetChildArea(Password, SkinProperties.DataBCC.x, SkinProperties.DataBCC.y, SkinProperties.DataBCC.width,
+		SkinProperties.DataBCC.height);
 	InsertChild(Link);
-	SetChildArea(Link, SkinProperties.DataBDC.x, SkinProperties.DataBDC.y, SkinProperties.DataBDC.Width,
-		SkinProperties.DataBDC.Height);
+	SetChildArea(Link, SkinProperties.DataBDC.x, SkinProperties.DataBDC.y, SkinProperties.DataBDC.width,
+		SkinProperties.DataBDC.height);
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, TextAccountNumber);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.DataB9C.x, SkinProperties.DataB9C.y, SkinProperties.DataB9C.Width,
-		SkinProperties.DataB9C.Height);
+	SetChildArea(Label, SkinProperties.DataB9C.x, SkinProperties.DataB9C.y, SkinProperties.DataB9C.width,
+		SkinProperties.DataB9C.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data64, TextPassword);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.DataBBC.x, SkinProperties.DataBBC.y, SkinProperties.DataBBC.Width,
-		SkinProperties.DataBBC.Height);
+	SetChildArea(Label, SkinProperties.DataBBC.x, SkinProperties.DataBBC.y, SkinProperties.DataBBC.width,
+		SkinProperties.DataBBC.height);
 	FocusGroup->SetActive(Account);
 	Arrange();
 	TEND
@@ -950,12 +950,12 @@ TCharacterListDialog::TCharacterListDialog()
 	TComponent::SetSize(SkinProperties.DataBF0, SkinProperties.DataBF4);
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectCharacter);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.DataBF8.x, SkinProperties.DataBF8.y, SkinProperties.DataBF8.Width,
-		SkinProperties.DataBF8.Height);
+	SetChildArea(Label, SkinProperties.DataBF8.x, SkinProperties.DataBF8.y, SkinProperties.DataBF8.width,
+		SkinProperties.DataBF8.height);
 	ListBox = new TListBox(NoCallback, TCallback(this, 1));
 	InsertChild(ListBox);
-	SetChildArea(ListBox, SkinProperties.DataC08.x, SkinProperties.DataC08.y, SkinProperties.DataC08.Width,
-		SkinProperties.DataC08.Height);
+	SetChildArea(ListBox, SkinProperties.DataC08.x, SkinProperties.DataC08.y, SkinProperties.DataC08.width,
+		SkinProperties.DataC08.height);
 	int Characters = GetAccountCharacters();
 	for (int i = 0; i < Characters; i++) {
 		char Line[372];
@@ -991,8 +991,8 @@ TCharacterListDialog::TCharacterListDialog()
 	}
 	TFormattedText *StatusText = new TFormattedText(Status);
 	InsertChild(StatusText);
-	SetChildArea(StatusText, SkinProperties.DataC18.x, SkinProperties.DataC18.y, SkinProperties.DataC18.Width,
-		SkinProperties.DataC18.Height);
+	SetChildArea(StatusText, SkinProperties.DataC18.x, SkinProperties.DataC18.y, SkinProperties.DataC18.width,
+		SkinProperties.DataC18.height);
 	Arrange();
 	TEND
 }
@@ -1098,12 +1098,12 @@ TMoveObjectsDialog::TMoveObjectsDialog()
 	TComponent::SetSize(SkinProperties.DataC28, SkinProperties.DataC2C);
 	TLabel *Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextSetNumberOfItems);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.DataC40.x, SkinProperties.DataC40.y, SkinProperties.DataC40.Width,
-		SkinProperties.DataC40.Height);
+	SetChildArea(Label, SkinProperties.DataC40.x, SkinProperties.DataC40.y, SkinProperties.DataC40.width,
+		SkinProperties.DataC40.height);
 	ScrollBar = new THorizontalScrollBar(1, DraggedObject.Data, DraggedObject.Data, 11, 1, NoCallback);
 	InsertChild(ScrollBar);
-	SetChildArea(ScrollBar, SkinProperties.DataC30.x, SkinProperties.DataC30.y, SkinProperties.DataC30.Width,
-		SkinProperties.DataC30.Height);
+	SetChildArea(ScrollBar, SkinProperties.DataC30.x, SkinProperties.DataC30.y, SkinProperties.DataC30.width,
+		SkinProperties.DataC30.height);
 	Arrange();
 	TEND
 }
@@ -1200,8 +1200,8 @@ TOutfitDialog::TOutfitDialog(int *Data)
 	OutfitIcon = new TOutfitIcon(Outfit, 2, Colors, &SkinProperties.DataC74);
 	TBorder *Border = new TBorder(OutfitIcon, 0, 9, 0, 11, 10, 0, 8, 0, SkinProperties.DataC70);
 	InsertChild(Border);
-	SetChildArea(Border, SkinProperties.DataC60.x, SkinProperties.DataC60.y, SkinProperties.DataC60.Width,
-		SkinProperties.DataC60.Height);
+	SetChildArea(Border, SkinProperties.DataC60.x, SkinProperties.DataC60.y, SkinProperties.DataC60.width,
+		SkinProperties.DataC60.height);
 	TTextButton *NextButton = new TTextButton(0, 0, "Next", TCallback(this, 6), NULL);
 	InsertChild(NextButton);
 	SetChildPosition(NextButton, SkinProperties.DataC80.x, SkinProperties.DataC80.y);
@@ -1290,19 +1290,19 @@ TTextDialog::TTextDialog(int MaximumLength, const char *Text, uint32 _ObjectNumb
 	bool ReadOnly = !GetObjectFlag(Obj, WRITE) && !(GetObjectFlag(Obj, WRITEONCE) && strlen(Text) == 0);
 	EditText = new TEditText(MaximumLength, ReadOnly);
 	InsertChild(EditText);
-	SetChildArea(EditText, SkinProperties.DataCF4.x, SkinProperties.DataCF4.y, SkinProperties.DataCF4.Width,
-		SkinProperties.DataCF4.Height);
+	SetChildArea(EditText, SkinProperties.DataCF4.x, SkinProperties.DataCF4.y, SkinProperties.DataCF4.width,
+		SkinProperties.DataCF4.height);
 	EditText->SetActive(true);
 	EditText->SetText(Text, ReadOnly);
 	ObjectIcon = new TObjectIcon(Obj, &SkinProperties.DataCD8, false);
 	InsertChild(ObjectIcon);
-	SetChildArea(ObjectIcon, SkinProperties.DataCC8.x, SkinProperties.DataCC8.y, SkinProperties.DataCC8.Width,
-		SkinProperties.DataCC8.Height);
+	SetChildArea(ObjectIcon, SkinProperties.DataCC8.x, SkinProperties.DataCC8.y, SkinProperties.DataCC8.width,
+		SkinProperties.DataCC8.height);
 	if (Description != NULL) {
 		TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, Description);
 		InsertChild(Label);
-		SetChildArea(Label, SkinProperties.DataCE4.x, SkinProperties.DataCE4.y, SkinProperties.DataCE4.Width,
-			SkinProperties.DataCE4.Height);
+		SetChildArea(Label, SkinProperties.DataCE4.x, SkinProperties.DataCE4.y, SkinProperties.DataCE4.width,
+			SkinProperties.DataCE4.height);
 	}
 	Arrange();
 	TEND2(MaximumLength, _ObjectNumber)
@@ -1332,8 +1332,8 @@ TEditListDialog::TEditListDialog(int MaxLength, const char *Text, int _Type, uin
 	TComponent::SetSize(SkinProperties.DataD04, SkinProperties.DataD08);
 	EditText = new TEditText(MaxLength - 1, false);
 	InsertChild(EditText);
-	SetChildArea(EditText, SkinProperties.DataD2C.x, SkinProperties.DataD2C.y, SkinProperties.DataD2C.Width,
-		SkinProperties.DataD2C.Height);
+	SetChildArea(EditText, SkinProperties.DataD2C.x, SkinProperties.DataD2C.y, SkinProperties.DataD2C.width,
+		SkinProperties.DataD2C.height);
 	EditText->SetActive(true);
 	EditText->SetText(Text, false);
 	DrawingListLength = 1;
@@ -1341,8 +1341,8 @@ TEditListDialog::TEditListDialog(int MaxLength, const char *Text, int _Type, uin
 	if (Description != NULL) {
 		TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, Description);
 		InsertChild(Label);
-		SetChildArea(Label, SkinProperties.DataD1C.x, SkinProperties.DataD1C.y, SkinProperties.DataD1C.Width,
-			SkinProperties.DataD1C.Height);
+		SetChildArea(Label, SkinProperties.DataD1C.x, SkinProperties.DataD1C.y, SkinProperties.DataD1C.width,
+			SkinProperties.DataD1C.height);
 	}
 	Arrange();
 	TEND
@@ -1380,16 +1380,16 @@ TIgnoreListDialog::TIgnoreListDialog()
 	IgnoreListCheckBox = new TCheckBox("Activate Ignore List");
 	InsertChild(IgnoreListCheckBox);
 	SetChildArea(IgnoreListCheckBox, SkinProperties.StyleD3C.Data08.x, SkinProperties.StyleD3C.Data08.y,
-		SkinProperties.StyleD3C.Data08.Width, SkinProperties.StyleD3C.Data08.Height);
+		SkinProperties.StyleD3C.Data08.width, SkinProperties.StyleD3C.Data08.height);
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextCharactersToIgnore);
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.StyleD3C.Data18.x, SkinProperties.StyleD3C.Data18.y,
-		SkinProperties.StyleD3C.Data18.Width, SkinProperties.StyleD3C.Data18.Height);
+		SkinProperties.StyleD3C.Data18.width, SkinProperties.StyleD3C.Data18.height);
 	IgnoreList = new TFontListBox(TCallback(this, 11), NoCallback);
 	IgnoreList->SetEditable(true);
 	InsertChild(IgnoreList);
 	SetChildArea(IgnoreList, SkinProperties.StyleD3C.Data28.x, SkinProperties.StyleD3C.Data28.y,
-		SkinProperties.StyleD3C.Data28.Width, SkinProperties.StyleD3C.Data28.Height);
+		SkinProperties.StyleD3C.Data28.width, SkinProperties.StyleD3C.Data28.height);
 	AddIgnoreButton = new TTextButton(SkinProperties.StyleD3C.Data38.x, SkinProperties.StyleD3C.Data38.y, "Add",
 		14, 15, TCallback(this, 709), NULL);
 	InsertChild(AddIgnoreButton);
@@ -1399,19 +1399,19 @@ TIgnoreListDialog::TIgnoreListDialog()
 	IgnorePermanently = new TCheckBox("Ignore Permanently");
 	InsertChild(IgnorePermanently);
 	SetChildArea(IgnorePermanently, SkinProperties.StyleD3C.Data48.x, SkinProperties.StyleD3C.Data48.y,
-		SkinProperties.StyleD3C.Data48.Width, SkinProperties.StyleD3C.Data48.Height);
+		SkinProperties.StyleD3C.Data48.width, SkinProperties.StyleD3C.Data48.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data78, TextGlobalIgnoreSettings);
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.StyleD3C.Data58.x, SkinProperties.StyleD3C.Data58.y,
-		SkinProperties.StyleD3C.Data58.Width, SkinProperties.StyleD3C.Data58.Height);
+		SkinProperties.StyleD3C.Data58.width, SkinProperties.StyleD3C.Data58.height);
 	IgnoreYelling = new TCheckBox("Ignore Yelling");
 	InsertChild(IgnoreYelling);
 	SetChildArea(IgnoreYelling, SkinProperties.StyleD3C.Data68.x, SkinProperties.StyleD3C.Data68.y,
-		SkinProperties.StyleD3C.Data68.Width, SkinProperties.StyleD3C.Data68.Height);
+		SkinProperties.StyleD3C.Data68.width, SkinProperties.StyleD3C.Data68.height);
 	IgnorePrivate = new TCheckBox("Ignore Private Messages");
 	InsertChild(IgnorePrivate);
 	SetChildArea(IgnorePrivate, SkinProperties.StyleD3C.Data78.x, SkinProperties.StyleD3C.Data78.y,
-		SkinProperties.StyleD3C.Data78.Width, SkinProperties.StyleD3C.Data78.Height);
+		SkinProperties.StyleD3C.Data78.width, SkinProperties.StyleD3C.Data78.height);
 	IgnoreListCheckBox->SetChecked(GetIgnoreListEnabled());
 	IgnoreYelling->SetChecked(IsModeIgnored(3));
 	IgnorePrivate->SetChecked(IsModeIgnored(4));
@@ -1456,16 +1456,16 @@ TIgnoreListDialog::TIgnoreListDialog()
 	WhiteListCheckBox = new TCheckBox("Activate White List");
 	InsertChild(WhiteListCheckBox);
 	SetChildArea(WhiteListCheckBox, SkinProperties.StyleD3C.Data94.x, SkinProperties.StyleD3C.Data94.y,
-		SkinProperties.StyleD3C.Data94.Width, SkinProperties.StyleD3C.Data94.Height);
+		SkinProperties.StyleD3C.Data94.width, SkinProperties.StyleD3C.Data94.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data78, TextCharactersToAllow);
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.StyleD3C.DataA4.x, SkinProperties.StyleD3C.DataA4.y,
-		SkinProperties.StyleD3C.DataA4.Width, SkinProperties.StyleD3C.DataA4.Height);
+		SkinProperties.StyleD3C.DataA4.width, SkinProperties.StyleD3C.DataA4.height);
 	WhiteList = new TFontListBox(TCallback(this, 11), NoCallback);
 	WhiteList->SetEditable(true);
 	InsertChild(WhiteList);
 	SetChildArea(WhiteList, SkinProperties.StyleD3C.DataB4.x, SkinProperties.StyleD3C.DataB4.y,
-		SkinProperties.StyleD3C.DataB4.Width, SkinProperties.StyleD3C.DataB4.Height);
+		SkinProperties.StyleD3C.DataB4.width, SkinProperties.StyleD3C.DataB4.height);
 	AddWhiteButton = new TTextButton(SkinProperties.StyleD3C.DataC4.x, SkinProperties.StyleD3C.DataC4.y, "Add",
 		14, 15, TCallback(this, 712), NULL);
 	InsertChild(AddWhiteButton);
@@ -1475,15 +1475,15 @@ TIgnoreListDialog::TIgnoreListDialog()
 	AllowPermanently = new TCheckBox("Allow Permanently");
 	InsertChild(AllowPermanently);
 	SetChildArea(AllowPermanently, SkinProperties.StyleD3C.DataD4.x, SkinProperties.StyleD3C.DataD4.y,
-		SkinProperties.StyleD3C.DataD4.Width, SkinProperties.StyleD3C.DataD4.Height);
+		SkinProperties.StyleD3C.DataD4.width, SkinProperties.StyleD3C.DataD4.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data78, TextGlobalAllowSettings);
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.StyleD3C.DataE4.x, SkinProperties.StyleD3C.DataE4.y,
-		SkinProperties.StyleD3C.DataE4.Width, SkinProperties.StyleD3C.DataE4.Height);
+		SkinProperties.StyleD3C.DataE4.width, SkinProperties.StyleD3C.DataE4.height);
 	AllowBuddies = new TCheckBox("Allow VIPs to message you");
 	InsertChild(AllowBuddies);
 	SetChildArea(AllowBuddies, SkinProperties.StyleD3C.DataF4.x, SkinProperties.StyleD3C.DataF4.y,
-		SkinProperties.StyleD3C.DataF4.Width, SkinProperties.StyleD3C.DataF4.Height);
+		SkinProperties.StyleD3C.DataF4.width, SkinProperties.StyleD3C.DataF4.height);
 	WhiteListCheckBox->SetChecked(GetIgnoreEnabled());
 	AllowBuddies->SetChecked(GetBuddyIgnore());
 	Text = GetBuddyIgnoreText();
@@ -1739,12 +1739,12 @@ TBugReportDialog::TBugReportDialog()
 	TComponent::SetSize(SkinProperties.DataE40, SkinProperties.DataE44);
 	EditText = new TEditText(1024, false);
 	InsertChild(EditText);
-	SetChildArea(EditText, SkinProperties.DataE48.x, SkinProperties.DataE48.y, SkinProperties.DataE48.Width,
-		SkinProperties.DataE48.Height);
+	SetChildArea(EditText, SkinProperties.DataE48.x, SkinProperties.DataE48.y, SkinProperties.DataE48.width,
+		SkinProperties.DataE48.height);
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, TextReportBugsOnly);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.DataE58.x, SkinProperties.DataE58.y, SkinProperties.DataE58.Width,
-		SkinProperties.DataE58.Height);
+	SetChildArea(Label, SkinProperties.DataE58.x, SkinProperties.DataE58.y, SkinProperties.DataE58.width,
+		SkinProperties.DataE58.height);
 	EditText->SetActive(true);
 	Arrange();
 	TEND
@@ -1776,18 +1776,18 @@ TNewChannelDialog::TNewChannelDialog(int _NumberOfChannels, int *_ChannelIDs, co
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectChannel);
 	InsertChild(ListBox);
 	InsertChild(Label);
-	SetChildArea(ListBox, SkinProperties.DataEE4.x, SkinProperties.DataEE4.y, SkinProperties.DataEE4.Width,
-		SkinProperties.DataEE4.Height);
-	SetChildArea(Label, SkinProperties.DataED4.x, SkinProperties.DataED4.y, SkinProperties.DataED4.Width,
-		SkinProperties.DataED4.Height);
+	SetChildArea(ListBox, SkinProperties.DataEE4.x, SkinProperties.DataEE4.y, SkinProperties.DataEE4.width,
+		SkinProperties.DataEE4.height);
+	SetChildArea(Label, SkinProperties.DataED4.x, SkinProperties.DataED4.y, SkinProperties.DataED4.width,
+		SkinProperties.DataED4.height);
 	NameEdit = new TEditLine(29, false);
 	Label = new TLabel(SkinProperties.StyleB08.Data78, TextOpenPrivateChannel);
 	InsertChild(NameEdit);
 	InsertChild(Label);
-	SetChildArea(NameEdit, SkinProperties.DataF04.x, SkinProperties.DataF04.y, SkinProperties.DataF04.Width,
-		SkinProperties.DataF04.Height);
-	SetChildArea(Label, SkinProperties.DataEF4.x, SkinProperties.DataEF4.y, SkinProperties.DataEF4.Width,
-		SkinProperties.DataEF4.Height);
+	SetChildArea(NameEdit, SkinProperties.DataF04.x, SkinProperties.DataF04.y, SkinProperties.DataF04.width,
+		SkinProperties.DataF04.height);
+	SetChildArea(Label, SkinProperties.DataEF4.x, SkinProperties.DataEF4.y, SkinProperties.DataEF4.width,
+		SkinProperties.DataEF4.height);
 	NumberOfChannels = _NumberOfChannels;
 	ChannelIDs = new int[_NumberOfChannels];
 	for (int i = 0; i < NumberOfChannels; i++) {
@@ -1863,10 +1863,10 @@ TPrivateChannelDialog::TPrivateChannelDialog(bool _Exclude)
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterCharacterName);
 	InsertChild(NameEdit);
 	InsertChild(Label);
-	SetChildArea(NameEdit, SkinProperties.DataF1C.x, SkinProperties.DataF1C.y, SkinProperties.DataF1C.Width,
-		SkinProperties.DataF1C.Height);
-	SetChildArea(Label, SkinProperties.DataF2C.x, SkinProperties.DataF2C.y, SkinProperties.DataF2C.Width,
-		SkinProperties.DataF2C.Height);
+	SetChildArea(NameEdit, SkinProperties.DataF1C.x, SkinProperties.DataF1C.y, SkinProperties.DataF1C.width,
+		SkinProperties.DataF1C.height);
+	SetChildArea(Label, SkinProperties.DataF2C.x, SkinProperties.DataF2C.y, SkinProperties.DataF2C.width,
+		SkinProperties.DataF2C.height);
 	NameEdit->SetActive(true);
 	Arrange();
 	TEND
@@ -1913,10 +1913,10 @@ TReportDialog::TReportDialog()
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextStateRuleViolation);
 	InsertChild(TextEdit);
 	InsertChild(Label);
-	SetChildArea(TextEdit, SkinProperties.DataF44.x, SkinProperties.DataF44.y, SkinProperties.DataF44.Width,
-		SkinProperties.DataF44.Height);
-	SetChildArea(Label, SkinProperties.DataF54.x, SkinProperties.DataF54.y, SkinProperties.DataF54.Width,
-		SkinProperties.DataF54.Height);
+	SetChildArea(TextEdit, SkinProperties.DataF44.x, SkinProperties.DataF44.y, SkinProperties.DataF44.width,
+		SkinProperties.DataF44.height);
+	SetChildArea(Label, SkinProperties.DataF54.x, SkinProperties.DataF54.y, SkinProperties.DataF54.width,
+		SkinProperties.DataF54.height);
 	TextEdit->SetActive(true);
 	Arrange();
 	TEND
@@ -1960,10 +1960,10 @@ TAddBuddyDialog::TAddBuddyDialog()
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterCharacterName2);
 	InsertChild(NameEdit);
 	InsertChild(Label);
-	SetChildArea(NameEdit, SkinProperties.DataF6C.x, SkinProperties.DataF6C.y, SkinProperties.DataF6C.Width,
-		SkinProperties.DataF6C.Height);
-	SetChildArea(Label, SkinProperties.DataF7C.x, SkinProperties.DataF7C.y, SkinProperties.DataF7C.Width,
-		SkinProperties.DataF7C.Height);
+	SetChildArea(NameEdit, SkinProperties.DataF6C.x, SkinProperties.DataF6C.y, SkinProperties.DataF6C.width,
+		SkinProperties.DataF6C.height);
+	SetChildArea(Label, SkinProperties.DataF7C.x, SkinProperties.DataF7C.y, SkinProperties.DataF7C.width,
+		SkinProperties.DataF7C.height);
 	NameEdit->SetActive(true);
 	Arrange();
 	TEND
@@ -2008,15 +2008,15 @@ TEditBuddyDialog::TEditBuddyDialog(int _CharacterID)
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, GetBuddyListName(Position));
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.StyleF8C.Data08.x, SkinProperties.StyleF8C.Data08.y,
-		SkinProperties.StyleF8C.Data08.Width, SkinProperties.StyleF8C.Data08.Height);
+		SkinProperties.StyleF8C.Data08.width, SkinProperties.StyleF8C.Data08.height);
 	TSeparator *Separator = new TSeparator(true);
 	InsertChild(Separator);
 	SetChildArea(Separator, SkinProperties.StyleF8C.Data18.x, SkinProperties.StyleF8C.Data18.y,
-		SkinProperties.StyleF8C.Data18.Width, SkinProperties.StyleF8C.Data18.Height);
+		SkinProperties.StyleF8C.Data18.width, SkinProperties.StyleF8C.Data18.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectType);
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.StyleF8C.Data28.x, SkinProperties.StyleF8C.Data28.y,
-		SkinProperties.StyleF8C.Data28.Width, SkinProperties.StyleF8C.Data28.Height);
+		SkinProperties.StyleF8C.Data28.width, SkinProperties.StyleF8C.Data28.height);
 	IconGroup = new TRadioButtonGroup;
 	for (int i = 0; i < 11; i++) {
 		int Icon;
@@ -2034,17 +2034,17 @@ TEditBuddyDialog::TEditBuddyDialog(int _CharacterID)
 	Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterShortDescription);
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.StyleF8C.Data90.x, SkinProperties.StyleF8C.Data90.y,
-		SkinProperties.StyleF8C.Data90.Width, SkinProperties.StyleF8C.Data90.Height);
+		SkinProperties.StyleF8C.Data90.width, SkinProperties.StyleF8C.Data90.height);
 	Description = new TEditText(127, false);
 	InsertChild(Description);
 	SetChildArea(Description, SkinProperties.StyleF8C.DataA0.x, SkinProperties.StyleF8C.DataA0.y,
-		SkinProperties.StyleF8C.DataA0.Width, SkinProperties.StyleF8C.DataA0.Height);
+		SkinProperties.StyleF8C.DataA0.width, SkinProperties.StyleF8C.DataA0.height);
 	if (GetBuddyListDescription(Position) != NULL)
 		Description->SetText(GetBuddyListDescription(Position), false);
 	Notify = new TCheckBox("Notify at login");
 	InsertChild(Notify);
 	SetChildArea(Notify, SkinProperties.StyleF8C.DataB0.x, SkinProperties.StyleF8C.DataB0.y,
-		SkinProperties.StyleF8C.DataB0.Width, SkinProperties.StyleF8C.DataB0.Height);
+		SkinProperties.StyleF8C.DataB0.width, SkinProperties.StyleF8C.DataB0.height);
 	Notify->SetChecked(GetBuddyListNotify(Position));
 	Description->SetActive(true);
 	Arrange();
@@ -2094,12 +2094,12 @@ TUpdateDialog::TUpdateDialog(const char *FileName, int _DataSize)
 	}
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, Text);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.Data1054.x, SkinProperties.Data1054.y, SkinProperties.Data1054.Width,
-		SkinProperties.Data1054.Height);
+	SetChildArea(Label, SkinProperties.Data1054.x, SkinProperties.Data1054.y, SkinProperties.Data1054.width,
+		SkinProperties.Data1054.height);
 	ProgressBar = new TProgressBar();
 	InsertChild(ProgressBar);
-	SetChildArea(ProgressBar, SkinProperties.Data1074.x, SkinProperties.Data1074.y, SkinProperties.Data1074.Width,
-		SkinProperties.Data1074.Height);
+	SetChildArea(ProgressBar, SkinProperties.Data1074.x, SkinProperties.Data1074.y, SkinProperties.Data1074.width,
+		SkinProperties.Data1074.height);
 	Arrange();
 	TEND
 }
@@ -2247,12 +2247,12 @@ THintsDialog::THintsDialog()
 	TComponent::SetSize(SkinProperties.Data10EC, SkinProperties.Data10F0);
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextAvailableHints);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.Data10F4.x, SkinProperties.Data10F4.y, SkinProperties.Data10F4.Width,
-		SkinProperties.Data10F4.Height);
+	SetChildArea(Label, SkinProperties.Data10F4.x, SkinProperties.Data10F4.y, SkinProperties.Data10F4.width,
+		SkinProperties.Data10F4.height);
 	ListBox = new TListBox(NoCallback, TCallback(this, 1));
 	InsertChild(ListBox);
-	SetChildArea(ListBox, SkinProperties.Data1104.x, SkinProperties.Data1104.y, SkinProperties.Data1104.Width,
-		SkinProperties.Data1104.Height);
+	SetChildArea(ListBox, SkinProperties.Data1104.x, SkinProperties.Data1104.y, SkinProperties.Data1104.width,
+		SkinProperties.Data1104.height);
 	for (int i = 1; i < 15; i++) {
 		if (IsKnownHint(i))
 			ListBox->AddLine(GetEventHelpTitle(i));
@@ -2313,7 +2313,7 @@ TRuleViolationDialog::TRuleViolationDialog(const char *Name, TTalkLine *Statemen
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, "Name");
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.Style1114.Data08.x, SkinProperties.Style1114.Data08.y,
-		SkinProperties.Style1114.Data08.Width, SkinProperties.Style1114.Data08.Height);
+		SkinProperties.Style1114.Data08.width, SkinProperties.Style1114.Data08.height);
 	NameEdit = new TEditLine(29, Name != NULL || Statement != NULL);
 	if (Name != NULL)
 		NameEdit->SetText(Name);
@@ -2322,49 +2322,49 @@ TRuleViolationDialog::TRuleViolationDialog(const char *Name, TTalkLine *Statemen
 	NameEdit->SetFocusGroup(FocusGroup);
 	InsertChild(NameEdit);
 	SetChildArea(NameEdit, SkinProperties.Style1114.Data18.x, SkinProperties.Style1114.Data18.y,
-		SkinProperties.Style1114.Data18.Width, SkinProperties.Style1114.Data18.Height);
+		SkinProperties.Style1114.Data18.width, SkinProperties.Style1114.Data18.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data64, "Reason");
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.Style1114.Data28.x, SkinProperties.Style1114.Data28.y,
-		SkinProperties.Style1114.Data28.Width, SkinProperties.Style1114.Data28.Height);
+		SkinProperties.Style1114.Data28.width, SkinProperties.Style1114.Data28.height);
 	ReasonList = new TListBox(TCallback(this, 21), NoCallback);
 	InsertChild(ReasonList);
 	SetChildArea(ReasonList, SkinProperties.Style1114.Data38.x, SkinProperties.Style1114.Data38.y,
-		SkinProperties.Style1114.Data38.Width, SkinProperties.Style1114.Data38.Height);
+		SkinProperties.Style1114.Data38.width, SkinProperties.Style1114.Data38.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data64, "Action");
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.Style1114.Data48.x, SkinProperties.Style1114.Data48.y,
-		SkinProperties.Style1114.Data48.Width, SkinProperties.Style1114.Data48.Height);
+		SkinProperties.Style1114.Data48.width, SkinProperties.Style1114.Data48.height);
 	ActionList = new TListBox(NoCallback, NoCallback);
 	InsertChild(ActionList);
 	SetChildArea(ActionList, SkinProperties.Style1114.Data58.x, SkinProperties.Style1114.Data58.y,
-		SkinProperties.Style1114.Data58.Width, SkinProperties.Style1114.Data58.Height);
+		SkinProperties.Style1114.Data58.width, SkinProperties.Style1114.Data58.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data64, "Comment");
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.Style1114.Data68.x, SkinProperties.Style1114.Data68.y,
-		SkinProperties.Style1114.Data68.Width, SkinProperties.Style1114.Data68.Height);
+		SkinProperties.Style1114.Data68.width, SkinProperties.Style1114.Data68.height);
 	CommentEdit = new TEditLine(100, false);
 	CommentEdit->SetFocusGroup(FocusGroup);
 	InsertChild(CommentEdit);
 	SetChildArea(CommentEdit, SkinProperties.Style1114.Data78.x, SkinProperties.Style1114.Data78.y,
-		SkinProperties.Style1114.Data78.Width, SkinProperties.Style1114.Data78.Height);
+		SkinProperties.Style1114.Data78.width, SkinProperties.Style1114.Data78.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data64, "Statement");
 	InsertChild(Label);
 	SetChildArea(Label, SkinProperties.Style1114.Data88.x, SkinProperties.Style1114.Data88.y,
-		SkinProperties.Style1114.Data88.Width, SkinProperties.Style1114.Data88.Height);
+		SkinProperties.Style1114.Data88.width, SkinProperties.Style1114.Data88.height);
 	StatementEdit = new TEditLine(Statement != NULL ? strlen(Statement->Text) : 0, true);
 	if (Statement != NULL)
 		StatementEdit->SetText(Statement->Text);
 	StatementEdit->SetFocusGroup(FocusGroup);
 	InsertChild(StatementEdit);
 	SetChildArea(StatementEdit, SkinProperties.Style1114.Data98.x, SkinProperties.Style1114.Data98.y,
-		SkinProperties.Style1114.Data98.Width, SkinProperties.Style1114.Data98.Height);
+		SkinProperties.Style1114.Data98.width, SkinProperties.Style1114.Data98.height);
 	IPBanishment = new TCheckBox("IP Address Banishment");
 	IPBanishment->SetChecked(false);
 	IPBanishment->SetEnabled(false);
 	InsertChild(IPBanishment);
 	SetChildArea(IPBanishment, SkinProperties.Style1114.DataA8.x, SkinProperties.Style1114.DataA8.y,
-		SkinProperties.Style1114.DataA8.Width, SkinProperties.Style1114.DataA8.Height);
+		SkinProperties.Style1114.DataA8.width, SkinProperties.Style1114.DataA8.height);
 	int Number = 0;
 	for (int i = 0; i < 32; i++) {
 		if (CheckRight(i, -1)) {
@@ -2511,18 +2511,18 @@ TEditMarkDialog::TEditMarkDialog(TCoordinate *_Coordinate, TMark *_Mark)
 		Mark = *_Mark;
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data78, TextEnterShortDescription2);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.Data11D4.x, SkinProperties.Data11D4.y, SkinProperties.Data11D4.Width,
-		SkinProperties.Data11D4.Height);
+	SetChildArea(Label, SkinProperties.Data11D4.x, SkinProperties.Data11D4.y, SkinProperties.Data11D4.width,
+		SkinProperties.Data11D4.height);
 	TextEdit = new TEditLine(100, false);
 	if (Mark.Text != NULL)
 		TextEdit->SetText(Mark.Text);
 	InsertChild(TextEdit);
-	SetChildArea(TextEdit, SkinProperties.Data11E4.x, SkinProperties.Data11E4.y, SkinProperties.Data11E4.Width,
-		SkinProperties.Data11E4.Height);
+	SetChildArea(TextEdit, SkinProperties.Data11E4.x, SkinProperties.Data11E4.y, SkinProperties.Data11E4.width,
+		SkinProperties.Data11E4.height);
 	Label = new TLabel(SkinProperties.StyleB08.Data78, TextSelectType2);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.Data11F4.x, SkinProperties.Data11F4.y, SkinProperties.Data11F4.Width,
-		SkinProperties.Data11F4.Height);
+	SetChildArea(Label, SkinProperties.Data11F4.x, SkinProperties.Data11F4.y, SkinProperties.Data11F4.width,
+		SkinProperties.Data11F4.height);
 	TypeGroup = new TRadioButtonGroup;
 	for (int i = 0; i < 14; i++) {
 		TypeButtons[i] = new TIconButton(0, 0, i + 74, 24, 25, NoCallback, NULL);
@@ -2627,7 +2627,7 @@ TOptionsDialog::TOptionsDialog()
 	TSeparator *Separator = new TSeparator(true);
 	InsertChild(Separator);
 	SetChildArea(Separator, SkinProperties.Style1274.Data68.x, SkinProperties.Style1274.Data68.y,
-		SkinProperties.Style1274.Data68.Width, SkinProperties.Style1274.Data68.Height);
+		SkinProperties.Style1274.Data68.width, SkinProperties.Style1274.Data68.height);
 	Arrange();
 	TEND
 }
@@ -2702,16 +2702,16 @@ TGeneralOptionsDialog::TGeneralOptionsDialog(void (*_OpenURL)(const char *URL))
 	InsertChild(ShowHints);
 	InsertChild(CreatureNames);
 	InsertChild(TextualEffects);
-	SetChildArea(ClassicControl, SkinProperties.Data12F4.x, SkinProperties.Data12F4.y, SkinProperties.Data12F4.Width,
-		SkinProperties.Data12F4.Height);
-	SetChildArea(AutoChaseOff, SkinProperties.Data1304.x, SkinProperties.Data1304.y, SkinProperties.Data1304.Width,
-		SkinProperties.Data1304.Height);
-	SetChildArea(ShowHints, SkinProperties.Data1314.x, SkinProperties.Data1314.y, SkinProperties.Data1314.Width,
-		SkinProperties.Data1314.Height);
-	SetChildArea(CreatureNames, SkinProperties.Data1334.x, SkinProperties.Data1334.y, SkinProperties.Data1334.Width,
-		SkinProperties.Data1334.Height);
-	SetChildArea(TextualEffects, SkinProperties.Data1324.x, SkinProperties.Data1324.y, SkinProperties.Data1324.Width,
-		SkinProperties.Data1324.Height);
+	SetChildArea(ClassicControl, SkinProperties.Data12F4.x, SkinProperties.Data12F4.y, SkinProperties.Data12F4.width,
+		SkinProperties.Data12F4.height);
+	SetChildArea(AutoChaseOff, SkinProperties.Data1304.x, SkinProperties.Data1304.y, SkinProperties.Data1304.width,
+		SkinProperties.Data1304.height);
+	SetChildArea(ShowHints, SkinProperties.Data1314.x, SkinProperties.Data1314.y, SkinProperties.Data1314.width,
+		SkinProperties.Data1314.height);
+	SetChildArea(CreatureNames, SkinProperties.Data1334.x, SkinProperties.Data1334.y, SkinProperties.Data1334.width,
+		SkinProperties.Data1334.height);
+	SetChildArea(TextualEffects, SkinProperties.Data1324.x, SkinProperties.Data1324.y, SkinProperties.Data1324.width,
+		SkinProperties.Data1324.height);
 	ClassicControl->SetChecked(GetClassicControl());
 	AutoChaseOff->SetChecked(GetAutoChaseOff());
 	ShowHints->SetChecked(GetShowNewHints());
@@ -2769,14 +2769,14 @@ TGraphicsOptionsDialog::TGraphicsOptionsDialog(void (*_OpenURL)(const char *URL)
 	InsertChild(AdvancedLabel);
 	InsertChild(AdvancedButton);
 	TComponent::SetSize(SkinProperties.Data1344, SkinProperties.Data1348);
-	SetChildArea(Fullscreen, SkinProperties.Data134C.x, SkinProperties.Data134C.y, SkinProperties.Data134C.Width,
-		SkinProperties.Data134C.Height);
+	SetChildArea(Fullscreen, SkinProperties.Data134C.x, SkinProperties.Data134C.y, SkinProperties.Data134C.width,
+		SkinProperties.Data134C.height);
 	SetChildArea(ResolutionList, SkinProperties.Data135C.x, SkinProperties.Data135C.y,
-		SkinProperties.Data135C.Width, SkinProperties.Data135C.Height);
+		SkinProperties.Data135C.width, SkinProperties.Data135C.height);
 	SetChildArea(ResolutionLabel, SkinProperties.Data136C.x, SkinProperties.Data136C.y,
-		SkinProperties.Data136C.Width, SkinProperties.Data136C.Height);
-	SetChildArea(AdvancedLabel, SkinProperties.Data1384.x, SkinProperties.Data1384.y, SkinProperties.Data1384.Width,
-		SkinProperties.Data1384.Height);
+		SkinProperties.Data136C.width, SkinProperties.Data136C.height);
+	SetChildArea(AdvancedLabel, SkinProperties.Data1384.x, SkinProperties.Data1384.y, SkinProperties.Data1384.width,
+		SkinProperties.Data1384.height);
 	SetChildPosition(AdvancedButton, SkinProperties.Data137C.x, SkinProperties.Data137C.y);
 	Fullscreen->SetChecked(GetViewMode() == 2);
 	NumberOfModes = GetSurface()->GetFullscreenModes(&Modes);
@@ -2882,13 +2882,13 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(void (*_OpenURL)(const char *UR
 	InsertChild(Framerate);
 	TComponent::SetSize(SkinProperties.Style1394.Data00, SkinProperties.Style1394.Data04);
 	SetChildArea(LightEffects, SkinProperties.Style1394.Data28.x, SkinProperties.Style1394.Data28.y,
-		SkinProperties.Style1394.Data28.Width, SkinProperties.Style1394.Data28.Height);
+		SkinProperties.Style1394.Data28.width, SkinProperties.Style1394.Data28.height);
 	SetChildArea(NoStretching, SkinProperties.Style1394.Data38.x, SkinProperties.Style1394.Data38.y,
-		SkinProperties.Style1394.Data38.Width, SkinProperties.Style1394.Data38.Height);
+		SkinProperties.Style1394.Data38.width, SkinProperties.Style1394.Data38.height);
 	SetChildArea(WindowsMousepointer, SkinProperties.Style1394.Data48.x, SkinProperties.Style1394.Data48.y,
-		SkinProperties.Style1394.Data48.Width, SkinProperties.Style1394.Data48.Height);
+		SkinProperties.Style1394.Data48.width, SkinProperties.Style1394.Data48.height);
 	SetChildArea(Framerate, SkinProperties.Style1394.Data58.x, SkinProperties.Style1394.Data58.y,
-		SkinProperties.Style1394.Data58.Width, SkinProperties.Style1394.Data58.Height);
+		SkinProperties.Style1394.Data58.width, SkinProperties.Style1394.Data58.height);
 	LightEffects->SetChecked(GetLightEffects());
 	if (!GetSurface()->CanShadeRectangles())
 		LightEffects->SetEnabled(false);
@@ -3000,16 +3000,16 @@ TConsoleOptionsDialog::TConsoleOptionsDialog(void (*_OpenURL)(const char *URL))
 	InsertChild(StatusMessages);
 	InsertChild(TimeStamps);
 	InsertChild(PrivateMessages);
-	SetChildArea(InfoMessages, SkinProperties.Data1414.x, SkinProperties.Data1414.y, SkinProperties.Data1414.Width,
-		SkinProperties.Data1414.Height);
-	SetChildArea(EventMessages, SkinProperties.Data1424.x, SkinProperties.Data1424.y, SkinProperties.Data1424.Width,
-		SkinProperties.Data1424.Height);
+	SetChildArea(InfoMessages, SkinProperties.Data1414.x, SkinProperties.Data1414.y, SkinProperties.Data1414.width,
+		SkinProperties.Data1414.height);
+	SetChildArea(EventMessages, SkinProperties.Data1424.x, SkinProperties.Data1424.y, SkinProperties.Data1424.width,
+		SkinProperties.Data1424.height);
 	SetChildArea(StatusMessages, SkinProperties.Data1434.x, SkinProperties.Data1434.y,
-		SkinProperties.Data1434.Width, SkinProperties.Data1434.Height);
-	SetChildArea(TimeStamps, SkinProperties.Data1444.x, SkinProperties.Data1444.y, SkinProperties.Data1444.Width,
-		SkinProperties.Data1444.Height);
+		SkinProperties.Data1434.width, SkinProperties.Data1434.height);
+	SetChildArea(TimeStamps, SkinProperties.Data1444.x, SkinProperties.Data1444.y, SkinProperties.Data1444.width,
+		SkinProperties.Data1444.height);
 	SetChildArea(PrivateMessages, SkinProperties.Data1454.x, SkinProperties.Data1454.y,
-		SkinProperties.Data1454.Width, SkinProperties.Data1454.Height);
+		SkinProperties.Data1454.width, SkinProperties.Data1454.height);
 	InfoMessages->SetChecked(GetInfoMessages());
 	EventMessages->SetChecked(GetEventMessages());
 	StatusMessages->SetChecked(GetStatusMessages());
@@ -3049,7 +3049,7 @@ TNetworkOptionsDialog::TNetworkOptionsDialog(void (*_OpenURL)(const char *URL))
 	TestServerLogin = new TCheckBox("Test Server Login");
 	InsertChild(TestServerLogin);
 	SetChildArea(TestServerLogin, SkinProperties.Data146C.x, SkinProperties.Data146C.y,
-		SkinProperties.Data146C.Width, SkinProperties.Data146C.Height);
+		SkinProperties.Data146C.width, SkinProperties.Data146C.height);
 	TestServerLogin->SetChecked(GetTestServerLogin());
 	Arrange();
 	TEND
@@ -3080,16 +3080,16 @@ THotkeyDialog::THotkeyDialog(void (*_OpenURL)(const char *URL))
 	TComponent::SetSize(SkinProperties.Data147C, SkinProperties.Data1480);
 	TLabel *Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextAvailableHotkeys);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.Data1494.x, SkinProperties.Data1494.y, SkinProperties.Data1494.Width,
-		SkinProperties.Data1494.Height);
+	SetChildArea(Label, SkinProperties.Data1494.x, SkinProperties.Data1494.y, SkinProperties.Data1494.width,
+		SkinProperties.Data1494.height);
 	Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextEditHotkeyText);
 	InsertChild(Label);
-	SetChildArea(Label, SkinProperties.Data14B4.x, SkinProperties.Data14B4.y, SkinProperties.Data14B4.Width,
-		SkinProperties.Data14B4.Height);
+	SetChildArea(Label, SkinProperties.Data14B4.x, SkinProperties.Data14B4.y, SkinProperties.Data14B4.width,
+		SkinProperties.Data14B4.height);
 	ListBox = new TFontListBox(TCallback(this, 11), NoCallback);
 	InsertChild(ListBox);
-	SetChildArea(ListBox, SkinProperties.Data1484.x, SkinProperties.Data1484.y, SkinProperties.Data1484.Width,
-		SkinProperties.Data1484.Height);
+	SetChildArea(ListBox, SkinProperties.Data1484.x, SkinProperties.Data1484.y, SkinProperties.Data1484.width,
+		SkinProperties.Data1484.height);
 	for (int i = 0; i < HOTKEYS; i++) {
 		strcpy(Texts[i], GetHotkey(i, &AutoSend[i]));
 		ListBox->AddLine(271);
@@ -3097,12 +3097,12 @@ THotkeyDialog::THotkeyDialog(void (*_OpenURL)(const char *URL))
 	}
 	TextEdit = new TEditLine(255, false);
 	InsertChild(TextEdit);
-	SetChildArea(TextEdit, SkinProperties.Data14A4.x, SkinProperties.Data14A4.y, SkinProperties.Data14A4.Width,
-		SkinProperties.Data14A4.Height);
+	SetChildArea(TextEdit, SkinProperties.Data14A4.x, SkinProperties.Data14A4.y, SkinProperties.Data14A4.width,
+		SkinProperties.Data14A4.height);
 	AutoSendCheckBox = new TCheckBox("Send automatically");
 	InsertChild(AutoSendCheckBox);
 	SetChildArea(AutoSendCheckBox, SkinProperties.Data14C4.x, SkinProperties.Data14C4.y,
-		SkinProperties.Data14C4.Width, SkinProperties.Data14C4.Height);
+		SkinProperties.Data14C4.width, SkinProperties.Data14C4.height);
 	Selected = -1;
 	Arrange();
 	TEND
@@ -3228,14 +3228,14 @@ TErrorReportDialog::TErrorReportDialog()
 	InsertChild(ReportText);
 	InsertChild(CommentLabel);
 	InsertChild(CommentEdit);
-	SetChildArea(CrashLabel, SkinProperties.Data14E8.x, SkinProperties.Data14E8.y, SkinProperties.Data14E8.Width,
-		SkinProperties.Data14E8.Height);
-	SetChildArea(ReportText, SkinProperties.Data14F8.x, SkinProperties.Data14F8.y, SkinProperties.Data14F8.Width,
-		SkinProperties.Data14F8.Height);
-	SetChildArea(CommentLabel, SkinProperties.Data1508.x, SkinProperties.Data1508.y, SkinProperties.Data1508.Width,
-		SkinProperties.Data1508.Height);
-	SetChildArea(CommentEdit, SkinProperties.Data1518.x, SkinProperties.Data1518.y, SkinProperties.Data1518.Width,
-		SkinProperties.Data1518.Height);
+	SetChildArea(CrashLabel, SkinProperties.Data14E8.x, SkinProperties.Data14E8.y, SkinProperties.Data14E8.width,
+		SkinProperties.Data14E8.height);
+	SetChildArea(ReportText, SkinProperties.Data14F8.x, SkinProperties.Data14F8.y, SkinProperties.Data14F8.width,
+		SkinProperties.Data14F8.height);
+	SetChildArea(CommentLabel, SkinProperties.Data1508.x, SkinProperties.Data1508.y, SkinProperties.Data1508.width,
+		SkinProperties.Data1508.height);
+	SetChildArea(CommentEdit, SkinProperties.Data1518.x, SkinProperties.Data1518.y, SkinProperties.Data1518.width,
+		SkinProperties.Data1518.height);
 	int Reports = GetNumberOfErrorReports();
 	std::stringstream Text;
 	for (int i = 0; i < Reports; i++) {

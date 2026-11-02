@@ -29,13 +29,6 @@
 #include "external.h"
 #include <GL/glu.h>
 
-// Assertions whose text names a variable this file does not have: the
-// original's FromRect is a rectangle with members width and height; the
-// binary passes its members separately, so the slots keep TSurface's int
-// parameters (as surfaceDX9.cpp does).
-#define TASSERT2_TEXT(Expr, Text, N1, V1, N2, V2) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", N1, V1, N2, V2, Text)
-
 // Not in the Windows SDK's OpenGL 1.1 headers (glext.h, wglext.h).
 #define GL_CLAMP_TO_EDGE 0x812F
 #define WGL_DRAW_TO_PBUFFER_ARB 0x202D
@@ -232,10 +225,10 @@ void TSurfaceGL::AddDirtyRect(TRect Rect)
 		DirtyRect.left = Rect.x;
 	if (Rect.y < DirtyRect.top)
 		DirtyRect.top = Rect.y;
-	if (Rect.x + Rect.Width > DirtyRect.right)
-		DirtyRect.right = Rect.x + Rect.Width;
-	if (Rect.y + Rect.Height > DirtyRect.bottom)
-		DirtyRect.bottom = Rect.y + Rect.Height;
+	if (Rect.x + Rect.width > DirtyRect.right)
+		DirtyRect.right = Rect.x + Rect.width;
+	if (Rect.y + Rect.height > DirtyRect.bottom)
+		DirtyRect.bottom = Rect.y + Rect.height;
 }
 
 // 0x4f9bd0. The filter of the bound texture, GL_LINEAR or GL_NEAREST (only
@@ -315,9 +308,9 @@ void TSurfaceGL::FillRectangle(int Surface, TRect Rect, TRGBColor Color)
 	SelectSurface(Surface);
 	glDisable(GL_TEXTURE_2D);
 	glColor3ub(Color.R, Color.G, Color.B);
-	glRecti(Rect.x, Rect.y, Rect.x + Rect.Width, Rect.y + Rect.Height);
+	glRecti(Rect.x, Rect.y, Rect.x + Rect.width, Rect.y + Rect.height);
 	BlitCount++;
-	BlitPixels += Rect.Width * Rect.Height;
+	BlitPixels += Rect.width * Rect.height;
 	AddDirtyRect(Rect);
 }
 
@@ -331,13 +324,13 @@ void TSurfaceGL::FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, 
 	RECT Destination;
 	Destination.left = Rect.x;
 	Destination.top = Rect.y;
-	Destination.right = Rect.x + Rect.Width;
-	Destination.bottom = Rect.y + Rect.Height;
+	Destination.right = Rect.x + Rect.width;
+	Destination.bottom = Rect.y + Rect.height;
 	RECT Unused;
 	if (ClipRect(Clip, &Destination, &Unused)) {
 		glColor3ub(Color.R, Color.G, Color.B);
 		glRecti(Destination.left, Destination.top, Destination.right, Destination.bottom);
-		BlitPixels += Rect.Width * Rect.Height;
+		BlitPixels += Rect.width * Rect.height;
 		BlitCount++;
 		AddDirtyRect(Rect);
 	}
@@ -373,47 +366,47 @@ void TSurfaceGL::DrawVerticalLine(int Surface, int x, int y, int Height, TRGBCol
 // twice the line is filled.
 void TSurfaceGL::DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color)
 {
-	if (Rect.Width < 2 * LineWidth || Rect.Height < 2 * LineWidth) {
+	if (Rect.width < 2 * LineWidth || Rect.height < 2 * LineWidth) {
 		FillRectangle(Surface, Rect, Color);
 		return;
 	}
-	FillRectangle(Surface, TRect(Rect.x, Rect.y, Rect.Width - LineWidth, LineWidth), Color);
-	FillRectangle(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.Height - LineWidth, Rect.Width - LineWidth,
+	FillRectangle(Surface, TRect(Rect.x, Rect.y, Rect.width - LineWidth, LineWidth), Color);
+	FillRectangle(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.height - LineWidth, Rect.width - LineWidth,
 		LineWidth), Color);
-	FillRectangle(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.Height - LineWidth), Color);
-	FillRectangle(Surface, TRect(Rect.x + Rect.Width - LineWidth, Rect.y, LineWidth, Rect.Height - LineWidth), Color);
+	FillRectangle(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.height - LineWidth), Color);
+	FillRectangle(Surface, TRect(Rect.x + Rect.width - LineWidth, Rect.y, LineWidth, Rect.height - LineWidth), Color);
 }
 
 // 0x4fa2c0 (the DirectX engines' vtables use it too)
 void TSurfaceGL::DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color, TRect Clip)
 {
-	if (Rect.Width < 2 * LineWidth || Rect.Height < 2 * LineWidth) {
+	if (Rect.width < 2 * LineWidth || Rect.height < 2 * LineWidth) {
 		FillRectangleClipped(Surface, Rect, Color, Clip);
 		return;
 	}
-	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y, Rect.Width - LineWidth, LineWidth), Color, Clip);
-	FillRectangleClipped(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.Height - LineWidth, Rect.Width - LineWidth,
+	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y, Rect.width - LineWidth, LineWidth), Color, Clip);
+	FillRectangleClipped(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.height - LineWidth, Rect.width - LineWidth,
 		LineWidth), Color, Clip);
-	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.Height - LineWidth), Color, Clip);
-	FillRectangleClipped(Surface, TRect(Rect.x + Rect.Width - LineWidth, Rect.y, LineWidth, Rect.Height - LineWidth),
+	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.height - LineWidth), Color, Clip);
+	FillRectangleClipped(Surface, TRect(Rect.x + Rect.width - LineWidth, Rect.y, LineWidth, Rect.height - LineWidth),
 		Color, Clip);
 }
 
 // 0x4fa510. A blit of the same size goes to Blit; otherwise the source is
 // drawn scaled with linear filtering. Odd behaviour kept: the scaled path
 // ignores both colours.
-void TSurfaceGL::StretchBlitUnclipped(int ToSurface, int x, int y, int Width, int Height, int FromSurface,
-	int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight)
+void TSurfaceGL::StretchBlitUnclipped(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect,
+	TRGBColor ColorKey, TRGBColor Highlight)
 {
-	if (Width == FromWidth && Height == FromHeight) {
-		Blit(ToSurface, x, y, FromSurface, FromX, FromY, FromWidth, FromHeight, ColorKey);
+	if (ToRect.width == FromRect.width && ToRect.height == FromRect.height) {
+		Blit(ToSurface, ToRect.x, ToRect.y, FromSurface, FromRect, ColorKey);
 		return;
 	}
 	TTextureGL *Texture = &Textures[FromSurface];
-	float Left = (float)((double)FromX / Texture->TexWidth);
-	float Right = (float)((double)(FromX + FromWidth) / Texture->TexWidth);
-	float Top = (float)((double)FromY / Texture->TexHeight);
-	float Bottom = (float)((double)(FromY + FromHeight) / Texture->TexHeight);
+	float Left = (float)((double)FromRect.x / Texture->TexWidth);
+	float Right = (float)((double)(FromRect.x + FromRect.width) / Texture->TexWidth);
+	float Top = (float)((double)FromRect.y / Texture->TexHeight);
+	float Bottom = (float)((double)(FromRect.y + FromRect.height) / Texture->TexHeight);
 	SelectSurface(ToSurface);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, Texture->Texture);
@@ -421,17 +414,17 @@ void TSurfaceGL::StretchBlitUnclipped(int ToSurface, int x, int y, int Width, in
 	glBegin(GL_QUADS);
 	glColor3ub(255, 255, 255);
 	glTexCoord2f(Left, Top);
-	glVertex2i(x, y);
+	glVertex2i(ToRect.x, ToRect.y);
 	glTexCoord2f(Left, Bottom);
-	glVertex2i(x, y + Height);
+	glVertex2i(ToRect.x, ToRect.y + ToRect.height);
 	glTexCoord2f(Right, Bottom);
-	glVertex2i(x + Width, y + Height);
+	glVertex2i(ToRect.x + ToRect.width, ToRect.y + ToRect.height);
 	glTexCoord2f(Right, Top);
-	glVertex2i(x + Width, y);
+	glVertex2i(ToRect.x + ToRect.width, ToRect.y);
 	glEnd();
 	BlitCount++;
-	BlitPixels += Height * Width;
-	AddDirtyRect(TRect(x, y, Width, Height));
+	BlitPixels += ToRect.height * ToRect.width;
+	AddDirtyRect(ToRect);
 }
 
 // 0x4fa700. Scaled, with linear filtering.
@@ -439,9 +432,9 @@ void TSurfaceGL::StretchBlitRect(int ToSurface, TRect Destination, int FromSurfa
 {
 	TTextureGL *Texture = &Textures[FromSurface];
 	double Left = (double)Source.x / Texture->TexWidth;
-	double Right = (double)(Source.x + Source.Width) / Texture->TexWidth;
+	double Right = (double)(Source.x + Source.width) / Texture->TexWidth;
 	double Top = (double)Source.y / Texture->TexHeight;
-	double Bottom = (double)(Source.y + Source.Height) / Texture->TexHeight;
+	double Bottom = (double)(Source.y + Source.height) / Texture->TexHeight;
 	SelectSurface(ToSurface);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, Texture->Texture);
@@ -451,14 +444,14 @@ void TSurfaceGL::StretchBlitRect(int ToSurface, TRect Destination, int FromSurfa
 	glTexCoord2d(Left, Top);
 	glVertex2i(Destination.x, Destination.y);
 	glTexCoord2d(Left, Bottom);
-	glVertex2i(Destination.x, Destination.y + Destination.Height);
+	glVertex2i(Destination.x, Destination.y + Destination.height);
 	glTexCoord2d(Right, Bottom);
-	glVertex2i(Destination.x + Destination.Width, Destination.y + Destination.Height);
+	glVertex2i(Destination.x + Destination.width, Destination.y + Destination.height);
 	glTexCoord2d(Right, Top);
-	glVertex2i(Destination.x + Destination.Width, Destination.y);
+	glVertex2i(Destination.x + Destination.width, Destination.y);
 	glEnd();
 	BlitCount++;
-	BlitPixels += Destination.Width * Destination.Height;
+	BlitPixels += Destination.width * Destination.height;
 	AddDirtyRect(Destination);
 }
 
@@ -468,19 +461,20 @@ void TSurfaceGL::StretchBlitRect(int ToSurface, TRect Destination, int FromSurfa
 // transparent (read back with glGetTexImage; the whole 64x64 texture);
 // Highlight is the colour key of the result. Odd behaviour kept: the readback
 // selects CACHE_SURFACE first.
-void TSurfaceGL::StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
-	int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip)
+void TSurfaceGL::StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+	TRGBColor Highlight, TRect Clip)
 {
-	if (Width == FromWidth && Height == FromHeight) {
-		BlitClipped(ToSurface, x, y, FromSurface, FromX, FromY, FromWidth, FromHeight, ColorKey, Clip);
+	if (ToRect.width == FromRect.width && ToRect.height == FromRect.height) {
+		BlitClipped(ToSurface, ToRect.x, ToRect.y, FromSurface, FromRect, ColorKey, Clip);
 		return;
 	}
 	if (Flag26)
-		DrawSkin(TEMP_SURFACE, 0, 0, FromWidth + 1, FromHeight + 1, 185, 0, 0);
+		DrawSkin(TEMP_SURFACE, 0, 0, FromRect.width + 1, FromRect.height + 1, 185, 0, 0);
 	else
-		FillRectangle(TEMP_SURFACE, TRect(0, 0, FromWidth + 1, FromHeight + 1), Highlight);
-	Blit(TEMP_SURFACE, 0, 0, FromSurface, FromX, FromY, FromWidth, FromHeight, ColorKey);
-	StretchBlitRect(STRETCH_SURFACE, TRect(0, 0, Width, Height), TEMP_SURFACE, TRect(0, 0, FromWidth, FromHeight));
+		FillRectangle(TEMP_SURFACE, TRect(0, 0, FromRect.width + 1, FromRect.height + 1), Highlight);
+	Blit(TEMP_SURFACE, 0, 0, FromSurface, FromRect, ColorKey);
+	StretchBlitRect(STRETCH_SURFACE, TRect(0, 0, ToRect.width, ToRect.height), TEMP_SURFACE,
+		TRect(0, 0, FromRect.width, FromRect.height));
 	if (!Flag26) {
 		SelectSurface(CACHE_SURFACE);
 		uint8 *Pixels = new uint8[64 * 64 * 4];
@@ -497,15 +491,16 @@ void TSurfaceGL::StretchBlit(int ToSurface, int x, int y, int Width, int Height,
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 64, 64, GL_RGBA, GL_UNSIGNED_BYTE, Pixels);
 		delete Pixels;
 	}
-	BlitClipped(ToSurface, x, y, STRETCH_SURFACE, 0, 0, Width, Height, Highlight, Clip);
+	BlitClipped(ToSurface, ToRect.x, ToRect.y, STRETCH_SURFACE, TRect(0, 0, ToRect.width, ToRect.height), Highlight,
+		Clip);
 }
 
 // 0x4fab70 (the DirectX engines' vtables use it too). The colour key is not
 // used.
-void TSurfaceGL::BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-	int Height, TRGBColor ColorKey, TRect Clip)
+void TSurfaceGL::BlitClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+	TRect Clip)
 {
-	BlitRectClipped(ToSurface, x, y, FromSurface, FromX, FromY, Width, Height, Clip);
+	BlitRectClipped(ToSurface, x, y, FromSurface, FromRect, Clip);
 }
 
 // 0x4fabd0. Multiplies Surface with Count quads whose corners have the
@@ -524,11 +519,11 @@ void TSurfaceGL::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor
 		glColor3ub(C[0].R, C[0].G, C[0].B);
 		glVertex2i(R->x, R->y);
 		glColor3ub(C[2].R, C[2].G, C[2].B);
-		glVertex2i(R->x, R->y + R->Height);
+		glVertex2i(R->x, R->y + R->height);
 		glColor3ub(C[3].R, C[3].G, C[3].B);
-		glVertex2i(R->x + R->Width, R->y + R->Height);
+		glVertex2i(R->x + R->width, R->y + R->height);
 		glColor3ub(C[1].R, C[1].G, C[1].B);
-		glVertex2i(R->x + R->Width, R->y);
+		glVertex2i(R->x + R->width, R->y);
 		AddDirtyRect(*R);
 	}
 	glEnd();
@@ -952,12 +947,11 @@ Next:
 
 // 0x4fc130, line 1023. A copy with nearest filtering, clipped. The statistics
 // count the unclipped size.
-void TSurfaceGL::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-	int Height, TRect Clip)
+void TSurfaceGL::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRect Clip)
 {
 	TASSERT(FromSurface != SCREEN_SURFACE);
-	RECT Destination = {x, y, x + Width, y + Height};
-	RECT Source = {FromX, FromY, FromX + Width, FromY + Height};
+	RECT Destination = {x, y, x + FromRect.width, y + FromRect.height};
+	RECT Source = {FromRect.x, FromRect.y, FromRect.x + FromRect.width, FromRect.y + FromRect.height};
 	if (!ClipRect(Clip, &Destination, &Source))
 		return;
 	TTextureGL *Texture = &Textures[FromSurface];
@@ -981,30 +975,27 @@ void TSurfaceGL::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, i
 	glVertex2i(Destination.right, Destination.top);
 	glEnd();
 	BlitCount++;
-	BlitPixels += Height * Width;
+	BlitPixels += FromRect.height * FromRect.width;
 	AddDirtyRect(TRect(Destination.left, Destination.top, Destination.right - Destination.left,
 		Destination.bottom - Destination.top));
 }
 
 // 0x4fc480, line 1073. Clipped to the target surface.
-void TSurfaceGL::Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-	int Height, TRGBColor ColorKey)
+void TSurfaceGL::Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey)
 {
-	TASSERT2_TEXT(Width > 0 && Height > 0, "FromRect.width>0 && FromRect.height>0",
-		"FromRect.width", Width, "FromRect.height", Height);
+	TASSERT2(FromRect.width>0 && FromRect.height>0, FromRect.width, FromRect.height);
 	TRect Clip;
 	GetSurfaceRect(ToSurface, &Clip);
-	BlitClipped(ToSurface, x, y, FromSurface, FromX, FromY, Width, Height, ColorKey, Clip);
+	BlitClipped(ToSurface, x, y, FromSurface, FromRect, ColorKey, Clip);
 }
 
 // 0x4fc6a0, line 1086
-void TSurfaceGL::BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source)
+void TSurfaceGL::BlitRect(int ToSurface, int x, int y, int FromSurface, TRect FromRect)
 {
-	TASSERT2_TEXT(Source.Width > 0 && Source.Height > 0, "FromRect.width>0 && FromRect.height>0",
-		"FromRect.width", Source.Width, "FromRect.height", Source.Height);
+	TASSERT2(FromRect.width>0 && FromRect.height>0, FromRect.width, FromRect.height);
 	TRect Clip;
 	GetSurfaceRect(ToSurface, &Clip);
-	BlitRectClipped(ToSurface, x, y, FromSurface, Source.x, Source.y, Source.Width, Source.Height, Clip);
+	BlitRectClipped(ToSurface, x, y, FromSurface, FromRect, Clip);
 }
 
 // 0x4fc8a0, line 1540
@@ -1013,8 +1004,8 @@ void TSurfaceGL::GetSurfaceRect(int Surface, TRect *Rect)
 	TASSERT(In(Surface,0,NUMBER_OF_SURFACES_GL-1));
 	Rect->x = this->Rect[Surface].left;
 	Rect->y = this->Rect[Surface].top;
-	Rect->Width = this->Rect[Surface].right - this->Rect[Surface].left;
-	Rect->Height = this->Rect[Surface].bottom - this->Rect[Surface].top;
+	Rect->width = this->Rect[Surface].right - this->Rect[Surface].left;
+	Rect->height = this->Rect[Surface].bottom - this->Rect[Surface].top;
 }
 
 // 0x4fca30, line 1555. Type 0-2 (Init clears all three, CreateSurfaces sets
@@ -1035,8 +1026,8 @@ bool TSurfaceGL::SurfaceRecreated(int Type)
 // much; false when nothing is left.
 bool TSurfaceGL::ClipRect(TRect Clip, RECT *Rect, RECT *Source)
 {
-	int ClipRight = Clip.x + Clip.Width;
-	int ClipBottom = Clip.y + Clip.Height;
+	int ClipRight = Clip.x + Clip.width;
+	int ClipBottom = Clip.y + Clip.height;
 	if (Rect->left < ClipRight && Rect->top < ClipBottom && Rect->right > Clip.x && Rect->bottom > Clip.y) {
 		if (Rect->left < Clip.x) {
 			Source->left += Clip.x - Rect->left;
@@ -1047,11 +1038,11 @@ bool TSurfaceGL::ClipRect(TRect Clip, RECT *Rect, RECT *Source)
 			Rect->top = Clip.y;
 		}
 		if (Rect->right > ClipRight) {
-			Source->right += Clip.Width - Rect->right + Clip.x;
+			Source->right += Clip.width - Rect->right + Clip.x;
 			Rect->right = ClipRight;
 		}
 		if (Rect->bottom > ClipBottom) {
-			Source->bottom += Clip.Height - Rect->bottom + Clip.y;
+			Source->bottom += Clip.height - Rect->bottom + Clip.y;
 			Rect->bottom = ClipBottom;
 		}
 		return true;

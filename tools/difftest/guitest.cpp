@@ -62,7 +62,7 @@ static void OurClippedPicture(int Surface, int x, int y, int PictureNumber, int 
 	int Height, TRect Clip)
 {
 	Logf(OURS, "C%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, SourceX, SourceY, Width,
-		Height, Clip.x, Clip.y, Clip.Width, Clip.Height);
+		Height, Clip.x, Clip.y, Clip.width, Clip.height);
 }
 
 // Redirects one of our functions to a recorder (Restore = false) or puts

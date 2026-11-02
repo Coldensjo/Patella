@@ -163,7 +163,7 @@ static void __cdecl FakePrintTextClipped(int Surface, int x, int y, int FontNumb
 	int Alignment, TRect Clip)
 {
 	Logf("PrintC%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d;", Surface, x, y, FontNumber, Color.R, Color.G, Color.B, Text,
-		Alignment, Clip.x, Clip.y, Clip.Width, Clip.Height);
+		Alignment, Clip.x, Clip.y, Clip.width, Clip.height);
 }
 static void __cdecl FakePrintFormattedText(int Surface, int x, int y, TFont F, const char *Text)
 {
@@ -180,13 +180,13 @@ static void __cdecl FakeDrawObject(int Surface, int x, int y, int Size, TObject 
 	bool ShowCount)
 {
 	Logf("Obj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data, Obj.Data2,
-		H.R, H.G, H.B, Clip.x, Clip.y, Clip.Width, Clip.Height, F.FontNumber, ShowCount ? 1 : 0);
+		H.R, H.G, H.B, Clip.x, Clip.y, Clip.width, Clip.height, F.FontNumber, ShowCount ? 1 : 0);
 }
 static void __cdecl FakeDrawOutfit(int Surface, int x, int y, int Size, int Outfit, int *Colors, TRGBColor H, TRect Clip,
 	TFont F)
 {
 	Logf("Outfit%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Outfit, Colors[0],
-		Colors[1], Colors[2], Colors[3], H.R, H.G, H.B, Clip.x, Clip.y, Clip.Width, Clip.Height, F.FontNumber, F.Alignment);
+		Colors[1], Colors[2], Colors[3], H.R, H.G, H.B, Clip.x, Clip.y, Clip.width, Clip.height, F.FontNumber, F.Alignment);
 }
 static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int Picture, int SourceX, int SourceY, int Width,
 	int Height)
@@ -215,7 +215,7 @@ class TDESurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{
-		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, C.R, C.G, C.B);
 	}
 	void DrawVerticalLine(int Surface, int x, int y, int Height, TRGBColor C)
 	{
@@ -645,7 +645,7 @@ static void Dump(std::string &Out, int s, TComponent *C, int Depth)
 		TBorder *B = (TBorder *)C;
 		Add(Out, " window %s skins %d,%d,%d,%d,%d,%d,%d,%d,%d area %d,%d,%d,%d border %d", Name(s, B->Window).c_str(),
 			B->TopLeft, B->Top, B->TopRight, B->Left, B->Right, B->BottomLeft, B->Bottom, B->BottomRight, B->Background,
-			B->WindowArea.x, B->WindowArea.y, B->WindowArea.Width, B->WindowArea.Height, B->Border);
+			B->WindowArea.x, B->WindowArea.y, B->WindowArea.width, B->WindowArea.height, B->Border);
 	} else if (K == "Label") {
 		TLabel *L = (TLabel *)C;
 		Add(Out, " full %s lines %d short %d", Str(L->FullText).c_str(), L->Lines, L->Shortened);
@@ -668,7 +668,7 @@ static void Dump(std::string &Out, int s, TComponent *C, int Depth)
 	} else if (K == "ObjectIcon") {
 		TObjectIcon *O = (TObjectIcon *)C;
 		Add(Out, " unused %d,%d,%d,%d framed %d hl %d,%d,%d obj %d,%d,%d", O->Unused24.x, O->Unused24.y,
-			O->Unused24.Width, O->Unused24.Height, O->Framed, O->Highlight.R, O->Highlight.G, O->Highlight.B, O->Obj.Type,
+			O->Unused24.width, O->Unused24.height, O->Framed, O->Highlight.R, O->Highlight.G, O->Highlight.B, O->Obj.Type,
 			O->Obj.Data, O->Obj.Data2);
 	} else if (K == "SkinButton" || K == "ColorButton" || K == "IconButton" || K == "Blinking" || K == "TextButton"
 		|| K == "Toggle" || K == "TextToggle" || K == "MultiState") {

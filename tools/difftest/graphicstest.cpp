@@ -47,7 +47,7 @@ static int Writes, Blits, DecodedSprites, DecodedTiles; // our side's statistics
 
 static void Put(int Value) { Log[Side].append((const char *)&Value, sizeof(Value)); }
 static void PutColor(TRGBColor Color) { Put(Color.R); Put(Color.G); Put(Color.B); }
-static void PutRect(TRect Rect) { Put(Rect.x); Put(Rect.y); Put(Rect.Width); Put(Rect.Height); }
+static void PutRect(TRect Rect) { Put(Rect.x); Put(Rect.y); Put(Rect.width); Put(Rect.height); }
 static void PutTile(const uint8 *Data)
 {
 	if (Data == NULL)
@@ -70,27 +70,26 @@ void TTestSurface::WriteMaskedImage(int ToSurface, int x, int y, int Width, int 
 	for (int i = 0; i < 4; i++)
 		PutColor(Colors[i]);
 }
-void TTestSurface::Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-	int Height, TRGBColor ColorKey)
+void TTestSurface::Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey)
 {
 	Blits += Side == OURS;
-	Put(0x34); Put(ToSurface); Put(x); Put(y); Put(FromSurface); Put(FromX); Put(FromY); Put(Width);
-	Put(Height); PutColor(ColorKey);
+	Put(0x34); Put(ToSurface); Put(x); Put(y); Put(FromSurface); Put(FromRect.x); Put(FromRect.y);
+	Put(FromRect.width); Put(FromRect.height); PutColor(ColorKey);
 }
-void TTestSurface::BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY,
-	int Width, int Height, TRGBColor ColorKey, TRect Clip)
+void TTestSurface::BlitClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect,
+	TRGBColor ColorKey, TRect Clip)
 {
 	Blits += Side == OURS;
-	Put(0x3c); Put(ToSurface); Put(x); Put(y); Put(FromSurface); Put(FromX); Put(FromY); Put(Width);
-	Put(Height); PutColor(ColorKey); PutRect(Clip);
+	Put(0x3c); Put(ToSurface); Put(x); Put(y); Put(FromSurface); Put(FromRect.x); Put(FromRect.y);
+	Put(FromRect.width); Put(FromRect.height); PutColor(ColorKey); PutRect(Clip);
 }
-void TTestSurface::StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface,
-	int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight,
-	TRect Clip)
+void TTestSurface::StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect,
+	TRGBColor ColorKey, TRGBColor Highlight, TRect Clip)
 {
 	Blits += Side == OURS;
-	Put(0x48); Put(ToSurface); Put(x); Put(y); Put(Width); Put(Height); Put(FromSurface); Put(FromX);
-	Put(FromY); Put(FromWidth); Put(FromHeight); PutColor(ColorKey); PutColor(Highlight); PutRect(Clip);
+	Put(0x48); Put(ToSurface); Put(ToRect.x); Put(ToRect.y); Put(ToRect.width); Put(ToRect.height);
+	Put(FromSurface); Put(FromRect.x); Put(FromRect.y); Put(FromRect.width); Put(FromRect.height);
+	PutColor(ColorKey); PutColor(Highlight); PutRect(Clip);
 }
 void TTestSurface::SetSourceColorKey(int Surface, TRGBColor ColorKey)
 {
@@ -104,8 +103,8 @@ int TTestSurface::GetCacheSurfaces()
 void TTestSurface::GetSurfaceRect(int Surface, TRect *Rect)
 {
 	Put(0x94); Put(Surface); PutRect(*Rect);
-	Rect->Width = CacheWidth;
-	Rect->Height = CacheHeight;
+	Rect->width = CacheWidth;
+	Rect->height = CacheHeight;
 }
 
 // --- Original functions and data ------------------------------------------------

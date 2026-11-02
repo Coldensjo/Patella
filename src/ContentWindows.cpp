@@ -51,7 +51,7 @@ TContentWindow *CreateInventoryWindow(TMainWindow *Receiver)
 	Window->SetSize(SkinProperties.Data184, SkinProperties.Data274);
 	TInventoryView *View = new TInventoryView(Receiver);
 	Window->InsertChild(View);
-	Window->SetChildPosition(View, SkinProperties.Data278.Width, SkinProperties.Data278.Height);
+	Window->SetChildPosition(View, SkinProperties.Data278.width, SkinProperties.Data278.height);
 	TCombatControls *Controls = new TCombatControls(Receiver, true);
 	Window->InsertChild(Controls);
 	Window->SetChildPosition(Controls, SkinProperties.Data278.x, SkinProperties.Data278.y);
@@ -72,19 +72,19 @@ TContentWindow *CreateSmallInventoryWindow(TMainWindow *Receiver)
 	Window->SetChildPosition(Controls, SkinProperties.Data550.x, SkinProperties.Data550.y);
 	TSkinButton *Maximise = new TSkinButton(0, 0, 140, 141, TCallback(Receiver, 24), TextMaximiseInventory, false);
 	Window->InsertChild(Maximise);
-	Window->SetChildPosition(Maximise, SkinProperties.Data550.Width, SkinProperties.Data550.Height);
+	Window->SetChildPosition(Maximise, SkinProperties.Data550.width, SkinProperties.Data550.height);
 	TCapacityLabel *Capacity = new TCapacityLabel;
 	Window->InsertChild(Capacity);
-	Window->SetChildArea(Capacity, SkinProperties.Data560.x, SkinProperties.Data560.y, SkinProperties.Data560.Width,
-		SkinProperties.Data560.Height);
+	Window->SetChildArea(Capacity, SkinProperties.Data560.x, SkinProperties.Data560.y, SkinProperties.Data560.width,
+		SkinProperties.Data560.height);
 	TSoulLabel *Soul = new TSoulLabel;
 	Window->InsertChild(Soul);
-	Window->SetChildArea(Soul, SkinProperties.Data570.x, SkinProperties.Data570.y, SkinProperties.Data570.Width,
-		SkinProperties.Data570.Height);
+	Window->SetChildArea(Soul, SkinProperties.Data570.x, SkinProperties.Data570.y, SkinProperties.Data570.width,
+		SkinProperties.Data570.height);
 	TPlayerStates *States = new TPlayerStates(false);
 	Window->InsertChild(States);
-	Window->SetChildArea(States, SkinProperties.Data580.x, SkinProperties.Data580.y, SkinProperties.Data580.Width,
-		SkinProperties.Data580.Height);
+	Window->SetChildArea(States, SkinProperties.Data580.x, SkinProperties.Data580.y, SkinProperties.Data580.width,
+		SkinProperties.Data580.height);
 	return Window;
 	TEND
 }
@@ -210,13 +210,13 @@ TButtonsWindow::TButtonsWindow(TDialogWindow *_CheckObject, TMainWindow *Receive
 	SkillsButton = new TTextToggleButton(SkinProperties.Data60C.x, SkinProperties.Data60C.y, "Skills", 14, 15,
 		TCallback(Receiver, 14), TextOpenSkillsWindow, TextCloseSkillsWindow, false);
 	InsertChild(SkillsButton);
-	BattleButton = new TTextToggleButton(SkinProperties.Data60C.Width, SkinProperties.Data60C.Height, "Battle", 14,
+	BattleButton = new TTextToggleButton(SkinProperties.Data60C.width, SkinProperties.Data60C.height, "Battle", 14,
 		15, TCallback(Receiver, 15), TextOpenBattleWindow, TextCloseBattleWindow, false);
 	InsertChild(BattleButton);
 	BuddyButton = new TTextToggleButton(SkinProperties.Data61C.x, SkinProperties.Data61C.y, "VIP", 14, 15,
 		TCallback(Receiver, 22), TextOpenVIPWindow, TextCloseVIPWindow, false);
 	InsertChild(BuddyButton);
-	LogoutButton = new TTextButton(SkinProperties.Data61C.Width, SkinProperties.Data61C.Height, "Logout",
+	LogoutButton = new TTextButton(SkinProperties.Data61C.width, SkinProperties.Data61C.height, "Logout",
 		TCallback(Receiver, 507), TextLeaveGame);
 	InsertChild(LogoutButton);
 	TEND
@@ -266,11 +266,11 @@ TAutomapWindow::TAutomapWindow()
 		TextCentreAroundPlayer);
 	FloorUpButton = new TSkinButton(SkinProperties.Data254.x, SkinProperties.Data254.y, 70, 71, TCallback(this, 3),
 		TextShowHigherFloor, false);
-	FloorDownButton = new TSkinButton(SkinProperties.Data254.Width, SkinProperties.Data254.Height, 72, 73,
+	FloorDownButton = new TSkinButton(SkinProperties.Data254.width, SkinProperties.Data254.height, 72, 73,
 		TCallback(this, 4), TextShowLowerFloor, false);
 	ZoomInButton = new TSkinButton(SkinProperties.Data244.x, SkinProperties.Data244.y, 66, 67, TCallback(this, 107),
 		TextZoomIn, false);
-	ZoomOutButton = new TSkinButton(SkinProperties.Data244.Width, SkinProperties.Data244.Height, 68, 69,
+	ZoomOutButton = new TSkinButton(SkinProperties.Data244.width, SkinProperties.Data244.height, 68, 69,
 		TCallback(this, 108), TextZoomOut, false);
 	CompassRose = new TCompassRose(65);
 	InsertChild(View);
@@ -280,9 +280,9 @@ TAutomapWindow::TAutomapWindow()
 	InsertChild(ZoomInButton);
 	InsertChild(ZoomOutButton);
 	InsertChild(CompassRose);
-	SetChildArea(View, SkinProperties.Data234.x, SkinProperties.Data234.y, SkinProperties.Data234.Width,
-		SkinProperties.Data234.Height);
-	SetChildPosition(CompassRose, SkinProperties.Data264.Width, SkinProperties.Data264.Height);
+	SetChildArea(View, SkinProperties.Data234.x, SkinProperties.Data234.y, SkinProperties.Data234.width,
+		SkinProperties.Data234.height);
+	SetChildPosition(CompassRose, SkinProperties.Data264.width, SkinProperties.Data264.height);
 	CompassRose->SetSize(Skins[65].width, Skins[65].height);
 	Arrange();
 	AddHotkey(0x912, TCallback(this, 108));
@@ -351,14 +351,14 @@ void TAutomapWindow::Arrange()
 	TBEGIN
 	TContentWindow::Arrange();
 	Changed = true;
-	DrawingList[0] = TDrawing(9, SkinProperties.Data224.x, SkinProperties.Data224.y, SkinProperties.Data224.Width,
+	DrawingList[0] = TDrawing(9, SkinProperties.Data224.x, SkinProperties.Data224.y, SkinProperties.Data224.width,
 		Skins[9].height, 0, 0);
 	DrawingList[1] = TDrawing(11, SkinProperties.Data224.x, SkinProperties.Data224.y, Skins[11].width,
-		SkinProperties.Data224.Height, 0, 0);
-	DrawingList[2] = TDrawing(10, SkinProperties.Data224.x - 1 + SkinProperties.Data224.Width,
-		SkinProperties.Data224.y, Skins[10].width, SkinProperties.Data224.Height, 0, 0);
-	DrawingList[3] = TDrawing(8, SkinProperties.Data224.x, SkinProperties.Data224.Height - 1 + SkinProperties.Data224.y,
-		SkinProperties.Data224.Width, Skins[8].height, 0, 0);
+		SkinProperties.Data224.height, 0, 0);
+	DrawingList[2] = TDrawing(10, SkinProperties.Data224.x - 1 + SkinProperties.Data224.width,
+		SkinProperties.Data224.y, Skins[10].width, SkinProperties.Data224.height, 0, 0);
+	DrawingList[3] = TDrawing(8, SkinProperties.Data224.x, SkinProperties.Data224.height - 1 + SkinProperties.Data224.y,
+		SkinProperties.Data224.width, Skins[8].height, 0, 0);
 	TEND
 }
 
@@ -714,15 +714,15 @@ TPlayerStates::TPlayerStates(bool islarge)
 		MaxIcons = 9;
 		DrawingListLength = 2;
 		DrawingList = new TDrawing[2];
-		DrawingList[0] = TDrawing(100, 0, 0, SkinProperties.Data580.Width, SkinProperties.Data580.Height, 0, 0);
-		DrawingList[1] = TDrawing(101, SkinProperties.Data580.Width - 1, 0, Skins[101].width, Skins[101].height, 0,
+		DrawingList[0] = TDrawing(100, 0, 0, SkinProperties.Data580.width, SkinProperties.Data580.height, 0, 0);
+		DrawingList[1] = TDrawing(101, SkinProperties.Data580.width - 1, 0, Skins[101].width, Skins[101].height, 0,
 			0);
 	} else {
 		MaxIcons = 10;
 		DrawingListLength = 1;
 		DrawingList = new TDrawing[1];
-		DrawingList[0] = TDrawing(100, 0, 0, SkinProperties.Style288.Data148.Width,
-			SkinProperties.Style288.Data148.Height, 0, 0);
+		DrawingList[0] = TDrawing(100, 0, 0, SkinProperties.Style288.Data148.width,
+			SkinProperties.Style288.Data148.height, 0, 0);
 	}
 	TEND1(islarge?1:0)
 }
@@ -959,8 +959,8 @@ TSmallInventoryWindow::TSmallInventoryWindow()
 	TBEGIN
 	DrawingListLength = 1;
 	DrawingList = new TDrawing[1];
-	DrawingList[0] = TDrawing(99, SkinProperties.Data590.x, SkinProperties.Data590.y, SkinProperties.Data590.Width,
-		SkinProperties.Data590.Height, 0, 0);
+	DrawingList[0] = TDrawing(99, SkinProperties.Data590.x, SkinProperties.Data590.y, SkinProperties.Data590.width,
+		SkinProperties.Data590.height, 0, 0);
 	TEND
 }
 
@@ -970,11 +970,11 @@ void TSmallInventoryWindow::Draw(int Surface, int x, int y)
 {
 	TBEGIN
 	TContentWindow::Draw(Surface, x, y);
-	if (In(GetMouseX() - SkinProperties.Data590.x - x, 0, SkinProperties.Data590.Width - 1)
-	 && In(GetMouseY() - SkinProperties.Data590.y - y, 0, SkinProperties.Data590.Height - 1)
+	if (In(GetMouseX() - SkinProperties.Data590.x - x, 0, SkinProperties.Data590.width - 1)
+	 && In(GetMouseY() - SkinProperties.Data590.y - y, 0, SkinProperties.Data590.height - 1)
 	 && GetActionState() == 6)
 		GetSurface()->DrawFrame(Surface, TRect(SkinProperties.Data590.x + x, SkinProperties.Data590.y + y,
-			SkinProperties.Data590.Width, SkinProperties.Data590.Height), 1, TRGBColor(255, 255, 255));
+			SkinProperties.Data590.width, SkinProperties.Data590.height), 1, TRGBColor(255, 255, 255));
 	TEND1(Surface)
 }
 
@@ -985,8 +985,8 @@ bool TSmallInventoryWindow::LeftButtonUp(int x, int y, int Flags)
 {
 	TBEGIN
 	bool Result = TContentWindow::LeftButtonUp(x, y, Flags);
-	if (In(x - SkinProperties.Data590.x, 0, SkinProperties.Data590.Width - 1)
-	 && In(y - SkinProperties.Data590.y, 0, SkinProperties.Data590.Height - 1) && GetActionState() == 6) {
+	if (In(x - SkinProperties.Data590.x, 0, SkinProperties.Data590.width - 1)
+	 && In(y - SkinProperties.Data590.y, 0, SkinProperties.Data590.height - 1) && GetActionState() == 6) {
 		int Index, SrcX, SrcY, SrcZ;
 		TObject *Obj = GetDragObject(&Index, &SrcX, &SrcY, &SrcZ);
 		if (!GetObjectFlag(Obj->Type, CUMULATIVE) || Obj->Data < 2 || (Flags & 0x200) != 0) {
@@ -1028,15 +1028,15 @@ TInventoryView::TInventoryView(TMainWindow *Receiver)
 	TCapacityLabel *Capacity = new TCapacityLabel;
 	InsertChild(Capacity);
 	SetChildArea(Capacity, SkinProperties.Style288.Data128.x, SkinProperties.Style288.Data128.y,
-		SkinProperties.Style288.Data128.Width, SkinProperties.Style288.Data128.Height);
+		SkinProperties.Style288.Data128.width, SkinProperties.Style288.Data128.height);
 	TSoulLabel *Soul = new TSoulLabel;
 	InsertChild(Soul);
 	SetChildArea(Soul, SkinProperties.Style288.Data138.x, SkinProperties.Style288.Data138.y,
-		SkinProperties.Style288.Data138.Width, SkinProperties.Style288.Data138.Height);
+		SkinProperties.Style288.Data138.width, SkinProperties.Style288.Data138.height);
 	TPlayerStates *States = new TPlayerStates(true);
 	InsertChild(States);
 	SetChildArea(States, SkinProperties.Style288.Data148.x, SkinProperties.Style288.Data148.y,
-		SkinProperties.Style288.Data148.Width, SkinProperties.Style288.Data148.Height);
+		SkinProperties.Style288.Data148.width, SkinProperties.Style288.Data148.height);
 	Arrange();
 	TEND
 }
@@ -1052,13 +1052,13 @@ void TInventoryView::Draw(int Surface, int x, int y)
 	int desty = SkinProperties.Style288.Data128.y + y;
 	TASSERT1(destx>=0, destx);
 	TASSERT1(desty>=0, desty);
-	DrawSkin(Surface, destx, desty, SkinProperties.Style288.Data128.Width, SkinProperties.Style288.Data128.Height, 98,
+	DrawSkin(Surface, destx, desty, SkinProperties.Style288.Data128.width, SkinProperties.Style288.Data128.height, 98,
 		0, 0);
 	destx = SkinProperties.Style288.Data138.x + x;
 	desty = y + SkinProperties.Style288.Data138.y;
 	TASSERT1(destx>=0, destx);
 	TASSERT1(desty>=0, desty);
-	DrawSkin(Surface, destx, desty, SkinProperties.Style288.Data138.Width, SkinProperties.Style288.Data138.Height, 98,
+	DrawSkin(Surface, destx, desty, SkinProperties.Style288.Data138.width, SkinProperties.Style288.Data138.height, 98,
 		0, 0);
 	TWindow::Draw(Surface, x, y);
 	for (int i = 0; i < 10; i++) {
@@ -1207,7 +1207,7 @@ int TInventoryView::GetSlotAt(int x, int y)
 	TBEGIN
 	for (int i = 0; i < 10; i++) {
 		TRect &Area = SkinProperties.Style288.Data60[i];
-		if (x - Area.x >= 0 && x - Area.x <= Area.Width && y - Area.y >= 0 && y - Area.y <= Area.Height)
+		if (x - Area.x >= 0 && x - Area.x <= Area.width && y - Area.y >= 0 && y - Area.y <= Area.height)
 			return i + 1;
 	}
 	return 0;
@@ -1387,16 +1387,16 @@ void TStatusWindow::Draw(int Surface, int x, int y)
 	sprintf(Text, "%d", Mana);
 	PrintFormattedText(Surface, SkinProperties.StatusWindow.Data44.x + x, SkinProperties.StatusWindow.Data44.y + y,
 		SkinProperties.StatusWindow.Data54, Text);
-	int BarWidth = SkinProperties.StatusWindow.HitpointsBar.Width;
+	int BarWidth = SkinProperties.StatusWindow.HitpointsBar.width;
 	if (Health < MaxHealth)
-		BarWidth = SkinProperties.StatusWindow.HitpointsBar.Width * Health / MaxHealth;
+		BarWidth = SkinProperties.StatusWindow.HitpointsBar.width * Health / MaxHealth;
 	TASSERT1(x+SkinProperties.StatusWindow.HitpointsBar.x>=0, x);
 	TASSERT1(y+SkinProperties.StatusWindow.HitpointsBar.y>=0, y);
 	DrawSkin(Surface, SkinProperties.StatusWindow.HitpointsBar.x + x, y + SkinProperties.StatusWindow.HitpointsBar.y,
 		BarWidth, Skins[121].height, 121, 0, 0);
-	BarWidth = SkinProperties.StatusWindow.ManaBar.Width;
+	BarWidth = SkinProperties.StatusWindow.ManaBar.width;
 	if (Mana < MaxMana)
-		BarWidth = SkinProperties.StatusWindow.ManaBar.Width * Mana / MaxMana;
+		BarWidth = SkinProperties.StatusWindow.ManaBar.width * Mana / MaxMana;
 	TASSERT1(x+SkinProperties.StatusWindow.ManaBar.x>=0, x);
 	TASSERT1(y+SkinProperties.StatusWindow.ManaBar.y>=0, y);
 	DrawSkin(Surface, SkinProperties.StatusWindow.ManaBar.x + x, SkinProperties.StatusWindow.ManaBar.y + y, BarWidth,
@@ -1422,12 +1422,12 @@ void TStatusWindow::Arrange()
 	TContentWindow::Arrange();
 	DrawingList[0] = TDrawing(119, SkinProperties.StatusWindow.Data04.x, SkinProperties.StatusWindow.Data04.y,
 		Skins[119].width, Skins[119].height, 0, 0);
-	DrawingList[1] = TDrawing(122, SkinProperties.StatusWindow.Data04.Width, SkinProperties.StatusWindow.Data04.Height,
+	DrawingList[1] = TDrawing(122, SkinProperties.StatusWindow.Data04.width, SkinProperties.StatusWindow.Data04.height,
 		Skins[122].width, Skins[122].height, 0, 0);
 	DrawingList[2] = TDrawing(120, SkinProperties.StatusWindow.HitpointsBar.x, SkinProperties.StatusWindow.HitpointsBar.y,
-		SkinProperties.StatusWindow.HitpointsBar.Width, SkinProperties.StatusWindow.HitpointsBar.Height, 0, 0);
+		SkinProperties.StatusWindow.HitpointsBar.width, SkinProperties.StatusWindow.HitpointsBar.height, 0, 0);
 	DrawingList[3] = TDrawing(123, SkinProperties.StatusWindow.ManaBar.x, SkinProperties.StatusWindow.ManaBar.y,
-		SkinProperties.StatusWindow.ManaBar.Width, SkinProperties.StatusWindow.ManaBar.Height, 0, 0);
+		SkinProperties.StatusWindow.ManaBar.width, SkinProperties.StatusWindow.ManaBar.height, 0, 0);
 	TEND
 }
 
@@ -1493,8 +1493,8 @@ void TContainerWindowBody::Draw(int Surface, int x, int y)
 					int SlotWidth = SkinProperties.Data638.x;
 					DrawPicturePart(Surface, ScreenX, ScreenY, 4, Skins[125].x, Skins[125].y, SlotWidth, ClipHeight);
 					if (i < ObjectCount)
-						DrawObject(Surface, SkinProperties.Data638.Width + SlotX + x,
-							SkinProperties.Data638.Height + SlotY + y, 32, GetContainerContent(Container, i),
+						DrawObject(Surface, SkinProperties.Data638.width + SlotX + x,
+							SkinProperties.Data638.height + SlotY + y, 32, GetContainerContent(Container, i),
 							TRGBColor(0, 0, 0), TRect(ScreenX, ScreenY, SlotWidth, ClipHeight), SkinProperties.Data498,
 							false);
 					if (GetActionState() == 6 && In(GetMouseX(), ScreenX, ScreenX + SlotWidth - 1)
@@ -2153,11 +2153,11 @@ void TBattleWindowBody::Draw(int Surface, int x, int y)
 			}
 			if (Framed)
 				GetSurface()->DrawFrameClipped(Surface, TRect(SkinProperties.Style688.Data38.x + x,
-					SkinProperties.Style688.Data38.y + RowY + y, SkinProperties.Style688.Data38.Width,
-					SkinProperties.Style688.Data38.Height), 1, Color, TRect(x, ClipY, ClipWidth, ClipHeight));
+					SkinProperties.Style688.Data38.y + RowY + y, SkinProperties.Style688.Data38.width,
+					SkinProperties.Style688.Data38.height), 1, Color, TRect(x, ClipY, ClipWidth, ClipHeight));
 			GetSurface()->Flag26 = true;
 			DrawOutfit(Surface, SkinProperties.Style688.Data04.x + x, SkinProperties.Style688.Data04.y + RowY + y,
-				SkinProperties.Style688.Data04.Width, Creature->OutfitType, Creature->Colors,
+				SkinProperties.Style688.Data04.width, Creature->OutfitType, Creature->Colors,
 				SkinProperties.Style688.Data68, TRect(x, ClipY, ClipWidth, ClipHeight), SkinProperties.Data498);
 			GetSurface()->Flag26 = false;
 			if (Creature->PARTYFlag > 0) {
@@ -2213,7 +2213,7 @@ void TBattleWindowBody::Draw(int Surface, int x, int y)
 		NoSkull:
 			const char *Name = Creature->Name;
 			int MaxLength = GetFittingTextLength(SkinProperties.Style688.Data54.FontNumber, Name,
-				SkinProperties.Style688.Data14.Width);
+				SkinProperties.Style688.Data14.width);
 			char Shortened[32];
 			if (MaxLength < (int)strlen(Name)) {
 				strcpy(Shortened, Name);
@@ -2229,13 +2229,13 @@ void TBattleWindowBody::Draw(int Surface, int x, int y)
 					SkinProperties.Style688.Data14.y + RowY + y, SkinProperties.Style688.Data54, Name,
 					TRect(x, ClipY, ClipWidth, ClipHeight));
 			GetSurface()->DrawFrameClipped(Surface, TRect(SkinProperties.Style688.Data28.x + x,
-				SkinProperties.Style688.Data28.y + RowY + y, SkinProperties.Style688.Data28.Width,
-				SkinProperties.Style688.Data28.Height), 1, SkinProperties.Style688.Data48,
+				SkinProperties.Style688.Data28.y + RowY + y, SkinProperties.Style688.Data28.width,
+				SkinProperties.Style688.Data28.height), 1, SkinProperties.Style688.Data48,
 				TRect(x, ClipY, ClipWidth, ClipHeight));
 			GetSurface()->FillRectangleClipped(Surface, TRect(SkinProperties.Style688.Data28.x + x + 1,
 				SkinProperties.Style688.Data28.y + RowY + y + 1,
-				Creature->Health * (SkinProperties.Style688.Data28.Width - 2) / 100,
-				SkinProperties.Style688.Data28.Height - 2), Creature->GetHealthColor(),
+				Creature->Health * (SkinProperties.Style688.Data28.width - 2) / 100,
+				SkinProperties.Style688.Data28.height - 2), Creature->GetHealthColor(),
 				TRect(x, ClipY, ClipWidth, ClipHeight));
 		}
 	}
@@ -2353,7 +2353,7 @@ void TBattleWindowBody::MouseHover(int x, int y)
 		TCreature *Creature = GetOpponent(Position);
 		if (Creature != NULL) {
 			int MaxLength = GetFittingTextLength(SkinProperties.Style688.Data54.FontNumber, Creature->Name,
-				SkinProperties.Style688.Data14.Width);
+				SkinProperties.Style688.Data14.width);
 			if (MaxLength < (int)strlen(Creature->Name)) {
 				strcpy(MouseOverText, Creature->Name);
 				SetMouseOverText(MouseOverText);
@@ -2458,11 +2458,11 @@ void TTradeOffers::Draw(int Surface, int x, int y)
 		TRect &Area = Side == 0 ? SkinProperties.Style6FC.Data68 : SkinProperties.Style6FC.Data78;
 		int AreaX = Area.x;
 		int AreaY = Area.y;
-		int AreaWidth = Area.Width;
-		int AreaHeight = Area.Height;
+		int AreaWidth = Area.width;
+		int AreaHeight = Area.height;
 		// Data88: the object's offset in a slot, x/y for the own offer,
 		// Width/Height for the partner's.
-		int *ObjectOffset = Side == 0 ? &SkinProperties.Style6FC.Data88.x : &SkinProperties.Style6FC.Data88.Width;
+		int *ObjectOffset = Side == 0 ? &SkinProperties.Style6FC.Data88.x : &SkinProperties.Style6FC.Data88.width;
 		int OffsetX = ObjectOffset[0];
 		int OffsetY = ObjectOffset[1];
 		int Count = Side == 0 ? GetOwnOfferCount() : GetCounterOfferCount();
@@ -2596,10 +2596,10 @@ void TTradeOffers::GetOfferAt(int x, int y, int *Side, int *Position)
 	*Side = -1;
 	for (int i = 0; i <= 1; i++) {
 		TRect &Area = i == 0 ? SkinProperties.Style6FC.Data68 : SkinProperties.Style6FC.Data78;
-		int AreaWidth = Area.Width;
+		int AreaWidth = Area.width;
 		int AreaX = Area.x;
 		int AreaY = Area.y;
-		int AreaHeight = Area.Height;
+		int AreaHeight = Area.height;
 		int Count = i == 0 ? GetOwnOfferCount() : GetCounterOfferCount();
 		int RelativeY = ScrollBar->Range->Value - AreaY + y;
 		int Column = (x - AreaX) / SkinProperties.Style6FC.DataA0;
@@ -2626,12 +2626,12 @@ TTradeNames::TTradeNames()
 	InsertChild(Separator);
 	const char *Name = GetOwnOfferCount() < 1 ? "" : GetOwnOfferName();
 	OwnName = new TLabel(SkinProperties.Style6FC.Data14.x, SkinProperties.Style6FC.Data14.y,
-		SkinProperties.Style6FC.Data14.Width, SkinProperties.Style6FC.Data14.Height, SkinProperties.Style6FC.Data44, Name,
+		SkinProperties.Style6FC.Data14.width, SkinProperties.Style6FC.Data14.height, SkinProperties.Style6FC.Data44, Name,
 		true);
 	InsertChild(OwnName);
 	Name = GetCounterOfferCount() < 1 ? "" : GetCounterOfferName();
 	CounterName = new TLabel(SkinProperties.Style6FC.Data24.x, SkinProperties.Style6FC.Data24.y,
-		SkinProperties.Style6FC.Data24.Width, SkinProperties.Style6FC.Data24.Height, SkinProperties.Style6FC.Data44, Name,
+		SkinProperties.Style6FC.Data24.width, SkinProperties.Style6FC.Data24.height, SkinProperties.Style6FC.Data44, Name,
 		true);
 	InsertChild(CounterName);
 	TEND
@@ -2654,9 +2654,9 @@ void TTradeNames::SetSize(int Width, int Height)
 	TBEGIN
 	TWindow::SetSize(Width, Height);
 	SetChildArea(OwnName, SkinProperties.Style6FC.Data14.x, SkinProperties.Style6FC.Data14.y,
-		SkinProperties.Style6FC.Data14.Width, SkinProperties.Style6FC.Data14.Height);
+		SkinProperties.Style6FC.Data14.width, SkinProperties.Style6FC.Data14.height);
 	SetChildArea(CounterName, SkinProperties.Style6FC.Data24.x, SkinProperties.Style6FC.Data24.y,
-		SkinProperties.Style6FC.Data24.Width, SkinProperties.Style6FC.Data24.Height);
+		SkinProperties.Style6FC.Data24.width, SkinProperties.Style6FC.Data24.height);
 	SetChildArea(Separator, SkinProperties.Style6FC.Data34.x, SkinProperties.Style6FC.Data34.y,
 		SkinProperties.Style6FC.Data3C.x, SkinProperties.Style6FC.Data3C.y);
 	TEND2(Width, Height)
@@ -2711,10 +2711,10 @@ void TTradeButtons::SetSize(int Width, int Height)
 	SetChildArea(Separator, SkinProperties.Style6FC.DataE8.x, SkinProperties.Style6FC.DataE8.y,
 		SkinProperties.Style6FC.DataF0.x, SkinProperties.Style6FC.DataF0.y);
 	if (CancelButton != NULL)
-		SetChildPosition(CancelButton, SkinProperties.Style6FC.DataC8.Width, SkinProperties.Style6FC.DataC8.Height);
+		SetChildPosition(CancelButton, SkinProperties.Style6FC.DataC8.width, SkinProperties.Style6FC.DataC8.height);
 	if (WaitLabel != NULL)
 		SetChildArea(WaitLabel, SkinProperties.Style6FC.DataD8.x, SkinProperties.Style6FC.DataD8.y,
-			SkinProperties.Style6FC.DataD8.Width, SkinProperties.Style6FC.DataD8.Height);
+			SkinProperties.Style6FC.DataD8.width, SkinProperties.Style6FC.DataD8.height);
 	if (AcceptButton != NULL)
 		SetChildPosition(AcceptButton, SkinProperties.Style6FC.DataC8.x, SkinProperties.Style6FC.DataC8.y);
 	TEND2(Width, Height)
@@ -2923,8 +2923,8 @@ void TBuddylistWindowBody::Draw(int Surface, int x, int y)
 				TASSERT1(x+ItemX+SkinProperties.BuddylistWindow.Logo.x>=0, x);
 				TASSERT1(y+ItemY+SkinProperties.BuddylistWindow.Logo.y>=0, y);
 				DrawSkinClipped(Surface, SkinProperties.BuddylistWindow.Logo.x + x,
-					SkinProperties.BuddylistWindow.Logo.y + ItemY + y, SkinProperties.BuddylistWindow.Logo.Width,
-					SkinProperties.BuddylistWindow.Logo.Height, Icon + 217, x, y, ClipWidth, ClipHeight, 0, 0);
+					SkinProperties.BuddylistWindow.Logo.y + ItemY + y, SkinProperties.BuddylistWindow.Logo.width,
+					SkinProperties.BuddylistWindow.Logo.height, Icon + 217, x, y, ClipWidth, ClipHeight, 0, 0);
 			}
 			TRGBColor Color = GetBuddyListOnline(i) ? SkinProperties.BuddylistWindow.Data3C
 				: SkinProperties.BuddylistWindow.Data48;
@@ -2932,7 +2932,7 @@ void TBuddylistWindowBody::Draw(int Surface, int x, int y)
 				Color = SkinProperties.BuddylistWindow.Data54;
 			const char *Name = GetBuddyListName(i);
 			int MaxLength = GetFittingTextLength(SkinProperties.BuddylistWindow.Data28.FontNumber, Name,
-				SkinProperties.BuddylistWindow.Data18.Width);
+				SkinProperties.BuddylistWindow.Data18.width);
 			char Shortened[40];
 			if (MaxLength < (int)strlen(Name)) {
 				strcpy(Shortened, Name);
@@ -3003,7 +3003,7 @@ void TBuddylistWindowBody::MouseHover(int x, int y)
 	if (Position != -1) {
 		const char *Name = GetBuddyListName(Position);
 		int MaxLength = GetFittingTextLength(SkinProperties.BuddylistWindow.Data28.FontNumber, Name,
-			SkinProperties.BuddylistWindow.Data18.Width);
+			SkinProperties.BuddylistWindow.Data18.width);
 		if (MaxLength < (int)strlen(Name)) {
 			if (MouseOverText != NULL)
 				delete[] MouseOverText;

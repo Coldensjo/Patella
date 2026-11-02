@@ -124,7 +124,7 @@ public:
 	void Grow(TComponent *Work);                    // 0x48acb0, line 505
 	int GetFreeHeight();                            // 0x487060, line 524
 
-	TRect Area;            // +0x2c, where the children go (x, y, Width, Height)
+	TRect Area;            // +0x2c, where the children go (x, y, width, height)
 	TComponent *Dragged;   // +0x3c
 	bool Busy;             // +0x40, Rearrange is running
 	int FreeHeight;        // +0x44, GetFreeHeight's last result while UpdateFreeHeight

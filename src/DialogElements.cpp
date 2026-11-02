@@ -225,7 +225,7 @@ void TBorder::SetSize(int Width, int Height)
 	TComponent::SetSize(Width, Height);
 	Arrange();
 	Window->SetPosition(WindowArea.x, WindowArea.y);
-	Window->SetSize(WindowArea.Width, WindowArea.Height);
+	Window->SetSize(WindowArea.width, WindowArea.height);
 	Window->Arrange();
 	TEND
 }
@@ -243,9 +243,9 @@ void TBorder::Arrange()
 {
 	TBEGIN
 	WindowArea.x = Skins[Left].width + Border;
-	WindowArea.Width = Width - 2 * Border - Skins[Right].width - Skins[Left].width;
+	WindowArea.width = Width - 2 * Border - Skins[Right].width - Skins[Left].width;
 	WindowArea.y = Skins[Top].height + Border;
-	WindowArea.Height = Height - 2 * Border - Skins[Bottom].height - Skins[Top].height;
+	WindowArea.height = Height - 2 * Border - Skins[Bottom].height - Skins[Top].height;
 	DrawingList[0] = TDrawing(TopLeft, 0, 0, 0, 0, 0, 0);
 	DrawingList[1] = TDrawing(Top, Skins[TopLeft].width, 0, Width - Skins[TopRight].width - Skins[TopLeft].width,
 		Skins[Top].height, 0, 0);
@@ -1182,7 +1182,7 @@ TCheckBox::TCheckBox(const char *_Text)
 	TWindow::InsertChild(Label);
 	TWindow::FitToChild(Label, SkinProperties.CheckBox.Data08, true);
 	TWindow::SetChildArea(Label, SkinProperties.CheckBox.Data08.x, SkinProperties.CheckBox.Data08.y,
-		SkinProperties.CheckBox.Data08.Width, SkinProperties.CheckBox.Data08.Height);
+		SkinProperties.CheckBox.Data08.width, SkinProperties.CheckBox.Data08.height);
 	TEND
 }
 
@@ -1253,7 +1253,7 @@ TEditLine::TEditLine(TRect Area, int _MaxLength, bool _ReadOnly)
 	DrawingListLength = 4;
 	DrawingList = new TDrawing[4];
 	TWindow::SetPosition(Area.x, Area.y);
-	TEditLine::SetSize(Area.Width, Area.Height);
+	TEditLine::SetSize(Area.width, Area.height);
 	TEditLine::Arrange();
 	TEND1(_MaxLength)
 }
@@ -2552,13 +2552,13 @@ TScrollBar::TScrollBar(TRect Area, int _Min, int _Max, int _Value, int _Visible,
 	DownButton = new TSkinButton(0, 0, 159, 160, TCallback(this, 4), NULL, true);
 	TWindow::InsertChild(UpButton);
 	TWindow::InsertChild(DownButton);
-	Range = new TScrollBarRange(0, 0, Area.Width, Area.Height - DownButton->Height - UpButton->Height, _Min, _Max,
+	Range = new TScrollBarRange(0, 0, Area.width, Area.height - DownButton->Height - UpButton->Height, _Min, _Max,
 		_Value, _Visible);
 	Range->PageScroll = true;
 	Range->ButtonRange = _ButtonRange;
 	TWindow::InsertChild(Range);
 	TWindow::SetPosition(Area.x, Area.y);
-	TScrollBar::SetSize(Area.Width, Area.Height);
+	TScrollBar::SetSize(Area.width, Area.height);
 	TEND
 }
 

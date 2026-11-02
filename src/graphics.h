@@ -40,10 +40,16 @@ enum {
 // compiler-generated constructors do (SkinProperties' constructor 0x496800,
 // the new TSprite[] and new TPicture[] loops, DrawOutfit's colours).
 
+// A rectangle: position and size. The members are named by the assertions
+// "FromRect.width>0 && FromRect.height>0" (the surfaces' Blit and BlitRect)
+// and "ToRect.width<=..." (StretchBlit), and by the TRect members of
+// SkinProperties that GUI.cpp's assertions name with .x and .y
+// (StatusWindow.HitpointsBar.x, BuddylistWindow.Logo.y); TSkin (Skins.h) and
+// TDrawing (GUI.h) have the same lower-case names (issue #29).
 struct TRect {     // passed by value (16 bytes)
-	constexpr TRect() : x(0), y(0), Width(0), Height(0) {}
-	constexpr TRect(int x, int y, int Width, int Height) : x(x), y(y), Width(Width), Height(Height) {}
-	int x, y, Width, Height;
+	constexpr TRect() : x(0), y(0), width(0), height(0) {}
+	constexpr TRect(int x, int y, int width, int height) : x(x), y(y), width(width), height(height) {}
+	int x, y, width, height;
 };
 
 struct TRGBColor { // passed by value (12 bytes)

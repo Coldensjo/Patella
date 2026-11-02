@@ -150,7 +150,7 @@ TFakeEditLine::TFakeEditLine(TRect Area, int MaxLength, int Param)
 	memset(Data67, 0, sizeof(Data67));
 	if (Testing) {
 		Role(this, "Edit");
-		Logf("NEdit%d,%d,%d,%d,%d,%d;", Area.x, Area.y, Area.Width, Area.Height, MaxLength, Param);
+		Logf("NEdit%d,%d,%d,%d,%d,%d;", Area.x, Area.y, Area.width, Area.height, MaxLength, Param);
 		SetVtable(this, TestEditVtable);
 	}
 }
@@ -216,14 +216,14 @@ TFakeScrollBar::TFakeScrollBar(TRect Area, int Param2, int Param3, int Param4, i
 	Range = new TFakeScrollBarRange;
 	memset(Range, 0, sizeof(*Range));
 	memset(Data30, 0, sizeof(Data30));
-	SetSize(Area.Width, Area.Height);
+	SetSize(Area.width, Area.height);
 	if (Testing) {
 		Role(this, "Scroll");
-		Logf("NScroll%d,%d,%d,%d,%d,%d,%d,%d,%d;", Area.x, Area.y, Area.Width, Area.Height, Param2, Param3, Param4,
+		Logf("NScroll%d,%d,%d,%d,%d,%d,%d,%d,%d;", Area.x, Area.y, Area.width, Area.height, Param2, Param3, Param4,
 			Param5, Step);
 		SetVtable(this, TestScrollVtable);
 	}
-	ReportElement(this, "ScrollBar", "%d,%d,%d,%d,%d,%d,%d,%d,%d", Area.x, Area.y, Area.Width, Area.Height, Param2,
+	ReportElement(this, "ScrollBar", "%d,%d,%d,%d,%d,%d,%d,%d,%d", Area.x, Area.y, Area.width, Area.height, Param2,
 		Param3, Param4, Param5, Step);
 }
 // The range is kept in Data00 for the wheel; the value stays inside it.
@@ -650,7 +650,7 @@ class TConsoleSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{
-		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, C.R, C.G, C.B);
 	}
 };
 static TConsoleSurface *Surface;

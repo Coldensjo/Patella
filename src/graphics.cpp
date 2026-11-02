@@ -495,14 +495,14 @@ void InitVideoCache()
 	}
 	TRect Rect = {0, 0, 0, 0};
 	GetSurface()->GetSurfaceRect(6, &Rect);
-	int PerSurface = (Rect.Height / 32) * (Rect.Width / 32);
+	int PerSurface = (Rect.height / 32) * (Rect.width / 32);
 	VideoCacheSize = PerSurface * Surfaces;
 	VideoCache = new TVideoCacheItem[VideoCacheSize];
 	for (int i = 0; i < VideoCacheSize; i++) {
 		TVideoCacheItem &Item = VideoCache[i];
 		Item.Surface = i / PerSurface;
-		Item.y = i % PerSurface / (Rect.Width / 32) * 32;
-		Item.x = i % PerSurface % (Rect.Width / 32) * 32;
+		Item.y = i % PerSurface / (Rect.width / 32) * 32;
+		Item.x = i % PerSurface % (Rect.width / 32) * 32;
 		Item.Type = EMPTY_ITEM;
 		Item.Next = i + 1;
 		Item.Previous = i - 1;
@@ -780,7 +780,7 @@ void DrawSprite(int Surface, int x, int y, int SpriteNumber)
 		return;
 	TASSERT2(In(SpriteNumber,1,NumberOfSprites), SpriteNumber, NumberOfSprites);
 	TVideoCacheItem *Item = GetVideoSprite(SpriteNumber);
-	GetSurface()->Blit(Surface, x, y, Item->Surface + 6, Item->x, Item->y, 32, 32,
+	GetSurface()->Blit(Surface, x, y, Item->Surface + 6, TRect(Item->x, Item->y, 32, 32),
 		Sprites[SpriteNumber - 1].ColorKey);
 }
 
@@ -792,7 +792,7 @@ void DrawSpriteClipped(int Surface, int x, int y, int SpriteNumber, TRect Clip)
 	TASSERT2(In(SpriteNumber,1,NumberOfSprites), SpriteNumber, NumberOfSprites);
 	TBEGIN
 	TVideoCacheItem *Item = GetVideoSprite(SpriteNumber);
-	GetSurface()->BlitClipped(Surface, x, y, Item->Surface + 6, Item->x, Item->y, 32, 32,
+	GetSurface()->BlitClipped(Surface, x, y, Item->Surface + 6, TRect(Item->x, Item->y, 32, 32),
 		Sprites[SpriteNumber - 1].ColorKey, Clip);
 	TEND2(Surface, SpriteNumber)
 }
@@ -806,8 +806,8 @@ void DrawSpriteScaled(int Surface, int x, int y, int Width, int Height, int Spri
 	TASSERT2(In(SpriteNumber,1,NumberOfSprites), SpriteNumber, NumberOfSprites);
 	TBEGIN
 	TVideoCacheItem *Item = GetVideoSprite(SpriteNumber);
-	GetSurface()->StretchBlit(Surface, x, y, Width, Height, Item->Surface + 6, Item->x, Item->y, 32, 32,
-		Sprites[SpriteNumber - 1].ColorKey, Highlight, Clip);
+	GetSurface()->StretchBlit(Surface, TRect(x, y, Width, Height), Item->Surface + 6,
+		TRect(Item->x, Item->y, 32, 32), Sprites[SpriteNumber - 1].ColorKey, Highlight, Clip);
 	TEND2(Surface, SpriteNumber)
 }
 
@@ -822,7 +822,7 @@ void DrawMaskedSprite(int Surface, int x, int y, int SpriteNumber, int MaskNumbe
 	TASSERT2(In(SpriteNumber,1,NumberOfSprites), SpriteNumber, NumberOfSprites);
 	TASSERT2(In(MaskNumber,1,NumberOfSprites), MaskNumber, NumberOfSprites);
 	TVideoCacheItem *Item = GetVideoMaskedSprite(SpriteNumber, MaskNumber, Colors);
-	GetSurface()->Blit(Surface, x, y, Item->Surface + 6, Item->x, Item->y, 32, 32,
+	GetSurface()->Blit(Surface, x, y, Item->Surface + 6, TRect(Item->x, Item->y, 32, 32),
 		Sprites[SpriteNumber - 1].ColorKey);
 	TEND2(Surface, SpriteNumber)
 }
@@ -839,8 +839,8 @@ void DrawMaskedSpriteScaled(int Surface, int x, int y, int Width, int Height, in
 	TASSERT2(In(SpriteNumber,1,NumberOfSprites), SpriteNumber, NumberOfSprites);
 	TASSERT2(In(MaskNumber,1,NumberOfSprites), MaskNumber, NumberOfSprites);
 	TVideoCacheItem *Item = GetVideoMaskedSprite(SpriteNumber, MaskNumber, Colors);
-	GetSurface()->StretchBlit(Surface, x, y, Width, Height, Item->Surface + 6, Item->x, Item->y, 32, 32,
-		Sprites[SpriteNumber - 1].ColorKey, Highlight, Clip);
+	GetSurface()->StretchBlit(Surface, TRect(x, y, Width, Height), Item->Surface + 6,
+		TRect(Item->x, Item->y, 32, 32), Sprites[SpriteNumber - 1].ColorKey, Highlight, Clip);
 	TEND2(Surface, SpriteNumber)
 }
 
@@ -935,8 +935,8 @@ void DrawPicture(int Surface, int x, int y, int PictureNumber)
 	for (int TileY = 0; TileY < Picture.TilesY; TileY++) {
 		for (int TileX = 0; TileX < Picture.TilesX; TileX++) {
 			TVideoCacheItem *Item = GetVideoPicture(PictureNumber, TileX, TileY);
-			GetSurface()->Blit(Surface, TileX * 32 + x, TileY * 32 + y, Item->Surface + 6, Item->x, Item->y,
-				32, 32, Picture.ColorKey);
+			GetSurface()->Blit(Surface, TileX * 32 + x, TileY * 32 + y, Item->Surface + 6,
+				TRect(Item->x, Item->y, 32, 32), Picture.ColorKey);
 		}
 	}
 	TEND2(Surface, PictureNumber)
@@ -972,8 +972,8 @@ void DrawPicturePart(int Surface, int x, int y, int PictureNumber, int SourceX, 
 			int TopY = (OffsetY < 0 ? 0 : OffsetY);
 			int DestX = (TileX * 32 - SourceX < 0 ? 0 : TileX * 32 - SourceX);
 			int DestY = (TileY * 32 - SourceY < 0 ? 0 : TileY * 32 - SourceY);
-			GetSurface()->Blit(Surface, DestX + x, DestY + y, Item->Surface + 6, Item->x + LeftX,
-				Item->y + TopY, PartWidth - LeftX, PartHeight - TopY, Picture.ColorKey);
+			GetSurface()->Blit(Surface, DestX + x, DestY + y, Item->Surface + 6,
+				TRect(Item->x + LeftX, Item->y + TopY, PartWidth - LeftX, PartHeight - TopY), Picture.ColorKey);
 		}
 	}
 	TEND2(Surface, PictureNumber)
@@ -1004,8 +1004,9 @@ void DrawPicturePartClipped(int Surface, int x, int y, int PictureNumber, int So
 			int TopY = (OffsetY < 0 ? 0 : OffsetY);
 			int DestX = (TileX * 32 - SourceX < 0 ? 0 : TileX * 32 - SourceX);
 			int DestY = (TileY * 32 - SourceY < 0 ? 0 : TileY * 32 - SourceY);
-			GetSurface()->BlitClipped(Surface, DestX + x, DestY + y, Item->Surface + 6, Item->x + LeftX,
-				Item->y + TopY, PartWidth - LeftX, PartHeight - TopY, Picture.ColorKey, Clip);
+			GetSurface()->BlitClipped(Surface, DestX + x, DestY + y, Item->Surface + 6,
+				TRect(Item->x + LeftX, Item->y + TopY, PartWidth - LeftX, PartHeight - TopY), Picture.ColorKey,
+				Clip);
 		}
 	}
 	TEND2(Surface, PictureNumber)
@@ -1052,8 +1053,9 @@ void PrintTextPart(int Surface, int x, int y, int FontNumber, TRGBColor Color, c
 		int SourceY = Font.CharHeight * (Index / Font.CharsPerLine);
 		int SourceX = Font.CharWidth * (Index % Font.CharsPerLine);
 		TVideoCacheItem *Item = GetVideoFontChar(FontNumber, SourceX / 32, SourceY / 32, Color);
-		GetSurface()->Blit(Surface, x, y, Item->Surface + 6, Item->x + SourceX % 32, Item->y + SourceY % 32,
-			Font.CharWidth, Font.CharHeight, Pictures[Font.PictureNumber - 1].ColorKey);
+		GetSurface()->Blit(Surface, x, y, Item->Surface + 6,
+			TRect(Item->x + SourceX % 32, Item->y + SourceY % 32, Font.CharWidth, Font.CharHeight),
+			Pictures[Font.PictureNumber - 1].ColorKey);
 		x += Font.Widths[Index] + Font.Spacing;
 	}
 	TEND2(Surface, FontNumber)
@@ -1095,9 +1097,9 @@ void PrintTextClipped(int Surface, int x, int y, int FontNumber, TRGBColor Color
 		int SourceY = Font.CharHeight * (Index / Font.CharsPerLine);
 		int SourceX = Font.CharWidth * (Index % Font.CharsPerLine);
 		TVideoCacheItem *Item = GetVideoFontChar(FontNumber, SourceX / 32, SourceY / 32, Color);
-		GetSurface()->BlitClipped(Surface, x, y, Item->Surface + 6, Item->x + SourceX % 32,
-			Item->y + SourceY % 32, Font.CharWidth, Font.CharHeight, Pictures[Font.PictureNumber - 1].ColorKey,
-			Clip);
+		GetSurface()->BlitClipped(Surface, x, y, Item->Surface + 6,
+			TRect(Item->x + SourceX % 32, Item->y + SourceY % 32, Font.CharWidth, Font.CharHeight),
+			Pictures[Font.PictureNumber - 1].ColorKey, Clip);
 		x += Font.Widths[Index] + Font.Spacing;
 	}
 	TEND2(Surface, FontNumber)

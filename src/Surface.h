@@ -66,23 +66,25 @@ public:
 	virtual void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data) = 0; // +0x28
 	virtual void WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data,
 		uint8 *Mask, TRGBColor *Colors) = 0;                         // +0x2c
-	virtual void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source) = 0; // +0x30
-	virtual void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-		int Height, TRGBColor ColorKey) = 0;                          // +0x34
+	// The blits take the source part as a TRect FromRect (and StretchBlit the
+	// target as ToRect): the assertions name FromRect.width/height and
+	// ToRect.width/height, and every caller builds the 16-byte block on the
+	// stack (issue #29).
+	virtual void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect FromRect) = 0; // +0x30
+	virtual void Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect,
+		TRGBColor ColorKey) = 0;                                      // +0x34
 	// +0x38: BlitRect's worker, a copy without colour key, clipped.
-	virtual void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY,
-		int Width, int Height, TRect Clip) = 0;
-	virtual void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY,
-		int Width, int Height, TRGBColor ColorKey, TRect Clip) = 0;   // +0x3c
+	virtual void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect,
+		TRect Clip) = 0;
+	virtual void BlitClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect,
+		TRGBColor ColorKey, TRect Clip) = 0;                          // +0x3c
 	virtual void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface,
 		TRect Source) = 0;                                            // +0x40
 	// +0x44: StretchBlit without the clipping rectangle.
-	virtual void StretchBlitUnclipped(int ToSurface, int x, int y, int Width, int Height,
-		int FromSurface, int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey,
-		TRGBColor Highlight) = 0;
-	virtual void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface,
-		int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight,
-		TRect Clip) = 0;                                              // +0x48
+	virtual void StretchBlitUnclipped(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect,
+		TRGBColor ColorKey, TRGBColor Highlight) = 0;
+	virtual void StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect,
+		TRGBColor ColorKey, TRGBColor Highlight, TRect Clip) = 0;     // +0x48
 	// +0x4c: shades Count rectangles with the colours of their four corners
 	// (top left, top right, bottom left, bottom right); MapWindow.cpp's light.
 	virtual void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors) = 0;

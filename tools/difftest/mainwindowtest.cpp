@@ -397,7 +397,7 @@ static void __cdecl FakeDrawObject(int Surface, int x, int y, int Size, TObject 
 	TFont Font, bool ShowCount)
 {
 	Logf("DObj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data, Obj.Data2,
-		Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.Width, Clip.Height, ShowCount ? 1 : 0);
+		Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.width, Clip.height, ShowCount ? 1 : 0);
 }
 
 // Both sides' DialogElements.cpp constructors and members build and are the
@@ -524,12 +524,12 @@ class TMainSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{
-		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, C.R, C.G, C.B);
 	}
 	void StretchBlitRect(int ToSurface, TRect D, int FromSurface, TRect S)
 	{
-		Logf("Stretch%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", ToSurface, D.x, D.y, D.Width, D.Height, FromSurface, S.x, S.y,
-			S.Width, S.Height);
+		Logf("Stretch%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", ToSurface, D.x, D.y, D.width, D.height, FromSurface, S.x, S.y,
+			S.width, S.height);
 	}
 };
 static TMainSurface *Surface;
@@ -719,8 +719,8 @@ static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth)
 	}
 	if (Kind0 == "Dialog") {
 		TDialogWindow *D = (TDialogWindow *)C;
-		sprintf(Buffer, " area %d,%d,%d,%d busy %d free %d,%d dragged ", D->Area.x, D->Area.y, D->Area.Width,
-			D->Area.Height, D->Busy ? 1 : 0, D->FreeHeight, D->UpdateFreeHeight ? 1 : 0);
+		sprintf(Buffer, " area %d,%d,%d,%d busy %d free %d,%d dragged ", D->Area.x, D->Area.y, D->Area.width,
+			D->Area.height, D->Busy ? 1 : 0, D->FreeHeight, D->UpdateFreeHeight ? 1 : 0);
 		Out += Buffer + NameOf(s, D->Dragged);
 	}
 	Out += " parent " + NameOf(s, C->Parent) + "\n";

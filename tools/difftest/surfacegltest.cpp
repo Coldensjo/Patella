@@ -1200,7 +1200,7 @@ static void RandomOperation()
 			Both("BlitRect", [&](TSurface *T) { T->BlitRect(To, x, y, From, Source); });
 		else
 			Both("BlitRectClipped", [&](TSurface *T) {
-				T->BlitRectClipped(To, x, y, From, Source.x, Source.y, Source.Width, Source.Height, Clip);
+				T->BlitRectClipped(To, x, y, From, Source, Clip);
 			});
 		break;
 	}
@@ -1211,10 +1211,10 @@ static void RandomOperation()
 		TRGBColor Key = RandomColor();
 		TRect Clip = RandomRect(500);
 		if (Chance(50))
-			Both("Blit", [&](TSurface *T) { T->Blit(To, x, y, From, FromX, FromY, Width, Height, Key); });
+			Both("Blit", [&](TSurface *T) { T->Blit(To, x, y, From, TRect(FromX, FromY, Width, Height), Key); });
 		else
 			Both("BlitClipped", [&](TSurface *T) {
-				T->BlitClipped(To, x, y, From, FromX, FromY, Width, Height, Key, Clip);
+				T->BlitClipped(To, x, y, From, TRect(FromX, FromY, Width, Height), Key, Clip);
 			});
 		break;
 	}
@@ -1233,7 +1233,8 @@ static void RandomOperation()
 		int Width = Chance(30) ? FromWidth : Between(1, 128), Height = Chance(30) ? FromHeight : Between(1, 128);
 		TRGBColor Key = RandomColor(), Highlight = RandomColor();
 		Both("StretchBlitUnclipped", [&](TSurface *T) {
-			T->StretchBlitUnclipped(To, x, y, Width, Height, From, FromX, FromY, FromWidth, FromHeight, Key, Highlight);
+			T->StretchBlitUnclipped(To, TRect(x, y, Width, Height), From, TRect(FromX, FromY, FromWidth, FromHeight), Key,
+				Highlight);
 		});
 		break;
 	}
@@ -1252,7 +1253,8 @@ static void RandomOperation()
 		World.Near[1] = Highlight.G;
 		World.Near[2] = Highlight.B;
 		Both("StretchBlit", [&](TSurface *T) {
-			T->StretchBlit(To, x, y, Width, Height, From, FromX, FromY, FromWidth, FromHeight, Key, Highlight, Clip);
+			T->StretchBlit(To, TRect(x, y, Width, Height), From, TRect(FromX, FromY, FromWidth, FromHeight), Key,
+				Highlight, Clip);
 		});
 		break;
 	}

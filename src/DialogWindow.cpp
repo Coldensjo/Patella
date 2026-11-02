@@ -115,8 +115,8 @@ void TDialogWindow::SetSize(int Width, int Height)
 {
 	TBEGIN
 	TWindow::SetSize(Width, Height);
-	Area.Height = Height;
-	Area.Width = Width;
+	Area.height = Height;
+	Area.width = Width;
 	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->GetNext())
 		Child->SetSize(Width, Child->Height);
 	Rearrange(8, NULL);
@@ -338,7 +338,7 @@ void TDialogWindow::PositionChildren(bool SkipDragged)
 void TDialogWindow::FitChildren()
 {
 	TBEGIN
-	int Space = Area.Height;
+	int Space = Area.height;
 	TComponent *Child = FirstChild;
 	while (Child != NULL) {
 		if (Space < Child->Height) {
@@ -346,7 +346,7 @@ void TDialogWindow::FitChildren()
 			if (Space < Child->getMinimumHeight()) {
 				Delete = Child;
 			} else if (Space < Child->Height) {
-				Child->SetSize(Area.Width, Space);
+				Child->SetSize(Area.width, Space);
 				Child->Arrange();
 				if (Space < Child->Height)
 					Delete = Child;
@@ -431,7 +431,7 @@ void TDialogWindow::DragChild(TComponent *Work)
 void TDialogWindow::MakeRoom(TComponent *Work)
 {
 	TBEGIN
-	int Space = Area.Height;
+	int Space = Area.height;
 	for (TComponent *Child = GetFirstChild(); Child != NULL; Child = Child->GetNext())
 		Space -= Child->Height;
 	if (Space < Work->Height) {
@@ -483,7 +483,7 @@ void TDialogWindow::Grow(TComponent *Work)
 int TDialogWindow::GetFreeHeight()
 {
 	TBEGIN
-	int Available = Area.Height;
+	int Available = Area.height;
 	int Used = 0;
 	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->GetNext())
 		Used += Child->Height;
@@ -632,7 +632,7 @@ void TSubWindow::SetSize(int Width, int Height)
 			Height = getMinimumHeight();
 		TWindow::SetSize(Width, Height);
 		SetChildArea(Body, SkinProperties.Style194.Data50.x, SkinProperties.Style194.Data50.y,
-			SkinProperties.Style194.Data50.Width, SkinProperties.Style194.Data50.Height);
+			SkinProperties.Style194.Data50.width, SkinProperties.Style194.Data50.height);
 		FitToChild(Body, SkinProperties.Style194.Data50, false);
 		if (Resizer1 != NULL)
 			SetChildArea(Resizer1, SkinProperties.Style194.Data60.x, SkinProperties.Style194.Data60.y,
@@ -867,7 +867,7 @@ void TSubWindow::SetIcon(TComponent *_Icon)
 	Icon = _Icon;
 	InsertChild(_Icon);
 	SetChildArea(Icon, SkinProperties.Style194.Data00.x, SkinProperties.Style194.Data00.y,
-		SkinProperties.Style194.Data00.Width, SkinProperties.Style194.Data00.Height);
+		SkinProperties.Style194.Data00.width, SkinProperties.Style194.Data00.height);
 	TEND
 }
 

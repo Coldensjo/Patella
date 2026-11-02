@@ -341,7 +341,7 @@ static int FreeContainer;
 static void __cdecl FakeDrawSprite(int Surface, int x, int y, int Sprite) { Logf("DS%d,%d,%d,%d;", Surface, x, y, Sprite); }
 static void __cdecl FakeDrawSpriteClipped(int Surface, int x, int y, int Sprite, TRect C)
 {
-	Logf("DC%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Sprite, C.x, C.y, C.Width, C.Height);
+	Logf("DC%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Sprite, C.x, C.y, C.width, C.height);
 }
 static void __cdecl FakeDrawMaskedSprite(int Surface, int x, int y, int Sprite, int Mask, TRGBColor *Colors)
 {
@@ -357,7 +357,7 @@ static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int Picture, 
 static void __cdecl FakeDrawPicturePartClipped(int Surface, int x, int y, int Picture, int sx, int sy, int w, int h,
 	TRect C)
 {
-	Logf("DQ%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Picture, sx, sy, w, h, C.x, C.y, C.Width, C.Height);
+	Logf("DQ%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Picture, sx, sy, w, h, C.x, C.y, C.width, C.height);
 }
 static void __cdecl FakePrintText(int Surface, int x, int y, int Font, TRGBColor Color, const char *Text, int Alignment)
 {
@@ -367,7 +367,7 @@ static void __cdecl FakePrintTextClipped(int Surface, int x, int y, int Font, TR
 	int Alignment, TRect C)
 {
 	Logf("PC%d,%d,%d,%d,%d/%d/%d,%s,%d,%d,%d,%d,%d;", Surface, x, y, Font, Color.R, Color.G, Color.B, Text, Alignment,
-		C.x, C.y, C.Width, C.Height);
+		C.x, C.y, C.width, C.height);
 }
 static void __cdecl FakePrintTextPart(int Surface, int x, int y, int Font, TRGBColor Color, const char *Text,
 	int Length, int Alignment)
@@ -426,26 +426,26 @@ void SendUseObjectOnCreature(int x, int y, int z, int Type, int Position, uint32
 static bool SurfaceLost, CanShade;
 void TTestSurface::FillRectangle(int Surface, TRect R, TRGBColor C)
 {
-	Logf("SF%d,%d,%d,%d,%d,%d/%d/%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+	Logf("SF%d,%d,%d,%d,%d,%d/%d/%d;", Surface, R.x, R.y, R.width, R.height, C.R, C.G, C.B);
 }
 void TTestSurface::DrawFrameClipped(int Surface, TRect R, int LineWidth, TRGBColor C, TRect Clip)
 {
-	Logf("SR%d,%d,%d,%d,%d,%d,%d/%d/%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, LineWidth, C.R, C.G, C.B,
-		Clip.x, Clip.y, Clip.Width, Clip.Height);
+	Logf("SR%d,%d,%d,%d,%d,%d,%d/%d/%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, LineWidth, C.R, C.G, C.B,
+		Clip.x, Clip.y, Clip.width, Clip.height);
 }
 void TTestSurface::BlitRect(int To, int x, int y, int From, TRect S)
 {
-	Logf("SB%d,%d,%d,%d,%d,%d,%d,%d;", To, x, y, From, S.x, S.y, S.Width, S.Height);
+	Logf("SB%d,%d,%d,%d,%d,%d,%d,%d;", To, x, y, From, S.x, S.y, S.width, S.height);
 }
 void TTestSurface::StretchBlitRect(int To, TRect D, int From, TRect S)
 {
-	Logf("SS%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", To, D.x, D.y, D.Width, D.Height, From, S.x, S.y, S.Width, S.Height);
+	Logf("SS%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", To, D.x, D.y, D.width, D.height, From, S.x, S.y, S.width, S.height);
 }
 void TTestSurface::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors)
 {
 	Logf("SH%d,%d", Surface, Count);
 	for (int i = 0; i < Count; i++)
-		Logf(",%d/%d/%d/%d", Rects[i].x, Rects[i].y, Rects[i].Width, Rects[i].Height);
+		Logf(",%d/%d/%d/%d", Rects[i].x, Rects[i].y, Rects[i].width, Rects[i].height);
 	for (int i = 0; i < Count * 4; i++)
 		Logf(",%d/%d/%d", Colors[i].R, Colors[i].G, Colors[i].B);
 	Logf(";");

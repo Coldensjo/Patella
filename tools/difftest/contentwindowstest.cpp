@@ -646,21 +646,21 @@ static void __cdecl FakeDrawPicturePartClipped(int Surface, int x, int y, int Pi
 	int Height, TRect Clip)
 {
 	Logf("PartC%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Picture, srcx, srcy, Width, Height, Clip.x, Clip.y,
-		Clip.Width, Clip.Height);
+		Clip.width, Clip.height);
 }
 static void __cdecl FakeDrawObject(int Surface, int x, int y, int Size, TObject Obj, TRGBColor Highlight, TRect Clip,
 	TFont Font, bool ShowCount)
 {
 	Logf("Obj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data,
-		Obj.Data2, Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.Width, Clip.Height, Font.FontNumber,
+		Obj.Data2, Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.width, Clip.height, Font.FontNumber,
 		Font.Color.R, Font.Color.G, Font.Color.B, Font.Alignment, ShowCount ? 1 : 0);
 }
 static void __cdecl FakeDrawOutfit(int Surface, int x, int y, int Size, int Outfit, int *Colors, TRGBColor Highlight,
 	TRect Clip, TFont Font)
 {
 	Logf("Outfit%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Outfit,
-		Colors[0], Colors[1], Colors[2], Colors[3], Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.Width,
-		Clip.Height, Font.FontNumber, Font.Color.R, Font.Color.G, Font.Color.B, Font.Alignment,
+		Colors[0], Colors[1], Colors[2], Colors[3], Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.width,
+		Clip.height, Font.FontNumber, Font.Color.R, Font.Color.G, Font.Color.B, Font.Alignment,
 		GetSurface()->Flag26 ? 1 : 0);
 }
 static void __cdecl FakePrintFormattedText(int Surface, int x, int y, TFont Format, const char *Text)
@@ -671,13 +671,13 @@ static void __cdecl FakePrintFormattedText(int Surface, int x, int y, TFont Form
 static void __cdecl FakePrintFormattedTextClipped(int Surface, int x, int y, TFont Format, const char *Text, TRect Clip)
 {
 	Logf("PrintFC%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%d;", Surface, x, y, Format.FontNumber, Format.Color.R,
-		Format.Color.G, Format.Color.B, Format.Alignment, Text, Clip.x, Clip.y, Clip.Width, Clip.Height);
+		Format.Color.G, Format.Color.B, Format.Alignment, Text, Clip.x, Clip.y, Clip.width, Clip.height);
 }
 static void __cdecl FakePrintTextClipped(int Surface, int x, int y, int Font, TRGBColor Color, const char *Text,
 	int Alignment, TRect Clip)
 {
 	Logf("PrintC%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d;", Surface, x, y, Font, Color.R, Color.G, Color.B, Text, Alignment,
-		Clip.x, Clip.y, Clip.Width, Clip.Height);
+		Clip.x, Clip.y, Clip.width, Clip.height);
 }
 static int CharWidth(char c) { return 4 + (uint8)c % 4; }
 static int __cdecl FakeGetFittingTextLength(int Font, const char *Text, int Width)
@@ -744,8 +744,8 @@ public:
 	}
 	void FillRectangleClipped(int Surface, TRect R, TRGBColor C, TRect Clip)
 	{
-		Logf("FillC%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B, Clip.x,
-			Clip.y, Clip.Width, Clip.Height);
+		Logf("FillC%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, C.R, C.G, C.B, Clip.x,
+			Clip.y, Clip.width, Clip.height);
 	}
 	void DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBColor C)
 	{
@@ -753,12 +753,12 @@ public:
 	}
 	void DrawFrame(int Surface, TRect R, int LineWidth, TRGBColor C)
 	{
-		Logf("Frame%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, LineWidth, C.R, C.G, C.B);
+		Logf("Frame%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, LineWidth, C.R, C.G, C.B);
 	}
 	void DrawFrameClipped(int Surface, TRect R, int LineWidth, TRGBColor C, TRect Clip)
 	{
-		Logf("FrameC%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, LineWidth, C.R, C.G,
-			C.B, Clip.x, Clip.y, Clip.Width, Clip.Height);
+		Logf("FrameC%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, LineWidth, C.R, C.G,
+			C.B, Clip.x, Clip.y, Clip.width, Clip.height);
 	}
 	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data)
 	{
@@ -769,7 +769,7 @@ public:
 	}
 	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect S)
 	{
-		Logf("Blit%d,%d,%d,%d,%d,%d,%d,%d;", ToSurface, x, y, FromSurface, S.x, S.y, S.Width, S.Height);
+		Logf("Blit%d,%d,%d,%d,%d,%d,%d,%d;", ToSurface, x, y, FromSurface, S.x, S.y, S.width, S.height);
 	}
 	bool SurfaceRecreated(int Surface)
 	{
@@ -1248,7 +1248,7 @@ static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth)
 		}
 	} else if (Kind == "Column") {
 		TDialogWindow *D = (TDialogWindow *)C;
-		Add(Out, " area %d,%d,%d,%d dragged %s busy %d free %d,%d", D->Area.x, D->Area.y, D->Area.Width, D->Area.Height,
+		Add(Out, " area %d,%d,%d,%d dragged %s busy %d free %d,%d", D->Area.x, D->Area.y, D->Area.width, D->Area.height,
 			Name(s, D->Dragged).c_str(), D->Busy ? 1 : 0, D->FreeHeight, D->UpdateFreeHeight ? 1 : 0);
 	} else if (Kind == "Buttons") {
 		TButtonsWindow *W = (TButtonsWindow *)C;
@@ -1481,8 +1481,8 @@ static void RandomPoint(TComponent *C, const std::string &Kind, int &x, int &y)
 	int i = Random() % 12;
 	if (Kind == "InvView") {
 		TRect &Area = SkinProperties.Style288.Data60[i % 10];
-		x = Area.x + (int)(Random() % (Area.Width + 2));
-		y = Area.y + (int)(Random() % (Area.Height + 2));
+		x = Area.x + (int)(Random() % (Area.width + 2));
+		y = Area.y + (int)(Random() % (Area.height + 2));
 	} else if (Kind == "ContainerBody") {
 		x = SkinProperties.Data630.x + i % SkinProperties.Data62C * SkinProperties.Data648 + (int)(Random() % 36);
 		y = SkinProperties.Data630.y + i / SkinProperties.Data62C * SkinProperties.Data64C + (int)(Random() % 36);
@@ -1694,8 +1694,8 @@ static void Queries()
 		if (Scenario == SC_SMALL_INVENTORY && Random() % 2 == 0) {
 			// A drop on the small inventory's area (a pile asks for the count).
 			TComponent *W = Window[OURS];
-			int x = SkinProperties.Data590.x + (int)(Random() % (SkinProperties.Data590.Width + 2));
-			int y = SkinProperties.Data590.y + (int)(Random() % (SkinProperties.Data590.Height + 2));
+			int x = SkinProperties.Data590.x + (int)(Random() % (SkinProperties.Data590.width + 2));
+			int y = SkinProperties.Data590.y + (int)(Random() % (SkinProperties.Data590.height + 2));
 			int Flags = RandomFlags();
 			World.ActionState = 6;
 			if (Random() % 2 == 0) {

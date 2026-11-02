@@ -38,6 +38,8 @@ the regexp is src/Extern/regexp. The atoi callers fixed (issue #30).
 Review of the low-confidence decisions done (issue #24, November 2, 2026): 80 behaviour-relevant entries
 confirmed by the binary or a test, two static objects added (MainFrm.cpp's NoCallback, TRSA.h's vlong),
 scripttest.cpp tests nextToken's length limits; summary table at the end of notes/decisions.md.
+TRect's members (issue #29, November 2, 2026): TRect is {x, y, width, height} and the blit slots take
+TRect FromRect/ToRect, both from the assertion texts and the callers' 16-byte blocks.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -60,7 +62,7 @@ None.
 ## Last difftest
 
 14,492,680 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11, #13, #15, #30 and #24; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
+(after merging #11, #13, #15, #30 and #24, unchanged by #29; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
 Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 
 ## Notes for later files
@@ -242,7 +244,18 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   with the used slots filled in, MakeVtbl), reusable for SurfaceGL.cpp's test. Fake texture memory must
   be large enough for every write (a too small test texture corrupted the heap once). DIFFTEST_ONLY=SurfaceDX9
   runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).
-- TRect's members may be width/height in the original (issue #29).
+- TRect (graphics.h) is {x, y, width, height} (issue #29, assertion texts); TSkin (Skins.h) and TDrawing
+  (GUI.h) use the same lower-case names, TSkin stays its own struct. Other Width/Height members (TComponent,
+  TSurface, TFullscreenMode, TFont, window sizes) keep their capitals.
+- The surface blit slots take the source as TRect FromRect (Surface.h, issue #29): BlitRect(ToSurface, x, y,
+  FromSurface, FromRect), Blit(..., FromRect, ColorKey), BlitRectClipped(..., FromRect, Clip),
+  BlitClipped(..., FromRect, ColorKey, Clip); StretchBlitUnclipped/StretchBlit(ToSurface, TRect ToRect,
+  FromSurface, TRect FromRect, ColorKey, Highlight[, Clip]). A new test surface overrides them with these
+  signatures (testsurface.h). When a slot's callers build a 16-byte block (`sub esp,0x10` and four stores)
+  the parameter is a TRect; build/scratch/slotcalls.py (i29 worktree) lists the argument pattern of every
+  slot call.
+- Issue #27 (SetChildArea) can now take TRect Area and use Area.width/Area.height; Dialogs.cpp's callers
+  pass R.x, R.y, R.width, R.height of SkinProperties' TRects today.
 - Unknown-owner data (issue #12, notes/decisions.md): every object that includes the text header has
   a full copy of its table (147 entries, 0x24c bytes, "You are poisoned" ... "Report Rule Violation");
   the object whose code reads an entry owns that copy (Player.obj 0x5c22cc, MapWindow.obj 0x5c2064,

@@ -23,12 +23,11 @@ public:
 	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data);
 	void WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data, uint8 *Mask,
 		TRGBColor *Colors);
-	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
-		TRGBColor ColorKey);
-	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-		int Height, TRGBColor ColorKey, TRect Clip);
-	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
-		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip);
+	void Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey);
+	void BlitClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+		TRect Clip);
+	void StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+		TRGBColor Highlight, TRect Clip);
 	void SetSourceColorKey(int Surface, TRGBColor ColorKey);
 	int GetCacheSurfaces();
 	void GetSurfaceRect(int Surface, TRect *Rect);
@@ -36,7 +35,7 @@ public:
 	// mapwindowtest.cpp
 	void FillRectangle(int Surface, TRect Rect, TRGBColor Color);
 	void DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color, TRect Clip);
-	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source);
+	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect FromRect);
 	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source);
 	void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors);
 	bool SurfaceRecreated(int Surface);
@@ -48,8 +47,8 @@ public:
 	void DrawHorizontalLine(int, int, int, int, TRGBColor) { abort(); }
 	void DrawVerticalLine(int, int, int, int, TRGBColor) { abort(); }
 	void DrawFrame(int, TRect, int, TRGBColor) { abort(); }
-	void BlitRectClipped(int, int, int, int, int, int, int, int, TRect) { abort(); }
-	void StretchBlitUnclipped(int, int, int, int, int, int, int, int, int, int, TRGBColor, TRGBColor) { abort(); }
+	void BlitRectClipped(int, int, int, int, TRect, TRect) { abort(); }
+	void StretchBlitUnclipped(int, TRect, int, TRect, TRGBColor, TRGBColor) { abort(); }
 	bool ClipRect(TRect, RECT *, RECT *) { abort(); }
 	void ResetFrameTimer() { abort(); }
 	void WaitForNextFrame() { abort(); }

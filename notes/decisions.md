@@ -887,6 +887,8 @@ WIP, checked and finished by a second one), November 1, 2026.
   engines 1 and 2 (OpenGL and DirectX 9) get the call.
   Reviewed in #24: confirmed: (int, TRGBColor) has the stack layout of the callers' copies; graphicstest
   records the calls on both sides.
+  Settled in #29: Blit, BlitClipped and StretchBlit take their source (and StretchBlit its target) as a
+  TRect FromRect/ToRect: every call builds a 16-byte block (see "TRect's members (issue #29)").
 - **TVideoCacheItem's overlapping fields** (medium): masked sprites keep the
   mask number and four colours at +0x14/+0x18, pictures and font characters
   TileX, TileY and the text colour at +0x14/+0x18/+0x1c (the Find and Get
@@ -1039,6 +1041,7 @@ finished it), November 1, 2026.
   its x, y, Width, Height are the left, top, right, bottom margins. The
   SkinProperties members passed this way (+0x0a0, Style194+0x50) became
   TRects.
+  Settled in #29: TRect's members are x, y, width, height (the margins are Area.width/Area.height now).
   Reviewed in #24: confirmed: the 16-byte block is the binary's; which struct type it is cannot change the
   code.
 - **Names from the binary**: SkinProperties and its member paths
@@ -2261,7 +2264,8 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   come from assertions. The other member/parameter names are ours.
   TBlitSize is a local two-int view solely to retain the asserted lower-case
   width/height names while keeping the existing TRect drawing ABI; it adds
-  no binary function or wrapper. The factory is CreateSurfaceDX (0x4eca00):
+  no binary function or wrapper. (Settled in #29: TBlitSize is gone; the
+  slots take TRect FromRect/ToRect, whose members are width and height.) The factory is CreateSurfaceDX (0x4eca00):
   its allocation is 0x250 bytes with an inlined empty derived constructor.
   Reviewed in #24: confirmed: a local view and an empty inlined constructor add no code (surfacedxtest).
 - **Layout (high)**: TSurface is 0x70 bytes, not the former 0x44 sketch.
@@ -2607,6 +2611,9 @@ PR #28, merged first into this branch).
   members as separate words, so the slots keep TSurface's int parameters and the assertions are written with
   TASSERT_TEXT/TASSERT2_TEXT, which give the binary's text and values. Issue #29 asks whether TRect's
   members should be renamed.
+  Settled in #29: TRect's members are width and height, the slots take TRect FromRect/ToRect (the callers
+  build 16-byte blocks; "the binary passes the members as separate words" was wrong), and the assertions
+  are plain TASSERT/TASSERT2 expressions with the binary's text.
 - **Exception tables** (high). No function has TBEGIN/TEND: the frames hold only the assertions' strings
   (5 states each). ResetDisplay (0x4f1160) is try { InitDisplay; CreateSurfaces } catch (PROGRAM_ERROR) {
   try { ExitDisplay } catch (...) {} throw } (ehinfo: catch PROGRAM_ERROR at states 0-0, catch ... at 2-2).
@@ -3037,7 +3044,7 @@ patch names, Talk.cpp's table, Objects.cpp's TProperties and flag names, the Pre
 ContextMenus/Control and start/Communication gaps, sysinc.cpp, Help.cpp's names, Inventory.cpp's function
 names, surfaceDX9.cpp, Resources, Header code and every "Names"/"Classes" entry). Skipped as other issues':
 TRect width/height and FromRect/ToRect (#29), SetChildArea's TRect (#27). Line numbers are those before this
-review.
+review. (Settled in #29: see "TRect's members (issue #29)" below.)
 
 Tools (new): tools/xctable.py lists the __xc initialiser table with what each initialiser builds and the
 atexit thunk it registers; tools\listing.cmd compiles src files like compile-check.cmd with assembly listings
@@ -3143,3 +3150,82 @@ changes: MainFrm.cpp's NoCallback, TRSA.h's HeaderExponent, the TOffer size comm
 | 2607 | SurfaceGL.cpp | glh_extensions.h #line | confirmed | our listing pushes 173 and 191 like 0x4f92e2/0x4f93ca | - |
 | 2632 | SurfaceGL.cpp | TSurface slots +0x04/+0x08/+0x80 | confirmed | AddDirtyRect's TRect = the 16-byte block; surfacegltest | - |
 | - | Communication/TRSA | unused vlong(65537) statics (not in the log before) | corrected | the __xc table 0x5c002c-0x5c00c4: 0x559da0, 0x55a1c0 | TRSA.h HeaderExponent |
+
+## TRect's members (issue #29)
+
+Claude Opus 5.5, November 2, 2026.
+
+- **Evidence** (every assertion string in Tibia.exe that names a member of a rectangle, from a scan of the
+  printable strings for width/height/.x/.y/Rect/skin, build/scratch/slotcalls.py and directcalls.py for the
+  call sites):
+  - "FromRect.width>0 && FromRect.height>0" (0x56f2a4) with the value names "FromRect.width" and
+    "FromRect.height" (0x56f5cc/0x56f5dc): the Blit and BlitRect slots of all three engines (SurfaceDX.cpp
+    lines 811/824, surfaceDX9.cpp 1302/1315, SurfaceGL.cpp 1073/1086). BlitRect already took a TRect, so
+    FromRect is a TRect, and its size members are width and height.
+  - "FromRect.width+1<=Rect[TEMP_SURFACE].right && FromRect.height+1<=..." and "ToRect.width<=
+    Rect[STRETCH_SURFACE].right && ToRect.height<=..." (0x56f178/0x56f1d8): StretchBlitUnclipped and
+    StretchBlit of SurfaceDX.cpp and StretchBlit of surfaceDX9.cpp.
+  - TRect members of SkinProperties named with lower-case .x/.y: "x+SkinProperties.StatusWindow.
+    HitpointsBar.x>=0" (and ManaBar), "y+ItemY+SkinProperties.BuddylistWindow.Logo.y>=0" (all three are
+    TRects in GUI.h; Buttons.Texture and CheckBox.Item are TGUIPoints).
+  - The other rectangles of the client use the same lower-case names: TSkin ("Skins[skin].width",
+    "Skins[skin].height") and TDrawing ("DrawingList.x", ".y", ".width", ".height", "DrawingList[i].skin").
+  - No string names a rectangle member Width or Height. The capitalised Width/Height strings are
+    parameters and locals ("Width>0", "x>=0 && y>=0 && Width>0 && Height>0" of WriteImage, "_Width"),
+    TComponent's getWidth()/getHeight() and Objects.cpp's "Entry.Width"/"Entry.Height" (not rectangles).
+- **TRect is {x, y, width, height}** (high for width/height, which the assertions name on a TRect parameter;
+  x and y were lower case already). graphics.h's members and its constructor's parameters were renamed.
+  The rename was compiler-checked: graphics.h's members renamed, every src file and every difftest file
+  compiled with column numbers (build/scratch/cc.cmd), and each "'Width': is not a member of 'TRect'"
+  error renamed at its exact line and column (build/scratch/fixmembers.py) until the build was clean, so no
+  Width/Height of another type (TComponent, TSurface, TFullscreenMode, TFont, the window sizes, the
+  parameters) was touched: 906 uses in 23 files (11 in src, 12 in tools/difftest), plus two comments
+  (GUI.cpp's FitToChild, DialogWindow.h's Area). No assertion text changed: no TASSERT stringified a TRect member.
+- **TSkin stays its own struct** (low). It has TRect's layout and now its member names, but nothing in the
+  binary uses a TSkin as a TRect: the callers of DrawPicturePart (0x490c60) push a skin's four members as
+  separate ints (eight pushes, no 16-byte block), DrawSkin takes the skin number, and no code copies a skin
+  into a TRect parameter. A typedef or a TRect array would give the same code; with no evidence for it,
+  Skins.h keeps TSkin.
+- **The blit slots take TRects** (high for the 16-byte blocks and the names FromRect/ToRect). Every call
+  through the slots builds the rectangle as a 16-byte block on the stack (`sub esp,0x10` and four stores),
+  separate from the pushes of the ints: graphics.cpp's ten calls (0x48fa3c Blit: `sub esp,0xc` for the
+  colour key and `sub esp,0x10` for Item->x, Item->y, 32, 32, then four pushes; 0x48fc13 BlitClipped:
+  clip, colour key, source; 0x48ff5d StretchBlit: clip, highlight, colour key, source, then the surface
+  pushed, then the target as a second block, then ToSurface) and every engine-internal call (StretchBlit's
+  and StretchBlitUnclipped's Blit/BlitClipped calls, BlitClipped's and BlitRect's BlitRectClipped calls:
+  two blocks and four pushes). The new signatures (Surface.h and the three engines; the parameter order and
+  the stack layout are the old ones):
+  - +0x30 BlitRect(int ToSurface, int x, int y, int FromSurface, TRect FromRect) (parameter renamed from
+    Source: its assertion names FromRect)
+  - +0x34 Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey)
+  - +0x38 BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRect Clip)
+  - +0x3c BlitClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+    TRect Clip)
+  - +0x44 StretchBlitUnclipped(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect,
+    TRGBColor ColorKey, TRGBColor Highlight) (no caller outside the engines; its assertions name ToRect and
+    FromRect like StretchBlit's, and its own calls build the same blocks)
+  - +0x48 StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+    TRGBColor Highlight, TRect Clip)
+  - +0x40 StretchBlitRect keeps (ToSurface, TRect Destination, FromSurface, TRect Source): it took TRects
+    already, and no assertion names its parameters (the names stay ours, low).
+  The x, y of Blit/BlitClipped/BlitRect/BlitRectClipped stay ints: the calls push them separately (four
+  pushes: ToSurface, x, y, FromSurface). WriteImage, WriteMaskedImage and SetSurfaceRect keep their ints
+  (six and eight pushes, no block; WriteImage's assertion "x>=0 && y>=0 && Width>0 && Height>0" names
+  separate parameters).
+- **The assertions are real expressions now**: SurfaceDX.cpp's TBlitSize view and the TASSERT_TEXT and
+  TASSERT2_TEXT macros of surfaceDX9.cpp and SurfaceGL.cpp are gone; the assertions are TASSERT and
+  TASSERT2(FromRect.width>0 && FromRect.height>0, FromRect.width, FromRect.height), whose texts are the
+  binary's. Inside StretchBlit the second and last blits pass TRect(0, 0, ToRect.width, ToRect.height)
+  for the STRETCH_SURFACE part (the binary builds a new block there; whether the original wrote a TRect
+  temporary or a local is unknown, the values are the same).
+- **Tests**: the test surfaces were changed to the new signatures (testsurface.h's TTestSurface and
+  graphicstest.cpp's recorders, which log the same values in the same order as before) and the calls of
+  surfacedxtest.cpp, surfacedx9test.cpp and surfacegltest.cpp build TRects where they passed four ints;
+  the image's functions are called through the same declarations (same stack layout). The difftest totals
+  are unchanged (14,492,680 checks, 67 in sysinctest.exe, 3,201 vlong; 0 failures).
+- **callcheck**: no file's list changed (SurfaceDX.cpp 14, surfaceDX9.cpp 13, SurfaceGL.cpp 20,
+  graphics.cpp 10, and 18 other files that use TRects: identical output before and after).
+- **For #27** (SetChildArea): TRect's members are x, y, width, height now, so SetChildArea(TComponent
+  *Child, TRect Area) can use Area.width/Area.height; GUI.cpp's FitToChild/FitToChildren already take a
+  TRect by value. The callers in Dialogs.cpp pass R.x, R.y, R.width, R.height of SkinProperties' TRects
+  today and can pass the TRect itself.

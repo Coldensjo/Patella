@@ -245,7 +245,7 @@ class TDialogSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{
-		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
+		Logf("Fill%d,%d,%d,%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.width, R.height, C.R, C.G, C.B);
 	}
 };
 static TDialogSurface *Surface;
@@ -419,7 +419,7 @@ static void DumpComponent(int s, std::string &Out, TComponent *C, int Depth, con
 	}
 	if (K == CLASS_COLUMN) {
 		TDialogWindow *D = (TDialogWindow *)C;
-		sprintf(Buffer, " area %d,%d,%d,%d busy %d free %d,%d", D->Area.x, D->Area.y, D->Area.Width, D->Area.Height,
+		sprintf(Buffer, " area %d,%d,%d,%d busy %d free %d,%d", D->Area.x, D->Area.y, D->Area.width, D->Area.height,
 			D->Busy ? 1 : 0, D->FreeHeight, D->UpdateFreeHeight ? 1 : 0);
 		Out += Buffer;
 		Out += " dragged " + NameOf(s, D->Dragged);

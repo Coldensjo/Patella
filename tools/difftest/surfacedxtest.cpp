@@ -1351,27 +1351,28 @@ static void DXPhaseDraw()
 				case 7: Object->DrawVerticalLine(Surface, PosX, PosY, Height, Color); break;
 				case 8: Object->DrawFrame(Surface, Rect, LineWidth, Color); break;
 				case 9: Object->DrawFrameClipped(Surface, Rect, LineWidth, Color, Clip); break;
-				case 10: Object->Blit(Surface, PosX, PosY, Source, 1, 2, Width, Height, Key); break;
-				case 11: Object->BlitClipped(Surface, PosX, PosY, Source, 1, 2, Width, Height, Key, Clip); break;
+				case 10: Object->Blit(Surface, PosX, PosY, Source, TRect(1, 2, Width, Height), Key); break;
+				case 11: Object->BlitClipped(Surface, PosX, PosY, Source, TRect(1, 2, Width, Height), Key, Clip); break;
 				case 12: Object->BlitRect(Surface, PosX, PosY, Source, TRect(1, 2, Width, Height)); break;
-				case 13: Object->BlitRectClipped(Surface, PosX, PosY, Source, 3, 1, Width, Height, Clip); break;
+				case 13: Object->BlitRectClipped(Surface, PosX, PosY, Source, TRect(3, 1, Width, Height), Clip); break;
 				case 14: Object->StretchBlitRect(Surface, Rect, Source, TRect(1, 2, FromWidth, FromHeight)); break;
 				case 15:
-					Object->StretchBlitUnclipped(StretchTo, PosX, PosY, FromWidth, FromHeight, Source, 2, 3,
-						FromWidth, FromHeight, Key, Highlight);
+					Object->StretchBlitUnclipped(StretchTo, TRect(PosX, PosY, FromWidth, FromHeight), Source,
+						TRect(2, 3, FromWidth, FromHeight), Key, Highlight);
 					break;
 				case 16:
-					Object->StretchBlitUnclipped(StretchTo, PosX, PosY, ToWidth, ToHeight == FromHeight
-						&& ToWidth == FromWidth ? ToHeight + 1 : ToHeight, Source, 2, 3, FromWidth, FromHeight, Key,
-						Highlight);
+					Object->StretchBlitUnclipped(StretchTo, TRect(PosX, PosY, ToWidth, ToHeight == FromHeight
+						&& ToWidth == FromWidth ? ToHeight + 1 : ToHeight), Source, TRect(2, 3, FromWidth, FromHeight),
+						Key, Highlight);
 					break;
 				case 17:
-					Object->StretchBlit(StretchTo, PosX, PosY, FromWidth, FromHeight, Source, 2, 3, FromWidth,
-						FromHeight, Key, Highlight, Clip);
+					Object->StretchBlit(StretchTo, TRect(PosX, PosY, FromWidth, FromHeight), Source,
+						TRect(2, 3, FromWidth, FromHeight), Key, Highlight, Clip);
 					break;
 				case 18:
-					Object->StretchBlit(StretchTo, PosX, PosY, ToWidth, ToHeight == FromHeight && ToWidth == FromWidth
-						? ToHeight + 1 : ToHeight, Source, 2, 3, FromWidth, FromHeight, Key, Highlight, Clip);
+					Object->StretchBlit(StretchTo, TRect(PosX, PosY, ToWidth, ToHeight == FromHeight
+						&& ToWidth == FromWidth ? ToHeight + 1 : ToHeight), Source, TRect(2, 3, FromWidth, FromHeight),
+						Key, Highlight, Clip);
 					break;
 				case 19: Object->GetSurfaceRect(Index, &Output[Side]); break;
 				case 20: Object->ShadeRectangles(Surface, Count, Rects, Colors); break;
@@ -1408,7 +1409,8 @@ static void DXPhaseDraw()
 				case 29: Object->AttachWindow(); break;
 				case 30:
 					Object->SetColorKey(Source, Key);
-					Object->BlitClipped(Surface, PosX - 6, PosY - 6, Source, 0, 0, Width + 8, Height + 8, Key, Clip);
+					Object->BlitClipped(Surface, PosX - 6, PosY - 6, Source, TRect(0, 0, Width + 8, Height + 8), Key,
+						Clip);
 					break;
 				case 31: Object->DrawFrame(Surface, TRect(PosX, PosY, LineWidth, Height + 4), LineWidth, Color); break;
 				}
@@ -1901,15 +1903,15 @@ static void DXPhaseLifecycle()
 					case 0: Object->FillRectangle(SCREEN_SURFACE, Rect, Color); break;
 					case 1:
 						Object->SetColorKey(Sprite, Key);
-						Object->Blit(SCREEN_SURFACE, Rect.x, Rect.y, Sprite, 2, 3, Width, Height, Key);
+						Object->Blit(SCREEN_SURFACE, Rect.x, Rect.y, Sprite, TRect(2, 3, Width, Height), Key);
 						break;
 					case 2:
-						Object->StretchBlit(SCREEN_SURFACE, Rect.x, Rect.y, ToWidth, ToHeight, Sprite, 1, 1, Width,
-							Height, Key, Color, Clip);
+						Object->StretchBlit(SCREEN_SURFACE, TRect(Rect.x, Rect.y, ToWidth, ToHeight), Sprite,
+							TRect(1, 1, Width, Height), Key, Color, Clip);
 						break;
 					case 3:
-						Object->StretchBlitUnclipped(AUTOMAP_SURFACE, Rect.x, Rect.y, ToWidth, ToHeight, Sprite, 1, 1,
-							Width, Height, Key, Color);
+						Object->StretchBlitUnclipped(AUTOMAP_SURFACE, TRect(Rect.x, Rect.y, ToWidth, ToHeight), Sprite,
+							TRect(1, 1, Width, Height), Key, Color);
 						break;
 					}
 				});

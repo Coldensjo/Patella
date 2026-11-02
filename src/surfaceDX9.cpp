@@ -21,14 +21,6 @@
 #include "Preferences.h"
 #include "external.h"
 
-// Assertions whose text names a variable this file does not have: the
-// original's FromRect and ToRect are rectangles with members width and
-// height (TRect's members are Width and Height here); the binary passes
-// their members separately, so the slots keep TSurface's int parameters.
-#define TASSERT_TEXT(Expr, Text) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", "", 0, "", 0, Text)
-#define TASSERT2_TEXT(Expr, Text, N1, V1, N2, V2) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", N1, V1, N2, V2, Text)
 #define TASSERTB1(Expr, V1, Bug) \
 	if (!(Expr)) throw TMYEXCEPTION("assertion failed", #V1, V1, "", 0, #Expr " " Bug)
 
@@ -186,8 +178,8 @@ TSurfaceDX9::~TSurfaceDX9()
 // 0x4f0410 (the same code in all three engines; this copy is kept).
 bool TSurfaceDX9::ClipRect(TRect Clip, RECT *Rect, RECT *Source)
 {
-	int ClipRight = Clip.x + Clip.Width;
-	int ClipBottom = Clip.y + Clip.Height;
+	int ClipRight = Clip.x + Clip.width;
+	int ClipBottom = Clip.y + Clip.height;
 	if (Rect->left < ClipRight && Rect->top < ClipBottom && Rect->right > Clip.x && Rect->bottom > Clip.y) {
 		if (Rect->left < Clip.x) {
 			Source->left += Clip.x - Rect->left;
@@ -198,11 +190,11 @@ bool TSurfaceDX9::ClipRect(TRect Clip, RECT *Rect, RECT *Source)
 			Rect->top = Clip.y;
 		}
 		if (Rect->right > ClipRight) {
-			Source->right += Clip.Width - Rect->right + Clip.x;
+			Source->right += Clip.width - Rect->right + Clip.x;
 			Rect->right = ClipRight;
 		}
 		if (Rect->bottom > ClipBottom) {
-			Source->bottom += Clip.Height - Rect->bottom + Clip.y;
+			Source->bottom += Clip.height - Rect->bottom + Clip.y;
 			Rect->bottom = ClipBottom;
 		}
 		return true;
@@ -263,13 +255,13 @@ void TSurfaceDX9::SetPixel(int Surface, int x, int y, TRGBColor Color)
 // 0x4f06b0
 void TSurfaceDX9::FillRectangle(int Surface, TRect Rect, TRGBColor Color)
 {
-	RECT R = {Rect.x, Rect.y, Rect.x + Rect.Width, Rect.y + Rect.Height};
+	RECT R = {Rect.x, Rect.y, Rect.x + Rect.width, Rect.y + Rect.height};
 	if (R.top != R.bottom && R.left != R.right) {
 		SetRenderTarget(Surface);
 		FlushVertices();
 		Device->ColorFill(CurrentTarget, &R, D3DCOLOR_XRGB(Color.R, Color.G, Color.B));
 		BlitCount++;
-		BlitPixels += Rect.Height * Rect.Width;
+		BlitPixels += Rect.height * Rect.width;
 	}
 }
 
@@ -278,9 +270,9 @@ void TSurfaceDX9::FillRectangle(int Surface, TRect Rect, TRGBColor Color)
 // count uses the size before clipping.
 void TSurfaceDX9::FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, TRect Clip)
 {
-	RECT R = {Rect.x, Rect.y, Rect.x + Rect.Width, Rect.y + Rect.Height};
+	RECT R = {Rect.x, Rect.y, Rect.x + Rect.width, Rect.y + Rect.height};
 	if (R.top != R.bottom && R.left != R.right) {
-		int Pixels = Rect.Height * Rect.Width;
+		int Pixels = Rect.height * Rect.width;
 		if (ClipRect(Clip, &R, (RECT *)&Rect)) {
 			SetRenderTarget(Surface);
 			FlushVertices();
@@ -409,7 +401,7 @@ void TSurfaceDX9::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColo
 		for (int i = 0; i < Count; i++) {
 			TRect *R = &Rects[i];
 			TRGBColor *C = &Colors[i * 4];
-			AddShadeQuad(R->x, R->y, R->x + R->Width, R->y + R->Height,
+			AddShadeQuad(R->x, R->y, R->x + R->width, R->y + R->height,
 				D3DCOLOR_XRGB(C[0].R, C[0].G, C[0].B), D3DCOLOR_XRGB(C[1].R, C[1].G, C[1].B),
 				D3DCOLOR_XRGB(C[3].R, C[3].G, C[3].B), D3DCOLOR_XRGB(C[2].R, C[2].G, C[2].B));
 		}
@@ -683,21 +675,21 @@ void TSurfaceDX9::AddQuad(int Left, int Top, int Right, int Bottom, double Left_
 
 // 0x4f18d0. StretchBlit without clipping; an unscaled one is a Blit. The
 // colours are not used for a scaled one.
-void TSurfaceDX9::StretchBlitUnclipped(int ToSurface, int x, int y, int Width, int Height, int FromSurface,
-	int FromX, int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight)
+void TSurfaceDX9::StretchBlitUnclipped(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect,
+	TRGBColor ColorKey, TRGBColor Highlight)
 {
-	if (Width == FromWidth && Height == FromHeight) {
-		Blit(ToSurface, x, y, FromSurface, FromX, FromY, FromWidth, FromHeight, ColorKey);
+	if (ToRect.width == FromRect.width && ToRect.height == FromRect.height) {
+		Blit(ToSurface, ToRect.x, ToRect.y, FromSurface, FromRect, ColorKey);
 		return;
 	}
-	int Right = x + Width;
-	int Bottom = y + Height;
-	int FromRight = FromX + FromWidth;
-	int FromBottom = FromY + FromHeight;
+	int Right = ToRect.x + ToRect.width;
+	int Bottom = ToRect.y + ToRect.height;
+	int FromRight = FromRect.x + FromRect.width;
+	int FromBottom = FromRect.y + FromRect.height;
 	SetRenderTarget(ToSurface);
 	SetTexture(FromSurface);
-	AddQuad(x, y, Right, Bottom, (FromX + 0.5) / Rect[FromSurface].right,
-		(FromRight + 0.5) / Rect[FromSurface].right, (FromY + 0.5) / Rect[FromSurface].bottom,
+	AddQuad(ToRect.x, ToRect.y, Right, Bottom, (FromRect.x + 0.5) / Rect[FromSurface].right,
+		(FromRight + 0.5) / Rect[FromSurface].right, (FromRect.y + 0.5) / Rect[FromSurface].bottom,
 		(FromBottom + 0.5) / Rect[FromSurface].bottom, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
 }
 
@@ -706,20 +698,19 @@ void TSurfaceDX9::StretchBlitRect(int ToSurface, TRect Destination, int FromSurf
 {
 	SetRenderTarget(ToSurface);
 	SetTexture(FromSurface);
-	AddQuad(Destination.x, Destination.y, Destination.x + Destination.Width, Destination.y + Destination.Height,
-		(Source.x + 0.5) / Rect[FromSurface].right, (Source.x + Source.Width + 0.5) / Rect[FromSurface].right,
-		(Source.y + 0.5) / Rect[FromSurface].bottom, (Source.y + Source.Height + 0.5) / Rect[FromSurface].bottom,
+	AddQuad(Destination.x, Destination.y, Destination.x + Destination.width, Destination.y + Destination.height,
+		(Source.x + 0.5) / Rect[FromSurface].right, (Source.x + Source.width + 0.5) / Rect[FromSurface].right,
+		(Source.y + 0.5) / Rect[FromSurface].bottom, (Source.y + Source.height + 0.5) / Rect[FromSurface].bottom,
 		0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
 	BlitCount++;
-	BlitPixels += Destination.Height * Destination.Width;
+	BlitPixels += Destination.height * Destination.width;
 }
 
 // 0x4f1b70. ScreenTexture (SCREEN_SURFACE) is always mapped as a whole.
-void TSurfaceDX9::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-	int Height, TRect Clip)
+void TSurfaceDX9::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRect Clip)
 {
-	RECT To = {x, y, x + Width, y + Height};
-	RECT From = {FromX, FromY, FromX + Width, FromY + Height};
+	RECT To = {x, y, x + FromRect.width, y + FromRect.height};
+	RECT From = {FromRect.x, FromRect.y, FromRect.x + FromRect.width, FromRect.y + FromRect.height};
 	if (ClipRect(Clip, &To, &From)) {
 		SetRenderTarget(ToSurface);
 		SetTexture(FromSurface);
@@ -738,7 +729,7 @@ void TSurfaceDX9::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, 
 		AddQuad(To.left, To.top, To.right, To.bottom, Left_u, Right_u, Top_v, Bottom_v,
 			0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
 		BlitCount++;
-		BlitPixels += Height * Width;
+		BlitPixels += FromRect.height * FromRect.width;
 	}
 }
 
@@ -883,53 +874,50 @@ Next:
 // 0x4f2620, lines 1199-1204. A scaled blit goes through TEMP_SURFACE (the
 // source with a one-pixel border of Highlight, or skin 185 while Flag26 is
 // set) and STRETCH_SURFACE; Highlight is the colour key of the result.
-void TSurfaceDX9::StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
-	int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip)
+void TSurfaceDX9::StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+	TRGBColor Highlight, TRect Clip)
 {
-	if (Width == FromWidth && Height == FromHeight) {
-		BlitClipped(ToSurface, x, y, FromSurface, FromX, FromY, FromWidth, FromHeight, ColorKey, Clip);
+	if (ToRect.width == FromRect.width && ToRect.height == FromRect.height) {
+		BlitClipped(ToSurface, ToRect.x, ToRect.y, FromSurface, FromRect, ColorKey, Clip);
 		return;
 	}
 	TASSERT(FromSurface!=TEMP_SURFACE);
 	TASSERT(FromSurface!=STRETCH_SURFACE);
 	TASSERT(ToSurface!=TEMP_SURFACE);
 	TASSERT(ToSurface!=STRETCH_SURFACE);
-	TASSERT_TEXT(FromWidth + 1 <= Rect[TEMP_SURFACE].right && FromHeight + 1 <= Rect[TEMP_SURFACE].bottom,
-		"FromRect.width+1<=Rect[TEMP_SURFACE].right && FromRect.height+1<=Rect[TEMP_SURFACE].bottom");
-	TASSERT_TEXT(Width <= Rect[STRETCH_SURFACE].right && Height <= Rect[STRETCH_SURFACE].bottom,
-		"ToRect.width<=Rect[STRETCH_SURFACE].right && ToRect.height<=Rect[STRETCH_SURFACE].bottom");
+	TASSERT(FromRect.width+1<=Rect[TEMP_SURFACE].right && FromRect.height+1<=Rect[TEMP_SURFACE].bottom);
+	TASSERT(ToRect.width<=Rect[STRETCH_SURFACE].right && ToRect.height<=Rect[STRETCH_SURFACE].bottom);
 	if (Flag26)
-		DrawSkin(TEMP_SURFACE, 0, 0, FromWidth + 1, FromHeight + 1, 185, 0, 0);
+		DrawSkin(TEMP_SURFACE, 0, 0, FromRect.width + 1, FromRect.height + 1, 185, 0, 0);
 	else
-		FillRectangle(TEMP_SURFACE, TRect(0, 0, FromWidth + 1, FromHeight + 1), Highlight);
-	Blit(TEMP_SURFACE, 0, 0, FromSurface, FromX, FromY, FromWidth, FromHeight, ColorKey);
-	StretchBlitRect(STRETCH_SURFACE, TRect(0, 0, Width, Height), TEMP_SURFACE, TRect(0, 0, FromWidth, FromHeight));
+		FillRectangle(TEMP_SURFACE, TRect(0, 0, FromRect.width + 1, FromRect.height + 1), Highlight);
+	Blit(TEMP_SURFACE, 0, 0, FromSurface, FromRect, ColorKey);
+	StretchBlitRect(STRETCH_SURFACE, TRect(0, 0, ToRect.width, ToRect.height), TEMP_SURFACE,
+		TRect(0, 0, FromRect.width, FromRect.height));
 	if (!Flag26) {
 		FlushVertices();
 		ApplyColorKey(STRETCH_SURFACE, Highlight);
 	}
-	BlitClipped(ToSurface, x, y, STRETCH_SURFACE, 0, 0, Width, Height, Highlight, Clip);
+	BlitClipped(ToSurface, ToRect.x, ToRect.y, STRETCH_SURFACE, TRect(0, 0, ToRect.width, ToRect.height), Highlight,
+		Clip);
 }
 
 // 0x4f2e20, line 1302. Clipped to the target surface.
-void TSurfaceDX9::Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-	int Height, TRGBColor ColorKey)
+void TSurfaceDX9::Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey)
 {
-	TASSERT2_TEXT(Width > 0 && Height > 0, "FromRect.width>0 && FromRect.height>0",
-		"FromRect.width", Width, "FromRect.height", Height);
+	TASSERT2(FromRect.width>0 && FromRect.height>0, FromRect.width, FromRect.height);
 	TRect Clip;
 	GetSurfaceRect(ToSurface, &Clip);
-	BlitClipped(ToSurface, x, y, FromSurface, FromX, FromY, Width, Height, ColorKey, Clip);
+	BlitClipped(ToSurface, x, y, FromSurface, FromRect, ColorKey, Clip);
 }
 
 // 0x4f3040, line 1315
-void TSurfaceDX9::BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source)
+void TSurfaceDX9::BlitRect(int ToSurface, int x, int y, int FromSurface, TRect FromRect)
 {
-	TASSERT2_TEXT(Source.Width > 0 && Source.Height > 0, "FromRect.width>0 && FromRect.height>0",
-		"FromRect.width", Source.Width, "FromRect.height", Source.Height);
+	TASSERT2(FromRect.width>0 && FromRect.height>0, FromRect.width, FromRect.height);
 	TRect Clip;
 	GetSurfaceRect(ToSurface, &Clip);
-	BlitRectClipped(ToSurface, x, y, FromSurface, Source.x, Source.y, Source.Width, Source.Height, Clip);
+	BlitRectClipped(ToSurface, x, y, FromSurface, FromRect, Clip);
 }
 
 // 0x4f3240, lines 1465-1468. Full-screen mode takes GMode's size if
@@ -1124,8 +1112,8 @@ void TSurfaceDX9::GetSurfaceRect(int Surface, TRect *Rect)
 	TASSERTB1(In(Surface,0,NUMBER_OF_SURFACES_DX9-1), Surface, "[bug0000290]");
 	Rect->x = this->Rect[Surface].left;
 	Rect->y = this->Rect[Surface].top;
-	Rect->Width = this->Rect[Surface].right - this->Rect[Surface].left;
-	Rect->Height = this->Rect[Surface].bottom - this->Rect[Surface].top;
+	Rect->width = this->Rect[Surface].right - this->Rect[Surface].left;
+	Rect->height = this->Rect[Surface].bottom - this->Rect[Surface].top;
 }
 
 // The slots whose code the linker took from another object (identical
@@ -1135,37 +1123,37 @@ void TSurfaceDX9::GetSurfaceRect(int Surface, TRect *Rect)
 // +0x20 (0x4fa2c0). A frame thinner than twice the line is filled.
 void TSurfaceDX9::DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color, TRect Clip)
 {
-	if (Rect.Width < 2 * LineWidth || Rect.Height < 2 * LineWidth) {
+	if (Rect.width < 2 * LineWidth || Rect.height < 2 * LineWidth) {
 		FillRectangleClipped(Surface, Rect, Color, Clip);
 		return;
 	}
-	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y, Rect.Width - LineWidth, LineWidth), Color, Clip);
-	FillRectangleClipped(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.Height - LineWidth, Rect.Width - LineWidth,
+	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y, Rect.width - LineWidth, LineWidth), Color, Clip);
+	FillRectangleClipped(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.height - LineWidth, Rect.width - LineWidth,
 		LineWidth), Color, Clip);
-	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.Height - LineWidth), Color, Clip);
-	FillRectangleClipped(Surface, TRect(Rect.x + Rect.Width - LineWidth, Rect.y, LineWidth, Rect.Height - LineWidth),
+	FillRectangleClipped(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.height - LineWidth), Color, Clip);
+	FillRectangleClipped(Surface, TRect(Rect.x + Rect.width - LineWidth, Rect.y, LineWidth, Rect.height - LineWidth),
 		Color, Clip);
 }
 
 // +0x24 (0x4fa110)
 void TSurfaceDX9::DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color)
 {
-	if (Rect.Width < 2 * LineWidth || Rect.Height < 2 * LineWidth) {
+	if (Rect.width < 2 * LineWidth || Rect.height < 2 * LineWidth) {
 		FillRectangle(Surface, Rect, Color);
 		return;
 	}
-	FillRectangle(Surface, TRect(Rect.x, Rect.y, Rect.Width - LineWidth, LineWidth), Color);
-	FillRectangle(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.Height - LineWidth, Rect.Width - LineWidth,
+	FillRectangle(Surface, TRect(Rect.x, Rect.y, Rect.width - LineWidth, LineWidth), Color);
+	FillRectangle(Surface, TRect(Rect.x + LineWidth, Rect.y + Rect.height - LineWidth, Rect.width - LineWidth,
 		LineWidth), Color);
-	FillRectangle(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.Height - LineWidth), Color);
-	FillRectangle(Surface, TRect(Rect.x + Rect.Width - LineWidth, Rect.y, LineWidth, Rect.Height - LineWidth), Color);
+	FillRectangle(Surface, TRect(Rect.x, Rect.y + LineWidth, LineWidth, Rect.height - LineWidth), Color);
+	FillRectangle(Surface, TRect(Rect.x + Rect.width - LineWidth, Rect.y, LineWidth, Rect.height - LineWidth), Color);
 }
 
 // +0x3c (0x4fab70). The colour key is not used.
-void TSurfaceDX9::BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-	int Height, TRGBColor ColorKey, TRect Clip)
+void TSurfaceDX9::BlitClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+	TRect Clip)
 {
-	BlitRectClipped(ToSurface, x, y, FromSurface, FromX, FromY, Width, Height, Clip);
+	BlitRectClipped(ToSurface, x, y, FromSurface, FromRect, Clip);
 }
 
 // +0x90 (0x4fb5e0)

@@ -53,18 +53,16 @@ public:
 	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data); // +0x28, 0x4f09d0
 	void WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data, uint8 *Mask,
 		TRGBColor *Colors);                                                // +0x2c, 0x4f2040
-	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source); // +0x30, 0x4f3040
-	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
-		TRGBColor ColorKey);                                               // +0x34, 0x4f2e20
-	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
-		TRect Clip);                                                       // +0x38, 0x4f1b70
-	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
-		int Height, TRGBColor ColorKey, TRect Clip);                       // +0x3c (copy 0x4fab70)
+	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect FromRect); // +0x30, 0x4f3040
+	void Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey); // +0x34, 0x4f2e20
+	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRect Clip); // +0x38, 0x4f1b70
+	void BlitClipped(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+		TRect Clip);                                                       // +0x3c (copy 0x4fab70)
 	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source); // +0x40, 0x4f1a40
-	void StretchBlitUnclipped(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
-		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight); // +0x44, 0x4f18d0
-	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
-		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip); // +0x48, 0x4f2620
+	void StretchBlitUnclipped(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+		TRGBColor Highlight);                                              // +0x44, 0x4f18d0
+	void StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect FromRect, TRGBColor ColorKey,
+		TRGBColor Highlight, TRect Clip);                                  // +0x48, 0x4f2620
 	void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors); // +0x4c, 0x4f0e50
 	void SetSourceColorKey(int ToSurface, TRGBColor ColorKey);                  // +0x54, 0x4f1eb0
 	bool ClipRect(TRect Clip, RECT *Rect, RECT *Source);                  // +0x58, 0x4f0410
