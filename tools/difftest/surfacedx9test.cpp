@@ -6,10 +6,10 @@
 // DirectDrawCreate) are fakes on both sides. The image calls them through its
 // import table, whose slots get the fakes' addresses; ours call them through
 // difftest.exe's import table, whose slots are patched while the test runs
-// (DirectDrawCreate is defined here). LoadLibraryA and GetProcAddress pass
+// (ddraw.lib is linked for DirectDrawCreate). LoadLibraryA and GetProcAddress pass
 // every other name to the real functions.
 //
-// The Direct3D 9 and DirectDraw 7 objects are fakes too: plain objects with
+// The Direct3D 9 and DirectDraw 4 objects are fakes too: plain objects with
 // vtables in the COM method order, one set per side (created by the fake
 // Direct3DCreate9, CreateDevice, CreateTexture, ...). They log every call with
 // its arguments (objects by kind and number), keep pixel memory for textures,
@@ -24,7 +24,7 @@
 // compared. The error paths (assertions, PROGRAM_ERRORs) are not run: the
 // image cannot throw in the child.
 //
-// DIFFTEST_ONLY=SurfaceDX9 runs it alone (DX_TRACE=1 traces, DX_LOGS=<file>
+// DIFFTEST_ONLY=SurfaceDX9 runs it alone (DX9_TRACE=1 traces, DX9_LOGS=<file>
 // writes every compared log).
 
 #include "difftest.h"
@@ -42,10 +42,8 @@
 
 #pragma warning(disable: 4100)
 
-int DAT_0071d0bc; // 0x71d0bc, owner unknown (external.h)
 
 static_assert(sizeof(TSurfaceDX9) == 0x2c0, "TSurfaceDX9 size");
-static_assert(offsetof(TSurfaceDX9, StartTime) == 0x48, "StartTime");
 static_assert(offsetof(TSurfaceDX9, Ready) == 0x70, "Ready");
 static_assert(offsetof(TSurfaceDX9, Rect) == 0x74, "Rect");
 static_assert(offsetof(TSurfaceDX9, WindowRect) == 0x1d4, "WindowRect");
@@ -575,17 +573,12 @@ static void WINAPI FakeSleep(DWORD Milliseconds)
 {
 	Logf("Sleep(%lu);", Milliseconds);
 }
-// Ours: surfaceDX9.cpp calls DirectDrawCreate directly (ddraw.dll is imported).
-extern "C" HRESULT WINAPI DirectDrawCreate(GUID *Id, IDirectDraw **DirectDraw, IUnknown *Outer)
+static HRESULT WINAPI FakeDirectDrawCreate(GUID *Id, IDirectDraw **DirectDraw, IUnknown *Outer)
 {
 	TDX9Fake *F = NewFake('O', DirectDrawVtbl);
 	*DirectDraw = (IDirectDraw *)F;
 	Logf("DirectDrawCreate(%p,%p)=%s;", Id, Outer, Name(F));
 	return DD_OK;
-}
-static HRESULT WINAPI ImageDirectDrawCreate(GUID *Id, IDirectDraw **DirectDraw, IUnknown *Outer)
-{
-	return DirectDrawCreate(Id, DirectDraw, Outer);
 }
 
 static void __cdecl FakeDrawSkin(int Surface, int x, int y, int Width, int Height, int Skin, int SourceX, int SourceY)
@@ -669,6 +662,7 @@ static void PatchWindows()
 		{0x55b510, "user32.dll", "ClientToScreen", (void *)FakeClientToScreen},
 		{0x55b4f8, "user32.dll", "GetSystemMetrics", (void *)FakeGetSystemMetrics},
 		{0x55b59c, "winmm.dll", "timeGetTime", (void *)FakeTimeGetTime},
+		{0x55b03c, "ddraw.dll", "DirectDrawCreate", (void *)FakeDirectDrawCreate},
 	};
 	for (auto &T : Table) {
 		Write((void *)(uintptr_t)T.ImageSlot, &T.Fake, 4);
@@ -680,8 +674,6 @@ static void PatchWindows()
 		}
 		Write(Slot, &T.Fake, 4);
 	}
-	void *Fake = (void *)ImageDirectDrawCreate;
-	Write((void *)(uintptr_t)0x55b03c, &Fake, 4);
 	Redirect((void *)(uintptr_t)0x497a00, (void *)FakeDrawSkin);
 	Redirect((void *)DrawSkin, (void *)FakeDrawSkin);
 	Redirect((void *)(uintptr_t)0x4db360, (void *)FakeSetDefaultNoStretching);
@@ -724,9 +716,9 @@ static std::string Dump(int S)
 			Global<int>(0x71d0ec), Global<int>(0x71d0f0), Global<int>(0x5c2568), Global<int>(0x5c256c),
 			Global<int>(0x71d0bc));
 	else
-		sprintf(Buffer, "|stats %d %d %d %d %d %d %d %d %d %d %d", FrameBlits, FramePixels, FrameStateChanges,
-			ScreenWidth, ScreenHeight, LastFrameBlits, LastFramePixels, NumberOfVideoSurfaces, CacheSurfaceWidth,
-			CacheSurfaceHeight, DAT_0071d0bc);
+		sprintf(Buffer, "|stats %d %d %d %d %d %d %d %d %d %d %d", BlitCount, BlitPixels, Data71D0D8,
+			ScreenWidth, ScreenHeight, LastBlitCount, LastBlitPixels, NumberOfSurfaces, CacheSurfaceWidth,
+			CacheSurfaceHeight, InitStep);
 	Text += Buffer;
 	Side = Old;
 	return Text;
@@ -758,6 +750,19 @@ static void Compare()
 			size_t From = i > 60 ? i - 60 : 0;
 			printf("FAIL SurfaceDX9 %s: objects differ at %u\n  image: %s\n  ours:  %s\n", What, (unsigned)i,
 				A.substr(From, 200).c_str(), B.substr(From, 200).c_str());
+			for (size_t k = 0; k < Fakes[0].size() && k < Fakes[1].size(); k++) {
+				TDX9Fake *F = Fakes[0][k], *G = Fakes[1][k];
+				if (F->Memory.size() != G->Memory.size())
+					continue;
+				for (size_t b = 0; b < F->Memory.size(); b++)
+					if (F->Memory[b] != G->Memory[b]) {
+						long Offset = (long)b - (long)(F->Bits - &F->Memory[0]);
+						printf("  %c%d first differs at byte %ld (row %ld, column %ld): %02x %02x\n", F->Kind, F->Id,
+							Offset, F->Pitch ? Offset / F->Pitch : 0, F->Pitch ? Offset % F->Pitch / 4 : 0,
+							F->Memory[b], G->Memory[b]);
+						break;
+					}
+			}
 		}
 	}
 	if (LogFile != NULL)
@@ -882,9 +887,9 @@ static void InitBoth(bool Force)
 	Resolution.Depth = Chance(70) ? 32 : 16;
 	Resolution.Frequency = Between(0, 100);
 	if (Chance(20) && S->ViewMode == FULLSCREEN_MODE) {
-		Resolution.Width = S->ModeWidth;
-		Resolution.Height = S->ModeHeight;
-		Resolution.Depth = S->ModeDepth;
+		Resolution.Width = S->Width;
+		Resolution.Height = S->Height;
+		Resolution.Depth = S->Depth;
 	}
 	if (Chance(10))
 		World.Cooperative = D3DERR_DEVICENOTRESET;
@@ -922,7 +927,7 @@ static void RandomOperation(int Round)
 	case 1: {
 		World.Cooperative = Chance(30) ? D3DERR_DEVICENOTRESET : Chance(50) ? D3DERR_DEVICELOST : D3D_OK;
 		if (S->Device != NULL)
-			Both("CheckDevice", [&](TSurface *T) { T->CheckDevice(0, NULL); });
+			Both("RestoreSurfaces", [&](TSurface *T) { T->RestoreSurfaces(0, NULL); });
 		World.Cooperative = D3D_OK;
 		break;
 	}
@@ -932,7 +937,7 @@ static void RandomOperation(int Round)
 		break;
 	}
 	case 3:
-		Both("InitFramerate", [&](TSurface *T) { T->InitFramerate(); });
+		Both("ResetFrameTimer", [&](TSurface *T) { T->ResetFrameTimer(); });
 		break;
 	case 4:
 		if (Chance(40)) {
@@ -940,22 +945,22 @@ static void RandomOperation(int Round)
 			int Limit = Chance(50) ? 100 : 125;
 			Both("SetFramerateLimit", [&](TSurface *T) { T->SetFramerateLimit(Limit); });
 			World.ClockStep = 1000 / Limit + Between(-1, 2);
-			Both("InitFramerate", [&](TSurface *T) { T->InitFramerate(); });
+			Both("ResetFrameTimer", [&](TSurface *T) { T->ResetFrameTimer(); });
 		} else {
 			World.ClockStep = Chance(50) ? Between(0, 5) : Between(0, 1500);
 		}
-		Both("LimitFramerate", [&](TSurface *T) { T->LimitFramerate(); });
+		Both("WaitForNextFrame", [&](TSurface *T) { T->WaitForNextFrame(); });
 		break;
 	case 5:
 		BothResult<double>("GetFPS", [&](TSurface *T) { return T->GetFPS(); });
 		BothResult<int>("GetCacheSurfaces", [&](TSurface *T) { return T->GetCacheSurfaces(); });
 		BothResult<bool>("IsUnavailable", [&](TSurface *T) { return T->IsUnavailable(); });
 		BothResult<bool>("CanShadeRectangles", [&](TSurface *T) { return T->CanShadeRectangles(); });
-		BothResult<bool>("Unknown9C", [&](TSurface *T) { return T->Unknown9C(Between(0, 1)); });
+		BothResult<bool>("SurfaceRecreated", [&](TSurface *T) { return T->SurfaceRecreated(Between(0, 1)); });
 		break;
 	case 6: {
 		int Surface = AnySurface();
-		BothResult<int>("IsSurfaceCreated", [&](TSurface *T) { return T->IsSurfaceCreated(Surface); });
+		BothResult<int>("GetSurfaceMemory", [&](TSurface *T) { return T->GetSurfaceMemory(Surface); });
 		TRect R[2];
 		Both("GetSurfaceRect", [&](TSurface *T) { T->GetSurfaceRect(Surface, &R[Side]); });
 		CHECK(memcmp(&R[0], &R[1], sizeof(TRect)) == 0, "SurfaceDX9 GetSurfaceRect differs");
@@ -973,8 +978,9 @@ static void RandomOperation(int Round)
 		break;
 	}
 	case 8: {
+		// at least 128: textures re-created with this size must hold the 106x106 writes
 		int Surface = Chance(40) ? 0 : Between(SPRITE_SURFACE, NUMBER_OF_SURFACES_DX9 - 1);
-		int x = Between(0, 4), y = Between(0, 4), Width = Between(64, 256), Height = Between(64, 256);
+		int x = Between(0, 4), y = Between(0, 4), Width = Between(128, 256), Height = Between(128, 256);
 		Both("SetSurfaceRect", [&](TSurface *T) { T->SetSurfaceRect(Surface, x, y, Width, Height); });
 		break;
 	}
@@ -1001,7 +1007,7 @@ static void RandomOperation(int Round)
 	}
 	case 11:
 		if (Chance(50))
-			Both("ExitDevice", [&](TSurface *T) { T->ExitDevice(); });
+			Both("ExitDisplay", [&](TSurface *T) { T->ExitDisplay(); });
 		else if (Chance(50)) {
 			Both("ExitSurfaces", [&](TSurface *T) { T->ExitSurfaces(); });
 			Both("InitSurfaces", [&](TSurface *T) { T->InitSurfaces(); });
@@ -1010,7 +1016,7 @@ static void RandomOperation(int Round)
 	case 12: {
 		int Surface = Chance(50) ? 0 : AnySurface();
 		TRGBColor Key = RandomColor();
-		Both("SetColorKey", [&](TSurface *T) { T->SetColorKey(Surface, Key); });
+		Both("SetSourceColorKey", [&](TSurface *T) { T->SetSourceColorKey(Surface, Key); });
 		break;
 	}
 	case 13: {
@@ -1105,7 +1111,9 @@ static void RandomOperation(int Round)
 		if (Chance(50))
 			Both("BlitRect", [&](TSurface *T) { T->BlitRect(To, x, y, From, Source); });
 		else
-			Both("BlitRectClipped", [&](TSurface *T) { T->BlitRectClipped(To, x, y, From, Source, Clip); });
+			Both("BlitRectClipped", [&](TSurface *T) {
+				T->BlitRectClipped(To, x, y, From, Source.x, Source.y, Source.Width, Source.Height, Clip);
+			});
 		break;
 	}
 	case 24:
@@ -1228,7 +1236,7 @@ static void RunRound(int Round)
 	}
 	Both("InitSurfaces", [&](TSurface *T) { T->InitSurfaces(); });
 	if (Round % 11 == 5) {
-		// a failed state: InitDevice returns early, nothing else is created
+		// a failed state: CreateSurfaces returns early, nothing else is created
 		World.AlphaResult = D3DERR_INVALIDCALL;
 		InitBoth(false);
 		World.AlphaResult = D3D_OK;
@@ -1246,7 +1254,7 @@ static void RunRound(int Round)
 	What = "destructor";
 	Log[0].clear();
 	Log[1].clear();
-	CHECK(Global<int>(0x71d0f0) == NumberOfVideoSurfaces, "SurfaceDX9 destructor: NumberOfVideoSurfaces");
+	CHECK(Global<int>(0x71d0f0) == NumberOfSurfaces, "SurfaceDX9 destructor: NumberOfSurfaces");
 	Objects[0] = Objects[1] = NULL;
 	ClearFakes();
 }
@@ -1256,11 +1264,11 @@ void TestSurfaceDX9()
 	PatchImage();
 	MakeVtbls();
 	PatchWindows();
-	Trace = getenv("DX_TRACE") != NULL;
-	const char *LogName = getenv("DX_LOGS");
+	Trace = getenv("DX9_TRACE") != NULL;
+	const char *LogName = getenv("DX9_LOGS");
 	LogFile = LogName != NULL ? fopen(LogName, "w") : NULL;
 	int Before = Checks;
-	int Rounds = getenv("DX_ROUNDS") != NULL ? atoi(getenv("DX_ROUNDS")) : 400;
+	int Rounds = getenv("DX9_ROUNDS") != NULL ? atoi(getenv("DX9_ROUNDS")) : 400;
 	for (int Round = 0; Round < Rounds; Round++) {
 		if (Trace)
 			printf("round %d\n", Round);

@@ -29,20 +29,25 @@ def cstr(va):
 
 
 def funcinfo(function):
-	"""The prologue is PUSH -1; PUSH stub; the stub is MOV EAX, FuncInfo; JMP __CxxFrameHandler."""
+	"""Find the handler stub, allowing argument loads between the SEH setup instructions."""
 	code = DATA[function - BASE:function - BASE + 32]
-	i = code.find(b'\x6a\xff\x68')
-	if i >= 0:
-		stub = struct.unpack_from('<I', code, i + 3)[0]
-	else:
-		# PUSH -1; MOV EAX, FS:[0]; PUSH stub (DialogElements.cpp 0x45dfc0)
-		i = code.find(b'\x6a\xff\x64\xa1\x00\x00\x00\x00\x68')
-		if i < 0:
-			return None, None
-		stub = struct.unpack_from('<I', code, i + 9)[0]
-	stub_code = DATA[stub - BASE:stub - BASE + 16]
-	j = stub_code.find(b'\xb8')
-	return stub, struct.unpack_from('<I', stub_code, j + 1)[0] if j >= 0 else None
+	start = code.find(b'\x6a\xff')
+	if start < 0:
+		return None, None
+	for position in range(start + 2, min(start + 24, len(code) - 4)):
+		if code[position] != 0x68:
+			continue
+		stub = struct.unpack_from('<I', code, position + 1)[0]
+		if not BASE <= stub < BASE + len(DATA) - 16:
+			continue
+		stub_code = DATA[stub - BASE:stub - BASE + 16]
+		load = stub_code.find(b'\xb8')
+		if not 0 <= load <= 11:
+			continue
+		info = struct.unpack_from('<I', stub_code, load + 1)[0]
+		if BASE <= info < BASE + len(DATA) - 20 and u32(info) in (0x19930520, 0x19930521, 0x19930522):
+			return stub, info
+	return None, None
 
 
 def main():

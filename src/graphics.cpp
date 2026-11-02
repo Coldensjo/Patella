@@ -665,7 +665,7 @@ TVideoCacheItem *GetVideoSprite(int SpriteNumber)
 		TVideoCacheItem &Item = VideoCache[LeastRecentVideoItem];
 		TMemoryCacheItem *Tile = GetMemorySprite(SpriteNumber);
 		if (curEngine == 1 || curEngine == 2)
-			GetSurface()->Unknown50(Item.Surface + 6, Sprites[SpriteNumber - 1].ColorKey);
+			GetSurface()->SetColorKey(Item.Surface + 6, Sprites[SpriteNumber - 1].ColorKey);
 		GetSurface()->WriteImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data);
 		Item.Type = SPRITE_ITEM;
 		Item.Number = SpriteNumber;
@@ -691,7 +691,7 @@ TVideoCacheItem *GetVideoMaskedSprite(int SpriteNumber, int MaskNumber, TRGBColo
 		TMemoryCacheItem *Tile = GetMemorySprite(SpriteNumber);
 		TMemoryCacheItem *Mask = GetMemorySprite(MaskNumber);
 		if (curEngine == 1 || curEngine == 2)
-			GetSurface()->Unknown50(Item.Surface + 6, Sprites[SpriteNumber - 1].ColorKey);
+			GetSurface()->SetColorKey(Item.Surface + 6, Sprites[SpriteNumber - 1].ColorKey);
 		GetSurface()->WriteMaskedImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data, Mask->Data,
 			Colors);
 		Item.MaskNumber = MaskNumber;
@@ -722,9 +722,9 @@ TVideoCacheItem *GetVideoPicture(int PictureNumber, int TileX, int TileY)
 		TMemoryCacheItem *Tile = GetMemoryPicture(PictureNumber, TileX, TileY);
 		if (curEngine == 1 || curEngine == 2) {
 			if (Pictures[PictureNumber].ColorKey != TRGBColor(1, 1, 1))
-				GetSurface()->Unknown50(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
+				GetSurface()->SetColorKey(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
 			else
-				GetSurface()->Unknown50(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
+				GetSurface()->SetColorKey(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
 		}
 		GetSurface()->WriteImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data);
 		Item.TileY = TileY;
@@ -756,7 +756,7 @@ TVideoCacheItem *GetVideoFontChar(int FontNumber, int TileX, int TileY, TRGBColo
 		TRGBColor Colors[4] = {Color, Pictures[PictureNumber - 1].ColorKey, TRGBColor(0, 0, 0),
 			TRGBColor(0, 0, 0)};
 		if (curEngine == 1 || curEngine == 2)
-			GetSurface()->Unknown50(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
+			GetSurface()->SetColorKey(Item.Surface + 6, Pictures[PictureNumber - 1].ColorKey);
 		GetSurface()->WriteMaskedImage(Item.Surface + 6, Item.x, Item.y, 32, 32, Tile->Data, NULL,
 			Colors);
 		Item.TileX = TileX;

@@ -372,12 +372,13 @@ callcheck differences, caller integration and differential coverage.
   own data (0x71d0c0-0x71d0cc: the main window, curEngine, the available
   engines, the surface object), defines TSurface (vtable 0x56ef78, mostly
   _purecall slots) and creates the engine surfaces; "Surface" sorts between
-  Status and SurfaceDX in the link order. Status.cpp's data ends before
-  0x71d0c0 and SurfaceDX's starts at 0x71d0f0.
+  Status and SurfaceDX in the link order. Issue #9 revises the data split:
+  engine-shared data extends from 0x71d0bc through 0x71d0f4, while private
+  SurfaceDX data starts at 0x71d0f8 (see SurfaceDX.cpp below).
 - **0x4eae70-0x4ed19f is SurfaceDX.cpp** (high): TSurfaceDX's vtable
   (0x56f038) follows TSurface's, its destructor 0x4eae90 sets it and calls
   ~TSurface, and the DirectX 5 factory 0x4eca00 is what GetSurface calls for
-  engine 0. Recorded in file-ranges.tsv, not reconstructed yet.
+  engine 0. Recorded in file-ranges.tsv; issue #9 reconstructs this object.
 - **TSurface moved from external.h to Surface.h** with the binary's shape:
   pure slots where the vtable has _purecall, empty default bodies for +0x04,
   +0x08, +0x64, +0x80, +0x98, a forwarder at +0x50 (to +0x54), TestEngine
@@ -2077,6 +2078,143 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   contentwindowstest.cpp and mainwindowtest.cpp name the real icons and
   separators by vtable (mainwindowtest.cpp fakes DrawObject now).
 
+
+## SurfaceDX.cpp (issue #9)
+
+- **Object boundary (high)**: DirectDraw is 0x4eae70-0x4efd0f, not just the
+  previously settled leading range ending at 0x4ed19f. Vtable 0x56f038
+  identifies the functions Ghidra missed, including the pixel writers,
+  AttachWindow, both stretch wrappers, the clipped blit wrappers, Init,
+  InitDisplay and GetSurfaceRect (assertion line 1411, [bug0000290]). The
+  generated source map counts only functions present in the raw decompile;
+  the missing entries are still named in names.tsv and implemented from
+  instructions, not inferred from that count.
+- **The following gap is Direct3D 9 (high)**: 0x4efd10 loads d3d9.dll and
+  stores Direct3DCreate9 at 0x71d278; 0x4f1430 and 0x4f03f0 install
+  vtable 0x56f480. Assign 0x4efd10-0x4f1ea4 to surfaceDX9.cpp for its own
+  reconstruction issue. Do not implement that engine in this issue.
+- **Interfaces (high)**: the engine is called DirectX 5, but its GUIDs and
+  calls use IDirectDraw4, IDirectDrawSurface4 and IDirect3D3 / Device3 /
+  Viewport3 (DirectX 6 interfaces). Use the installed SDK declarations,
+  ddraw.lib, dxguid.lib, winmm.lib and user32.lib, not handwritten COM shims.
+  d3dtypes.h supplies the empty D3DTLVERTEX constructor at 0x4eae70;
+  D3D_OVERLOADS enables it. Its names.tsv kind is stl (SDK/library code).
+- **Class and names (medium)**: TSurfaceDX is inferred from the object name.
+  Surface, Rect, DirectDraw, Direct3D, hWindow, ViewMode, VMode, GMode,
+  FromRect.width/height, ToRect.width/height and the surface-index constants
+  come from assertions. The other member/parameter names are ours.
+  TBlitSize is a local two-int view solely to retain the asserted lower-case
+  width/height names while keeping the existing TRect drawing ABI; it adds
+  no binary function or wrapper. The factory is CreateSurfaceDX (0x4eca00):
+  its allocation is 0x250 bytes with an inlined empty derived constructor.
+- **Layout (high)**: TSurface is 0x70 bytes, not the former 0x44 sketch.
+  Doubles at +0x48/+0x50/+0x58/+0x60 give it 8-byte alignment, making +0x04
+  padding, not a member. hWindow is still +0x08; mode, size, availability,
+  counts and frame timing have real fields. TSurfaceDX adds Recreated at
+  +0x70, DirectDraw at +0x74, WindowRect at +0x78, Surface[22] at +0x88,
+  Rect[22] at +0xe0 and the three Direct3D pointers at +0x240/+0x244/+0x248.
+  +0x0c/+0x20/+0x44/+0x6c/+0x24c remain offset names (low confidence).
+  TSurfaceGL retains total size 0x498 by shortening its opaque tail.
+- **Folded members (high addresses, medium names)**: eight overrides are
+  shared with neighboring engines: ClipRect 0x4f0410, ResetFrameTimer
+  0x4f04d0 and SurfaceRecreated 0x4f13e0 (DX9); DrawFrame 0x4fa110,
+  DrawFrameClipped 0x4fa2c0, GetCacheSurfaces 0x4fb5e0, IsUnavailable
+  0x4fb5f0 and GetFPS 0x4f9d00 (OpenGL). TestEngine is the return-true body
+  folded with codecvt at 0x4d7d40; unlike TSurface's implementation it
+  does not store the main window. No extra thunk is reconstructed.
+- **Shared data ownership (medium/low)**: all engines reference the blit
+  counters/statistics and InitStep; place them with the engine-independent
+  Surface.cpp data, spanning 0x71d0bc-0x71d0f4, and declare them in Surface.h.
+  This revises the earlier boundary argument: 0x71d0f0 is the shared
+  NumberOfSurfaces, not the first private DirectDraw datum. The private
+  SurfaceMemory[22] starts at 0x71d0f8, followed by WaitForNextFrame's
+  Frames at 0x71d150 and LastSecond at 0x71d158. No dynamic static
+  initializers are needed for these POD/BSS values. CacheSurfaceWidth and
+  CacheSurfaceHeight at 0x5c2568/6c are shared, initially 256 and changed
+  to 320 by InitSurfaces. The private DeviceGUID pointer at 0x5c2570
+  selects IID_IDirect3DHALDevice. Exact source ownership of shared globals
+  is low confidence, but their addresses, types and common use are verified.
+- **EH and switches (high)**: AttachWindow has 15 unwind states,
+  StretchBlitUnclipped/StretchBlit 30, Blit/BlitRect/GetSurfaceRect 5,
+  InitDisplay 20 and CreateSurfaces 45, all with zero try blocks: assertions
+  without TBEGIN. ResetDisplay alone has a PROGRAM_ERROR catch and a
+  nested catch-all protecting cleanup. The six-way assertion prologues
+  interleave an argument load with the FS:[0] setup; ehinfo.py now accepts
+  these and validates the FuncInfo magic. Init's switch is a compare chain
+  (0, windowed, fullscreen), not a jump table; the whole object contains
+  no indexed indirect jump to a switch table.
+- **Odd behavior retained**: Locks set dwSize to 0x6c inside a zeroed
+  0x7c-byte descriptor. The image writers leave sub-16-bit surfaces locked.
+  A zero RGB mask loops forever in GetPixelColor; valid formats avoid it.
+  DirectDrawCreate's initial interface leaks. A failed Direct3D setup only
+  releases Direct3D and decrements NumberOfSurfaces even if its render
+  target was not allocated. GetDisplayMode/GetSurfaceDesc descriptors are
+  not zeroed. Shading uses the original float 1/255 factor promoted to
+  double before truncation; do not algebraically simplify it. The mode
+  callback tests DDSD_REFRESHRATE in ddpfPixelFormat.dwFlags, not dwFlags
+  (0x4ec869); preserve this misplaced-flag test rather than correcting it.
+- **Callcheck audit**: 14 of 43 blocks differ. The destructor/base-constructor
+  calls are implicit (0x4eae90, 0x4eca00); the parser mistakes COM's
+  SetColorKey for TSurface::SetColorKey (0x4eafb0). Vtable dispatch is
+  absent from Ghidra's named-call counts at 0x4ebd20/0x4ebe60 (ClipRect,
+  SetSourceColorKey), 0x4ec220 (WaitForNextFrame), 0x4ec600 (InitDisplay,
+  CreateSurfaces, cleanup), 0x4ec690 (cleanup/reset), 0x4ec9e0 (cleanup),
+  0x4ecdd0 (FillRectangle), 0x4ecfd0 (timer/framerate) and 0x4eed40
+  (AttachWindow). AddFullscreenMode's 8 versus 9 static GetSurface calls
+  are the compiler's duplicated loop-condition test; dynamic calls agree.
+  ShadeRectangle's SDK vertex-array constructors and twelve x87 _ftol
+  conversions are expressed by C++/D3DRGB, not explicit helper calls.
+- **Caller audit**: Surface.cpp now calls CreateSurfaceDX; the other engine
+  factories stay external. graphics.cpp's five +0x50 calls become
+  SetColorKey; the +0x64 window attachment in Control.cpp and +0x9c
+  recreation checks in ContentWindows.cpp/MapWindow.cpp retain their
+  arguments and slot offsets. Sketches/fakes follow the retyped slots.
+  Naming the base CacheSurfaces member exposed a collision with
+  graphicstest.cpp's fake counter; rename that counter GraphicsCacheSurfaces
+  so its GetCacheSurfaces override still returns the configured test value.
+- **Integration with issue #8**: keep its member GetAvailableEngines and
+  the shared +0xac name SetFramerateLimit (our initial name was
+  SetFramerate). Both names are inferred; the binary clamps values below
+  10 or above 200 to 0xffff. There is one implementation, no alias or
+  compatibility wrapper. The new SurfaceDX layout and slot signatures
+  are used by the existing engine sketches and all test surfaces.
+- **Differential coverage**: surfacedxtest.cpp runs every callable object
+  function and folded override through real reconstructed/image code on
+  independent fake DirectDraw4/Surface4/Clipper and Direct3D3/Device3/
+  Viewport3 pools. Imports, preferences and the clock are scripted before
+  either side runs. After each operation compare call logs, all 0x250
+  object bytes (pointers normalized), thirteen shared globals, per-surface
+  memory kinds, COM state and pixels; shading includes every vertex word.
+  All code and IAT patches are restored. The standalone run passes
+  1,213,828 checks over 16,089 operations of 56 kinds, with 269 coverage
+  points. DX_LOGS writes compared logs; DX_TRACE prints phase coverage.
+  Coverage includes every mode transition, forced/recovered displays,
+  Direct3D setup failures at steps 2-14, cache/video-memory exhaustion,
+  busy/still-drawing retries, both shading outcomes, 8/16/24/32-bit
+  formats, the misplaced refresh flag and the 32-bit clock wrap.
+  Assertion and PROGRAM_ERROR throw paths cannot run in the mapped
+  image without its original CRT initialization; EH and instructions
+  establish their behavior instead. GetAttachedSurface initializes only
+  DDSCAPS2.dwCaps, so the test deliberately does not read its other words.
+- **Mutation sensitivity**: eighteen isolated changes were all detected:
+  frame-limit boundary, frame schedule, pixel offset, rectangle fill size,
+  clipped-fill statistics, horizontal/vertical line size, RGB input stride,
+  mask grayscale coefficient, color key, stretch source size, vertex color,
+  offscreen memory kind, 3D surface caps, refresh flag location, mode count,
+  surface rectangle width and recreation flag. The initial caps mutation
+  removed DDSCAPS_3DDEVICE and crashed the fake world after diverging;
+  rerunning it with an extra DDSCAPS_LOCALVIDMEM instead produced 4,371
+  ordinary comparison failures. All eighteen targets therefore have
+  explicit mismatch evidence; no target escaped. Restore the source after
+  each mutation and rebuild the unmutated test before final validation.
+- **Final validation (November 2, 2026)**: after integrating issue #8
+  from origin/main, tools\compile-check.cmd is warning/error-free and
+  tools\difftest\build.cmd passes 13,955,244 differential checks,
+  67 sysinc checks and 3,201 arithmetic checks, all with zero failures.
+  SurfaceDX contributes 1,213,366 checks in that full run; its separate
+  deterministic run passes 1,213,828 checks. The full-suite random stream
+  changes its input distribution and totals, not the tested code.
+
 ## Dialogs.cpp
 
 Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
@@ -2242,3 +2380,104 @@ Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
   dialog's two-second close needed small clock steps). 98,889 checks in the
   full run.
   DIFFTEST_ONLY=Dialogs runs it alone (DG_TRACE, DG_LOGS).
+
+## surfaceDX9.cpp
+
+Reconstructed by Claude Opus 5.5 (issue #10), November 2, 2026, in parallel with SurfaceDX.cpp (issue #9,
+PR #28, merged first into this branch).
+
+- **Range** (high; agreed on #9 and #10). surfaceDX9.obj is 0x4efd10-0x4f46ef: the whole former
+  SurfaceDX/surfaceDX9 gap and the code after the asserted 0x4f2040 that Ghidra had not split. Evidence:
+  TSurfaceDX9's vtable 0x56f480 (set by the factory 0x4f1430 and the destructor 0x4f03f0) points into
+  that range; its .rdata starts with "Direct3DCreate9"/"d3d9.dll" (0x56f458, used only by 0x4efd10 and
+  0x4efd40) right after SurfaceDX.cpp's last string 0x56f428, and ends with 0x56f6ac (0x4f4560); its .bss is
+  0x71d170-0x71d28f (SurfaceDX.cpp's own ends at 0x71d158, SurfaceGL.cpp's starts at 0x71d290); .data
+  0x5c2574 (CurrentTargetNumber = -1). 0x5c2578 (256) is referenced by nothing; it is left out (owner
+  unknown). Only Surface.cpp calls into the range (0x4efd10, 0x4f1430). #9 had recorded 0x4efd10-0x4f1ea4 as
+  surfaceDX9.cpp; the row now covers the whole object.
+- **The surfaceDX9/SurfaceGL gap 0x4f46f0-0x4fb7ef is SurfaceGL.obj** (high), recorded in file-ranges.tsv
+  for issue #11 and not reconstructed: .rdata only from 0x56f6e0 (the WGL_/GL_ extension names of
+  glh_extensions.h, whose code is 0x4f46f0-0x4f9260), .bss only from 0x71d290 (the extension pointers),
+  TSurfaceGL's constructor 0x4fb670 and destructor 0x4f9860 (vtable 0x573250), "OpenGL works" 0x4f9710.
+- **Folded copies** (high). Seven of TSurfaceDX9's slots point to identical code the linker kept from
+  another object: DrawFrameClipped 0x4fa2c0, DrawFrame 0x4fa110, BlitClipped 0x4fab70, GetCacheSurfaces
+  0x4fb5e0, IsUnavailable 0x4fb5f0, GetFPS 0x4f9d00 (SurfaceGL.obj) and SetFramerateLimit 0x4eb000
+  (SurfaceDX.obj); they are written at the end of surfaceDX9.cpp, like TSurface::AttachWindow. The other
+  way round, TSurfaceDX's ClipRect, ResetFrameTimer and SurfaceRecreated are surfaceDX9.obj's 0x4f0410,
+  0x4f04d0, 0x4f13e0 (names.tsv has the TSurfaceDX9 names; #9's TSurfaceDX rows for those addresses were
+  replaced in the merge), and the display mode callback of GetFullscreenModes is SurfaceDX.obj's
+  AddFullscreenMode 0x4ec810: surfaceDX9.cpp has its own static copy (EnumModesCallback, identical code).
+- **Interfaces** (high). Direct3D 9 is loaded at run time (IsDirect3D9Installed: LoadLibraryA,
+  GetProcAddress "Direct3DCreate9"; the module handle is never kept, so ExitDisplay's FreeLibrary is dead
+  code, kept). DirectDraw is the imported DirectDrawCreate, queried for IDirectDraw4 (the IID at 0x574204,
+  as in SurfaceDX.cpp), used only for the display modes, the stretch capabilities and the desktop depth;
+  the first IDirectDraw is never released (kept). The interfaces, D3DPRESENT_PARAMETERS, DDCAPS and
+  DDSURFACEDESC2 are the Windows SDK's d3d9.h and ddraw.h: the issue assumed the SDK headers were missing,
+  but the installed Windows 10 SDK has both, so no shim header was written (the method order is checked by
+  the test's fakes, which have only the slots the code uses).
+- **Class** (layout high, names medium/low). TSurfaceDX9, 0x2c0 bytes. Names from the assertions:
+  Direct3D (+0x1f4), DirectDraw (+0x1fc), Surface9[] (+0x200: the textures; "Surface9[PRIMARY_SURFACE]==NULL"
+  reads +0x200), Rect[] (+0x74, Windows RECTs: "Rect[TEMP_SURFACE].right"), hWindow and ViewMode (TSurface),
+  VMode, GMode, ToSurface, FromSurface, Surface, NUMBER_OF_SURFACES_DX9 (22) and the surface constants,
+  whose values come from the comparisons (ToSurface!=SCREEN_SURFACE is `cmp 1`, FromSurface!=TEMP_SURFACE
+  `cmp 2`, STRETCH_SURFACE 3; the CreateSurfaces assertions check +0x200 + 4*N in the order PRIMARY, SCREEN,
+  TEMP, CACHE, AUTOMAP, SPRITE). Ours: Device, RenderTarget[] (level 0 of Surface9[]; SCREEN_SURFACE's is the
+  back buffer), CurrentTarget, VertexBuffer, ShadeBuffer, ScreenTexture (SCREEN_SURFACE's texture, 106x106),
+  WindowRect, SurfaceArea, Ready (+0x70, returned by SurfaceRecreated). The frame timer members (+0x44-+0x6c)
+  and the shared statistics are TSurface's/Surface.cpp's as #9 settled them.
+- **Merge with #9** (PR #28, merged into this branch first): #9 had named the shared parts from
+  SurfaceDX.cpp, so this file uses its names for TSurface's members (Width, Height, Depth, Unavailable,
+  CacheSurfaces, the frame timer +0x44-+0x6c), the slots (SetSourceColorKey +0x54, ResetFrameTimer,
+  WaitForNextFrame, InitDisplay, ExitDisplay, CreateSurfaces, ResetDisplay, RestoreSurfaces,
+  SurfaceRecreated, GetSurfaceMemory, BlitRectClipped with int arguments), the enums in Surface.h and
+  Surface.cpp's statistics (BlitCount, BlitPixels, Data71D0D8, LastBlitCount, LastBlitPixels,
+  NumberOfSurfaces, InitStep 0x71d0bc). Evidence from this file added to them: +0x98 is SetSurfaceRect.
+  IsDirect3D9Installed and CreateSurfaceDX9 are declared in Surface.h, because SurfaceDX.h's DirectX 6
+  d3d.h sets DIRECT3D_VERSION 0x700 and empties a later d3d9.h.
+- **Function names** (low unless the slot name came from #9 or Surface.h): IsDirect3D9Installed,
+  CreateSurfaceDX9, AddQuad, AddShadeQuad, FlushVertices, SetTexture, SetRenderTarget, ApplyColorKey,
+  FlushShade, EnumModesCallback; slot +0x98 SetSurfaceRect (TSurface's empty default renamed from Unknown98:
+  surfaceDX9.cpp sets Rect[Surface] there).
+- **FromRect and ToRect** (medium). The assertions of Blit, BlitRect and StretchBlit name
+  "FromRect.width", "FromRect.height" and "ToRect.width": in the original those slots took rectangles whose
+  members are width and height (like TSkin; graphics.h's TRect has Width and Height). The binary passes the
+  members as separate words, so the slots keep TSurface's int parameters and the assertions are written with
+  TASSERT_TEXT/TASSERT2_TEXT, which give the binary's text and values. Issue #29 asks whether TRect's
+  members should be renamed.
+- **Exception tables** (high). No function has TBEGIN/TEND: the frames hold only the assertions' strings
+  (5 states each). ResetDisplay (0x4f1160) is try { InitDisplay; CreateSurfaces } catch (PROGRAM_ERROR) {
+  try { ExitDisplay } catch (...) {} throw } (ehinfo: catch PROGRAM_ERROR at states 0-0, catch ... at 2-2).
+  No switch has a jump table (Init's switch on ViewMode is a compare chain).
+- **Odd behaviour kept**: FillRectangleClipped passes the stack slot of its Rect argument as ClipRect's
+  second rectangle (the pixel count uses the unclipped size); SetSurfaceRect sets SurfaceArea.left only for
+  surface 0 (an else without braces, by the look of it); WriteImage below SPRITE_SURFACE always writes into
+  ScreenTexture and blits all of it to AUTOMAP_SURFACE with point filtering, keyed with ToSurface's colour;
+  ApplyColorKey copies Rect[Surface] of the temporary 64x64 surface; RestoreSurfaces resets a device it can
+  reset and then releases it and calls InitSurfaces; FinishFrame compares ViewMode before Present without
+  using the result; InitDisplay with no listed modes reads before the NULL array; CreateSurfaces returns quietly
+  when the alpha blending states fail, checks no other state, sets only dwSize of the display mode
+  description, and its cache texture loop has a second exit for textures from the 25th on (16 are made);
+  the mode callback tests DDSD_REFRESHRATE in the pixel format's flags; AddShadeQuad has no check for a full
+  buffer; WaitForNextFrame's FPS uses an unsigned frame count.
+- **callcheck** (13 differences, all explained): the slot calls (ClipRect, BlitRect, StretchBlitRect,
+  WaitForNextFrame, InitDisplay, CreateSurfaces, ExitDisplay, InitSurfaces, ResetFrameTimer) are indirect in
+  the binary, and the tool matches some of them with functions of the same name elsewhere (the device's
+  Reset with DialogElements' 0x452790, SetFramerateLimit with SurfaceDX.obj's copy 0x4eb000); SetTexture is inlined into FlushShade,
+  StretchBlitRect and StretchBlitUnclipped and IsDirect3D9Installed into TestEngine; the base constructor
+  and destructor calls are not lexical calls.
+- **Tests**. surfacedx9test.cpp (new): every round creates the image's surface with 0x4f1430 and ours with
+  CreateSurfaceDX9, runs InitSurfaces and Init (windowed or full screen, forced or not, the device lost or
+  not), then 20-80 random operations through the vtable (every slot, the image's object called through its
+  own vtable) and ExitSurfaces and the destructors; the logs of every fake call, a dump of every member word
+  of both objects (fake objects by kind and number), hashes of every fake object's memory and Surface.cpp's
+  statistics are compared after each operation. The Windows functions are fakes on both sides (the image's
+  import slots get the fakes, difftest.exe's own import slots are patched during the test, DirectDrawCreate
+  is defined by the test); the Direct3D 9 and DirectDraw objects are per-side fakes with COM vtables that log
+  every call, keep pixel and vertex memory and log a hash of the vertices each DrawPrimitive draws.
+  TestEngine and IsDirect3D9Installed (with and without d3d9.dll) run every seventh round, the failing
+  alpha state every eleventh. Not run: the error paths (assertions and PROGRAM_ERRORs; the image cannot
+  throw in the child). Mutation check (build/scratch/dx9/mutate.py): 27 changes; 25 made the test fail, two
+  are equivalent (BlitClipped ignores the colour key StretchBlit passes; at exactly 1 ms late,
+  NextFrame = Now - 1.0 assigns the value NextFrame already has, so `>` and `>=` agree). An earlier run's
+  heap corruption was the test's own input (a cache surface shrunk below the 106-pixel writes).
+  DIFFTEST_ONLY=SurfaceDX9 runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).

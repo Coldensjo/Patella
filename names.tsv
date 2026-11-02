@@ -839,7 +839,7 @@ address	name	kind	confidence	note
 0x4eab60	SurfaceExitInstance	game	high	Surface.cpp: deletes the surface; name from ChangeEngine's error messages
 0x4eab80	TSurface_TestEngine	game	high	Surface.cpp: default TestEngine (vtable +0xbc) takes the main window, returns true
 0x4eab90	TSurface_ctor	game	high	Surface.cpp
-0x4eabb0	TSurface_Unknown50	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same arguments, a surface and a colour key (TRGBColor by value; graphics.cpp sets the cache surfaces' key with it) (missed by Ghidra)
+0x4eabb0	TSurface_SetColorKey	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same arguments, a surface and a colour key (TRGBColor by value; graphics.cpp sets the cache surfaces' key with it) (missed by Ghidra)
 0x4eabd0	TSurface_dtor	game	high	Surface.cpp
 0x4eabe0	TSurface_GetAvailableEngines	game	low	Surface.cpp, a TSurface member (Dialogs.cpp calls it with the surface in ECX): bit 0 OpenGL, bit 1 DirectX 9
 0x4eabf0	TSurface_Unknown98	game	medium	Surface.cpp: vtable +0x98, empty (missed by Ghidra)
@@ -1955,6 +1955,54 @@ address	name	kind	confidence	note
 0x46b520	TEditText_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TEditText, calls 0x46b540
 0x46b540	TEditText_dtor	stl	high	compiler-generated ~TEditText (vtable 0x562040): ~vector<int>, ~TEditLine inlined
 0x46b570	TEditText_ctor	game	medium	DialogElements.cpp line 2466 (MaxLength): TEditLine, vtable 0x562040, 0x9c bytes, multi-line with a scroll bar; class name ours (FieldWidth from the assertion)
+0x4eae70	D3DTLVERTEX_ctor	stl	high	d3dtypes.h inline empty D3DTLVERTEX constructor; D3D_OVERLOADS, emitted by SurfaceDX.obj
+0x4eae80	TSurfaceDX_GetSurfaceMemory	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eae90	TSurfaceDX_dtor	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eaeb0	TSurfaceDX_GetPixelColor	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eafb0	TSurfaceDX_SetSourceColorKey	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb000	TSurfaceDX_SetFramerateLimit	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb040	TSurfaceDX_WaitForNextFrame	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb100	TSurfaceDX_UpdateWindowRect	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb160	TSurfaceDX_SetPixel	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb2f0	TSurfaceDX_FillRectangle	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb3f0	TSurfaceDX_FillRectangleClipped	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb540	TSurfaceDX_DrawHorizontalLine	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb630	TSurfaceDX_DrawVerticalLine	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb720	TSurfaceDX_WriteImage	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eb900	TSurfaceDX_WriteMaskedImage	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ebc30	TSurfaceDX_StretchBlitRect	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ebd20	TSurfaceDX_BlitClipped	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ebe60	TSurfaceDX_BlitRectClipped	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ebf80	TSurfaceDX_ShadeRectangles	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec220	TSurfaceDX_FinishFrame	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec3a0	TSurfaceDX_CreateOffscreenSurface	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec470	TSurfaceDX_Create3DSurface	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec540	TSurfaceDX_ExitDisplay	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec600	TSurfaceDX_ResetDisplay	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec690	TSurfaceDX_RestoreSurfaces	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec700	TSurfaceDX_Init	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec810	AddFullscreenMode	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec980	TSurfaceDX_GetFullscreenModes	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec9d0	TSurfaceDX_CanShadeRectangles	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ec9e0	TSurfaceDX_ExitSurfaces	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eca00	CreateSurfaceDX	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eca60	TSurfaceDX_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor; calls 0x4eae90 and free when flags & 1
+0x4eca80	TSurfaceDX_ShadeRectangle	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ecdd0	TSurfaceDX_TestShading	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ecfd0	TSurfaceDX_InitSurfaces	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ed1a0	TSurfaceDX_AttachWindow	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ed520	TSurfaceDX_StretchBlitUnclipped	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4edc70	TSurfaceDX_StretchBlit	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ee410	TSurfaceDX_Blit	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ee630	TSurfaceDX_BlitRect	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4ee830	TSurfaceDX_InitDisplay	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4eed40	TSurfaceDX_CreateSurfaces	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4efb70	TSurfaceDX_GetSurfaceRect	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
+0x4f9d00	TSurfaceDX_GetFPS	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0xb0
+0x4fa110	TSurfaceDX_DrawFrame	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0x24
+0x4fa2c0	TSurfaceDX_DrawFrameClipped	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0x20
+0x4fb5e0	TSurfaceDX_GetCacheSurfaces	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0x90
+0x4fb5f0	TSurfaceDX_IsUnavailable	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0xa0
 0x4731d0	TScrollBar_KeyPress	game	medium	DialogElements.h inline Range->KeyPress(Key), vtable +0x6c of both scroll bars; folded with Dialogs.h's TBugReportDialog::KeyPress (EditText->KeyPress(Key), vtable 0x562cd8 +0x6c)
 0x46b790	TQuestionLabel_ctor	game	medium	Dialogs.h inline TQuestionLabel(Font, Text, Yes, No) (vtable 0x562110), called by CreateQuestionDialog
 0x46b840	TLogoutLabel_ctor	game	medium	Dialogs.h inline TLogoutLabel(Font, Text, Logout, Exit) (vtable 0x562198)
@@ -2138,11 +2186,11 @@ address	name	kind	confidence	note
 0x4f02a0	TSurfaceDX9_FlushVertices	game	low	surfaceDX9.cpp: draws the collected quads (unlock, DrawPrimitive, lock with DISCARD)
 0x4f0330	TSurfaceDX9_SetTexture	game	medium	surfaceDX9.cpp: texture stage 0 (SCREEN_SURFACE: ScreenTexture), current one in 0x71d260
 0x4f0380	TSurfaceDX9_SetRenderTarget	game	medium	surfaceDX9.cpp: render target (current number in 0x5c2574, surface in +0x2b0)
-0x4f03e0	TSurfaceDX9_IsSurfaceCreated	game	low	surfaceDX9.cpp vtable +0xa8: SurfaceCreated[Surface] (0x71d208)
+0x4f03e0	TSurfaceDX9_GetSurfaceMemory	game	low	surfaceDX9.cpp vtable +0xa8: 1 for every surface created (0x71d208)
 0x4f03f0	TSurfaceDX9_dtor	game	high	surfaceDX9.cpp: clears NumberOfVideoSurfaces (0x71d0f0), ~TSurface
 0x4f0410	TSurfaceDX9_ClipRect	game	medium	surfaceDX9.cpp vtable +0x58 (also TSurfaceDX's and TSurfaceGL's, folded): clips a RECT to a TRect, moves a second one
-0x4f04d0	TSurfaceDX9_InitFramerate	game	low	surfaceDX9.cpp vtable +0x5c (shared by all three engines, folded): the frame clock, no limit
-0x4f0510	TSurfaceDX9_LimitFramerate	game	medium	surfaceDX9.cpp vtable +0x60: FPS once a second, Sleep until the next frame
+0x4f04d0	TSurfaceDX9_ResetFrameTimer	game	low	surfaceDX9.cpp vtable +0x5c (shared by all three engines, folded): the frame clock, no limit
+0x4f0510	TSurfaceDX9_WaitForNextFrame	game	medium	surfaceDX9.cpp vtable +0x60: FPS once a second, Sleep until the next frame
 0x4f05d0	TSurfaceDX9_UpdateWindowRect	game	low	surfaceDX9.cpp vtable +0x68: client rectangles in windowed mode
 0x4f0630	TSurfaceDX9_SetPixel	game	medium	surfaceDX9.cpp vtable +0x0c: ColorFill of one pixel
 0x4f06b0	TSurfaceDX9_FillRectangle	game	medium	surfaceDX9.cpp vtable +0x14: ColorFill
@@ -2154,13 +2202,13 @@ address	name	kind	confidence	note
 0x4f0d50	TSurfaceDX9_FlushShade	game	low	surfaceDX9.cpp: TEMP_SURFACE to PRIMARY_SURFACE, then the shade buffer into TEMP_SURFACE
 0x4f0e50	TSurfaceDX9_ShadeRectangles	game	medium	surfaceDX9.cpp vtable +0x4c: the light rectangles with corner colours (TEMP_SURFACE only)
 0x4f0f80	TSurfaceDX9_FinishFrame	game	medium	surfaceDX9.cpp vtable +0x84: frame limit, statistics, Present
-0x4f1040	TSurfaceDX9_ExitDevice	game	low	surfaceDX9.cpp vtable +0x70: releases device, textures, buffers, Direct3D
-0x4f1160	TSurfaceDX9_ChangeDisplayMode	game	low	surfaceDX9.cpp vtable +0x78: +0x6c and +0x74 in a try; catch PROGRAM_ERROR: ExitDevice, rethrow
-0x4f11f0	TSurfaceDX9_CheckDevice	game	low	surfaceDX9.cpp vtable +0x7c: TestCooperativeLevel, D3DERR_DEVICENOTRESET: Reset, ExitDevice, InitSurfaces
+0x4f1040	TSurfaceDX9_ExitDisplay	game	low	surfaceDX9.cpp vtable +0x70: releases the device, textures, buffers and Direct3D
+0x4f1160	TSurfaceDX9_ResetDisplay	game	low	surfaceDX9.cpp vtable +0x78: +0x6c and +0x74 in a try; catch PROGRAM_ERROR: ExitDevice, rethrow
+0x4f11f0	TSurfaceDX9_RestoreSurfaces	game	low	surfaceDX9.cpp vtable +0x7c: TestCooperativeLevel, D3DERR_DEVICENOTRESET: Reset, ExitDevice, InitSurfaces
 0x4f1240	TSurfaceDX9_Init	game	medium	surfaceDX9.cpp vtable +0x88: switches the view mode when it changes (or with Force)
 0x4f1320	TSurfaceDX9_GetFullscreenModes	game	medium	surfaceDX9.cpp vtable +0x8c: DirectDraw 7 EnumDisplayModes with the callback 0x4ec810 (folded)
 0x4f1370	TSurfaceDX9_SetSurfaceRect	game	low	surfaceDX9.cpp vtable +0x98: Rect[Surface] and the rectangle at +0x1e4 (missing braces)
-0x4f13e0	TSurfaceDX9_Unknown9C	game	low	surfaceDX9.cpp vtable +0x9c (also TSurfaceDX's, folded): returns Ready (+0x70)
+0x4f13e0	TSurfaceDX9_SurfaceRecreated	game	low	surfaceDX9.cpp vtable +0x9c (also TSurfaceDX's, folded): returns Ready (+0x70) (also TSurfaceDX's slot)
 0x4f13f0	TSurfaceDX9_CanShadeRectangles	game	medium	surfaceDX9.cpp vtable +0xa4: Direct3D != NULL
 0x4f1400	TSurfaceDX9_ExitSurfaces	game	high	surfaceDX9.cpp vtable +0xb8: ExitDevice, releases DirectDraw
 0x4f1430	CreateSurfaceDX9	game	low	surfaceDX9.cpp: new TSurfaceDX9 (0x2c0 bytes, inline constructor); GetSurface for engine 2
@@ -2170,11 +2218,11 @@ address	name	kind	confidence	note
 0x4f1a40	TSurfaceDX9_StretchBlitRect	game	medium	surfaceDX9.cpp vtable +0x40
 0x4f1b70	TSurfaceDX9_BlitRectClipped	game	low	surfaceDX9.cpp vtable +0x38: blit without colour key after ClipRect
 0x4f1cd0	TSurfaceDX9_InitSurfaces	game	high	surfaceDX9.cpp vtable +0xb4: start state, DirectDraw 7, stretch caps, frame clock
-0x4f1eb0	TSurfaceDX9_SetColorKey	game	medium	surfaceDX9.cpp vtable +0x54, line 496 (ToSurface)
+0x4f1eb0	TSurfaceDX9_SetSourceColorKey	game	medium	surfaceDX9.cpp vtable +0x54, line 496 (ToSurface)
 0x4f2040	TSurfaceDX9_WriteMaskedImage	game	medium	surfaceDX9.cpp vtable +0x2c, lines 982-983
 0x4f2620	TSurfaceDX9_StretchBlit	game	medium	surfaceDX9.cpp vtable +0x48, lines 1199-1204 (FromRect, ToRect)
 0x4f2e20	TSurfaceDX9_Blit	game	medium	surfaceDX9.cpp vtable +0x34, line 1302 (FromRect.width, FromRect.height)
 0x4f3040	TSurfaceDX9_BlitRect	game	medium	surfaceDX9.cpp vtable +0x30, line 1315
-0x4f3240	TSurfaceDX9_SetDisplayMode	game	medium	surfaceDX9.cpp vtable +0x6c, lines 1465-1468 (VMode, GMode)
-0x4f3740	TSurfaceDX9_InitDevice	game	medium	surfaceDX9.cpp vtable +0x74, lines 1639-1647: Direct3D, device, states, buffers, textures
+0x4f3240	TSurfaceDX9_InitDisplay	game	medium	surfaceDX9.cpp vtable +0x6c, lines 1465-1468 (VMode, GMode)
+0x4f3740	TSurfaceDX9_CreateSurfaces	game	medium	surfaceDX9.cpp vtable +0x74, lines 1639-1647: Direct3D, device, states, buffers, textures
 0x4f4560	TSurfaceDX9_GetSurfaceRect	game	medium	surfaceDX9.cpp vtable +0x94, line 2055 (Surface, bug0000290)

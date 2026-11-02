@@ -39,7 +39,7 @@ static_assert(offsetof(TVideoCacheItem, Previous) == 0x48, "TVideoCacheItem::Pre
 enum { OURS = 0, ORIGINAL = 1 };
 static int Side;
 static std::string Log[2];
-static int CacheSurfaces = 2;
+static int GraphicsCacheSurfaces = 2;
 static int CacheWidth = 96;
 static int CacheHeight = 64;
 static int Writes, Blits, DecodedSprites, DecodedTiles; // our side's statistics
@@ -91,14 +91,14 @@ void TSurfaceGL::StretchBlit(int ToSurface, int x, int y, int Width, int Height,
 	Put(0x48); Put(ToSurface); Put(x); Put(y); Put(Width); Put(Height); Put(FromSurface); Put(FromX);
 	Put(FromY); Put(FromWidth); Put(FromHeight); PutColor(ColorKey); PutColor(Highlight); PutRect(Clip);
 }
-void TSurfaceGL::SetColorKey(int Surface, TRGBColor ColorKey)
+void TSurfaceGL::SetSourceColorKey(int Surface, TRGBColor ColorKey)
 {
 	Put(0x54); Put(Surface); PutColor(ColorKey);
 }
 int TSurfaceGL::GetCacheSurfaces()
 {
 	Put(0x90);
-	return CacheSurfaces;
+	return GraphicsCacheSurfaces;
 }
 void TSurfaceGL::GetSurfaceRect(int Surface, TRect *Rect)
 {
@@ -598,7 +598,7 @@ static void TestVideoCache()
 	Global<TSurface *>(0x71d0cc) = Fake;
 	for (int Round = 0; Round < 6; Round++) {
 		SetEngine(Round % 3);
-		CacheSurfaces = 1 + Round % 2;
+		GraphicsCacheSurfaces = 1 + Round % 2;
 		CacheWidth = 96 + 32 * (Round % 3) + Round;
 		CacheHeight = 64 + 7 * Round;
 		Side = OURS;
@@ -619,13 +619,13 @@ static void TestVideoCache()
 		}
 	}
 	// No cache surfaces: the cache becomes NULL, its size stays.
-	CacheSurfaces = 0;
+	GraphicsCacheSurfaces = 0;
 	Side = OURS;
 	ResetVideoCache();
 	Side = ORIGINAL;
 	At<VoidFn>(0x4922c0)();
 	CompareCaches("ResetVideoCache without cache surfaces");
-	CacheSurfaces = 2;
+	GraphicsCacheSurfaces = 2;
 	Side = OURS;
 	InitVideoCache();
 	Side = ORIGINAL;

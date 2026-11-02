@@ -16,7 +16,6 @@
 // into SurfaceDX.obj's copy 0x4ec810 in the same way.
 
 #include "common.h"
-#include <initguid.h>
 #include "surfaceDX9.h"
 #include "GUI.h"
 #include "Preferences.h"
@@ -41,7 +40,7 @@ static D3DPRESENT_PARAMETERS PresentParameters;       // 0x71d170
 static D3DCOLOR ColorKey[NUMBER_OF_SURFACES_DX9];     // 0x71d1a8, 0 when the surface has none
 static TVertexDX9 *ShadeVertices;                     // 0x71d200, ShadeBuffer while it is locked
 static TVertexDX9 *Vertices;                          // 0x71d204, VertexBuffer, locked between draws
-static int SurfaceCreated[NUMBER_OF_SURFACES_DX9];    // 0x71d208, indexed by NumberOfVideoSurfaces
+static int SurfaceCreated[NUMBER_OF_SURFACES_DX9];    // 0x71d208, indexed by NumberOfSurfaces
 static int CurrentTexture;                            // 0x71d260
 static int NumberOfVertices;                          // 0x71d26c
 static int NumberOfShadeVertices;                     // 0x71d270
@@ -173,7 +172,7 @@ void TSurfaceDX9::SetRenderTarget(int Surface)
 }
 
 // 0x4f03e0
-int TSurfaceDX9::IsSurfaceCreated(int Surface)
+int TSurfaceDX9::GetSurfaceMemory(int Surface)
 {
 	return SurfaceCreated[Surface];
 }
@@ -181,7 +180,7 @@ int TSurfaceDX9::IsSurfaceCreated(int Surface)
 // 0x4f03f0
 TSurfaceDX9::~TSurfaceDX9()
 {
-	NumberOfVideoSurfaces = 0;
+	NumberOfSurfaces = 0;
 }
 
 // 0x4f0410 (the same code in all three engines; this copy is kept).
@@ -212,19 +211,19 @@ bool TSurfaceDX9::ClipRect(TRect Clip, RECT *Rect, RECT *Source)
 }
 
 // 0x4f04d0 (shared with the other engines)
-void TSurfaceDX9::InitFramerate()
+void TSurfaceDX9::ResetFrameTimer()
 {
 	double Now = timeGetTime();
 	StartTime = Now;
-	FramerateLimit = 0xffff;
-	NextFrameTime = Now;
+	Framerate = 0xffff;
+	NextFrame = Now;
 	FPS = 0.0;
 	FrameTime = 1000.0 / 0xffff;
 }
 
 // 0x4f0510. Measures the frame rate once a second and sleeps until the next
 // frame is due; a frame more than a millisecond late moves the schedule.
-void TSurfaceDX9::LimitFramerate()
+void TSurfaceDX9::WaitForNextFrame()
 {
 	double Now = timeGetTime();
 	FrameCount++;
@@ -233,11 +232,11 @@ void TSurfaceDX9::LimitFramerate()
 		FrameCount = 0;
 		LastFPSTime = Now;
 	}
-	NextFrameTime += FrameTime;
-	if (NextFrameTime > Now)
-		Sleep((int)(NextFrameTime - Now));
-	else if (Now - NextFrameTime > 1.0)
-		NextFrameTime = Now - 1.0;
+	NextFrame += FrameTime;
+	if (NextFrame > Now)
+		Sleep((int)(NextFrame - Now));
+	else if (Now - NextFrame > 1.0)
+		NextFrame = Now - 1.0;
 }
 
 // 0x4f05d0
@@ -269,8 +268,8 @@ void TSurfaceDX9::FillRectangle(int Surface, TRect Rect, TRGBColor Color)
 		SetRenderTarget(Surface);
 		FlushVertices();
 		Device->ColorFill(CurrentTarget, &R, D3DCOLOR_XRGB(Color.R, Color.G, Color.B));
-		FrameBlits++;
-		FramePixels += Rect.Height * Rect.Width;
+		BlitCount++;
+		BlitPixels += Rect.Height * Rect.Width;
 	}
 }
 
@@ -286,8 +285,8 @@ void TSurfaceDX9::FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color,
 			SetRenderTarget(Surface);
 			FlushVertices();
 			Device->ColorFill(CurrentTarget, &R, D3DCOLOR_XRGB(Color.R, Color.G, Color.B));
-			FrameBlits++;
-			FramePixels += Pixels;
+			BlitCount++;
+			BlitPixels += Pixels;
 		}
 	}
 }
@@ -300,8 +299,8 @@ void TSurfaceDX9::DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBC
 		SetRenderTarget(Surface);
 		FlushVertices();
 		Device->ColorFill(CurrentTarget, &R, D3DCOLOR_XRGB(Color.R, Color.G, Color.B));
-		FrameBlits++;
-		FramePixels += Width;
+		BlitCount++;
+		BlitPixels += Width;
 	}
 }
 
@@ -313,8 +312,8 @@ void TSurfaceDX9::DrawVerticalLine(int Surface, int x, int y, int Height, TRGBCo
 		SetRenderTarget(Surface);
 		FlushVertices();
 		Device->ColorFill(CurrentTarget, &R, D3DCOLOR_XRGB(Color.R, Color.G, Color.B));
-		FrameBlits++;
-		FramePixels += Height;
+		BlitCount++;
+		BlitPixels += Height;
 	}
 }
 
@@ -425,24 +424,24 @@ void TSurfaceDX9::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColo
 void TSurfaceDX9::FinishFrame()
 {
 	if (ViewMode != 0) {
-		LimitFramerate();
+		WaitForNextFrame();
 		ScreenWidth = Rect[SCREEN_SURFACE].right;
 		ScreenHeight = Rect[SCREEN_SURFACE].bottom;
-		LastFramePixels = FramePixels;
-		LastFrameBlits = FrameBlits;
-		FrameStateChanges = 0;
-		FrameBlits = 0;
-		FramePixels = 0;
+		LastBlitPixels = BlitPixels;
+		LastBlitCount = BlitCount;
+		Data71D0D8 = 0;
+		BlitCount = 0;
+		BlitPixels = 0;
 		FlushVertices();
 		Device->Present(&Rect[SCREEN_SURFACE], NULL, NULL, NULL);
-		FrameBlits++;
-		FramePixels += (WindowRect.bottom - WindowRect.top) * (WindowRect.right - WindowRect.left);
+		BlitCount++;
+		BlitPixels += (WindowRect.bottom - WindowRect.top) * (WindowRect.right - WindowRect.left);
 	}
 }
 
 // 0x4f1040. Releases the device and its surfaces (only while DirectDraw
 // exists). SCREEN_SURFACE's texture slot is released before the loop.
-void TSurfaceDX9::ExitDevice()
+void TSurfaceDX9::ExitDisplay()
 {
 	if (DirectDraw == NULL)
 		return;
@@ -477,7 +476,7 @@ void TSurfaceDX9::ExitDevice()
 			RenderTarget[i] = NULL;
 		}
 	}
-	NumberOfCacheSurfaces = 0;
+	CacheSurfaces = 0;
 	if (Device != NULL) {
 		Device->Release();
 		Device = NULL;
@@ -494,16 +493,16 @@ void TSurfaceDX9::ExitDevice()
 	ViewMode = 0;
 }
 
-// 0x4f1160. ExitDevice cleans up when switching fails; an exception of
-// ExitDevice itself is swallowed.
-void TSurfaceDX9::ChangeDisplayMode(int VMode, TFullscreenMode *GMode)
+// 0x4f1160. ExitDisplay cleans up when switching fails; an exception of
+// ExitDisplay itself is swallowed.
+void TSurfaceDX9::ResetDisplay(int VMode, TFullscreenMode *GMode)
 {
 	try {
-		SetDisplayMode(VMode, GMode);
-		InitDevice();
+		InitDisplay(VMode, GMode);
+		CreateSurfaces();
 	} catch (PROGRAM_ERROR Error) {
 		try {
-			ExitDevice();
+			ExitDisplay();
 		} catch (...) {
 		}
 		throw Error;
@@ -511,18 +510,18 @@ void TSurfaceDX9::ChangeDisplayMode(int VMode, TFullscreenMode *GMode)
 }
 
 // 0x4f11f0. Odd behaviour kept: a device that can be reset is reset, then
-// released (ExitDevice) and the surface is set back to its start state
-// (InitSurfaces); Lost stays set. The parameters are not used.
-void TSurfaceDX9::CheckDevice(int ViewMode, TFullscreenMode *Resolution)
+// released (ExitDisplay) and the surface is set back to its start state
+// (InitSurfaces); Unavailable stays set. The parameters are not used.
+void TSurfaceDX9::RestoreSurfaces(int ViewMode, TFullscreenMode *Resolution)
 {
 	if (Device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET) {
-		Lost = true;
+		Unavailable = true;
 		Device->Reset(&PresentParameters);
-		ExitDevice();
+		ExitDisplay();
 		InitSurfaces();
 		return;
 	}
-	Lost = false;
+	Unavailable = false;
 }
 
 // 0x4f1240. Switches to VMode (with the resolution Resolution in full-screen
@@ -531,17 +530,17 @@ bool TSurfaceDX9::Init(HWND *Window, int VMode, TFullscreenMode *Resolution, boo
 {
 	Ready = false;
 	if (Force) {
-		ExitDevice();
+		ExitDisplay();
 		hWindow = *Window;
-		ChangeDisplayMode(VMode, Resolution);
+		ResetDisplay(VMode, Resolution);
 	} else if (VMode == WINDOWED_MODE) {
 		switch (ViewMode) {
 		case FULLSCREEN_MODE:
-			ExitDevice();
+			ExitDisplay();
 			// fall through
 		case 0:
 			hWindow = *Window;
-			ChangeDisplayMode(WINDOWED_MODE, NULL);
+			ResetDisplay(WINDOWED_MODE, NULL);
 			break;
 		case WINDOWED_MODE:
 			if (hWindow != *Window)
@@ -550,14 +549,14 @@ bool TSurfaceDX9::Init(HWND *Window, int VMode, TFullscreenMode *Resolution, boo
 			break;
 		}
 	} else if (VMode == FULLSCREEN_MODE) {
-		if (ViewMode != FULLSCREEN_MODE || Resolution->Width != ModeWidth || Resolution->Height != ModeHeight
-				|| Resolution->Depth != ModeDepth) {
-			ExitDevice();
+		if (ViewMode != FULLSCREEN_MODE || Resolution->Width != Width || Resolution->Height != Height
+				|| Resolution->Depth != Depth) {
+			ExitDisplay();
 			hWindow = *Window;
-			ChangeDisplayMode(FULLSCREEN_MODE, Resolution);
+			ResetDisplay(FULLSCREEN_MODE, Resolution);
 		}
 	}
-	CheckDevice(VMode, Resolution);
+	RestoreSurfaces(VMode, Resolution);
 	return true;
 }
 
@@ -622,7 +621,7 @@ void TSurfaceDX9::SetSurfaceRect(int Surface, int x, int y, int Width, int Heigh
 }
 
 // 0x4f13e0 (shared with SurfaceDX.cpp)
-bool TSurfaceDX9::Unknown9C(int Value)
+bool TSurfaceDX9::SurfaceRecreated(int Surface)
 {
 	return Ready;
 }
@@ -636,7 +635,7 @@ bool TSurfaceDX9::CanShadeRectangles()
 // 0x4f1400
 void TSurfaceDX9::ExitSurfaces()
 {
-	ExitDevice();
+	ExitDisplay();
 	if (DirectDraw != NULL) {
 		DirectDraw->Release();
 		DirectDraw = NULL;
@@ -711,15 +710,16 @@ void TSurfaceDX9::StretchBlitRect(int ToSurface, TRect Destination, int FromSurf
 		(Source.x + 0.5) / Rect[FromSurface].right, (Source.x + Source.Width + 0.5) / Rect[FromSurface].right,
 		(Source.y + 0.5) / Rect[FromSurface].bottom, (Source.y + Source.Height + 0.5) / Rect[FromSurface].bottom,
 		0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
-	FrameBlits++;
-	FramePixels += Destination.Height * Destination.Width;
+	BlitCount++;
+	BlitPixels += Destination.Height * Destination.Width;
 }
 
 // 0x4f1b70. ScreenTexture (SCREEN_SURFACE) is always mapped as a whole.
-void TSurfaceDX9::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect Source, TRect Clip)
+void TSurfaceDX9::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
+	int Height, TRect Clip)
 {
-	RECT To = {x, y, x + Source.Width, y + Source.Height};
-	RECT From = {Source.x, Source.y, Source.x + Source.Width, Source.y + Source.Height};
+	RECT To = {x, y, x + Width, y + Height};
+	RECT From = {FromX, FromY, FromX + Width, FromY + Height};
 	if (ClipRect(Clip, &To, &From)) {
 		SetRenderTarget(ToSurface);
 		SetTexture(FromSurface);
@@ -737,8 +737,8 @@ void TSurfaceDX9::BlitRectClipped(int ToSurface, int x, int y, int FromSurface, 
 		}
 		AddQuad(To.left, To.top, To.right, To.bottom, Left_u, Right_u, Top_v, Bottom_v,
 			0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
-		FrameBlits++;
-		FramePixels += Source.Height * Source.Width;
+		BlitCount++;
+		BlitPixels += Height * Width;
 	}
 }
 
@@ -792,12 +792,12 @@ void TSurfaceDX9::InitSurfaces()
 		CanStretch = false;
 	}
 	SetDefaultNoStretching(CanStretch == false);
-	InitFramerate();
+	ResetFrameTimer();
 	SetFramerateLimit(GetConfineFramerate());
 }
 
 // 0x4f1eb0, line 496
-void TSurfaceDX9::SetColorKey(int ToSurface, TRGBColor Key)
+void TSurfaceDX9::SetSourceColorKey(int ToSurface, TRGBColor Key)
 {
 	TASSERT1(In(ToSurface,0,NUMBER_OF_SURFACES_DX9-1), ToSurface);
 	ColorKey[ToSurface] = D3DCOLOR_XRGB(Key.R, Key.G, Key.B);
@@ -929,14 +929,14 @@ void TSurfaceDX9::BlitRect(int ToSurface, int x, int y, int FromSurface, TRect S
 		"FromRect.width", Source.Width, "FromRect.height", Source.Height);
 	TRect Clip;
 	GetSurfaceRect(ToSurface, &Clip);
-	BlitRectClipped(ToSurface, x, y, FromSurface, Source, Clip);
+	BlitRectClipped(ToSurface, x, y, FromSurface, Source.x, Source.y, Source.Width, Source.Height, Clip);
 }
 
 // 0x4f3240, lines 1465-1468. Full-screen mode takes GMode's size if
 // DirectDraw lists it, otherwise the last mode listed (written back into
 // GMode, without its frequency). Odd behaviour kept: with no modes at all it
 // reads before the (NULL) array.
-void TSurfaceDX9::SetDisplayMode(int VMode, TFullscreenMode *GMode)
+void TSurfaceDX9::InitDisplay(int VMode, TFullscreenMode *GMode)
 {
 	TASSERT(DirectDraw!=NULL);
 	TASSERT(hWindow!=NULL);
@@ -963,12 +963,12 @@ void TSurfaceDX9::SetDisplayMode(int VMode, TFullscreenMode *GMode)
 		}
 		if (Modes != NULL)
 			delete[] Modes;
-		ModeWidth = GMode->Width;
-		ModeHeight = GMode->Height;
-		ModeDepth = GMode->Depth;
-		SetRect(&Rect[PRIMARY_SURFACE], 0, 0, ModeWidth, ModeHeight);
-		SetRect(&Rect[SCREEN_SURFACE], 0, 0, ModeWidth, ModeHeight);
-		SetRect(&WindowRect, 0, 0, ModeWidth, ModeHeight);
+		Width = GMode->Width;
+		Height = GMode->Height;
+		Depth = GMode->Depth;
+		SetRect(&Rect[PRIMARY_SURFACE], 0, 0, Width, Height);
+		SetRect(&Rect[SCREEN_SURFACE], 0, 0, Width, Height);
+		SetRect(&WindowRect, 0, 0, Width, Height);
 	}
 	ViewMode = VMode;
 }
@@ -981,7 +981,7 @@ void TSurfaceDX9::SetDisplayMode(int VMode, TFullscreenMode *GMode)
 // are not checked; the description for GetDisplayMode has only its size set;
 // the video cache loop has a second way out for textures from the 25th on,
 // which cannot happen with 16.
-void TSurfaceDX9::InitDevice()
+void TSurfaceDX9::CreateSurfaces()
 {
 	TASSERT(DirectDraw!=NULL);
 	TASSERT(Direct3D==NULL);
@@ -992,7 +992,7 @@ void TSurfaceDX9::InitDevice()
 	TASSERT(Surface9[AUTOMAP_SURFACE]==NULL);
 	TASSERT(Surface9[SPRITE_SURFACE]==NULL);
 	TASSERT(ViewMode==WINDOWED_MODE || ViewMode==FULLSCREEN_MODE);
-	NumberOfVideoSurfaces = 0;
+	NumberOfSurfaces = 0;
 	DDSURFACEDESC2 Description;
 	Description.dwSize = sizeof(DDSURFACEDESC2);
 	DirectDraw->GetDisplayMode(&Description);
@@ -1006,7 +1006,7 @@ void TSurfaceDX9::InitDevice()
 	Direct3D = Direct3DCreate9Function(D3D_SDK_VERSION);
 	if (Direct3D == NULL) {
 		Direct3D = NULL;
-		DAT_0071d0bc = 1;
+		InitStep = 1;
 		throw (PROGRAM_ERROR)12;
 	}
 	memset(&PresentParameters, 0, sizeof(PresentParameters));
@@ -1028,8 +1028,8 @@ void TSurfaceDX9::InitDevice()
 		PresentParameters.Windowed = FALSE;
 		PresentParameters.SwapEffect = D3DSWAPEFFECT_COPY;
 		PresentParameters.BackBufferFormat = D3DFMT_A8R8G8B8;
-		PresentParameters.BackBufferWidth = ModeWidth;
-		PresentParameters.BackBufferHeight = ModeHeight;
+		PresentParameters.BackBufferWidth = Width;
+		PresentParameters.BackBufferHeight = Height;
 		PresentParameters.MultiSampleQuality = 0;
 		PresentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;
 		PresentParameters.BackBufferCount = 1;
@@ -1066,37 +1066,37 @@ void TSurfaceDX9::InitDevice()
 	if (Device->CreateTexture(Rect[TEMP_SURFACE].right, Rect[TEMP_SURFACE].bottom, 1, D3DUSAGE_RENDERTARGET,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &Surface9[PRIMARY_SURFACE], NULL) != D3D_OK)
 		throw (PROGRAM_ERROR)14;
-	SurfaceCreated[NumberOfVideoSurfaces++] = 1;
+	SurfaceCreated[NumberOfSurfaces++] = 1;
 	Surface9[PRIMARY_SURFACE]->GetSurfaceLevel(0, &RenderTarget[PRIMARY_SURFACE]);
 	Device->ColorFill(RenderTarget[PRIMARY_SURFACE], NULL, 0xffff0000);
 
 	if (Device->CreateTexture(106, 106, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &ScreenTexture,
 			NULL) != D3D_OK)
 		throw (PROGRAM_ERROR)14;
-	SurfaceCreated[NumberOfVideoSurfaces++] = 1;
+	SurfaceCreated[NumberOfSurfaces++] = 1;
 
 	if (Device->CreateTexture(Rect[TEMP_SURFACE].right, Rect[TEMP_SURFACE].bottom, 1, D3DUSAGE_RENDERTARGET,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &Surface9[TEMP_SURFACE], NULL) != D3D_OK)
 		throw (PROGRAM_ERROR)14;
-	SurfaceCreated[NumberOfVideoSurfaces++] = 1;
+	SurfaceCreated[NumberOfSurfaces++] = 1;
 	Surface9[TEMP_SURFACE]->GetSurfaceLevel(0, &RenderTarget[TEMP_SURFACE]);
 
 	if (Device->CreateTexture(Rect[STRETCH_SURFACE].right, Rect[STRETCH_SURFACE].bottom, 1, D3DUSAGE_RENDERTARGET,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &Surface9[STRETCH_SURFACE], NULL) != D3D_OK)
 		throw (PROGRAM_ERROR)15;
-	SurfaceCreated[NumberOfVideoSurfaces++] = 1;
+	SurfaceCreated[NumberOfSurfaces++] = 1;
 	Surface9[STRETCH_SURFACE]->GetSurfaceLevel(0, &RenderTarget[STRETCH_SURFACE]);
 
 	if (Device->CreateTexture(Rect[CACHE_SURFACE].right, Rect[CACHE_SURFACE].bottom, 1, D3DUSAGE_RENDERTARGET,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &Surface9[CACHE_SURFACE], NULL) != D3D_OK)
 		throw (PROGRAM_ERROR)16;
-	SurfaceCreated[NumberOfVideoSurfaces++] = 1;
+	SurfaceCreated[NumberOfSurfaces++] = 1;
 	Surface9[CACHE_SURFACE]->GetSurfaceLevel(0, &RenderTarget[CACHE_SURFACE]);
 
 	if (Device->CreateTexture(Rect[AUTOMAP_SURFACE].right, Rect[AUTOMAP_SURFACE].bottom, 1, D3DUSAGE_RENDERTARGET,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &Surface9[AUTOMAP_SURFACE], NULL) != D3D_OK)
 		throw (PROGRAM_ERROR)17;
-	SurfaceCreated[NumberOfVideoSurfaces++] = 1;
+	SurfaceCreated[NumberOfSurfaces++] = 1;
 	Surface9[AUTOMAP_SURFACE]->GetSurfaceLevel(0, &RenderTarget[AUTOMAP_SURFACE]);
 
 	for (int i = 0; i < 16; i++) {
@@ -1107,11 +1107,11 @@ void TSurfaceDX9::InitDevice()
 				throw (PROGRAM_ERROR)18;
 			break;
 		}
-		SurfaceCreated[NumberOfVideoSurfaces++] = 1;
+		SurfaceCreated[NumberOfSurfaces++] = 1;
 		Surface9[Surface]->GetSurfaceLevel(0, &RenderTarget[Surface]);
-		NumberOfCacheSurfaces++;
+		CacheSurfaces++;
 	}
-	Lost = false;
+	Unavailable = false;
 	Ready = true;
 	VertexBuffer->Lock(0, 0, (void **)&Vertices, D3DLOCK_DISCARD);
 	Device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
@@ -1165,19 +1165,19 @@ void TSurfaceDX9::DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Co
 void TSurfaceDX9::BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
 	int Height, TRGBColor ColorKey, TRect Clip)
 {
-	BlitRectClipped(ToSurface, x, y, FromSurface, TRect(FromX, FromY, Width, Height), Clip);
+	BlitRectClipped(ToSurface, x, y, FromSurface, FromX, FromY, Width, Height, Clip);
 }
 
 // +0x90 (0x4fb5e0)
 int TSurfaceDX9::GetCacheSurfaces()
 {
-	return NumberOfCacheSurfaces;
+	return CacheSurfaces;
 }
 
 // +0xa0 (0x4fb5f0)
 bool TSurfaceDX9::IsUnavailable()
 {
-	return Lost;
+	return Unavailable;
 }
 
 // +0xac (0x4eb000). Limits from 10 to 200 frames per second; others mean no
@@ -1185,10 +1185,10 @@ bool TSurfaceDX9::IsUnavailable()
 void TSurfaceDX9::SetFramerateLimit(int Limit)
 {
 	if (Limit < 10 || Limit >= 201)
-		FramerateLimit = 0xffff;
+		Framerate = 0xffff;
 	else
-		FramerateLimit = Limit;
-	FrameTime = 1000.0 / FramerateLimit;
+		Framerate = Limit;
+	FrameTime = 1000.0 / Framerate;
 }
 
 // +0xb0 (0x4f9d00)

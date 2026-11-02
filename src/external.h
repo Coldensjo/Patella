@@ -85,7 +85,8 @@ extern const char *TextReportRuleViolation; // 0x5c0664, "Report Rule Violation"
 // Surface.cpp: curEngine, TSurface and the surface functions (Surface.h).
 #include "Surface.h"
 
-// The engines' surface classes (SurfaceDX.cpp, surfaceDX9.cpp, SurfaceGL.cpp).
+// The engines' surface classes (surfaceDX9.cpp, SurfaceGL.cpp; SurfaceDX.cpp's
+// TSurfaceDX is in SurfaceDX.h).
 class TSurfaceGL : public TSurface {       // 0x498 bytes
 public:
 	TSurfaceGL();                          // 0x4fb670
@@ -101,7 +102,8 @@ public:
 	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source);
 	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
 		TRGBColor ColorKey);
-	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect Source, TRect Clip);
+	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
+		int Height, TRect Clip);
 	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
 		int Height, TRGBColor ColorKey, TRect Clip);
 	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source);
@@ -110,19 +112,18 @@ public:
 	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
 		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip);
 	void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors);
-	void SetColorKey(int Surface, TRGBColor ColorKey); bool ClipRect(TRect Clip, RECT *Rect, RECT *Source);
-	void InitFramerate(); void LimitFramerate();
-	void UpdateWindowRect(); void SetDisplayMode(int VMode, TFullscreenMode *GMode); void ExitDevice();
-	void InitDevice(); void ChangeDisplayMode(int VMode, TFullscreenMode *GMode);
-	void CheckDevice(int ViewMode, TFullscreenMode *Resolution); void FinishFrame();
+	void SetSourceColorKey(int Surface, TRGBColor ColorKey); bool ClipRect(TRect Clip, RECT *Destination, RECT *Source);
+	void ResetFrameTimer(); void WaitForNextFrame(); void UpdateWindowRect();
+	void InitDisplay(int VMode, TFullscreenMode *GMode); void ExitDisplay(); void CreateSurfaces();
+	void ResetDisplay(int VMode, TFullscreenMode *GMode); void RestoreSurfaces(int ViewMode, TFullscreenMode *Mode);
+	void FinishFrame();
 	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force);
 	int GetFullscreenModes(TFullscreenMode **Modes); int GetCacheSurfaces(); void GetSurfaceRect(int Surface, TRect *Rect);
-	bool Unknown9C(int Value);
-	bool IsUnavailable(); bool CanShadeRectangles(); int IsSurfaceCreated(int Surface); void SetFramerateLimit(int Limit); double GetFPS();
+	bool SurfaceRecreated(int Surface);
+	bool IsUnavailable(); bool CanShadeRectangles(); int GetSurfaceMemory(int Index); void SetFramerateLimit(int Framerate); double GetFPS();
 	void InitSurfaces(); void ExitSurfaces();
-	uint8 DataGL[0x498 - 0x44];
+	uint8 DataGL[0x498 - 0x70];
 };
-TSurface *FUN_004eca00();               // 0x4eca00, SurfaceDX.cpp: creates the DirectX 5 surface
 bool FUN_004f9710(HDC Context);         // 0x4f9710, SurfaceGL.cpp (file-ranges.tsv): OpenGL works on the context
 
 // Text table (owner unknown, .data 0x5c0c80-0x5c0d7c).
@@ -294,9 +295,6 @@ extern const char *TextNetworkOptionsURL;             // 0x5c1474, "...options#n
 // Owner unknown (.data after Status.cpp's 0x5c2560): set by "engine N" on
 // the command line, read by SurfaceInitInstance; -1 = none.
 extern int DAT_005c2564;                // 0x5c2564
-// Owner unknown (.bss just before Surface.cpp's 0x71d0c0; SurfaceDX.cpp writes
-// it often): surfaceDX9.cpp's InitDevice sets it to 1 when Direct3DCreate9 fails.
-extern int DAT_0071d0bc;                // 0x71d0bc
 
 
 // Owner unknown: a table of message texts in .data (0x5c2480-0x5c2517).

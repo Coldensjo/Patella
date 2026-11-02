@@ -19,14 +19,16 @@ Read this and `git log` first when resuming.
 7e. ContentWindows.cpp — **done** (issue #6, Claude Opus 5.5; the gap before it was settled in issue #5).
 7f. DialogElements.cpp and the DialogElements/Dialogs gap — **done** (issue #7, Claude Opus 5.5; the gap is Dialogs.obj).
 7g. Dialogs.cpp with its leading run of header code — **done** (issue #8, Claude Opus 5.5).
+7h. SurfaceDX.cpp with its trailing DirectDraw functions — **done** (issue #9, GPT-6.1-sol with Claude Opus 5.5 delegates; PR for review).
+7i. surfaceDX9.cpp and the surfaceDX9/SurfaceGL gap — **done** (issue #10, Claude Opus 5.5; the gap is SurfaceGL.obj, merged with #9).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-Dialogs.cpp done (issue #8, November 2, 2026). Next: the surface files (SurfaceDX.cpp with its settled range
-0x4eae70-0x4ed19f, surfaceDX9.cpp, SurfaceGL.cpp) with their gaps and the other open issues; see GitHub.
+surfaceDX9.cpp done (issue #10, November 2, 2026), merged with SurfaceDX.cpp (issue #9, PR #28).
+Next: SurfaceGL.cpp with its leading run 0x4f46f0-0x4fb7ef (issue #11) and the other open issues; see GitHub.
 
 ## Delegates (running)
 
@@ -38,8 +40,8 @@ None.
 
 ## Last difftest
 
-12,744,375 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after issue #8; Dialogs: 98,889).
+14,015,187 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(after issue #10 merged with #9; SurfaceDX: 1,213,366, SurfaceDX9: 58,682).
 
 ## Notes for later files
 
@@ -192,3 +194,32 @@ None.
   and strings only for the members listed as strings; values with two 0xab bytes are pattern, not pointers.
   Event 31 only with a timer, event 11 of the hotkey dialog only with a selection.
 - DIFFTEST_ONLY=Dialogs runs dialogstest.cpp alone (DG_TRACE=1, DG_LOGS=<file>).
+- SurfaceDX.cpp (issue #9): the engine uses DirectDraw4/Surface4 and
+  Direct3D3/Device3/Viewport3 despite its DirectX 5 name. TSurface is 0x70
+  bytes (8-byte alignment), TSurfaceDX is 0x250. Base Window is now hWindow;
+  the +0x50/+0x54 color-key, +0x64 attachment and +0x9c recreation slots
+  have typed names. Keep the shared +0xac name SetFramerateLimit.
+- Shared surface statistics span 0x71d0bc-0x71d0f4; private DirectDraw
+  SurfaceMemory starts at 0x71d0f8. CacheSurfaceWidth/Height start at 256,
+  InitSurfaces sets them to 320. Do not duplicate these globals for DX9/GL.
+  Source ownership is inferred; their common binary use is verified.
+- DIFFTEST_ONLY=SurfaceDX runs surfacedxtest.cpp alone (DX_TRACE=1 prints
+  phase coverage, DX_LOGS=<file> writes compared logs). All code/IAT patches
+  are restored. Never read the uninitialized DDSCAPS2 words after dwCaps.
+  The display-mode callback intentionally tests the refresh flag in
+  ddpfPixelFormat.dwFlags rather than the descriptor's dwFlags.
+- tools/ehinfo.py accepts interleaved argument loads in the SEH prologue
+  and validates FuncInfo magic (needed by SurfaceDX's stretch wrappers).
+- surfaceDX9.cpp (issue #10): surfaceDX9.h includes the SDK's d3d9.h, which is empty after SurfaceDX.h's
+  DirectX 6 d3d.h (DIRECT3D_VERSION 0x700): never include both; Surface.h declares IsDirect3D9Installed and
+  CreateSurfaceDX9 for Surface.cpp. TSurfaceDX9's own members start at +0x70 (Ready); its surfaces are
+  textures (Surface9[]) whose level 0 is RenderTarget[].
+- SurfaceGL.cpp (#11): its object starts at 0x4f46f0 with glh_extensions.h code; six of its functions
+  (0x4f9d00, 0x4fa110, 0x4fa2c0, 0x4fab70, 0x4fb5e0, 0x4fb5f0) are also the DX5/DX9 slots, written in those
+  files too. The display-mode callback and the frame timer are the engines' identical copies as well.
+- surfacedx9test.cpp fakes the Windows functions by writing the fakes into the image's import slots and
+  difftest.exe's own (OwnImportSlot), restored at the end; its fake COM objects are generic (a vtable of traps
+  with the used slots filled in, MakeVtbl), reusable for SurfaceGL.cpp's test. Fake texture memory must
+  be large enough for every write (a too small test texture corrupted the heap once). DIFFTEST_ONLY=SurfaceDX9
+  runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).
+- TRect's members may be width/height in the original (issue #29).

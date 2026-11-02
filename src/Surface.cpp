@@ -2,32 +2,34 @@
 //
 // The first part of the Status/SurfaceDX gap: the current graphics engine,
 // the surface object of that engine, the engine selection at start-up, and
-// the base class TSurface. The file name is inferred (see Surface.h). No
-// function has line evidence, so they are in binary order. The DirectDraw
-// surface code after 0x4eae70 is SurfaceDX.cpp's.
+// the base class TSurface, and the data the engines share. The file name is
+// inferred (see Surface.h). No function has line evidence, so they are in
+// binary order. The DirectDraw surface code after 0x4eae70 is SurfaceDX.cpp's.
 
 #include "Surface.h"
+#include "SurfaceDX.h"
 #include "Preferences.h"
 #include "external.h"
-#include "surfaceDX9.h"
 
-// Data, in .bss order.
+// Data, in .data and .bss order. The shared data the engines use (Surface.h)
+// lies around this file's own; 0x71d0f8 and up are SurfaceDX.cpp's.
+int CacheSurfaceWidth = 256;        // 0x5c2568
+int CacheSurfaceHeight = 256;       // 0x5c256c
+int InitStep;                       // 0x71d0bc
 static HWND SurfaceWindow;          // 0x71d0c0, the main window, from SurfaceInitInstance
 int curEngine;                      // 0x71d0c4
 static uint8 AvailableEngines;      // 0x71d0c8, bit 0 OpenGL works, bit 1 DirectX 9 passed TestEngine
 static TSurface *Surface;           // 0x71d0cc
-int FrameBlits;                    // 0x71d0d0 (Surface.h)
-int FramePixels;                   // 0x71d0d4
-int FrameStateChanges;             // 0x71d0d8
-int ScreenWidth;                   // 0x71d0dc
-int ScreenHeight;                  // 0x71d0e0
-int LastFrameBlits;                // 0x71d0e8
-int LastFramePixels;               // 0x71d0ec
-int NumberOfVideoSurfaces;         // 0x71d0f0
-
-// .data, after the "engine N" value 0x5c2564.
-int CacheSurfaceWidth = 256;       // 0x5c2568
-int CacheSurfaceHeight = 256;      // 0x5c256c
+int BlitCount;                      // 0x71d0d0
+int BlitPixels;                     // 0x71d0d4
+int Data71D0D8;                     // 0x71d0d8
+int ScreenWidth;                    // 0x71d0dc
+int ScreenHeight;                   // 0x71d0e0
+int ScreenDepth;                    // 0x71d0e4
+int LastBlitCount;                  // 0x71d0e8
+int LastBlitPixels;                 // 0x71d0ec
+int NumberOfSurfaces;               // 0x71d0f0
+int Data71D0F4;                     // 0x71d0f4
 
 // 0x4eaa80. Written to error.txt as "Graphic Engine".
 int GetCurrentEngine()
@@ -45,7 +47,7 @@ TSurface *GetSurface()
 		if (Surface == NULL)
 			Surface = CreateSurfaceDX9();
 	} else if (curEngine == 0 && Surface == NULL) {
-		Surface = FUN_004eca00();
+		Surface = CreateSurfaceDX();
 	}
 	return Surface;
 }
@@ -70,14 +72,14 @@ TSurface::TSurface()
 {
 	NumberOfModes = 0;
 	Data3C = 0;
-	NumberOfCacheSurfaces = 0;
+	CacheSurfaces = 0;
 	Flag26 = false;
 }
 
 // 0x4eabb0
-void TSurface::Unknown50(int Surface, TRGBColor ColorKey)
+void TSurface::SetColorKey(int Surface, TRGBColor ColorKey)
 {
-	SetColorKey(Surface, ColorKey);
+	SetSourceColorKey(Surface, ColorKey);
 }
 
 // 0x4eabd0
@@ -113,7 +115,7 @@ void TSurface::Unknown80(int a, int b, int c, int d)
 
 // The linker kept the copy of this empty body from another object
 // (0x496160, folded with other empty functions).
-void TSurface::Unknown64()
+void TSurface::AttachWindow()
 {
 }
 

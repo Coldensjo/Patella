@@ -18,21 +18,15 @@
 #include <d3d9.h>
 #include <ddraw.h>
 
-// The surfaces (Surface9[] and Rect[] are indexed with them).
+// The surfaces (Surface9[] and Rect[] are indexed with them) are Surface.h's
+// PRIMARY_SURFACE (the main render target, Rect[TEMP_SURFACE]'s size),
+// SCREEN_SURFACE (the back buffer; its texture is the 106x106 ScreenTexture),
+// TEMP_SURFACE (640x480), STRETCH_SURFACE (64x64), CACHE_SURFACE (512x384),
+// AUTOMAP_SURFACE (106x106) and SPRITE_SURFACE (6-21: the video cache
+// surfaces, CacheSurfaceWidth x CacheSurfaceHeight); the values follow from
+// this file's comparisons (ToSurface!=SCREEN_SURFACE compares with 1).
 enum {
-	PRIMARY_SURFACE = 0,   // the main render target, Rect[TEMP_SURFACE]'s size
-	SCREEN_SURFACE = 1,    // the back buffer; its texture is the 106x106 ScreenTexture
-	TEMP_SURFACE = 2,      // 640x480
-	STRETCH_SURFACE = 3,   // 64x64
-	CACHE_SURFACE = 4,     // 512x384
-	AUTOMAP_SURFACE = 5,   // 106x106
-	SPRITE_SURFACE = 6,    // 6-21: the video cache surfaces, CacheSurfaceWidth x CacheSurfaceHeight
 	NUMBER_OF_SURFACES_DX9 = 22
-};
-
-enum {
-	WINDOWED_MODE = 1,
-	FULLSCREEN_MODE = 2
 };
 
 // One vertex of the vertex buffers (D3DFVF_XYZRHW | D3DFVF_DIFFUSE |
@@ -62,7 +56,8 @@ public:
 	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source); // +0x30, 0x4f3040
 	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
 		TRGBColor ColorKey);                                               // +0x34, 0x4f2e20
-	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect Source, TRect Clip); // +0x38, 0x4f1b70
+	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
+		TRect Clip);                                                       // +0x38, 0x4f1b70
 	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
 		int Height, TRGBColor ColorKey, TRect Clip);                       // +0x3c (copy 0x4fab70)
 	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source); // +0x40, 0x4f1a40
@@ -71,26 +66,26 @@ public:
 	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
 		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip); // +0x48, 0x4f2620
 	void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors); // +0x4c, 0x4f0e50
-	void SetColorKey(int ToSurface, TRGBColor ColorKey);                  // +0x54, 0x4f1eb0
+	void SetSourceColorKey(int ToSurface, TRGBColor ColorKey);                  // +0x54, 0x4f1eb0
 	bool ClipRect(TRect Clip, RECT *Rect, RECT *Source);                  // +0x58, 0x4f0410
-	void InitFramerate();                                                  // +0x5c, 0x4f04d0
-	void LimitFramerate();                                                 // +0x60, 0x4f0510
+	void ResetFrameTimer();                                                  // +0x5c, 0x4f04d0
+	void WaitForNextFrame();                                                 // +0x60, 0x4f0510
 	void UpdateWindowRect();                                               // +0x68, 0x4f05d0
-	void SetDisplayMode(int VMode, TFullscreenMode *GMode);               // +0x6c, 0x4f3240
-	void ExitDevice();                                                     // +0x70, 0x4f1040
-	void InitDevice();                                                     // +0x74, 0x4f3740
-	void ChangeDisplayMode(int VMode, TFullscreenMode *GMode);            // +0x78, 0x4f1160
-	void CheckDevice(int ViewMode, TFullscreenMode *Resolution);          // +0x7c, 0x4f11f0
+	void InitDisplay(int VMode, TFullscreenMode *GMode);               // +0x6c, 0x4f3240
+	void ExitDisplay();                                                     // +0x70, 0x4f1040
+	void CreateSurfaces();                                                     // +0x74, 0x4f3740
+	void ResetDisplay(int VMode, TFullscreenMode *GMode);            // +0x78, 0x4f1160
+	void RestoreSurfaces(int ViewMode, TFullscreenMode *Resolution);          // +0x7c, 0x4f11f0
 	void FinishFrame();                                                    // +0x84, 0x4f0f80
 	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force); // +0x88, 0x4f1240
 	int GetFullscreenModes(TFullscreenMode **Modes);                      // +0x8c, 0x4f1320
 	int GetCacheSurfaces();                                                // +0x90 (copy 0x4fb5e0)
 	void GetSurfaceRect(int Surface, TRect *Rect);                        // +0x94, 0x4f4560
 	void SetSurfaceRect(int Surface, int x, int y, int Width, int Height); // +0x98, 0x4f1370
-	bool Unknown9C(int Value);                                             // +0x9c, 0x4f13e0
+	bool SurfaceRecreated(int Surface);                                           // +0x9c, 0x4f13e0
 	bool IsUnavailable();                                                  // +0xa0 (copy 0x4fb5f0)
 	bool CanShadeRectangles();                                             // +0xa4, 0x4f13f0
-	int IsSurfaceCreated(int Surface);                                    // +0xa8, 0x4f03e0
+	int GetSurfaceMemory(int Surface);                                    // +0xa8, 0x4f03e0
 	void SetFramerateLimit(int Limit);                                     // +0xac (copy 0x4eb000)
 	double GetFPS();                                                       // +0xb0 (copy 0x4f9d00)
 	void InitSurfaces();                                                   // +0xb4, 0x4f1cd0
@@ -107,15 +102,7 @@ public:
 	void AddQuad(int Left, int Top, int Right, int Bottom, double Left_u, double Right_u, double Top_v,
 		double Bottom_v, D3DCOLOR TopLeft, D3DCOLOR TopRight, D3DCOLOR BottomRight, D3DCOLOR BottomLeft); // 0x4f14c0
 
-	// The frame clock (the same members as in the other engines; the copies of
-	// InitFramerate, ClipRect, SetFramerateLimit and GetFPS are shared).
-	double StartTime;        // +0x48
-	double NextFrameTime;    // +0x50
-	double FrameTime;        // +0x58, milliseconds per frame
-	double FPS;              // +0x60
-	int FramerateLimit;      // +0x68, 0xffff when unlimited
-	int Data6C;              // +0x6c, never used
-	bool Ready;              // +0x70, set when InitDevice has finished (Unknown9C)
+	bool Ready;              // +0x70, set when CreateSurfaces has finished (SurfaceRecreated)
 	RECT Rect[NUMBER_OF_SURFACES_DX9]; // +0x74
 	RECT WindowRect;         // +0x1d4, the client area on the screen
 	RECT SurfaceArea;        // +0x1e4, SetSurfaceRect
@@ -130,5 +117,4 @@ public:
 	IDirect3DTexture9 *ScreenTexture;     // +0x2bc, the texture of SCREEN_SURFACE
 };
 
-bool IsDirect3D9Installed();   // 0x4efd10
-TSurface *CreateSurfaceDX9();  // 0x4f1430
+// IsDirect3D9Installed (0x4efd10) and CreateSurfaceDX9 (0x4f1430) are declared in Surface.h.
