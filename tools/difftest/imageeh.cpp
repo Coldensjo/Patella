@@ -272,6 +272,22 @@ static LONG CALLBACK RedirectImageHandlers(EXCEPTION_POINTERS *Info)
 			printf("eh: C++ exception %s (ThrowInfo 0x%x) at %p\n", Name, ThrowInfo,
 				Info->ExceptionRecord->ExceptionAddress);
 	}
+	// A replaced registration that is alive is on the chain (a frame that a
+	// catch block's unwinding removed is gone): when the table fills up (deep
+	// call trees of the window tests leave many stale stack addresses behind),
+	// only the entries on the current chain are kept.
+	if (ReplacedCount > 192) {
+		int Kept = 0;
+		for (int i = 0; i < ReplacedCount; i++) {
+			bool Live = false;
+			for (TRegistration *R = (TRegistration *)__readfsdword(0); R != (TRegistration *)(intptr_t)-1 && !Live;
+				R = R->Next)
+				Live = R == Replaced[i].Registration;
+			if (Live)
+				Replaced[Kept++] = Replaced[i];
+		}
+		ReplacedCount = Kept;
+	}
 	for (TRegistration *R = (TRegistration *)__readfsdword(0); R != (TRegistration *)(intptr_t)-1; R = R->Next) {
 		if (InImage((uint32)(uintptr_t)R->Handler))
 			ReplaceHandler(R);

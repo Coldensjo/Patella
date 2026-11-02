@@ -680,7 +680,7 @@ int main(int argc, char **argv)
 #ifdef DIFFTEST_SYSINC
 	TestSysinc();
 #else
-	// DIFFTEST_ONLY=MainWindow, DialogWindow, ContextMenus, ConsoleWindow,
+	// DIFFTEST_ONLY=MainWindow, MapWindow, DialogWindow, ContextMenus, ConsoleWindow,
 	// ContentWindows, DialogElements, Dialogs, SurfaceDX9 or Container runs only mainwindowtest.cpp,
 	// dialogwindowtest.cpp, contextmenustest.cpp, consolewindowtest.cpp,
 	// contentwindowstest.cpp, dialogelementstest.cpp, dialogstest.cpp, surfacedx9test.cpp or containertest.cpp
@@ -751,6 +751,11 @@ int main(int argc, char **argv)
 	}
 	if (Only != NULL && strcmp(Only, "Errors") == 0) {
 		TestErrors(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
+	if (Only != NULL && strcmp(Only, "MapWindow") == 0) {
+		TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}

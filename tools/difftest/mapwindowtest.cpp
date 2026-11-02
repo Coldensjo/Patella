@@ -35,6 +35,7 @@
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
 #include "testsurface.h"
+#include "imageeh.h"
 #include "../../src/Talk.h"
 #include <new>
 #include <stdarg.h>
@@ -53,8 +54,20 @@ enum { OURS = 0, ORIGINAL = 1 };
 static int Side;
 static std::string Log[2];
 
+// The error round (issue #34): the FailAt-th call of a fake (every logged
+// call and the map, creature and effect getters) throws an assertion of the
+// calling side; 0 means none. Ticks counts the calls of one side's call.
+static int FailAt, Ticks;
+static void Tick()
+{
+	Ticks++;
+	if (FailAt > 0 && --FailAt == 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Ticks);
+}
+
 static void Logf(const char *Format, ...)
 {
+	Tick();
 	char Buffer[512];
 	va_list Args;
 	va_start(Args, Format);
@@ -98,6 +111,7 @@ static int CenterX = 1000, CenterY = 1000, CenterZ = 7, Level = 7;
 static int AmbientBrightness = 200;
 static TRGBColor Ambient(200, 180, 160);
 static int IterX, IterY, IterZ, IterIndex;   // GetFirstObject/GetNextObject
+static int BadMapType, NullCreatureAt;       // the error round's inputs (0: none)
 static int EffectX, EffectY, EffectZ, EffectIndex;
 
 struct TFakeEffect {
@@ -116,6 +130,7 @@ static TRGBColor __cdecl FakeGetAmbientColor() { return Ambient; }
 static int __cdecl FakeGetAmbientBrightness() { return AmbientBrightness; }
 static TObject __cdecl FakeGetFirstObject(int x, int y, int z)
 {
+	Tick();
 	IterX = x;
 	IterY = y;
 	IterZ = z;
@@ -126,6 +141,7 @@ static TObject __cdecl FakeGetFirstObject(int x, int y, int z)
 }
 static TObject __cdecl FakeGetNextObject()
 {
+	Tick();
 	IterIndex++;
 	if (!OnMap(IterX, IterY, IterZ) || IterIndex >= Fields[IterX][IterY][IterZ].Count)
 		return TObject();
@@ -134,12 +150,17 @@ static TObject __cdecl FakeGetNextObject()
 static TObject __cdecl FakeGetMapObject(int x, int y, int z, int Position)
 {
 	Logf("GM%d,%d,%d;", x, y, z); // AddLightSource's fields, in order
+	if (BadMapType != 0) { // the error round: a type Tibia.dat does not have
+		TObject Bad = {BadMapType, 0, 0};
+		return Bad;
+	}
 	if (!OnMap(x, y, z) || Position >= Fields[x][y][z].Count)
 		return TObject();
 	return Fields[x][y][z].Objects[Position];
 }
 static TObject TopObject(int x, int y, int z, int &Position, int Kind)
 {
+	Tick();
 	if (!OnMap(x, y, z) || Fields[x][y][z].Count == 0) {
 		Position = -1;
 		return TObject();
@@ -170,11 +191,12 @@ static TObject __cdecl FakeTopLook(int x, int y, int z, int &Position)
 }
 static TObject __cdecl FakeTopUse(int x, int y, int z, int &Position) { return TopObject(x, y, z, Position, 2); }
 static TObject __cdecl FakeTopMultiUse(int x, int y, int z, int &Position) { return TopObject(x, y, z, Position, 3); }
-static bool __cdecl FakeThrowable(int x, int y, int z) { return OnMap(x, y, z) && Fields[x][y][z].Throwable; }
+static bool __cdecl FakeThrowable(int x, int y, int z) { Tick(); return OnMap(x, y, z) && Fields[x][y][z].Throwable; }
 static bool __cdecl FakeTranslucent(int x, int y, int z) { return OnMap(x, y, z) && Fields[x][y][z].Translucent; }
 static void __cdecl FakeProcessMissileEffects() { Logf("M;"); }
 static int __cdecl FakeGetFirstEffect(int x, int y, int z)
 {
+	Tick();
 	EffectX = x;
 	EffectY = y;
 	EffectZ = z;
@@ -185,6 +207,7 @@ static int __cdecl FakeGetFirstEffect(int x, int y, int z)
 }
 static int __cdecl FakeGetNextEffect()
 {
+	Tick();
 	EffectIndex++;
 	if (EffectIndex >= Fields[EffectX][EffectY][EffectZ].EffectCount)
 		return -1;
@@ -209,6 +232,9 @@ static int Destination;
 
 static TCreature *__cdecl FakeGetCreature(uint32 ID)
 {
+	Tick();
+	if (NullCreatureAt > 0 && --NullCreatureAt == 0)
+		return NULL; // the error round: the NullCreatureAt-th call finds nothing
 	for (int i = 0; i < WorldSize; i++) {
 		if (World[i].CreatureID == ID)
 			return &World[i];
@@ -276,7 +302,7 @@ static int __cdecl FakeCreatureInfo() { return CreatureInfo; }
 static void __cdecl FakeSetCreatureInfo(int Value) { Logf("CI%d;", Value); }
 static bool __cdecl FakeNoStretching() { return NoStretching; }
 static bool __cdecl FakeClassicControl() { return ClassicControl; }
-static bool __cdecl FakeShowNewHints() { return ShowNewHints; }
+static bool __cdecl FakeShowNewHints() { Tick(); return ShowNewHints; }
 
 // Talk.cpp.
 struct TFakeTalkbox {
@@ -290,7 +316,7 @@ static int NumberOfTalkboxes;
 static const char *StatusMessage;
 static bool TalkChanged;
 static int __cdecl FakeNumberOfTalkboxes() { return NumberOfTalkboxes; }
-static int __cdecl FakeTalkboxLines(int n) { return Talkboxes[n - 1].Lines; }
+static int __cdecl FakeTalkboxLines(int n) { Tick(); return Talkboxes[n - 1].Lines; }
 static const char *__cdecl FakeTalkboxLine(int n, int Line) { return Talkboxes[n - 1].Line[Line]; }
 static int __cdecl FakeTalkboxMode(int n) { return Talkboxes[n - 1].Mode; }
 static void __cdecl FakeTalkboxPosition(int n, int *x, int *y, int *z)
@@ -387,7 +413,15 @@ static void __cdecl FakeAddHotkey(int Key, TCallback Callback)
 {
 	Logf("HK+%d,%d,%d;", Key, Callback.Receiver == Window[Side], Callback.Event);
 }
-static void __cdecl FakeRemoveHotkey(int Key) { Logf("HK-%d;", Key); }
+// (~TMapWindow calls it: a destructor of ours must not throw, so this fake
+// does not count for the error round's FailAt.)
+static void __cdecl FakeRemoveHotkey(int Key)
+{
+	int Saved = FailAt;
+	FailAt = 0;
+	Logf("HK-%d;", Key);
+	FailAt = Saved;
+}
 static int __cdecl FakeFreeContainer() { return FreeContainer; }
 
 // Communication.cpp: our side's definitions, also the image's.
@@ -1280,6 +1314,473 @@ static void TestFrames(int Rounds)
 	}
 }
 
+// --- Error paths (issue #34) ---------------------------------------------------
+
+// The hint button's place in the error round: a child that throws from
+// SetPosition and SetSize while armed (Arrange's TEND), our class on both
+// sides with the image's base code on the image side.
+class TMapThrower : public TElement {
+public:
+	explicit TMapThrower(int _Owner) : Owner(_Owner), Armed(false) {}
+	void Throw()
+	{
+		if (Armed)
+			ThrowSideAssertion(Owner == ORIGINAL, -77);
+	}
+	void SetSize(int w, int h)
+	{
+		Throw();
+		if (Owner == OURS)
+			TElement::SetSize(w, h);
+		else
+			At<Int2Fn>(0x49bee0)(this, NULL, w, h);
+	}
+	void SetPosition(int x, int y)
+	{
+		Throw();
+		if (Owner == OURS)
+			TElement::SetPosition(x, y);
+		else
+			At<Int2Fn>(0x496060)(this, NULL, x, y);
+	}
+	// TMapFrame's minimum size asks its map view (a thrower in its place).
+	int getMinimumWidth() { Throw(); return 240; }
+	int getMinimumHeight() { Throw(); return 176; }
+	int Owner;
+	bool Armed;
+};
+
+static TErrorRound *MWRound;
+
+// One call on both sides: the Fail-th fake call throws (0: none), the
+// NullAt-th GetCreature finds nothing (0: none); then the windows and logs.
+template <class F> static void MWCall(const char *What, int Fail, int NullAt, F Call)
+{
+	char Name[128];
+	snprintf(Name, sizeof(Name), "%s (fail at %d, no creature at %d)", What, Fail, NullAt);
+	ROUND_COMPARE(*MWRound, Name, (Side = OURS, Ticks = 0, FailAt = Fail, NullCreatureAt = NullAt, Call(OURS)),
+		(Side = ORIGINAL, Ticks = 0, FailAt = Fail, NullCreatureAt = NullAt, Call(ORIGINAL)));
+	FailAt = 0;
+	NullCreatureAt = 0;
+	Compare(Name, Fail);
+}
+
+// A fake call to fail at, of Count: uniform, near the start or near the end
+// (both on a logarithmic scale: the early and late blocks of Draw have few
+// of its calls).
+static int FailIndex(int Count)
+{
+	int Kind = Random() % 3, Range = 1 << (Random() % 16);
+	Range = Range < Count ? Range : Count;
+	if (Kind == 0)
+		return 1 + (int)(Random() % Count);
+	if (Kind == 1)
+		return 1 + (int)(Random() % Range);
+	return Count - (int)(Random() % Range);
+}
+
+// A call without failures (it counts the fake calls), then Tries calls that
+// fail at one of them, each from the windows' state before the first (a
+// second Draw makes fewer calls: the cache tiles hold the sprites).
+template <class F> static void MWFailing(const char *What, int Tries, F Call)
+{
+	const int From = 0x14, Size = (int)offsetof(TMapWindow, HintButton) - From;
+	std::vector<uint8> Saved[2] = {std::vector<uint8>((uint8 *)Ours + From, (uint8 *)Ours + From + Size),
+		std::vector<uint8>(Original + From, Original + From + Size)};
+	MWCall(What, 0, 0, Call);
+	int Count = Ticks;
+	for (int t = 0; t < Tries && Count > 0; t++) {
+		memcpy((uint8 *)Ours + From, Saved[OURS].data(), Size);
+		memcpy(Original + From, Saved[ORIGINAL].data(), Size);
+		MWCall(What, FailIndex(Count), 0, Call);
+	}
+}
+
+static void SetWidth(int Width, int Height)
+{
+	Ours->Width = Width;
+	Ours->Height = Height;
+	*(int *)(Original + 0x1c) = Width;
+	*(int *)(Original + 0x20) = Height;
+}
+
+static void PlaceThrowers(TMapThrower *T[2])
+{
+	for (int s = 0; s < 2; s++)
+		T[s] = new TMapThrower(s);
+	Side = OURS;
+	Ours->InsertChild(T[OURS]);
+	Ours->HintButton = T[OURS];
+	Side = ORIGINAL;
+	At<void (__fastcall *)(void *, void *, void *)>(0x49c190)(Original, NULL, T[ORIGINAL]);
+	*(void **)(Original + 0x92d4) = T[ORIGINAL];
+}
+
+// Every TASSERT/TERROR of MapWindow.cpp and the TEND blocks: the fakes throw
+// at the n-th call (FailAt) inside every function the test calls, then the
+// assertions get their bad inputs (no player, bad flags, effect numbers,
+// brightness, field indices, objects and talkbox modes).
+static void TestMapWindowErrors()
+{
+	TErrorRound R("MapWindow");
+	MWRound = &R;
+	// The logging surface of this file's TTestSurface methods (alone, the
+	// surface of engine 1 is another object; in the full run an earlier
+	// test's TTestSurface): the round is the same in both.
+	TSurface *SavedSurface = FakeSurface;
+	TTestSurface *RoundSurface = new TTestSurface;
+	FakeSurface = RoundSurface;
+	TRGBColor Colors[4] = {TRGBColor(1, 2, 3), TRGBColor(4, 5, 6), TRGBColor(7, 8, 9), TRGBColor(10, 11, 12)};
+	for (int Round = 0; Round < 12; Round++) {
+		RandomWorld();
+		while (Round % 3 == 0 && (Level == 7 || CreatureInfo == 0)) // names below the top level
+			RandomWorld();
+		NoStretching = Round % 2 != 0;
+		SetSizes();
+		RandomState();
+		RandomTalkboxes();
+		int x = Random() % 100, y = Random() % 100;
+		MWFailing("TMapWindow::Draw", 8, [&](int s) {
+			if (s == OURS) Ours->Draw(1, x, y); else At<Int3Fn>(0x4c7580)(Original, NULL, 1, x, y); });
+		// Below the top level, with names: the names' visibility loop (a few
+		// hundred calls before the end).
+		if (Level < 7 && CreatureInfo != 0) {
+			const int From = 0x14, Size = (int)offsetof(TMapWindow, HintButton) - From;
+			std::vector<uint8> Saved[2] = {std::vector<uint8>((uint8 *)Ours + From, (uint8 *)Ours + From + Size),
+				std::vector<uint8>(Original + From, Original + From + Size)};
+			MWCall("TMapWindow::Draw below the top", 0, 0, [&](int s) {
+				if (s == OURS) Ours->Draw(1, x, y); else At<Int3Fn>(0x4c7580)(Original, NULL, 1, x, y); });
+			int Count = Ticks;
+			for (int t = 0; t < 12; t++) {
+				memcpy((uint8 *)Ours + From, Saved[OURS].data(), Size);
+				memcpy(Original + From, Saved[ORIGINAL].data(), Size);
+				MWCall("TMapWindow::Draw below the top", Count - (int)(Random() % (Count < 400 ? Count : 400)), 0,
+					[&](int s) { if (s == OURS) Ours->Draw(1, x, y); else At<Int3Fn>(0x4c7580)(Original, NULL, 1, x, y); });
+			}
+		}
+		RandomState();
+		Ours->NumberOfNames = Random() % 5;
+		Ours->NumberOfTextualEffects = Random() % 5;
+		Mirror();
+		for (int k = 0; k < 4; k++) {
+			// The first one is the player's field (creatures to draw).
+			int fx = k == 0 ? 8 : Random() % MAPSIZE_X, fy = k == 0 ? 6 : Random() % MAPSIZE_Y;
+			int fz = k == 0 || Random() % 2 ? Level : Random() % 8;
+			int Mode = Random() % 3 == 0 ? 1 : 0, px = fx * 32 - Ours->ScrollX, py = fy * 32 - Ours->ScrollY;
+			MWFailing("TMapWindow::DrawField", 8, [&](int s) {
+				if (s == OURS) Ours->DrawField(px, py, fx, fy, fz, Mode);
+				else At<Int6Fn>(0x4c5520)(Original, NULL, px, py, fx, fy, fz, Mode); });
+		}
+		{
+			TObject Obj = RandomObject();
+			int px = Random() % 560 - 40, py = Random() % 420 - 40, z = Random() % 8;
+			int ax = Random() % 2000, ay = Random() % 2000, az = Random() % 16;
+			MWFailing("TMapWindow::DrawObject", 3, [&](int s) {
+				if (s == OURS) Ours->DrawObject(px, py, z, Obj, ax, ay, az);
+				else At<ObjectFn>(0x4c4af0)(Original, NULL, px, py, z, Obj, ax, ay, az); });
+			RandomCreature(11, 8, 6, Level);
+			if (World[11].OutfitType == 0)
+				World[11].OutfitType = Pick(Outfits);
+			MWFailing("TMapWindow::DrawCreature", 3, [&](int s) {
+				if (s == OURS) Ours->DrawCreature(px, py, z, &World[11]);
+				else At<CreatureFn>(0x4c4f80)(Original, NULL, px, py, z, &World[11]); });
+			bool Animated = Random() % 3 == 0;
+			int Sprite = 1 + Random() % 9, Mask = Random() % 4 == 0 ? 1 + Random() % 5 : 0;
+			MWFailing("TMapWindow::DrawFieldSprite", 3, [&](int s) {
+				if (s == OURS) Ours->DrawFieldSprite(px, py, z, Animated, Sprite, Mask, Colors);
+				else At<SpriteFn>(0x4c46a0)(Original, NULL, px, py, z, Animated, Sprite, Mask, Colors); });
+			int cx = Random() % MAPSIZE_X, cy = Random() % MAPSIZE_Y, dx = Random() % 3 - 1, dy = Random() % 3 - 1;
+			MWFailing("TMapWindow::CacheSprite", 2, [&](int s) {
+				if (s == OURS) Ours->CacheSprite(cx, cy, Sprite, dx, dy);
+				else At<Int5Fn>(0x4c41e0)(Original, NULL, cx, cy, Sprite, dx, dy); });
+			// A tile with more sprites than this frame's (drawn again before the blit).
+			int fx = 1 + Random() % 13, fy = 1 + Random() % 9;
+			TCacheField *Tile = Ours->GetCacheField(fx, fy);
+			Tile->Copied = false;
+			Tile->Sprites = 1 + Random() % 5;
+			Tile->CachedSprites = Tile->Sprites + 1 + Random() % 4;
+			Mirror();
+			MWFailing("TMapWindow::FlushField", 3, [&](int s) {
+				if (s == OURS) Ours->FlushField(fx, fy); else At<Int2Fn>(0x4c3980)(Original, NULL, fx, fy); });
+			int b = Random() % 256;
+			MWFailing("TMapWindow::DrawLightMask", 1, [&](int s) {
+				if (s == OURS) Ours->DrawLightMask(px, py, b); else At<Int3Fn>(0x4c02c0)(Original, NULL, px, py, b); });
+			int Brightness = 1 + Random() % 7;
+			TRGBColor Color(Random() % 300, Random() % 300, Random() % 300);
+			MWFailing("TMapWindow::AddLightSource", 3, [&](int s) {
+				if (s == OURS) Ours->AddLightSource(px, py, z, Brightness, Color);
+				else At<LightFn>(0x4c3c80)(Original, NULL, px, py, z, Brightness, Color); });
+			// A ground type Tibia.dat does not have: GetObjectFlag's error, wrapped
+			// in AddLightSource's own catch block.
+			BadMapType = Random() % 2 ? 60000 + Random() % 100 : 1 + Random() % 98;
+			int lx = (Random() % MAPSIZE_X) * 32 + 16 - Ours->ScrollX, ly = (Random() % MAPSIZE_Y) * 32 + 16 - Ours->ScrollY;
+			MWCall("TMapWindow::AddLightSource bad type", 0, 0, [&](int s) {
+				if (s == OURS) Ours->AddLightSource(lx, ly, z, Brightness, Color);
+				else At<LightFn>(0x4c3c80)(Original, NULL, lx, ly, z, Brightness, Color); });
+			BadMapType = 0;
+		}
+		RandomTalkboxes();
+		MWFailing("TMapWindow::ArrangeTalkboxes", 3, [&](int s) {
+			if (s == OURS) Ours->ArrangeTalkboxes(); else At<VoidFn>(0x4c0880)(Original, NULL); });
+		for (int k = 0; k < 3; k++) {
+			int mx = Random() % Ours->Width, my = Random() % Ours->Height;
+			MWFailing("TMapWindow::GetField", 2, [&](int s) {
+				int f[3];
+				if (s == OURS) Ours->GetField(mx, my, &f[0], &f[1], &f[2]);
+				else At<FieldFn>(0x4c12e0)(Original, NULL, mx, my, &f[0], &f[1], &f[2]); });
+			MWFailing("TMapWindow::GetCreatureAt", 2, [&](int s) {
+				if (s == OURS) Ours->GetCreatureAt(mx, my); else At<ID2Fn>(0x4c16b0)(Original, NULL, mx, my); });
+		}
+		// The mouse, with the inputs of the counted test.
+		for (int Op = 15; Op <= 18; Op++) {
+			static const int States[] = {0, 6, 7, 8, 9};
+			ActionState = States[Random() % 5];
+			DraggedObject = RandomObject();
+			TradedObject = RandomObject();
+			UsedObject = RandomObject();
+			if (Random() % 3 == 0)
+				DraggedObject.Type = Pick(Movables);
+			else if (Random() % 2 == 0)
+				DraggedObject.Type = Pick(Cumulatives);
+			for (int n = 0; n < 3; n++) {
+				SlotData[n][0] = Random() % 4;
+				SlotData[n][1] = CenterX - 8 + Random() % MAPSIZE_X;
+				SlotData[n][2] = CenterY - 6 + Random() % MAPSIZE_Y;
+				SlotData[n][3] = 100 + (Random() % 2 ? Level : Random() % 8);
+			}
+			TradeInfo = Random() % 2 ? World[Random() % WorldSize].CreatureID : Random() % 3 == 0 ? 0 : 0x7000000;
+			ClassicControl = Random() % 2 != 0;
+			Destination = Random() % 4;
+			FreeContainer = Random() % 16;
+			int mx = Random() % Ours->Width, my = Random() % Ours->Height;
+			static const int FlagSets[] = {0, 0x200, 0x400, 0x800, 0x600, 0x100};
+			int Flags = FlagSets[Random() % 6];
+			MWFailing("TMapWindow mouse", 3, [&](int s) {
+				if (s == OURS) {
+					if (Op == 15) Ours->LeftButtonDown(mx, my, Flags);
+					else if (Op == 16) Ours->LeftButtonUp(mx, my, Flags);
+					else if (Op == 17) Ours->RightButtonUp(mx, my, Flags);
+					else Ours->HelpMouseMove(mx, my);
+				} else {
+					if (Op == 15) At<Bool3Fn>(0x4c24d0)(Original, NULL, mx, my, Flags);
+					else if (Op == 16) At<Bool3Fn>(0x4c2710)(Original, NULL, mx, my, Flags);
+					else if (Op == 17) At<Bool3Fn>(0x4c2e50)(Original, NULL, mx, my, Flags);
+					else At<Bool2Fn>(0x4c3520)(Original, NULL, mx, my);
+				}
+			});
+		}
+		int Event = Random() % 2 ? 600 : 601;
+		MWFailing("TMapWindow::HandleEvent", 1, [&](int s) {
+			if (s == OURS) Ours->HandleEvent(Event); else At<Int1Fn>(0x4bffa0)(Original, NULL, Event); });
+		int Wd = 240 + Random() % 600, Ht = 176 + Random() % 450;
+		MWFailing("TMapWindow::SetSize", 1, [&](int s) {
+			if (s == OURS) Ours->SetSize(Wd, Ht); else At<Int2Fn>(0x4bfc30)(Original, NULL, Wd, Ht); });
+		SetSizes();
+
+		// The assertions.
+		int Bad = Random() % 2 ? -1 - (int)(Random() % 5) : (Random() % 2 ? MAPSIZE_X : MAPSIZE_Y) + (int)(Random() % 5);
+		int Good = Random() % MAPSIZE_Y;
+		MWCall("TMapWindow::GetCacheField x", 0, 0, [&](int s) {
+			if (s == OURS) Ours->GetCacheField(Bad, Good); else At<CacheFn>(0x4c0590)(Original, NULL, Bad, Good); });
+		MWCall("TMapWindow::GetCacheField y", 0, 0, [&](int s) {
+			if (s == OURS) Ours->GetCacheField(Good % MAPSIZE_X, Bad);
+			else At<CacheFn>(0x4c0590)(Original, NULL, Good % MAPSIZE_X, Bad); });
+		int BadBrightness = Random() % 2 ? -1 - (int)(Random() % 300) : 256 + (int)(Random() % 300);
+		MWCall("TMapWindow::DrawLightMask brightness", 0, 0, [&](int s) {
+			if (s == OURS) Ours->DrawLightMask(10, 20, BadBrightness);
+			else At<Int3Fn>(0x4c02c0)(Original, NULL, 10, 20, BadBrightness); });
+		{
+			TObject None;
+			MWCall("TMapWindow::DrawObject type 0", 0, 0, [&](int s) {
+				if (s == OURS) Ours->DrawObject(32, 32, 7, None, 1000, 1000, 7);
+				else At<ObjectFn>(0x4c4af0)(Original, NULL, 32, 32, 7, None, 1000, 1000, 7); });
+			MWCall("TMapWindow::DrawCreature NULL", 0, 0, [&](int s) {
+				if (s == OURS) Ours->DrawCreature(32, 32, 7, NULL);
+				else At<CreatureFn>(0x4c4f80)(Original, NULL, 32, 32, 7, NULL); });
+			RandomCreature(11, 8, 6, Level);
+			World[11].OutfitType = 0;
+			MWCall("TMapWindow::DrawCreature no outfit", 0, 0, [&](int s) {
+				if (s == OURS) Ours->DrawCreature(32, 32, 7, &World[11]);
+				else At<CreatureFn>(0x4c4f80)(Original, NULL, 32, 32, 7, &World[11]); });
+		}
+		// No player: Draw's, GetField's and (its second GetCreature) HelpMouseMove's.
+		MWCall("TMapWindow::Draw without a player", 0, 1, [&](int s) {
+			if (s == OURS) Ours->Draw(1, 0, 0); else At<Int3Fn>(0x4c7580)(Original, NULL, 1, 0, 0); });
+		for (int k = 0; k < 6; k++) {
+			int mx = Random() % Ours->Width, my = Random() % Ours->Height;
+			MWCall("TMapWindow::GetField without a player", 0, 1, [&](int s) {
+				int f[3];
+				if (s == OURS) Ours->GetField(mx, my, &f[0], &f[1], &f[2]);
+				else At<FieldFn>(0x4c12e0)(Original, NULL, mx, my, &f[0], &f[1], &f[2]); });
+			MWCall("TMapWindow::HelpMouseMove without a player", 0, 2, [&](int s) {
+				if (s == OURS) Ours->HelpMouseMove(mx, my); else At<Bool2Fn>(0x4c3520)(Original, NULL, mx, my); });
+		}
+		// The map wider or higher than the map surface without stretching.
+		{
+			int SavedWidth = Ours->Width, SavedHeight = Ours->Height;
+			bool SavedStretching = NoStretching;
+			NoStretching = true;
+			bool Wide = Random() % 2 != 0;
+			SetWidth(Wide ? 481 + Random() % 100 : 200 + Random() % 280, Wide ? 200 : 353 + Random() % 100);
+			MWCall(Wide ? "TMapWindow::Draw too wide" : "TMapWindow::Draw too high", 0, 0, [&](int s) {
+				if (s == OURS) Ours->Draw(1, 0, 0); else At<Int3Fn>(0x4c7580)(Original, NULL, 1, 0, 0); });
+			SetWidth(SavedWidth, SavedHeight);
+			NoStretching = SavedStretching;
+		}
+		// Unknown party and skull flags of the creatures with names.
+		{
+			int Flag = 5 + Random() % 20;
+			bool Party = Random() % 2 != 0;
+			int SavedInfo = CreatureInfo;
+			CreatureInfo = 1 + Random() % 2;
+			for (int i = 0; i < WorldSize; i++) {
+				if (Party)
+					World[i].PARTYFlag = Flag;
+				else
+					World[i].PKFlag = Flag;
+			}
+			MWCall(Party ? "TMapWindow::Draw party flag" : "TMapWindow::Draw skull flag", 0, 0, [&](int s) {
+				if (s == OURS) Ours->Draw(1, 0, 0); else At<Int3Fn>(0x4c7580)(Original, NULL, 1, 0, 0); });
+			for (int i = 0; i < WorldSize; i++)
+				World[i].PARTYFlag = World[i].PKFlag = 0;
+			CreatureInfo = SavedInfo;
+		}
+		// An effect number outside the table.
+		{
+			int fx = Random() % MAPSIZE_X, fy = Random() % MAPSIZE_Y;
+			TFakeField &F = Fields[fx][fy][Level];
+			int SavedCount = F.EffectCount, Saved0 = F.Effects[0];
+			F.EffectCount = 1;
+			F.Effects[0] = Random() % 2 ? EFFECTS + (int)(Random() % 50) : -2 - (int)(Random() % 50);
+			int px = fx * 32 - Ours->ScrollX, py = fy * 32 - Ours->ScrollY;
+			MWCall("TMapWindow::DrawField effect number", 0, 0, [&](int s) {
+				if (s == OURS) Ours->DrawField(px, py, fx, fy, Level, 0);
+				else At<Int6Fn>(0x4c5520)(Original, NULL, px, py, fx, fy, Level, 0); });
+			F.EffectCount = SavedCount;
+			F.Effects[0] = Saved0;
+		}
+		// A talkbox without a creature and with a mode ArrangeTalkboxes does not know.
+		RandomTalkboxes();
+		if (NumberOfTalkboxes == 0)
+			NumberOfTalkboxes = 1;
+		{
+			TFakeTalkbox &T = Talkboxes[Random() % NumberOfTalkboxes];
+			T.x = 0;
+			T.Mode = Random() % 2 ? 1 + (int)(Random() % 3) : 40 + (int)(Random() % 10);
+			if (T.Lines == 0)
+				T.Lines = 1;
+			MWCall("TMapWindow::ArrangeTalkboxes mode", 0, 0, [&](int s) {
+				if (s == OURS) Ours->ArrangeTalkboxes(); else At<VoidFn>(0x4c0880)(Original, NULL); });
+		}
+		// The use and trade objects the mouse asserts.
+		for (int k = 0; k < 8; k++) {
+			int Which = k % 4;
+			ActionState = Which == 0 ? 7 : Which == 1 ? 8 : 0;
+			ClassicControl = Which == 2;
+			TradeInfo = 0;
+			UsedObject = RandomObject();
+			TradedObject = RandomObject();
+			if (Which == 0)
+				UsedObject.Type = Random() % 2 ? 0 : CREATURE;
+			else if (Which == 1)
+				TradedObject.Type = 0;
+			else
+				UsedObject.Type = CREATURE;
+			int Flags = Which == 3 ? 0x400 : 0;
+			int mx = Random() % Ours->Width, my = Random() % Ours->Height;
+			MWCall("TMapWindow mouse objects", 0, 0, [&](int s) {
+				if (s == OURS) {
+					if (Which <= 1) Ours->LeftButtonUp(mx, my, 0); else Ours->RightButtonUp(mx, my, Flags);
+				} else {
+					if (Which <= 1) At<Bool3Fn>(0x4c2710)(Original, NULL, mx, my, 0);
+					else At<Bool3Fn>(0x4c2e50)(Original, NULL, mx, my, Flags);
+				}
+			});
+		}
+		// The hint button: Arrange with a child that throws, then HandleEvent(27)
+		// (which deletes it) with a hint outside 1..EVENTHELPS.
+		{
+			TMapThrower *T[2];
+			PlaceThrowers(T);
+			T[OURS]->Armed = T[ORIGINAL]->Armed = true;
+			MWCall("TMapWindow::Arrange", 0, 0, [&](int s) {
+				if (s == OURS) Ours->Arrange(); else At<VoidFn>(0x4bfde0)(Original, NULL); });
+			T[OURS]->Armed = T[ORIGINAL]->Armed = false;
+			NextHint = Random() % 3 == 0 ? 1 + Random() % EVENTHELPS : Random() % 2 ? 0 : EVENTHELPS + 1 + Random() % 5;
+			MWCall("TMapWindow::HandleEvent hint", 0, 0, [&](int s) {
+				if (s == OURS) Ours->HandleEvent(27); else At<Int1Fn>(0x4bffa0)(Original, NULL, 27); });
+		}
+	}
+	// The constructors: TMapWindow's hotkeys, TMapFrame's map view.
+	void *SavedWindows[2] = {Window[OURS], Window[ORIGINAL]};
+	for (int Fail = 1; Fail <= 2; Fail++) {
+		uint8 *A = (uint8 *)calloc(1, sizeof(TMapWindow)), *B = (uint8 *)calloc(1, sizeof(TMapWindow));
+		Window[OURS] = A;
+		Window[ORIGINAL] = B;
+		ROUND_COMPARE(R, "TMapWindow::TMapWindow", (Side = OURS, Ticks = 0, FailAt = Fail, new (A) TMapWindow),
+			(Side = ORIGINAL, Ticks = 0, FailAt = Fail, At<CtorFn>(0x4bfa00)(B, NULL)));
+		FailAt = 0;
+		CompareLogs("TMapWindow::TMapWindow", Fail);
+		free(A);
+		free(B);
+		A = (uint8 *)calloc(1, sizeof(TMapFrame));
+		B = (uint8 *)calloc(1, sizeof(TMapFrame));
+		Window[OURS] = Window[ORIGINAL] = NULL;
+		ROUND_COMPARE(R, "TMapFrame::TMapFrame", (Side = OURS, Ticks = 0, FailAt = Fail, new (A) TMapFrame),
+			(Side = ORIGINAL, Ticks = 0, FailAt = Fail, At<CtorFn>(0x4c1a40)(B, NULL)));
+		FailAt = 0;
+		CompareLogs("TMapFrame::TMapFrame", Fail);
+		free(A);
+		free(B);
+	}
+	// TMapFrame::SetSize through its map view's SetSize.
+	{
+		uint8 *A = (uint8 *)calloc(1, sizeof(TMapFrame)), *B = (uint8 *)calloc(1, sizeof(TMapFrame));
+		Window[OURS] = Window[ORIGINAL] = NULL;
+		Side = OURS;
+		TMapFrame *Frame = new (A) TMapFrame;
+		Side = ORIGINAL;
+		At<CtorFn>(0x4c1a40)(B, NULL);
+		ClearMapWindow((uint8 *)Frame->MapWindow);
+		ClearMapWindow(*(uint8 **)(B + 0x2c));
+		CompareLogs("TMapFrame errors: constructor");
+		for (int Fail = 0; Fail <= 4; Fail++) {
+			int Width = 260 + Random() % 700, Height = 200 + Random() % 500;
+			ROUND_COMPARE(R, "TMapFrame::SetSize", (Side = OURS, Ticks = 0, FailAt = Fail, Frame->SetSize(Width, Height)),
+				(Side = ORIGINAL, Ticks = 0, FailAt = Fail, At<Int2Fn>(0x4c1c40)(B, NULL, Width, Height)));
+			FailAt = 0;
+			CompareLogs("TMapFrame::SetSize", Fail);
+		}
+		// The minimum size with a map view that throws.
+		void *Views[2] = {Frame->MapWindow, *(void **)(B + 0x2c)};
+		TMapThrower *T[2] = {new TMapThrower(OURS), new TMapThrower(ORIGINAL)};
+		T[OURS]->Armed = T[ORIGINAL]->Armed = true;
+		Frame->MapWindow = (TMapWindow *)(TComponent *)T[OURS];
+		*(void **)(B + 0x2c) = T[ORIGINAL];
+		ROUND_COMPARE(R, "TMapFrame::getMinimumWidth", (Side = OURS, Frame->getMinimumWidth()),
+			(Side = ORIGINAL, At<IntFn>(0x4c1ea0)(B, NULL)));
+		ROUND_COMPARE(R, "TMapFrame::getMinimumHeight", (Side = OURS, Frame->getMinimumHeight()),
+			(Side = ORIGINAL, At<IntFn>(0x4c2040)(B, NULL)));
+		Frame->MapWindow = (TMapWindow *)Views[OURS];
+		*(void **)(B + 0x2c) = Views[ORIGINAL];
+		delete T[OURS];
+		delete T[ORIGINAL];
+		Side = OURS;
+		Frame->~TMapFrame();
+		free(A);
+		Side = ORIGINAL;
+		At<DeleteFn>(0x4adc40)(B, NULL, 0);
+		free(B);
+		CompareLogs("TMapFrame errors: destructor");
+	}
+	Window[OURS] = SavedWindows[OURS];
+	Window[ORIGINAL] = SavedWindows[ORIGINAL];
+	FakeSurface = SavedSurface;
+	delete RoundSurface;
+	R.Finish();
+	MWRound = NULL;
+}
+
 void TestMapWindow(const char *ExePath)
 {
 	int Before = Checks, BeforeFailures = Failures;
@@ -1322,6 +1823,16 @@ void TestMapWindow(const char *ExePath)
 	DeleteWindows();
 	CompareLogs("destructor");
 	TestFrames(40);
+	// The error round (issue #34), on new windows: its checks and log entries
+	// are reported apart.
+	int RoundChecks = Checks, SavedKinds[sizeof(KindCount) / sizeof(KindCount[0])];
+	memcpy(SavedKinds, KindCount, sizeof(KindCount));
+	NewWindows();
+	TestMapWindowErrors();
+	DeleteWindows();
+	CompareLogs("errors: destructor");
+	memcpy(KindCount, SavedKinds, sizeof(KindCount));
+	RoundChecks = Checks - RoundChecks;
 
 	ExitSkins();
 	Global<TSkin *>(0x71c454) = NULL;
@@ -1331,8 +1842,8 @@ void TestMapWindow(const char *ExePath)
 	int Least = Executed[0];
 	for (int i = 1; i < 24; i++)
 		Least = Executed[i] < Least ? Executed[i] : Least;
-	printf("MapWindow: %d checks, %d failures (each of the 24 operations at least %d times; entries:", Checks - Before,
-		Failures - BeforeFailures, Least);
+	printf("MapWindow: %d checks, %d failures (each of the 24 operations at least %d times; entries:",
+		Checks - Before - RoundChecks, Failures - BeforeFailures, Least);
 	for (size_t i = 0; i < sizeof(Kinds) / sizeof(Kinds[0]); i++)
 		printf(" %.*s %d", (int)strcspn(Kinds[i], ",;"), Kinds[i], KindCount[i]);
 	printf(")\n");
