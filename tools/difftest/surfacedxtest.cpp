@@ -37,14 +37,15 @@
 // RestoreSurfaces, FinishFrame, AttachWindow, UpdateWindowRect,
 // CreateOffscreenSurface, Create3DSurface, ExitDisplay, ExitSurfaces) and
 // clockwrap (WaitForNextFrame across timeGetTime's wrap, last: it leaves the
-// frame counter's second far in the future). Not run: the assertions and the
-// PROGRAM_ERROR throws (the original needs its CRT for them), so every
-// scripted failure is one the code handles without throwing.
+// frame counter's second far in the future). The phases script only failures
+// the code handles without throwing; the assertions and PROGRAM_ERROR throws
+// are TestSurfaceDXErrors' (issue #34, imageeh.h), reported apart.
 //
 // DX_LOGS=<file> writes every operation's log; DX_TRACE=1 prints each
 // operation before it runs and the coverage of each phase to stderr.
 
 #include "difftest.h"
+#include "imageeh.h"
 #include "../../src/SurfaceDX.h"
 #include "../../src/graphics.h"
 #include "../../src/Preferences.h"
@@ -130,13 +131,26 @@ struct TDXScript {
 	int ModeCount;
 	DDSURFACEDESC2 Modes[16];
 	HRESULT EnumResult;
+	int FailCall; // the error round (issue #34): the FailCall-th creation call fails (0: none)
 };
 static TDXScript DXScript;
 
 struct TDXCounters {
 	int Time, VideoRequests, SystemRequests, RenderStates, IsLost, BltStatus, Flips;
+	int Calls; // DXFailing's
 };
 static TDXCounters DXCount[2];
+
+// DirectDrawCreate, QueryInterface (IDirectDraw4), CreateClipper,
+// SetCooperativeLevel, SetDisplayMode, CreateSurface and GetAttachedSurface
+// count their calls; the one DXScript.FailCall names fails.
+static bool DXFailing(const char *What)
+{
+	if (DXScript.FailCall == 0 || ++DXCount[DXSide].Calls != DXScript.FailCall)
+		return false;
+	DXLogf("%s fails;", What);
+	return true;
+}
 
 static void DXFormat(DDPIXELFORMAT *Format, int Kind)
 {
@@ -426,6 +440,10 @@ static HRESULT WINAPI DXGetAttachedSurface(TDXCom *StateObject, DDSCAPS2 *Caps, 
 	// Only dwCaps: the binary leaves the rest of its DDSCAPS2 uninitialised too
 	// (0x4ef694 sets [esp+0x114] alone).
 	DXLogf("GetAttachedSurface %s,%lx,%s;", DXName(StateObject).c_str(), Caps->dwCaps, DXWhere(Result).c_str());
+	if (DXFailing("GetAttachedSurface")) {
+		*Result = NULL;
+		return DDERR_NOTFOUND;
+	}
 	TDXCom *Back = DXAlloc(DX_SURFACE);
 	if (Back == NULL)
 		return DDERR_OUTOFMEMORY;
@@ -540,7 +558,7 @@ static const char *DXGuidName(const GUID *Guid)
 static HRESULT WINAPI DXQueryInterface1(TDXCom *ComObject, const GUID *Guid, void **Result)
 {
 	DXLogf("QI %s,%s,%s;", DXName(ComObject).c_str(), DXGuidName(Guid), DXWhere(Result).c_str());
-	if (*Guid != IID_IDirectDraw4) {
+	if (*Guid != IID_IDirectDraw4 || DXFailing("QI")) {
 		*Result = NULL;
 		return E_NOINTERFACE;
 	}
@@ -564,6 +582,10 @@ static HRESULT WINAPI DXQueryInterface4(TDXCom *ComObject, const GUID *Guid, voi
 static HRESULT WINAPI DXCreateClipper(TDXCom *ComObject, DWORD Flags, TDXCom **Result, IUnknown *Outer)
 {
 	DXLogf("CreateClipper %s,%lx,%s;", DXName(ComObject).c_str(), Flags, Outer == NULL ? "null" : "outer");
+	if (DXFailing("CreateClipper")) {
+		*Result = NULL;
+		return DDERR_GENERIC;
+	}
 	*Result = DXAlloc(DX_CLIPPER);
 	DXLogf("=%s;", DXName(*Result).c_str());
 	return DD_OK;
@@ -576,6 +598,10 @@ static HRESULT WINAPI DXCreateSurface(TDXCom *ComObject, DDSURFACEDESC2 *Desc, T
 		Caps, Desc->ddsCaps.dwCaps2, Desc->dwWidth, Desc->dwHeight, Desc->dwBackBufferCount,
 		DXWhere(Result).c_str(), Outer == NULL ? "null" : "outer");
 	bool Fail = false;
+	if (DXFailing("CreateSurface")) {
+		*Result = NULL;
+		return DDERR_OUTOFMEMORY;
+	}
 	if ((Caps & DDSCAPS_PRIMARYSURFACE) != 0) {
 	} else if ((Caps & DDSCAPS_3DDEVICE) != 0) {
 		Fail = (Caps & DDSCAPS_VIDEOMEMORY) != 0 ? DXScript.Fail3D >= 1 : DXScript.Fail3D >= 2;
@@ -641,14 +667,14 @@ static HRESULT WINAPI DXGetDisplayMode(TDXCom *ComObject, DDSURFACEDESC2 *Desc)
 static HRESULT WINAPI DXSetCooperativeLevel(TDXCom *ComObject, HWND Window, DWORD Flags)
 {
 	DXLogf("SetCooperativeLevel %s,%x,%lx;", DXName(ComObject).c_str(), (unsigned)(uintptr_t)Window, Flags);
-	return DD_OK;
+	return DXFailing("SetCooperativeLevel") ? DDERR_GENERIC : DD_OK;
 }
 
 static HRESULT WINAPI DXSetDisplayMode(TDXCom *ComObject, DWORD Width, DWORD Height, DWORD Bits, DWORD Refresh,
 	DWORD Flags)
 {
 	DXLogf("SetDisplayMode %s,%lu,%lu,%lu,%lu,%lx;", DXName(ComObject).c_str(), Width, Height, Bits, Refresh, Flags);
-	return DD_OK;
+	return DXFailing("SetDisplayMode") ? DDERR_GENERIC : DD_OK;
 }
 
 static HRESULT WINAPI DXTestCooperativeLevel(TDXCom *ComObject)
@@ -801,6 +827,10 @@ static HRESULT WINAPI DXDirectDrawCreate(GUID *Guid, TDXCom **Result, IUnknown *
 {
 	DXLogf("DirectDrawCreate %s,%s,%s;", Guid == NULL ? "null" : "guid", DXWhere(Result).c_str(),
 		Outer == NULL ? "null" : "outer");
+	if (DXFailing("DirectDrawCreate")) {
+		*Result = NULL;
+		return DDERR_GENERIC;
+	}
 	*Result = DXAlloc(DX_DD1);
 	DXLogf("=%s;", DXName(*Result).c_str());
 	return DD_OK;
@@ -2004,6 +2034,149 @@ static void DXEndPhase()
 	}
 }
 
+// --- Error paths (issue #34) ---------------------------------------------------------------
+
+// DXRun with each side in OurThrow/ImageThrow: what they threw, then the
+// usual comparison of logs and objects.
+template <class Body> static void DXThrown(TErrorRound &R, const char *Name, Body Run)
+{
+	TThrown Thrown[2];
+	DXRun(Name, [&](int Side, TSurface *Object) {
+		if (Side == DX_OURS)
+			Thrown[Side] = OurThrow([&] { Run(Side, Object); });
+		else
+			Thrown[Side] = ImageThrow([&] { Run(Side, Object); });
+	});
+	R.Compare(Name, Thrown[DX_OURS], Thrown[DX_ORIGINAL]);
+}
+
+// PROGRAM_ERROR 7-18: one creation call fails, the desktop has too few bits,
+// all offscreen memory is gone; the assertions of AttachWindow, the blits,
+// InitDisplay, CreateSurfaces and GetSurfaceRect.
+static void TestSurfaceDXErrors()
+{
+	TErrorRound R("SurfaceDX");
+	DXPhase = "errors";
+	for (int Round = 0; Round < 160; Round++) {
+		DXResetPools();
+		DXDefaultScript(1 + Round % 4);
+		DXSetGlobal(&CacheSurfaceWidth, 0x5c2568, 256);
+		DXSetGlobal(&CacheSurfaceHeight, 0x5c256c, 256);
+		DXCreateObjects();
+		int Case = Round % 4;
+		DXScript.FailCall = Case == 0 ? 1 + (int)(Random() % 2) : 0; // DirectDrawCreate, QueryInterface
+		DXThrown(R, "InitSurfaces", [&](int, TSurface *Object) { Object->InitSurfaces(); });
+		if (Case != 0) {
+			// Case 1: each counted call of Init in turn fails; case 2: the
+			// desktop depth, or the n-th offscreen request in both memories.
+			int Sweep = Round / 4;
+			DXScript.FailCall = Case == 1 ? 1 + Sweep % 20 : 0;
+			if (Case == 2) {
+				if (Sweep % 3 == 0)
+					DXScript.Format.dwRGBBitCount = 1 + Random() % 15;
+				else {
+					DXScript.VideoFail = (TDXMask)1 << (Sweep % 26);
+					DXScript.SystemFail = ~(TDXMask)0;
+					if (Sweep % 3 == 1) { // no Direct3D: TEMP_SURFACE is the first offscreen request
+						DXScript.QI3D = E_NOINTERFACE;
+						DXScript.VideoFail = (TDXMask)1 << ((Sweep / 3) % 4);
+					}
+				}
+			}
+			TFullscreenMode Resolution = DXResolutions[Random() % 4];
+			Resolution.Frequency = 60;
+			HWND Window = (HWND)0x1234;
+			int Mode = Case == 1 ? 1 + (Sweep / 20) % 2 : 1 + (int)(Random() % 2);
+			DXThrown(R, "Init", [&](int, TSurface *Object) { Object->Init(&Window, Mode, &Resolution, true); });
+			DXScript.FailCall = 0;
+			DXScript.VideoFail = DXScript.SystemFail = 0;
+			DXDefaultScript(1 + Round % 4);
+			TSurfaceDX *Ours = DXOurs();
+			if (Case == 3 && Ours->DirectDraw != NULL && Ours->Surface[PRIMARY_SURFACE] != NULL) {
+				TRect Some(1, 1, 1 + (int)(Random() % 30), 1 + (int)(Random() % 30));
+				TRect Empty(1, 1, (int)(Random() % 2) - 1, 1 + (int)(Random() % 5));
+				if (Random() % 2 == 0)
+					std::swap(Empty.width, Empty.height);
+				TRGBColor Key(1, 2, 3);
+				int Good = (int)(Random() % NUMBER_OF_SURFACES);
+				int Bad = Random() % 2 == 0 ? -1 - (int)(Random() % 5) : NUMBER_OF_SURFACES + (int)(Random() % 5);
+				DXThrown(R, "Blit", [&](int, TSurface *Object) { Object->Blit(SCREEN_SURFACE, 1, 1, Good, Empty, Key); });
+				DXThrown(R, "BlitRect", [&](int, TSurface *Object) { Object->BlitRect(SCREEN_SURFACE, 1, 1, Good, Empty); });
+				DXThrown(R, "GetSurfaceRect", [&](int, TSurface *Object) { TRect Out; Object->GetSurfaceRect(Bad, &Out); });
+				for (int k = 0; k < 6; k++) {
+					int From = k == 0 ? TEMP_SURFACE : k == 1 ? STRETCH_SURFACE : Good;
+					int To = k == 2 ? TEMP_SURFACE : k == 3 ? STRETCH_SURFACE : SCREEN_SURFACE;
+					if (From == TEMP_SURFACE || From == STRETCH_SURFACE)
+						To = SCREEN_SURFACE;
+					if (k >= 4 && (Good == TEMP_SURFACE || Good == STRETCH_SURFACE))
+						From = SPRITE_SURFACE;
+					TRect Huge(0, 0, 2000 + (int)(Random() % 3000), 1 + (int)(Random() % 20));
+					if (Random() % 2 == 0)
+						std::swap(Huge.width, Huge.height);
+					TRect FromRect = k == 4 ? Huge : Some;
+					TRect ToRect = k == 5 ? Huge : TRect(FromRect.x, FromRect.y, FromRect.width + 1, FromRect.height);
+					DXThrown(R, "StretchBlitUnclipped", [&](int, TSurface *Object) {
+						Object->StretchBlitUnclipped(To, ToRect, From, FromRect, Key, Key);
+					});
+					DXThrown(R, "StretchBlit", [&](int, TSurface *Object) {
+						Object->StretchBlit(To, ToRect, From, FromRect, Key, Key, TRect(0, 0, 800, 600));
+					});
+				}
+				// The state checks: members set on both objects for the call
+				// (a stand-in pointer where a check needs one that is not set).
+				static const int Order[6] = {PRIMARY_SURFACE, SCREEN_SURFACE, TEMP_SURFACE, CACHE_SURFACE,
+					AUTOMAP_SURFACE, SPRITE_SURFACE};
+				for (int Check = 0; Check < 16; Check++) {
+					static uint8 Saved[2][sizeof(TSurfaceDX)]; // raw copies: no constructor or destructor
+					for (int Side = 0; Side < 2; Side++) {
+						TSurfaceDX *D = (TSurfaceDX *)DXObjects[Side];
+						memcpy((void *)&Saved[Side], (void *)D, sizeof(TSurfaceDX));
+						void *StandIn = D->DirectDraw;
+						if (Check == 0 || Check == 4 || Check == 7)
+							D->DirectDraw = NULL;
+						if (Check == 1 || Check == 5)
+							D->hWindow = NULL;
+						if (Check == 6)
+							D->Surface[PRIMARY_SURFACE] = NULL;
+						if (Check == 8 && D->Direct3D == NULL)
+							D->Direct3D = (IDirect3D3 *)StandIn;
+						if (Check >= 9) {
+							D->Direct3D = NULL;
+							for (int k = 0; k < 6; k++) {
+								if (k < Check - 9)
+									D->Surface[Order[k]] = NULL;
+								else if (k == Check - 9 && D->Surface[Order[k]] == NULL)
+									D->Surface[Order[k]] = (IDirectDrawSurface4 *)StandIn;
+							}
+							if (Check == 15)
+								D->ViewMode = 7;
+						}
+					}
+					if (Check <= 3) {
+						int VMode = Check == 2 ? 7 : Check == 3 ? FULLSCREEN_MODE : WINDOWED_MODE;
+						TFullscreenMode *GMode = Check == 3 ? NULL : &Resolution;
+						DXThrown(R, "InitDisplay", [&](int, TSurface *Object) { Object->InitDisplay(VMode, GMode); });
+					} else if (Check <= 6) {
+						DXThrown(R, "AttachWindow", [&](int, TSurface *Object) { Object->AttachWindow(); });
+					} else {
+						DXThrown(R, "CreateSurfaces", [&](int, TSurface *Object) { Object->CreateSurfaces(); });
+					}
+					for (int Side = 0; Side < 2; Side++)
+						memcpy(DXObjects[Side], (void *)&Saved[Side], sizeof(TSurfaceDX));
+				}
+				// AttachWindow's clipper failing (PROGRAM_ERROR 9).
+				DXScript.FailCall = 1;
+				DXThrown(R, "AttachWindow clipper", [&](int, TSurface *Object) { Object->AttachWindow(); });
+				DXScript.FailCall = 0;
+			}
+		}
+		DXThrown(R, "ExitSurfaces", [&](int, TSurface *Object) { Object->ExitSurfaces(); });
+		DXDestroyObjects();
+	}
+	DXScript.FailCall = 0;
+	R.Finish();
+}
+
 void TestSurfaceDX()
 {
 	int Before = Checks, BeforeFailures = Failures;
@@ -2035,6 +2208,14 @@ void TestSurfaceDX()
 	DXEndPhase();
 	DXPhaseClockWrap();
 	DXEndPhase();
+	// The error round runs with the fakes; its operations and coverage
+	// points are not counted in the lines below, its checks apart.
+	int ErrorChecks = Checks, Operations = DXOperation;
+	auto Coverage = DXCoverage;
+	TestSurfaceDXErrors();
+	ErrorChecks = Checks - ErrorChecks;
+	DXOperation = Operations;
+	DXCoverage = Coverage;
 	DXRestoreAll();
 	if (DXLogs != NULL) {
 		fclose(DXLogs);
@@ -2045,5 +2226,5 @@ void TestSurfaceDX()
 		if (Entry.first.compare(0, 3, "op ") == 0)
 			Kinds++;
 	printf("SurfaceDX: %d operations of %d kinds, %d coverage points\n", DXOperation, Kinds, (int)DXCoverage.size());
-	printf("SurfaceDX: %d checks, %d failures\n", Checks - Before, Failures - BeforeFailures);
+	printf("SurfaceDX: %d checks, %d failures\n", Checks - Before - ErrorChecks, Failures - BeforeFailures);
 }
