@@ -116,8 +116,22 @@ statics 7,920; every other test's count as before).
   must not throw (noexcept). Clear what a throw leaves behind before the next call (TDialogWindow's Busy and
   Dragged). DIFFTEST_SKIP=<names> leaves tests out of the full run (find which earlier test leaves state
   behind); DIFFTEST_FAILS=<n> prints n failures in every test. notes/decisions.md "Error paths of the window
-  and surface files" lists what is covered and what is left (DialogElements, ConsoleWindow,
-  ContentWindows, Dialogs, MainWindow, MapWindow, Surface.cpp).
+  and surface files" lists what is covered and what is not reachable (its "Second part": MapWindow,
+  MainWindow, ConsoleWindow, ContentWindows, NumberOfBuddies, Surface.cpp; Dialogs and DialogElements on
+  branch issue-34c).
+- Failure injection by call count (issue #34, second part): a window test's Logf calls Tick(), which counts
+  one side's fake calls and makes the FailAt-th throw ThrowSideAssertion of the calling side; a getter that
+  does not log can tick too. Both sides make the same calls, so the throw lands at the same place. A Tick in
+  a getter that was silent before can show a call-order difference (TTradeWindowBody::SetSize). A direct call
+  with Fail = 1-3 (ContentCall, ConsoleCall) reaches the TEND blocks the random rounds miss. After a throw
+  members may point to deleted windows: skip the dumps, compare the logs, abandon the trees.
+- Image-side test objects (issue #34): a test class's object on the image side runs our base code for what
+  it does not override, whose TEND catches the image's exception with our layout. imageeh.h's
+  ImageSideVtable(our vtable, our base vtable, the image's base vtable) gives it the image's base entries
+  (in the error rounds only); an override that must call the base calls the image's on the image side.
+- Destructors and exceptions (issue #34): VC7.1 lets exceptions out of destructors, C++11 makes them
+  noexcept (terminate). TComponent's destructor is noexcept(false), so the window classes' destructors throw
+  as in the binary; a class whose base is MFC's (CMainFrame) cannot (C2694).
 - build.cmd (issue #23) gives the same result from cmd, PowerShell and Git Bash. The old silent
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
   which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with

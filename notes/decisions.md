@@ -4069,7 +4069,7 @@ Claude Opus 5.5 (issue #34), November 2, 2026.
   SurfaceGL 2,620, statics 7,920. Every per-test count of the earlier full runs is unchanged (GUI 5,246,029, DialogWindow
   24,567, ContextMenus 33,088, SurfaceDX 1,213,366, SurfaceDX9 58,682, SurfaceGL 53,082, Errors 31,912).
 
-### Second part (MapWindow, MainWindow, ConsoleWindow, ContentWindows, NumberOfBuddies)
+### Second part (MapWindow, MainWindow, ConsoleWindow, ContentWindows, NumberOfBuddies, Surface.cpp)
 
 Claude Opus 5.5 (issue #34, second part), November 2, 2026.
 
@@ -4096,7 +4096,13 @@ Claude Opus 5.5 (issue #34, second part), November 2, 2026.
   ~TTradeWindowBody: "the handlers rethrow out of the destructor") ended our client in terminate() where
   the original reports the error. TComponent's virtual destructor is noexcept(false) now, so every window
   class's destructor is potentially throwing as in the binary (as TTalkBuffer's, Talk.cpp). MainFrm.cpp's
-  CMainFrame destructor (MFC base, not in the difftest) is left as it was.
+  CMainFrame destructor (0x4a8760, not in the difftest) has the same property in the binary: one try
+  block (state 1) around ExitControl, whose three handlers throw on (0x4a87cd PROGRAM_ERROR,
+  0x4a884d TMyException, 0x4a88e4 the "unknown exception" one) with state 0, the CFrameWnd destructor,
+  left to unwind. It stays noexcept: CFrameWnd's destructor (MFC, afxwin.h) is noexcept and a
+  noexcept(false) override is ill-formed (C2694 with the real MFC; tried). An exception from ExitControl
+  ends our client where the original's goes on to the destructor's caller; the comment at the destructor
+  says so (low impact: the client is exiting).
 - **Reconstruction bugs found and fixed** (high, each from a failing comparison and the binary's code):
   MapWindow.cpp DrawField's object loop prints the object (TEND1(Obj): catch 0x4c72da, line 874, the type
   at [ebp-0x4c]); MapWindow.cpp HelpMouseMove stores the help position in x and y before MoveHelpPosition
@@ -4104,7 +4110,13 @@ Claude Opus 5.5 (issue #34, second part), November 2, 2026.
   MainWindow.cpp ResizeConsole calls Console->getMinimumHeight() once (0x4ac642), ours twice;
   ConsoleWindow.cpp TTextWindow::GetPosition keeps x - Indent in a value of its own (a register,
   0x41a0d8-0x41a0e5): TEND2(x, y) prints the clamped x; ContentWindows.cpp TContainerWindowBody::GetSlotAt
-  turns x and y into grid positions in place (0x42e302, 0x42e30c), which its TEND2 prints.
+  turns x and y into grid positions in place (0x42e302, 0x42e30c), which its TEND2 prints;
+  ContentWindows.cpp TTradeWindowBody::SetSize calls GetMaximumHeight, getMinimumHeight, then both again
+  (0x43403f, 0x43404b, 0x434058, 0x434064; the first pair gives the lower bound): ours had the four calls
+  in one Limit(...) expression, which our compiler evaluated in another order (getMinimumHeight first; seen
+  once the test scroll bar's getMinimumHeight counted as a fake call), now in variables in the binary's
+  order; ContentWindows.cpp TBuddylistWindowBody::GetBuddyAt adds the scroll position to y in place (the
+  parameter's slot, 0x43611f), which its TEND2(x, y) prints (ours computed it in the expression).
 - **Covered** (build/scratch/cover.py of the worktree from an EH_LINES=1 run; a statement over several lines
   counts with any of its lines):
   - MapWindow.cpp (mapwindowtest.cpp TestMapWindowErrors, DIFFTEST_ONLY=MapWindow): 60 of 60. The fakes
@@ -4134,7 +4146,42 @@ Claude Opus 5.5 (issue #34, second part), November 2, 2026.
     tabs between the bar's parts), 1124 (FindTab: loops only), 1712, 1741 (NewTab NULL: needs operator new
     to return NULL), 1794 (SetServerMessages: HandleEvent(203) makes no fake call), 1911 (AddToHistory:
     History->Append), 1975 (ParseInput stops only at '$', '*' or '@'), 2009 (GetTextBuffer asserts first).
-  - ContentWindows.cpp (contentwindowstest.cpp TestContentWindowsErrors): see the handover / later entry.
+  - ContentWindows.cpp (contentwindowstest.cpp TestContentWindowsErrors): 172 of 192. After the 3,000
+    rounds of failing actions, 800 rounds of direct calls on new windows (ContentCall, the console test's
+    ConsoleCall pattern). The assertions: Draw of every part at negative coordinates, a VIP list scrolled
+    by part of a row drawn at 0, 0, HelpMouseMove without a parent, the bodies' SetSize without room for
+    the scroll bar, the trade names and buttons sized to nothing (SetChildArea's assertions, GUI.cpp),
+    LeftButtonUp over an occupied slot or row with an empty or CREATURE use object (action state 7) or an
+    empty trade object (8), GetIcon and GetLine outside their ranges, GetLine's TASSERTB2 (negative values,
+    progress outside -1..100), ShowAcceptButton(NULL), TButtonsWindow(NULL, ...), TCompassRose with a skin
+    >= NumberOfSkins. Then calls whose first to third fake call fails, in a random order until one throws
+    (help, Arrange, events, hover, the getMinimumHeight chain, the wheel, GetInitialHeight, presses on the
+    scroll bar, SetSize, Wait, SetCancelButton, the TTradeButtons constructor, mouse events and Draw of
+    random parts). The test scroll bar's getMinimumHeight counts as a fake call, and its LeftButtonDown
+    counts and runs TWindow's (the image's 0x49dff0 on the image side in the round); the counted part's
+    numbers are unchanged. Not reachable: 359 and 1425 (TAutomapWindow::Arrange, TStatusWindow::Arrange:
+    TWindow::Arrange reaches only TElement's empty Arrange, then the drawing list), 724 and 961 (the
+    TPlayerStates and TSmallInventoryWindow constructors: only new TDrawing[] under the try), 745, 746
+    (TComponent::Draw throws first for x < 0 or y < 0: drawing list entry 0 at 0, 0; destx, desty >= 2),
+    827 (GetIcon returns 0 or 228-239 only), 943 (the loop's i is 0-9, all cases), 1054 (y + 124 as in
+    1048, which throws first), 1208 and 1774 (GetSlotAt, ~TSkillsWindowBody: no calls; no try block in the
+    binary), 1364 (TStatusWindow's constructor: SetSize with the skin's constants, Arrange as above), 1387,
+    1388, 1394, 1395 (TContentWindow::Draw asserts x >= 0 and y >= 0 first; the bars are at 26, 4 and 26,
+    17), 1536 (GetMaximumHeight: GetContentHeight is inline arithmetic), 2480, 2481 (x and y >= 0 asserted
+    first; DestX >= 3, DestY clamped to >= 0), 2919 (x >= 0 asserted first; ItemX 0, Logo.x 2).
   - Creatures.cpp NumberOfBuddies (errortest.cpp TestErrorStatics): FindStatic scans 256 bytes (the read
     comes after GetNumberOfBuddies' try block set-up) with BuddyHideOffline cleared on both sides (ours
     through SetBuddyHideOffline, the image's 0x719eac), restored after.
+  - Surface.cpp SurfaceInitInstance (errortest.cpp TestSurfaceInitInstance, in the statics round): 1 of 2.
+    IsDirect3D9Installed, GetEngine, GetSurface and CreateSurfaceDX9 are fakes on both sides for the round
+    (patched and restored; our GetSurface is a call, not inlined), the surface a TTestSurface whose
+    TestEngine throws; 12 calls with the engine from Tibia.cfg random and no command line engine, the
+    assertion thrown by IsDirect3D9Installed, the creation or TestEngine: PROGRAM_ERROR 12 on both sides,
+    curEngine compared. Not reachable: the second PROGRAM_ERROR 12 (ChoosePixelFormat, DescribePixelFormat):
+    the binary has one try block (ehinfo 0x4eac20: 4 states, try 0-0, catch ... 0x4eae33); the second
+    try's states (2 set at 0x4ead6c, -1 at 0x4ead95) have no handler, the compiler dropped the catch of C
+    functions. Ours (/EHa) keeps it.
+  - Dialogs.cpp and DialogElements.cpp: done on a separate branch (issue-34c, worktree i34c), with their
+    own entry; the coordinator merges both.
+- **Mutation check** (high): MUTATION_PLACEHOLDER
+- **Totals** (full build.cmd, November 2, 2026): TOTALS_PLACEHOLDER
