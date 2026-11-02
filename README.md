@@ -8,11 +8,13 @@ differential tests.
 - `notes/reconstruction.md`: the process, the tools and the status of each file.
 - `notes/progress.md`: where the work stands and what comes next.
 - `notes/decisions.md`: the judgement calls made along the way.
-- `tools/`: triage, pseudocode cleanup, exception-table and call checks, and the
-  differential tests (`tools/difftest`).
+- `tools/`: the build, the differential tests (`tools/difftest`) and the comparisons of
+  the running clients (traffic, written files, rendering, network).
 - `Patella.sln` / `Patella.vcxproj`: build `Patella.exe`, the reconstructed client, with
   Visual Studio 2026 and its MFC component (`tools\build-patella.cmd`; see "Building" in
   `notes/reconstruction.md`).
 
 The client's own files (`Tibia.exe`, `Tibia.dat`, `Tibia.spr`, `Tibia.pic`) and
-the raw decompiler output are not part of this repository.
+the decompilation workspace (the decompiler output, the name and symbol databases,
+the analysis notes and tools) are not part of this repository; `tools\decompilation.ps1`
+moves the local copy between `decompilation/` and its working paths (see CLAUDE.md).

@@ -11,21 +11,33 @@ unins000.*
 # CipSoft gameserver files
 gameserver/
 
-# REA output: empty stderr logs and the regenerable Ghidra snapshot
-rea-out/*.err
-rea-out/*.snapshot
+# The decompilation workspace (the analysis of Tibia.exe), kept out of the repository since November 2, 2026.
+# tools\decompilation.ps1 -Stash keeps it in decompilation\ (same relative paths), -Restore moves it back to
+# the paths below; ignored in both places. decompilation\MANIFEST.txt names the last commit that has the files.
+decompilation/
+decomp/
+rea-out/
+/names.tsv
+/symbols.tsv
+/file-ranges.tsv
+/notes/source-map.md
+/notes/findings.md
+/notes/Communication.md
+/notes/Talk.md
+/tools/triage.py
+/tools/simplify.py
+/tools/callcheck.py
+/tools/ehinfo.py
+/tools/ehcompare.py
+/tools/xctable.py
+/tools/lines.py
+/tools/listing.cmd
 
-# Raw Ghidra pseudocode (179 MB); regenerate with rea decompile-all (see notes/source-map.md)
-decomp/raw/
-decomp/*.json
-decomp/*.err
-decomp/work/
 build/
 
 # Visual Studio state and per-user project settings (Patella.sln, issue #16)
 .vs/
 *.vcxproj.user
-decomp/clean/
 
 # Python bytecode of the tools
 __pycache__/
