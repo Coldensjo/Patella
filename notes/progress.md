@@ -30,6 +30,15 @@ Read this and `git log` first when resuming.
 surfaceDX9.cpp done (issue #10, November 2, 2026), merged with SurfaceDX.cpp (issue #9, PR #28).
 Next: SurfaceGL.cpp with its leading run 0x4f46f0-0x4fb7ef (issue #11) and the other open issues; see GitHub.
 
+## Resources (issue #17)
+
+src/res/Patella.rc + resource.h rebuild all 55 entries of Tibia.exe's .rsrc byte for byte (types, IDs,
+languages). `tools\build-resources.cmd` regenerates the pictures (tools/extract_resources.py Tibia.exe
+build/res; not committed), compiles build\res\Patella.res with rc.exe and compares it with Tibia.exe
+(tools/compare_resources.py: 0 differences). For #16: compile Patella.rc with /I build\res, link the .res,
+do not include MFC's afxres.rc, link with /MANIFEST:NO, then run compare_resources.py Tibia.exe Patella.exe.
+Details and the users of every ID: notes/resources.md.
+
 ## Delegates (running)
 
 None.
