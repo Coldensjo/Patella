@@ -25,10 +25,13 @@ Read this and `git log` first when resuming.
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
+11. The remaining header code (Container.h, Talk.h, Utils.h, ConsoleWindow.h, GUI.h) — **done** (issue #13, Claude Opus 5.5; glh_extensions.h's is #11's).
 
 ## Current item
 
-SurfaceGL.cpp done (issue #11, November 2, 2026, branch issue-11): the three engines are reconstructed.
+SurfaceGL.cpp done (issue #11, November 2, 2026): the three engines are reconstructed.
+The remaining header code done (issue #13, November 2, 2026): every header function of symbols.tsv is in its
+header (glh_extensions.h's with SurfaceGL.cpp, #11); containertest.cpp tests Container.h's instances.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -50,8 +53,8 @@ None.
 
 ## Last difftest
 
-14,068,269 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(issue #11; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082; every other test's total as before).
+14,261,101 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(after merging #11 and #13; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082, Container: 192,832).
 
 ## Notes for later files
 
@@ -256,3 +259,13 @@ None.
   static of ours (no name outside its file) by making it take a sentinel value and searching difftest.exe's
   writable sections (surfacegltest.cpp's FindWord/FindChange). DIFFTEST_ONLY=SurfaceGL runs it alone
   (GL_TRACE=1, GL_LOGS=<file>, GL_ROUNDS=<n>); it has its own random generator.
+- Container.h (issue #13): every instance of the templates in the image is listed at the top of the
+  header; a new user of vector/array/matrix gets the existing template, and its instance's address goes
+  into that list (tools/triage.py counts a header function as written when src/ names its address).
+  containertest.cpp (DIFFTEST_ONLY=Container) calls every image instance next to ours with both sides'
+  operator new[] filling the same pattern; add a line to its Run() for a new instance. Mutating
+  Container.h needs a full rebuild of difftest.exe (every object instantiates the templates and the
+  linker keeps one COMDAT): build/scratch/mutate13.py's way.
+- A temporary coverage build (issue #13, build/scratch/cover in the i13 worktree): INT3 on the first
+  byte of the image's and our functions (ours from the link map), the first hit per test counted, re-armed
+  at the next test. Hitting a breakpoint on every call makes the suite far too slow.

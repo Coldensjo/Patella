@@ -79,11 +79,7 @@ Functions between two different files. Each belongs to one of the neighbours, or
 
 ## Header code
 
-| Header | Functions |
-|---|---:|
-| Container.h | 17 |
-| GUI.h | 1 |
-| ConsoleWindow.h | 1 |
-| Utils.h | 1 |
-| glh_extensions.h | 1 |
-| Talk.h | 1 |
+22 functions name only a header in their assertions; 22 of them are defined in `src/` (their address is named there), 0 are not source (names.tsv kind `stl`). Left:
+
+| Header | Address | Bytes |
+|---|---|---:|

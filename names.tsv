@@ -623,7 +623,7 @@ address	name	kind	confidence	note
 0x4fd6a0	TTalkBuffer_GetSendTalkMode	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd6b0	TTalkBuffer_GetClosed	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x4fd6c0	TTalkLine_GetText	game	medium	Talk.h inline, confirmed by vtable references and disassembly
-0x4fd6e0	vector_talkfilter_ctor	game	medium	Container.h initialized vector<TTalkFilter*> constructor, folded 4-byte pointer layout
+0x4fd6e0	vector_TTalkFilterPtr_ctor_init	game	high	Container.h vector<TTalkFilter *>::vector(min, max, block, init), lines 355-356; Talk.cpp's four filter lists (initialisers 0x55a140-0x55a1a0); same code as 0x453300, 0x425e70 and 0x4973f0 apart from addresses (one copy per object, not folded); operator() folds with vector<int>'s 0x452ac0
 0x506eb0	TPrivateTalkBuffer_GetAddressee	game	medium	Talk.h inline, confirmed by vtable references and disassembly
 0x507060	TChannelTalkBuffer_GetChannelID	game	medium	Talk.h inline, confirmed by vtable references and disassembly; folded with DialogElements.h's TListBox::GetNumberOfLines (Lines at +0x2c), which Dialogs.cpp calls
 0x507260	TRuleViolationTalkBuffer_SetWriteEnabled	game	medium	Talk.h inline, confirmed by vtable references and disassembly
@@ -1113,10 +1113,10 @@ address	name	kind	confidence	note
 0x4964a0	TSkinProperties1274_ctor	stl	high	GUI.cpp: compiler-generated default constructor of a SkinProperties block (constructs the TGUIPoint/TRGBColor/TRect/TFont members, leaves the ints); type name ours
 0x496520	TComponent_scalar_deleting_dtor	stl	high	GUI.cpp: compiler-generated, ~TComponent inlined
 0x496550	TElement_scalar_deleting_dtor	stl	high	GUI.cpp: compiler-generated, calls ~TComponent 0x496040
-0x496570	vector_THotkey_at	game	low	Container.h vector<T>::operator() for THotkey (12 bytes; the element constructor zeroes the callback), GUI.cpp
+0x496570	vector_THotkey_at	game	high	Container.h vector<THotkey>::operator() (12-byte element; new[] runs TCallback's inline constructor, clearing +4/+8 of each entry; init at +0x18, entry at +0x24), GUI.cpp's Hotkeys
 0x496800	TSkinProperties_ctor	stl	high	GUI.cpp: compiler-generated default constructor of SkinProperties (0x5ccfc8), static initialiser 0x559e50
-0x4973f0	vector_TTimerPtr_ctor	game	low	Container.h vector<T>::vector(min, max, block, init), lines 355-356, for GUI.cpp's Timers (0x5ccfa4, initialiser 0x559e30)
-0x4976f0	vector_THotkey_ctor	game	low	Container.h vector<T>::vector(min, max, block), lines 369-370, for GUI.cpp's Hotkeys (0x5ce4f0, initialiser 0x559e60); missed by Ghidra
+0x4973f0	vector_TTimerPtr_ctor_init	game	high	Container.h vector<TTimer *>::vector(min, max, block, init), lines 355-356, for GUI.cpp's Timers (0x5ccfa4, initialiser 0x559e30); same code as 0x453300 apart from addresses
+0x4976f0	vector_THotkey_ctor	game	high	Container.h vector<THotkey>::vector(min, max, block), lines 369-370, for GUI.cpp's Hotkeys (0x5ce4f0, initialiser 0x559e60); init's TCallback constructor first, then new[] with the element constructor (the eleventh EH state); missed by Ghidra
 0x497a00	DrawSkin	game	low	GUI.cpp lines 42-86: tiles a skin; srcx/srcy cut the first column/row
 0x498160	InitSkinProperties	game	low	GUI.cpp: fills SkinProperties (1341 constant stores); called by InitControl after InitSkins
 0x49af20	AddTimer	game	medium	GUI.cpp line 851
@@ -1568,7 +1568,7 @@ address	name	kind	confidence	note
 0x424b10	TConsoleWindow_HandleEvent	game	high	ConsoleWindow.cpp lines 1856-1859 (Event), vtable +0x70: events 201-213 and 403
 0x425070	TConsoleWindow_OpenChannel	game	medium	ConsoleWindow.cpp lines 1965-1969 (RecvMode, SendMode, TextBuffer!=NULL): CreateTextBuffer or GetTextBuffer, AddChannel; Control.cpp's messages 0x2f-0x31; name ours
 0x425330	TConsoleWindow_ReportRuleViolation	game	medium	ConsoleWindow.cpp lines 2033-2051 (NewTab!=NULL, Question!=NULL, strlen(Question)>0, TextBuffer!=NULL): opens the player's request channel; Control.cpp's message 0x33; name ours
-0x425b10	vector_TMark_dtor	game	medium	Container.h ~vector<TMark> (delete[] entry at +0x88), out-of-line copy kept in ContentWindows.obj next to 0x425b20; atexit thunks 0x536e26, 0x536f86 jump to it
+0x425b10	vector_TMark_dtor	game	high	Container.h vector<TMark>::~vector (delete[] entry at +0x88), out-of-line copy kept in ContentWindows.obj next to 0x425b20; atexit thunks 0x536e26, 0x536f86 jump to it
 0x452790	TMultiStateButton_Reset	game	low	DialogElements.h inline: State = States+1, which wraps to 0, and its skins; ConsoleWindow.cpp's volume button; name ours
 0x45bc80	TEditLine_SetActive	game	medium	DialogElements.cpp: Active; false clears the selection length
 0x460450	TScrollBarRange_SetRange	game	high	DialogElements.cpp lines 3281-3291 (_Min<=_Max): (Min, Max, Value, Visible)
@@ -1780,8 +1780,8 @@ address	name	kind	confidence	note
 0x452a00	TProgressBar_ctor	game	medium	DialogElements.h inline TProgressBar(), vtable 0x561028, 0x2c bytes: Maximum 100
 0x452a90	TProgressBar_getMinimumWidth	game	high	DialogElements.h inline, vtable 0x561028 +0x3c; missed by Ghidra
 0x452ab0	TProgressBar_getMinimumHeight	game	high	DialogElements.h inline, vtable +0x40; missed by Ghidra
-0x452c50	vector_int_dtor	game	medium	Container.h ~vector<int> (delete[] entry), called by unwind funclets
-0x452c60	vector_TListBoxLine_dtor	game	medium	Container.h ~vector<TListBoxLine> (delete[] entry at +0x30), called by unwind funclets
+0x452c50	vector_int_dtor	game	high	Container.h vector<int>::~vector (delete[] entry at +0x1c; any 4-byte element: also the vector<TEditLine *> and vector<char *> of DialogElements.obj), called by unwind funclets
+0x452c60	vector_TListBoxLine_dtor	game	high	Container.h vector<TListBoxLine>::~vector (delete[] entry at +0x30), called by unwind funclets
 0x452c70	TListBoxLine_ctor	game	medium	DialogElements.h implicit TListBoxLine() (TFont's defaults), the element constructor of new TListBoxLine[]; missed by Ghidra
 0x452d50	TLabel_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TLabel (vtable 0x560bb8 slot 0), calls 0x4525d0
 0x452d70	TFormattedText_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TFormattedText, calls 0x452630
@@ -2009,7 +2009,7 @@ address	name	kind	confidence	note
 0x46bb00	CompareNames	game	low	Dialogs.h inline qsort comparator of TIgnoreListDialog (_stricmp of two char *); missed by Ghidra
 0x46bb20	TNewChannelDialog_dtor	game	medium	Dialogs.h inline ~TNewChannelDialog (vtable 0x562418): delete[] ChannelIDs
 0x46bb40	TGraphicsOptionsDialog_dtor	game	medium	Dialogs.h inline ~TGraphicsOptionsDialog (vtable 0x5624b8): delete[] Modes
-0x46bb60	vector_TIgnoreEntry_dtor	game	medium	Container.h ~vector<TIgnoreEntry> (delete[] entry at +0x34), called by unwind funclets
+0x46bb60	vector_TIgnoreEntry_dtor	game	high	Container.h vector<TIgnoreEntry>::~vector (delete[] entry at +0x34), called by unwind funclets
 0x46bb70	vector_TIgnoreEntry_at	game	high	Container.h vector<TIgnoreEntry>::operator() (0x1f-byte element: Name[30], Permanent), Dialogs.cpp's ignore list
 0x46bdf0	TQuestionLabel_dtor	stl	high	compiler-generated ~TQuestionLabel (and ~TLogoutLabel, folded): jmp ~TLabel 0x4525d0
 0x46be00	TQuestionLabel_scalar_deleting_dtor	stl	high	compiler-generated deleting destructor of TQuestionLabel and TLogoutLabel (vtables 0x562110, 0x562198), calls 0x46bdf0

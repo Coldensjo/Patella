@@ -2706,3 +2706,66 @@ Reconstructed by Claude Opus 5.5, November 2, 2026.
   as before. Every test's check count in the full run is unchanged (DialogWindow 24,567, ContextMenus 33,088,
   ConsoleWindow 30,948, ContentWindows 52,506, DialogElements 135,478, Dialogs 98,889, Graphics 570,954,
   MapWindow 115,169, MainWindow 14,164); the full run passes 14,068,269 checks with SurfaceGL's 53,082.
+## Header code (issue #13)
+
+Claude Opus 5.5, November 2, 2026. glh_extensions.h's 0x4f9260 is left to #11 (SurfaceGL.cpp).
+
+- **Every header function was in src/ already** (high). The earlier file issues wrote each one where
+  its object needed it: Container.h's templates (Status/Preferences/Talk/Objects/Map), GUI.h's
+  GetFirstChild/GetLastChild (0x417de0/0x417f00, TERROR "not possible", lines 681-682),
+  ConsoleWindow.h's TLineFormat constructors (0x418020, lines 47-54, and the inline default one),
+  Utils.h's TBuffer::SetSize (0x4ca300, line 50), Talk.h's TTalkBuffer constructor, GetText,
+  GetChannelID and TRuleViolationChannel::AddText (line 321). Issue #13 checked each against its
+  disassembly and exception table again; nothing in the code changed. No .cpp or external.h kept a
+  hand-written copy of a header member (every vector/array/matrix user includes Container.h).
+- **One template, every instance** (high). All 13 vector<T> instances compile from the one
+  Container.h template: the four initialized constructors 0x425e70 (TSkinButton *), 0x453300 (int),
+  0x4973f0 (TTimer *) and 0x4fd6e0 (TTalkFilter *) are the same instructions apart from addresses
+  (one copy per object: functions with exception tables are not folded), lines 355-356, ten EH
+  states. The plain constructors have ten states for elements without a constructor (int,
+  TContentWindowSize, TBuddy, TMessage) and eleven for those with one (TLineFormat, TMark,
+  TListBoxLine, TIgnoreEntry, THotkey, TErrorReport): the extra state frees the new[] block if an
+  element constructor throws; init is default-constructed first (THotkey: TCallback's constructor
+  clears +0x1c/+0x20 before the first store). vector<THotkey>::operator() 0x496570 grows with new[]
+  (TCallback's constructor on every new entry), copies 12-byte entries by swapping and frees with
+  operator delete[] (0x523812): the template's code. The out-of-line destructors are delete[] of the
+  entry pointer, whose offset gives the element size (0x1c: 4 bytes, 0x30: 0x18, 0x34: 0x1f, 0x88:
+  0x70, matrix's 0x10).
+- **names.tsv** (high). The three low rows of GUI.obj's instances (0x496570, 0x4973f0, 0x4976f0) and
+  the four medium destructor rows are high now; vector_talkfilter_ctor is
+  vector_TTalkFilterPtr_ctor_init and vector_TTimerPtr_ctor vector_TTimerPtr_ctor_init, like
+  vector_int_ctor_init and vector_TSkinButtonPtr_ctor_init. Rows keep C identifiers (simplify.py
+  substitutes them into the pseudocode and callcheck.py reads Class_method); the note of each row
+  names the instance as Container.h writes it, e.g. vector<TTalkFilter *>::vector(min, max, block, init).
+- **tools/triage.py's header table** (medium for the rule). A header function counts as written when
+  src/ names its address (the "// 0x..." comments next to the definitions); names.tsv rows of kind stl
+  count as not source. notes/source-map.md now lists only what is left (glh_extensions.h 0x4f9260).
+  The rule is textual: a comment that names an address without defining the function would hide it.
+- **Coverage** (high). A temporary build put an INT3 on the first byte of each image instance and of
+  each of our compiled instances (addresses from the link map), counted the first hit per test and
+  re-armed at the next test (build/scratch/cover, not committed); the full suite passed with it
+  (14,015,187 checks, 0 failures). Every image instance was reached by its users' tests (ConsoleWindow,
+  ContentWindows, Map, DialogElements, Dialogs, GUI, Help, Preferences, PreferencesFile, Talk,
+  Objects, Creatures, Graphics, MapWindow, Status) except the out-of-line destructors 0x425b10,
+  0x452c50, 0x452c60, 0x46bb60, 0x4b0b20 (only unwind funclets and atexit thunks call them),
+  TBuffer::SetSize 0x4ca300 and the three functions that only throw (0x417de0, 0x417f00, 0x5075c0).
+  Our static vectors' constructors run before main (the image's are called explicitly by the tests).
+- **containertest.cpp** (DIFFTEST_ONLY=Container, before TestMapWindow): every image instance of
+  vector, array, matrix and matrix3d next to ours on random sizes, blocks and init values; after each
+  call the objects (all bytes but the entry pointer) and the whole allocated arrays are compared,
+  operator()'s returned entry as an index. Both sides' operator new[] fill new memory with the same
+  random pattern (as contentwindowstest.cpp does), so entries neither side initialises agree; the
+  vector objects get a different pattern than their entries (otherwise an entry wrongly set from an
+  uninitialised init looks like a fresh one: the first mutation run missed exactly that). The
+  out-of-line destructors run on the image's objects. Also TLineFormat's constructor 0x418020,
+  TBuffer::SetSize and GetChannelID 0x507060. Not run: the assertion and index-error paths (the
+  image cannot throw in the child, its stringstream cannot run) and the three throwing functions.
+  It draws from its own generator, so the later tests (MapWindow, MainWindow) get the same inputs
+  as before: the full run is the old total plus its 192,832 checks.
+- **Mutation check** (build/scratch/mutate13.py: each mutation rebuilds difftest.exe completely, since
+  every object instantiates the templates and the linker keeps one COMDAT, then runs
+  DIFFTEST_ONLY=Container): eight changes (the initialized constructor's last entry, initialized in
+  the plain constructor, block 0 growing down, filling below min without init, growing up dropping the
+  last entry, matrix3d's layout, matrix's ymin, array's entry), all detected after the pattern split.
+  An equivalent change exists: dropping `entry[j - start] = h` in the growth loops (the old array is
+  freed right after).
