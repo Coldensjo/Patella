@@ -53,8 +53,8 @@ class TSurface {
 public:
 	TSurface();
 	virtual ~TSurface();                                              // +0x00
-	virtual void Unknown04(int Value);                                // +0x04, empty
-	virtual void Unknown08(int Value);                                // +0x08, empty
+	virtual void SelectSurface(int Surface);                          // +0x04, empty; SurfaceGL.cpp's drawing target
+	virtual void SetTextureFilter(int Filter);                        // +0x08, empty; SurfaceGL.cpp's GL_LINEAR/GL_NEAREST
 	virtual void SetPixel(int Surface, int x, int y, TRGBColor Color) = 0; // +0x0c, ContentWindows.cpp's automap cross
 	virtual void FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, TRect Clip) = 0; // +0x10, ContentWindows.cpp's bars
 	virtual void FillRectangle(int Surface, TRect Rect, TRGBColor Color) = 0; // +0x14
@@ -100,7 +100,7 @@ public:
 	virtual void CreateSurfaces() = 0;                                // +0x74
 	virtual void ResetDisplay(int VMode, TFullscreenMode *GMode) = 0; // +0x78
 	virtual void RestoreSurfaces(int ViewMode, TFullscreenMode *Mode) = 0; // +0x7c
-	virtual void Unknown80(int a, int b, int c, int d);               // +0x80, empty
+	virtual void AddDirtyRect(TRect Rect);                            // +0x80, empty; SurfaceGL.cpp's area drawn into the selected surface
 	virtual void FinishFrame() = 0;                                   // +0x84
 	virtual bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force) = 0; // +0x88
 	virtual int GetFullscreenModes(TFullscreenMode **Modes) = 0;      // +0x8c, a new[] list; the number of modes
@@ -126,7 +126,7 @@ public:
 	// surfaceDX9.cpp's copies). The doubles align the class to 8 bytes, so
 	// +0x04 is padding after the vtable pointer.
 	HWND hWindow;        // +0x08, the main window (TestEngine, SurfaceInitInstance)
-	int Data0C;          // +0x0c
+	HDC DeviceContext;   // +0x0c, SurfaceGL.cpp's device context of the window
 	int ViewMode;        // +0x10, 0 none, WINDOWED_MODE, FULLSCREEN_MODE
 	int Width;           // +0x14, the fullscreen mode
 	int Height;          // +0x18
@@ -135,7 +135,8 @@ public:
 	bool Unavailable;    // +0x24, no exclusive mode (another application has it)
 	bool CanStretch;     // +0x25, the hardware stretches blits
 	bool Flag26;         // +0x26, cleared by the constructor
-	uint8 Data27[0x11];  // +0x27
+	uint8 Data27;        // +0x27
+	RECT ScreenRect;     // +0x28, SurfaceGL.cpp's client area in screen coordinates
 	int NumberOfModes;   // +0x38, cleared by the constructor; GetFullscreenModes' count
 	int Data3C;          // +0x3c, cleared by the constructor
 	int CacheSurfaces;   // +0x40, cleared by the constructor

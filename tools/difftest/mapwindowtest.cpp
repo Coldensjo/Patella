@@ -6,7 +6,7 @@
 // state are shared fakes; the image's functions and ours (PatchOwn) jump to
 // the same code, which knows the calling side from Side. Everything MapWindow
 // draws or sends goes to a log per side: the graphics.cpp and GUI.cpp drawing
-// functions, the surface slots (the TSurfaceGL methods below; both sides'
+// functions, the surface slots (the TTestSurface methods below; both sides'
 // GetSurface return the same object), the Communication.cpp messages (our
 // side's definitions are here), the Status, Talk and Help setters and the
 // hotkeys. Objects, outfits, effects and missiles come from the real
@@ -34,6 +34,7 @@
 #include "../../src/Skins.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/Talk.h"
 #include <new>
 #include <stdarg.h>
@@ -420,27 +421,27 @@ void SendUseObjectOnCreature(int x, int y, int z, int Type, int Position, uint32
 	Logf("CC%d,%d,%d,%d,%d,%u;", x, y, z, Type, Position, CreatureID);
 }
 
-// The surface slots MapWindow.cpp calls (the TSurfaceGL methods; the others
+// The surface slots MapWindow.cpp calls (the TTestSurface methods; the others
 // are graphicstest.cpp's recorders and playertest.cpp's stubs).
 static bool SurfaceLost, CanShade;
-void TSurfaceGL::FillRectangle(int Surface, TRect R, TRGBColor C)
+void TTestSurface::FillRectangle(int Surface, TRect R, TRGBColor C)
 {
 	Logf("SF%d,%d,%d,%d,%d,%d/%d/%d;", Surface, R.x, R.y, R.Width, R.Height, C.R, C.G, C.B);
 }
-void TSurfaceGL::DrawFrameClipped(int Surface, TRect R, int LineWidth, TRGBColor C, TRect Clip)
+void TTestSurface::DrawFrameClipped(int Surface, TRect R, int LineWidth, TRGBColor C, TRect Clip)
 {
 	Logf("SR%d,%d,%d,%d,%d,%d,%d/%d/%d,%d,%d,%d,%d;", Surface, R.x, R.y, R.Width, R.Height, LineWidth, C.R, C.G, C.B,
 		Clip.x, Clip.y, Clip.Width, Clip.Height);
 }
-void TSurfaceGL::BlitRect(int To, int x, int y, int From, TRect S)
+void TTestSurface::BlitRect(int To, int x, int y, int From, TRect S)
 {
 	Logf("SB%d,%d,%d,%d,%d,%d,%d,%d;", To, x, y, From, S.x, S.y, S.Width, S.Height);
 }
-void TSurfaceGL::StretchBlitRect(int To, TRect D, int From, TRect S)
+void TTestSurface::StretchBlitRect(int To, TRect D, int From, TRect S)
 {
 	Logf("SS%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", To, D.x, D.y, D.Width, D.Height, From, S.x, S.y, S.Width, S.Height);
 }
-void TSurfaceGL::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors)
+void TTestSurface::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors)
 {
 	Logf("SH%d,%d", Surface, Count);
 	for (int i = 0; i < Count; i++)
@@ -449,8 +450,8 @@ void TSurfaceGL::ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor
 		Logf(",%d/%d/%d", Colors[i].R, Colors[i].G, Colors[i].B);
 	Logf(";");
 }
-bool TSurfaceGL::SurfaceRecreated(int Surface) { Logf("S9%d;", Surface); return SurfaceLost; }
-bool TSurfaceGL::CanShadeRectangles() { return CanShade; }
+bool TTestSurface::SurfaceRecreated(int Surface) { Logf("S9%d;", Surface); return SurfaceLost; }
+bool TTestSurface::CanShadeRectangles() { return CanShade; }
 static TSurface *FakeSurface;
 static TSurface *__cdecl FakeGetSurface() { return FakeSurface; }
 

@@ -842,9 +842,9 @@ address	name	kind	confidence	note
 0x4eabb0	TSurface_SetColorKey	game	medium	Surface.cpp: vtable +0x50, calls +0x54 with the same arguments, a surface and a colour key (TRGBColor by value; graphics.cpp sets the cache surfaces' key with it) (missed by Ghidra)
 0x4eabd0	TSurface_dtor	game	high	Surface.cpp
 0x4eabe0	TSurface_GetAvailableEngines	game	low	Surface.cpp, a TSurface member (Dialogs.cpp calls it with the surface in ECX): bit 0 OpenGL, bit 1 DirectX 9
-0x4eabf0	TSurface_Unknown98	game	medium	Surface.cpp: vtable +0x98, empty (missed by Ghidra)
-0x4eac00	TSurface_Unknown04	game	medium	Surface.cpp: vtable +0x04 and +0x08, empty, folded (missed by Ghidra)
-0x4eac10	TSurface_Unknown80	game	medium	Surface.cpp: vtable +0x80, empty (missed by Ghidra)
+0x4eabf0	TSurface_SetSurfaceRect	game	medium	Surface.cpp: vtable +0x98, empty; surfaceDX9.cpp sets Rect[Surface] there (missed by Ghidra)
+0x4eac00	TSurface_SelectSurface	game	medium	Surface.cpp: vtable +0x04 (SelectSurface) and +0x08 (SetTextureFilter), empty, folded; only SurfaceGL.cpp overrides them (missed by Ghidra)
+0x4eac10	TSurface_AddDirtyRect	game	medium	Surface.cpp: vtable +0x80, empty (TRect by value); only SurfaceGL.cpp overrides it (missed by Ghidra)
 0x4eac20	SurfaceInitInstance	game	low	Surface.cpp: chooses the engine at start-up; name after SurfaceExitInstance
 0x4eae50	TSurface_scalar_deleting_dtor	stl	high	compiler-generated, kept in Surface.obj
 0x4fcba0	FileExists	game	medium	sysinc.cpp: _access(Name, 0) == 0
@@ -1998,11 +1998,6 @@ address	name	kind	confidence	note
 0x4ee830	TSurfaceDX_InitDisplay	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
 0x4eed40	TSurfaceDX_CreateSurfaces	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
 0x4efb70	TSurfaceDX_GetSurfaceRect	game	medium	SurfaceDX.cpp; name inferred from DirectDraw/Direct3D calls, virtual slot and binary instructions
-0x4f9d00	TSurfaceDX_GetFPS	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0xb0
-0x4fa110	TSurfaceDX_DrawFrame	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0x24
-0x4fa2c0	TSurfaceDX_DrawFrameClipped	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0x20
-0x4fb5e0	TSurfaceDX_GetCacheSurfaces	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0x90
-0x4fb5f0	TSurfaceDX_IsUnavailable	game	medium	shared inline override folded with SurfaceGL.cpp; virtual +0xa0
 0x4731d0	TScrollBar_KeyPress	game	medium	DialogElements.h inline Range->KeyPress(Key), vtable +0x6c of both scroll bars; folded with Dialogs.h's TBugReportDialog::KeyPress (EditText->KeyPress(Key), vtable 0x562cd8 +0x6c)
 0x46b790	TQuestionLabel_ctor	game	medium	Dialogs.h inline TQuestionLabel(Font, Text, Yes, No) (vtable 0x562110), called by CreateQuestionDialog
 0x46b840	TLogoutLabel_ctor	game	medium	Dialogs.h inline TLogoutLabel(Font, Text, Logout, Exit) (vtable 0x562198)
@@ -2226,3 +2221,53 @@ address	name	kind	confidence	note
 0x4f3240	TSurfaceDX9_InitDisplay	game	medium	surfaceDX9.cpp vtable +0x6c, lines 1465-1468 (VMode, GMode)
 0x4f3740	TSurfaceDX9_CreateSurfaces	game	medium	surfaceDX9.cpp vtable +0x74, lines 1639-1647: Direct3D, device, states, buffers, textures
 0x4f4560	TSurfaceDX9_GetSurfaceRect	game	medium	surfaceDX9.cpp vtable +0x94, line 2055 (Surface, bug0000290)
+0x4f46f0	glh_init_extension	stl	high	glh_genext.h (NVIDIA SDK, Extern/glh): the entry points of one extension by name (121 names, 549 wglGetProcAddress pointers 0x71d318-0x71dba8); kept in SurfaceGL.obj (GLH_EXT_SINGLE_FILE), reconstructed in src/Extern/glh
+0x4f9040	glh_ExtensionExists	stl	high	glh_extensions.h static ExtensionExists(extName in a register, sysExts): GL_VERSION_1_2..1_5 by the version string, else the padded name in sysExts
+0x4f9260	glh_init_extensions	stl	high	glh_extensions.h: builds sysExts (GL + WGL extension strings), initialises each requested extension, collects unsupportedExts
+0x4f9510	glh_shutdown_extensions	stl	low	glh_extensions.h by position: frees unsupportedExts and sysExts (also inlined into TSurfaceGL::ExitSurfaces); name ours
+0x4f9550	ReleasePbuffer	game	low	SurfaceGL.cpp: releases the pbuffer, its DC and context (imports checked for NULL)
+0x4f95d0	CreatePbuffer	game	low	SurfaceGL.cpp: 640x480 pbuffer (wglChoosePixelFormatARB, wglCreatePbufferARB), context sharing the main one
+0x4f9710	IsOpenGLWorking	game	low	SurfaceGL.cpp: Surface.cpp engine selection; pixel format, context, pbuffer extensions and a test pbuffer; catch ... 0x4f9850
+0x4f9860	TSurfaceGL_dtor	game	high	SurfaceGL.cpp: sets the vtable 0x573250, NumberOfSurfaces = 0, ~TSurface
+0x4f9880	TSurfaceGL_GetSurfaceMemory	game	medium	SurfaceGL.cpp vtable +0xa8: SurfaceCreated[Index]
+0x4f9890	TSurfaceGL_SelectSurface	game	low	SurfaceGL.cpp vtable +0x04: the drawing target; copies the dirty rectangle back, draws the texture into the pbuffer
+0x4f9b80	TSurfaceGL_AddDirtyRect	game	low	SurfaceGL.cpp vtable +0x80 (TRect by value): grows the dirty rectangle 0x71d290
+0x4f9bd0	TSurfaceGL_SetTextureFilter	game	low	SurfaceGL.cpp vtable +0x08: GL_TEXTURE_MIN/MAG_FILTER when it changed (0x5c257c)
+0x4f9c10	TSurfaceGL_SetSourceColorKey	game	medium	SurfaceGL.cpp vtable +0x54: Textures[Surface].ColorKey
+0x4f9c40	TSurfaceGL_WaitForNextFrame	game	medium	SurfaceGL.cpp vtable +0x60: the frame limiter (the same code as surfaceDX9.cpp's, its own counters 0x71dbb4/0x71dbb8)
+0x4f9d00	TSurfaceGL_GetFPS	game	medium	SurfaceGL.cpp vtable +0xb0; also the DX5 and DX9 vtables' (folded)
+0x4f9d10	TSurfaceGL_UpdateWindowRect	game	medium	SurfaceGL.cpp vtable +0x68: client rectangles, ScreenRect, projection
+0x4f9dc0	TSurfaceGL_SetPixel	game	medium	SurfaceGL.cpp vtable +0x0c: GL_POINTS
+0x4f9e50	TSurfaceGL_FillRectangle	game	medium	SurfaceGL.cpp vtable +0x14: glRecti
+0x4f9ef0	TSurfaceGL_FillRectangleClipped	game	medium	SurfaceGL.cpp vtable +0x10: ClipRect with an uninitialised second rectangle
+0x4f9ff0	TSurfaceGL_DrawHorizontalLine	game	medium	SurfaceGL.cpp vtable +0x18: GL_LINES
+0x4fa080	TSurfaceGL_DrawVerticalLine	game	medium	SurfaceGL.cpp vtable +0x1c: GL_LINES
+0x4fa110	TSurfaceGL_DrawFrame	game	medium	SurfaceGL.cpp vtable +0x24; also the DX5 and DX9 vtables' (folded)
+0x4fa2c0	TSurfaceGL_DrawFrameClipped	game	medium	SurfaceGL.cpp vtable +0x20; also the DX5 and DX9 vtables' (folded)
+0x4fa510	TSurfaceGL_StretchBlitUnclipped	game	medium	SurfaceGL.cpp vtable +0x44: Blit at the same size, else a scaled quad (float texture coordinates, both colours unused)
+0x4fa700	TSurfaceGL_StretchBlitRect	game	medium	SurfaceGL.cpp vtable +0x40: scaled quad, linear filtering
+0x4fa8b0	TSurfaceGL_StretchBlit	game	medium	SurfaceGL.cpp vtable +0x48: through TEMP_SURFACE and STRETCH_SURFACE, colour key by glGetTexImage
+0x4fab70	TSurfaceGL_BlitClipped	game	medium	SurfaceGL.cpp vtable +0x3c: BlitRectClipped without the colour key; also the DX5 and DX9 vtables' (folded)
+0x4fabd0	TSurfaceGL_ShadeRectangles	game	medium	SurfaceGL.cpp vtable +0x4c: GL_DST_COLOR blended quads
+0x4fad20	TSurfaceGL_FinishFrame	game	medium	SurfaceGL.cpp vtable +0x84: frame statistics, SwapBuffers
+0x4fada0	TSurfaceGL_InitDisplay	game	medium	SurfaceGL.cpp vtable +0x6c: ChangeDisplaySettingsA
+0x4faef0	TSurfaceGL_CreateTexture	game	low	SurfaceGL.cpp: power-of-two texture, counts SurfaceCreated/NumberOfSurfaces, always true
+0x4fb030	TSurfaceGL_ExitDisplay	game	medium	SurfaceGL.cpp vtable +0x70: deletes the textures and the pbuffer
+0x4fb070	TSurfaceGL_CreateSurfaces	game	medium	SurfaceGL.cpp vtable +0x74 (missed by Ghidra): textures 2-21, pbuffer; PROGRAM_ERROR 15-18, 12
+0x4fb1f0	TSurfaceGL_ResetDisplay	game	medium	SurfaceGL.cpp vtable +0x78: catch ... 0x4fb23b (ExitDisplay, nested catch ... 0x4fb266), PROGRAM_ERROR 12
+0x4fb280	TSurfaceGL_RestoreSurfaces	game	medium	SurfaceGL.cpp vtable +0x7c: CreateSurfaces, catch ... 0x4fb2c1 PROGRAM_ERROR 12
+0x4fb2e0	TSurfaceGL_Init	game	medium	SurfaceGL.cpp vtable +0x88: window context, pixel format, glh_init_extensions
+0x4fb4e0	TSurfaceGL_GetFullscreenModes	game	medium	SurfaceGL.cpp vtable +0x8c (missed by Ghidra): EnumDisplaySettingsA, desktop depth, width >= 550
+0x4fb5e0	TSurfaceGL_GetCacheSurfaces	game	medium	SurfaceGL.cpp vtable +0x90; also the DX5 and DX9 vtables' (folded)
+0x4fb5f0	TSurfaceGL_IsUnavailable	game	medium	SurfaceGL.cpp vtable +0xa0; also the DX5 and DX9 vtables' (folded)
+0x4fb600	TSurfaceGL_ExitSurfaces	game	medium	SurfaceGL.cpp vtable +0xb8
+0x4fb670	TSurfaceGL_ctor	game	high	SurfaceGL.cpp: Surface.cpp GetSurface new TSurfaceGL (0x498 bytes); TTextureGL constructors inline
+0x4fb6e0	TSurfaceGL_scalar_deleting_dtor	game	high	SurfaceGL.cpp vtable +0x00 (compiler-generated)
+0x4fb700	TSurfaceGL_InitSurfaces	game	medium	SurfaceGL.cpp vtable +0xb4 (missed by Ghidra)
+0x4fb7f0	TSurfaceGL_WriteImage	game	medium	SurfaceGL.cpp vtable +0x28, lines 767-768
+0x4fbbb0	TSurfaceGL_WriteMaskedImage	game	medium	SurfaceGL.cpp vtable +0x2c, lines 802-803
+0x4fc130	TSurfaceGL_BlitRectClipped	game	medium	SurfaceGL.cpp vtable +0x38, line 1023
+0x4fc480	TSurfaceGL_Blit	game	medium	SurfaceGL.cpp vtable +0x34, line 1073 (missed by Ghidra)
+0x4fc6a0	TSurfaceGL_BlitRect	game	medium	SurfaceGL.cpp vtable +0x30, line 1086 (missed by Ghidra)
+0x4fc8a0	TSurfaceGL_GetSurfaceRect	game	medium	SurfaceGL.cpp vtable +0x94, line 1540 (missed by Ghidra)
+0x4fca30	TSurfaceGL_SurfaceRecreated	game	medium	SurfaceGL.cpp vtable +0x9c, line 1555, "Type>=0 && Type<3" (missed by Ghidra)

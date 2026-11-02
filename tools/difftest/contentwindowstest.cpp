@@ -47,6 +47,7 @@
 #include "../../src/Skins.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/Talk.h"
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
@@ -735,7 +736,7 @@ void SendAcceptTrade() { FakeSendAcceptTrade(); }
 void SendRejectTrade() { FakeSendRejectTrade(); }
 
 // The surface: every call ContentWindows.cpp makes is logged.
-class TContentSurface : public TSurfaceGL {
+class TContentSurface : public TTestSurface {
 public:
 	void SetPixel(int Surface, int x, int y, TRGBColor C)
 	{

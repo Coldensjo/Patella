@@ -37,6 +37,7 @@
 #include "../../src/Skins.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/Talk.h"
 #include "../../src/external.h"
 #include <map>
@@ -519,7 +520,7 @@ static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNu
 
 // The surface: StretchBlitRect and FillRectangle (a dragged content window's
 // place) are logged, the rest never called.
-class TMainSurface : public TSurfaceGL {
+class TMainSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{

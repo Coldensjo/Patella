@@ -21,14 +21,15 @@ Read this and `git log` first when resuming.
 7g. Dialogs.cpp with its leading run of header code — **done** (issue #8, Claude Opus 5.5).
 7h. SurfaceDX.cpp with its trailing DirectDraw functions — **done** (issue #9, GPT-6.1-sol with Claude Opus 5.5 delegates; PR for review).
 7i. surfaceDX9.cpp and the surfaceDX9/SurfaceGL gap — **done** (issue #10, Claude Opus 5.5; the gap is SurfaceGL.obj, merged with #9).
+7j. SurfaceGL.cpp with its glh_extensions.h code (the surfaceDX9/SurfaceGL gap) — **done** (issue #11, Claude Opus 5.5).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-surfaceDX9.cpp done (issue #10, November 2, 2026), merged with SurfaceDX.cpp (issue #9, PR #28).
-Next: SurfaceGL.cpp with its leading run 0x4f46f0-0x4fb7ef (issue #11) and the other open issues; see GitHub.
+SurfaceGL.cpp done (issue #11, November 2, 2026, branch issue-11): the three engines are reconstructed.
+Next: the other open issues; see GitHub.
 
 ## Delegates (running)
 
@@ -40,8 +41,8 @@ None.
 
 ## Last difftest
 
-14,015,187 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after issue #10 merged with #9; SurfaceDX: 1,213,366, SurfaceDX9: 58,682).
+14,068,269 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(issue #11; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082; every other test's total as before).
 
 ## Notes for later files
 
@@ -223,3 +224,17 @@ None.
   be large enough for every write (a too small test texture corrupted the heap once). DIFFTEST_ONLY=SurfaceDX9
   runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).
 - TRect's members may be width/height in the original (issue #29).
+- SurfaceGL.cpp (issue #11): SurfaceGL.h includes the SDK's GL/gl.h (no conflict with either DirectX header;
+  Surface.cpp includes it for new TSurfaceGL and IsOpenGLWorking). NVIDIA's glh_extensions.h and
+  glh_genext.h are reconstructed in src/Extern/glh (glh_genext.h generated from the binary by
+  build/scratch/gl/genext.py); only SurfaceGL.cpp may define GLH_EXT_SINGLE_FILE. TSurface's +0x04/+0x08/+0x80
+  are SelectSurface, SetTextureFilter and AddDirtyRect(TRect) (overridden only by SurfaceGL.cpp), +0x0c is
+  DeviceContext and +0x28 ScreenRect. MainFrm.cpp's DisplayChanged (0x5d1670) is global (Init reads it).
+- The tests' recording surface is tools/difftest/testsurface.h's TTestSurface (formerly external.h's
+  TSurfaceGL sketch): a new window test derives from it; the slots graphicstest.cpp and mapwindowtest.cpp
+  define are the recorders, the others abort.
+- difftest.exe links SurfaceGL.cpp but not opengl32/glu32: surfacegltest.cpp provides the OpenGL import
+  symbols (__imp__glXxx@n via /alternatename to its GLSlot_ variables) and gluOrtho2D. A test can find a
+  static of ours (no name outside its file) by making it take a sentinel value and searching difftest.exe's
+  writable sections (surfacegltest.cpp's FindWord/FindChange). DIFFTEST_ONLY=SurfaceGL runs it alone
+  (GL_TRACE=1, GL_LOGS=<file>, GL_ROUNDS=<n>); it has its own random generator.

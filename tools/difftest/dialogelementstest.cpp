@@ -35,6 +35,7 @@
 #include "../../src/Skins.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
 #include "../../src/sysinc.h"
@@ -210,7 +211,7 @@ static char *__cdecl FakeGetClipboardText() { return (char *)World.Clipboard; }
 char *GetClipboardText() { return FakeGetClipboardText(); }
 
 // The surface: the two calls DialogElements.cpp makes.
-class TDESurface : public TSurfaceGL {
+class TDESurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{

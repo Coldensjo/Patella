@@ -41,6 +41,7 @@
 #include "../../src/Skins.h"
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
+#include "testsurface.h"
 #include "../../src/Talk.h"
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
@@ -540,7 +541,7 @@ static void *__cdecl PatternNew(size_t Size)
 
 // The surface: the calls DialogElements.cpp and Dialogs.cpp make. The modes
 // are new memory the graphics dialog frees.
-class TDGSurface : public TSurfaceGL {
+class TDGSurface : public TTestSurface {
 public:
 	void FillRectangle(int Surface, TRect R, TRGBColor C)
 	{

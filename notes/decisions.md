@@ -2481,3 +2481,121 @@ PR #28, merged first into this branch).
   NextFrame = Now - 1.0 assigns the value NextFrame already has, so `>` and `>=` agree). An earlier run's
   heap corruption was the test's own input (a cache surface shrunk below the 106-pixel writes).
   DIFFTEST_ONLY=SurfaceDX9 runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).
+
+## SurfaceGL.cpp (issue #11)
+
+Reconstructed by Claude Opus 5.5, November 2, 2026.
+
+- **Range** (high). SurfaceGL.obj is 0x4f46f0-0x4fcb8f: the surfaceDX9/SurfaceGL gap settled in #10 plus
+  the asserted functions after it, whose last one (SurfaceRecreated, line 1555) ends at 0x4fcb8f, where
+  sysinc.cpp starts. Ghidra missed CreateSurfaces 0x4fb070, GetFullscreenModes 0x4fb4e0, InitSurfaces
+  0x4fb700, Blit 0x4fc480, BlitRect 0x4fc6a0, GetSurfaceRect 0x4fc8a0, SurfaceRecreated 0x4fca30 and the
+  slots 0x4f9b80/0x4f9bd0/0x4f9c10/0x4f9c40/0x4fa510/0x4fa8b0/0x4fab70; all come from the vtable 0x573250
+  and were written from the instructions. 0x4f98a2 is not a function (Ghidra split SelectSurface). The
+  object's data: .data 0x5c257c (the filter, GL_LINEAR) and 0x5c2580 (the selected surface, 1); .bss
+  0x71d290-0x71d317 (dirty rectangle, pbuffer, main context and DC, SurfaceCreated[22]), the glh pointers
+  0x71d318-0x71dba8, glh's strings 0x71dbac/0x71dbb0, the frame counter 0x71dbb4 and 0x71dbb8 (FPS time).
+  0x71d2bc is referenced by nothing (padding or an unused static; left out). 0x5c2578 (256) is still
+  unowned (#10).
+- **glh_extensions.h** (high for the code, medium for the file layout). The leading run 0x4f46f0-0x4f954f
+  is NVIDIA's glh_extensions.h with glh_genext.h (the memory error message keeps the path
+  "Extern\glh/glh_extensions.h", lines 173 and 191), included with GLH_EXT_SINGLE_FILE: glh_init_extension
+  (121 extension names, 549 entry points; a newer version of the header that knows GL_VERSION_1_2-1_5),
+  the static ExtensionExists (extName passed in EBX: a register convention the compiler chose for the
+  static function), glh_init_extensions and 0x4f9510, which frees the two strings. The NVIDIA SDK is not
+  installed, so both headers are reconstructed in src/Extern/glh (the original's include path):
+  glh_genext.h is generated from the binary (build/scratch/gl/glhparse.py parses the blocks of 0x4f46f0,
+  genext.py writes the header; every name/slot pair is consistent, no slot unused). The pointers are PROC
+  except the WGL_ARB_pbuffer/pixel_format ones SurfaceGL.cpp calls (their wglext.h types written out); the
+  types do not change the code. A `#line 173 "Extern\\glh/glh_extensions.h"` gives the two CHECK_MEMORY
+  messages the original's __FILE__/__LINE__. names.tsv kind stl (library code), the names are glh's
+  except glh_shutdown_extensions (0x4f9510, ours, low; it sits right after glh_init_extensions, so it is
+  the header's) and the prefix of glh_ExtensionExists. strdup is written _strdup (the same CRT function;
+  the modern SDK deprecates the POSIX name). Odd behaviour kept: ExtensionExists' GL_VERSION_1_x answers
+  leak padExtName.
+- **Class** (layout high, names low unless from the binary). TSurfaceGL, 0x498 bytes: Context +0x70, the
+  textures TTextureGL Textures[22] +0x74 (0x20 bytes each: name, size, power-of-two size, the colour key;
+  the inline constructor sets the key to (1,1,1) after TRGBColor's default constructor zeroed it), RECT
+  Rect[22] +0x334, bool Recreated[3] +0x494. From TSurface it uses +0x0c as the window's HDC
+  (Surface.h's Data0C renamed DeviceContext) and +0x28 as a RECT, the client area in screen coordinates
+  (Data27[0x11] split into Data27 and ScreenRect). NUMBER_OF_SURFACES_GL, Type (SurfaceRecreated) and
+  FromRect are from the assertions. Ours: Context, Textures, TTextureGL and its members, Recreated,
+  ScreenRect, DeviceContext, IsOpenGLWorking (Surface.cpp's former FUN_004f9710), CreatePbuffer,
+  ReleasePbuffer, CreateTexture, the statics.
+- **TSurface slots** (medium). The empty TSurface slots +0x04, +0x08 and +0x80 are overridden only here:
+  +0x04 SelectSurface(int Surface) (the drawing target), +0x08 SetTextureFilter(int Filter) (GL_LINEAR or
+  GL_NEAREST), +0x80 AddDirtyRect(TRect Rect): the callers build a 16-byte TRect on the stack, so the
+  parameter is a TRect (the former four ints had the same stack layout). Surface.h, Surface.cpp,
+  names.tsv (TSurface_SelectSurface, TSurface_AddDirtyRect, TSurface_SetSurfaceRect for the old
+  Unknown04/80/98 rows) and surfacedxtest.cpp's calls are renamed. The base slot names do not collide with
+  TSurfaceDX9's non-virtual SetRenderTarget.
+- **Folded copies** (high). Six slots of the vtable point to identical code kept from another object:
+  ClipRect 0x4f0410 and ResetFrameTimer 0x4f04d0 (surfaceDX9.obj), SetFramerateLimit 0x4eb000
+  (SurfaceDX.obj), CanShadeRectangles and TestEngine 0x4d7d40 (the return-true body folded with the STL's
+  codecvt::do_always_noconv); they are written at the end of SurfaceGL.cpp, as surfaceDX9.cpp does. +0x50
+  (SetColorKey), +0x64 (AttachWindow) and +0x98 (SetSurfaceRect) are TSurface's. The other way round,
+  GetFPS 0x4f9d00, DrawFrame 0x4fa110, DrawFrameClipped 0x4fa2c0, BlitClipped 0x4fab70, GetCacheSurfaces
+  0x4fb5e0 and IsUnavailable 0x4fb5f0 are this object's code in the DX5/DX9 vtables: SurfaceGL.cpp has its
+  own versions, the same text as surfaceDX9.cpp's/SurfaceDX.cpp's (they agree: the copies of those files
+  were tested against the same addresses). names.tsv's TSurfaceDX_* rows for them became TSurfaceGL_*.
+  WaitForNextFrame 0x4f9c40 is the same code as surfaceDX9.cpp's with this file's own counters (not
+  folded: other data). There is no display mode callback here: GetFullscreenModes uses
+  EnumDisplaySettingsA.
+- **Order**. Only WriteImage (767-768), WriteMaskedImage (802-803), BlitRectClipped (1023), Blit (1073),
+  BlitRect (1086), GetSurfaceRect (1540) and SurfaceRecreated (1555) have lines; they are in binary order,
+  so the file is in binary order.
+- **EH tables and switches** (high). IsOpenGLWorking: try { ... } catch (...) { return false; } from
+  CreatePbuffer to the return (the state never goes back to -1 before it). ResetDisplay: try { InitDisplay }
+  catch (...) { try { ExitDisplay } catch (...) { throw 12 } throw 12 } (states 0 and 2). RestoreSurfaces:
+  try { CreateSurfaces } catch (...) { throw 12 }. The asserted functions have only their assertions'
+  states (10, 10, 5, 5, 5, 5, 5; the last four share one FuncInfo); no TBEGIN. No jump tables.
+- **MainFrm.cpp's DisplayChanged** (high). 0x5d1670, set by OnDisplayChange, is read and cleared by Init
+  (SurfaceRecreated(2) reports it): it is no longer static; MainFrm.h declares it.
+- **Odd behaviour kept**: ReleasePbuffer and CreatePbuffer test the imported functions for NULL; after
+  wglCreateContext CreatePbuffer tests the pbuffer again instead of the context; IsOpenGLWorking's early
+  returns leave the context current; FillRectangleClipped passes an uninitialised RECT as ClipRect's second
+  rectangle and counts the unclipped size; StretchBlitUnclipped's scaled path ignores both colours;
+  StretchBlit selects CACHE_SURFACE before reading STRETCH_SURFACE back; WriteImage does not select
+  AUTOMAP_SURFACE; CreateSurfaces does not check TEMP_SURFACE's result and has the second way out of the
+  cache loop for i >= 24; CreateTexture leaves the texture contents undefined (an uncleared buffer) and
+  counts in SurfaceCreated without a bound; InitDisplay sets the view mode after a failed switch back to
+  the desktop, changes nothing after a failed full-screen switch and reads before an empty mode list;
+  GetFullscreenModes never sets the description's size and does not store NumberOfModes; Init reads
+  Resolution->Depth for the pixel format in windowed mode too and only reports missing extensions to the
+  debugger; ExitSurfaces frees glh's strings with glh_shutdown_extensions' inlined code.
+- **callcheck** (20 of 45 blocks differ, all explained): the slot calls are indirect in the binary
+  (SelectSurface, AddDirtyRect, SetTextureFilter, ClipRect, FillRectangle(Clipped) in the frames,
+  WaitForNextFrame, GetFullscreenModes, InitDisplay/ExitDisplay/CreateSurfaces/ResetDisplay/
+  RestoreSurfaces/UpdateWindowRect in Init and ResetDisplay, ExitDisplay in ExitSurfaces); the base
+  constructor/destructor calls are implicit (0x4fb670, 0x4f9860); TRGBColor's operator== is a call in the
+  binary (0x48b380, WriteMaskedImage) but an operator here; glh_shutdown_extensions is inlined into
+  ExitSurfaces in the binary. The functions Ghidra missed are not counted by the tool; they were compared
+  with their instructions.
+- **Tests**. surfacegltest.cpp (new): the opengl32/glu32 functions are never linked: the import symbols
+  of ours are the test's GLSlot_ variables (/alternatename), gluOrtho2D is defined by the test; the
+  user32/gdi32/kernel32/winmm functions are patched in difftest.exe's import table and the image's. The
+  fakes log every call (pixels hashed, floating point as bits) and answer from one world that both sides
+  start from. Our statics are found once by sentinel values (handles 0x7a5e300x, a filter, a surface
+  rectangle) and glh's strings through glh_shutdown_extensions' code; every compare covers the logs, all
+  object words, the statics of both files, the shared statistics, SurfaceCreated, DisplayChanged, glh's
+  strings and the 549 extension pointers. Rounds: Init and 20-80 random operations of 46 kinds (every
+  slot, CreateTexture with Empty, glh rounds with random extension/version strings and requests,
+  IsOpenGLWorking failing at each step). Not run: the assertions and PROGRAM_ERRORs (CreateSurfaces throws
+  only when the pbuffer fails; the image cannot throw in the child) and glh's out-of-memory exits. The
+  test has its own random generator, so the later tests' inputs are unchanged.
+  DIFFTEST_ONLY=SurfaceGL (GL_TRACE, GL_LOGS, GL_ROUNDS). Coverage was checked in the compared logs (every
+  import and branch, among them the copy-back, the projection growth, the GetClientRect of SelectSurface,
+  both "not supported" messages, the readback of StretchBlit, the version answers of ExtensionExists).
+  Mutation check (build/scratch/gl/mutate.py, 120 rounds each): 28 changes in SurfaceGL.cpp and
+  glh_extensions.h, all detected. Two survived the first run and showed weak inputs, since fixed: the fake
+  wglChoosePixelFormatARB stopped logging the attribute list at the first 0 value instead of the first 0 key,
+  and GL_VERSION_1_4 was rarely requested under a "1.3" version string.
+- **Test surfaces**. The window and graphics tests used external.h's TSurfaceGL sketch as their recording
+  surface; it is tools/difftest/testsurface.h's TTestSurface now (the same members and size; the slots
+  graphicstest.cpp and mapwindowtest.cpp define stay there, the never-called ones abort inline instead of
+  playertest.cpp's stubs, and FUN_004f9710's stub is gone). graphicstest.cpp had taken the recording
+  surface from our GetSurface (which created the sketch with new for curEngine 1); it now creates the
+  TTestSurface itself and patches our GetSurface for good to return it, which mapwindowtest.cpp then takes
+  as before. Every test's check count in the full run is unchanged (DialogWindow 24,567, ContextMenus 33,088,
+  ConsoleWindow 30,948, ContentWindows 52,506, DialogElements 135,478, Dialogs 98,889, Graphics 570,954,
+  MapWindow 115,169, MainWindow 14,164); the full run passes 14,068,269 checks with SurfaceGL's 53,082.

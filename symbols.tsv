@@ -5079,10 +5079,10 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4f1b70	349	FUN_004f1b70	game	surfaceDX9.cpp	range			
 0x4f1cd0	468	FUN_004f1cd0	game	surfaceDX9.cpp	range			
 0x4f2040	1490	FUN_004f2040	game	surfaceDX9.cpp	assert	982,983		
-0x4f46f0	18765	FUN_004f46f0	game	SurfaceGL.cpp	range			
-0x4f9040	539	FUN_004f9040	game	SurfaceGL.cpp	range			
+0x4f46f0	18765	FUN_004f46f0	game	glh_extensions.h	range			
+0x4f9040	539	FUN_004f9040	game	glh_extensions.h	range			
 0x4f9260	682	FUN_004f9260	game	glh_extensions.h	header			
-0x4f9510	57	FUN_004f9510	game	SurfaceGL.cpp	range			
+0x4f9510	57	FUN_004f9510	game	glh_extensions.h	range			
 0x4f9550	119	FUN_004f9550	game	SurfaceGL.cpp	range			
 0x4f95d0	305	FUN_004f95d0	game	SurfaceGL.cpp	range			
 0x4f9710	320	FUN_004f9710	game	SurfaceGL.cpp	range			

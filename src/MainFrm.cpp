@@ -34,7 +34,7 @@ static HCURSOR DefaultCursor;      // 0x5d1668, cursor resource 0x84 (the others
 static bool LeftButtonPressed;     // 0x5d166c
 static bool RightButtonPressed;    // 0x5d166d
 static bool Closing;               // 0x5d166f, CloseRequest is not asked any more
-static bool DisplayChanged;        // 0x5d1670, set by OnDisplayChange, not read here
+bool DisplayChanged;               // 0x5d1670, set by OnDisplayChange; SurfaceGL.cpp's Init reads and clears it
 static char ClassName[32];         // 0x5d167c
 static int WheelDelta;             // 0x5d169c, the remainder below one notch (120)
 

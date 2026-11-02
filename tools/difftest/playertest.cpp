@@ -77,34 +77,6 @@ WNDPROC AfxGetAfxWndProc() STUB
 
 void OutputControlErrorInformations(std::ostream &) STUB
 int DAT_005c2564;
-// The constructor and the slots graphics.cpp calls are graphicstest.cpp's recorders, those
-// MapWindow.cpp calls mapwindowtest.cpp's.
-void TSurfaceGL::SetPixel(int, int, int, TRGBColor) STUB
-void TSurfaceGL::FillRectangleClipped(int, TRect, TRGBColor, TRect) STUB
-void TSurfaceGL::DrawHorizontalLine(int, int, int, int, TRGBColor) STUB
-void TSurfaceGL::DrawVerticalLine(int, int, int, int, TRGBColor) STUB
-void TSurfaceGL::DrawFrame(int, TRect, int, TRGBColor) STUB
-void TSurfaceGL::BlitRectClipped(int, int, int, int, int, int, int, int, TRect) STUB
-void TSurfaceGL::StretchBlitUnclipped(int, int, int, int, int, int, int, int, int, int, TRGBColor, TRGBColor) STUB
-bool TSurfaceGL::ClipRect(TRect, RECT *, RECT *) STUB
-void TSurfaceGL::ResetFrameTimer() STUB
-void TSurfaceGL::WaitForNextFrame() STUB
-void TSurfaceGL::UpdateWindowRect() STUB
-void TSurfaceGL::InitDisplay(int, TFullscreenMode *) STUB
-void TSurfaceGL::ExitDisplay() STUB
-void TSurfaceGL::CreateSurfaces() STUB
-void TSurfaceGL::ResetDisplay(int, TFullscreenMode *) STUB
-void TSurfaceGL::RestoreSurfaces(int, TFullscreenMode *) STUB
-void TSurfaceGL::FinishFrame() STUB
-bool TSurfaceGL::Init(HWND *, int, TFullscreenMode *, bool) STUB
-int TSurfaceGL::GetFullscreenModes(TFullscreenMode **) STUB
-bool TSurfaceGL::IsUnavailable() STUB
-int TSurfaceGL::GetSurfaceMemory(int) STUB
-void TSurfaceGL::SetFramerateLimit(int) STUB
-double TSurfaceGL::GetFPS() STUB
-void TSurfaceGL::InitSurfaces() STUB
-void TSurfaceGL::ExitSurfaces() STUB
-bool FUN_004f9710(HDC) STUB
 const char *GetErrorText(int) STUB
 const char *GetErrorHint(int) STUB
 

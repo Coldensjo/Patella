@@ -8,6 +8,7 @@
 
 #include "Surface.h"
 #include "SurfaceDX.h"
+#include "SurfaceGL.h"
 #include "Preferences.h"
 #include "external.h"
 
@@ -99,17 +100,18 @@ void TSurface::SetSurfaceRect(int Surface, int x, int y, int Width, int Height)
 {
 }
 
-// 0x4eac00: Unknown04 and Unknown08 share this copy (identical code).
-void TSurface::Unknown04(int Value)
+// 0x4eac00: SelectSurface and SetTextureFilter share this copy (identical
+// code). Only SurfaceGL.cpp overrides them.
+void TSurface::SelectSurface(int Surface)
 {
 }
 
-void TSurface::Unknown08(int Value)
+void TSurface::SetTextureFilter(int Filter)
 {
 }
 
-// 0x4eac10
-void TSurface::Unknown80(int a, int b, int c, int d)
+// 0x4eac10. Only SurfaceGL.cpp overrides it.
+void TSurface::AddDirtyRect(TRect Rect)
 {
 }
 
@@ -185,7 +187,7 @@ void SurfaceInitInstance(HWND *Window)
 		throw (PROGRAM_ERROR)12;
 	}
 	if ((Format.dwFlags & PFD_GENERIC_ACCELERATED) == 0 && (Format.dwFlags & PFD_GENERIC_FORMAT) == 0
-			&& FUN_004f9710(Context)) {
+			&& IsOpenGLWorking(Context)) {
 		AvailableEngines |= 1;
 		if (!Chosen) {
 			curEngine = 1;
