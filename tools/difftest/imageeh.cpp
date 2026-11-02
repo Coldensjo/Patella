@@ -36,6 +36,49 @@ static void PatchJumpSaved(uint32 Address, void *Target)
 	PatchBytes(Address, Code, 5);
 }
 
+void PatchImageJump(uint32 Address, void *Target)
+{
+	PatchJumpSaved(Address, Target);
+	FlushInstructionCache(GetCurrentProcess(), (void *)(uintptr_t)Address, 5);
+}
+
+// Our own code and import table are write-protected.
+static void PatchOwnBytes(void *Address, const void *Bytes, int Size)
+{
+	DWORD Old;
+	VirtualProtect(Address, Size, PAGE_EXECUTE_READWRITE, &Old);
+	PatchBytes((uint32)(uintptr_t)Address, Bytes, Size);
+	FlushInstructionCache(GetCurrentProcess(), Address, Size);
+}
+
+void PatchOwnCode(void *Function, void *Target)
+{
+	uint8 Code[5];
+	Code[0] = 0xe9;
+	*(int32_t *)(Code + 1) = (int32_t)((uintptr_t)Target - ((uintptr_t)Function + 5));
+	PatchOwnBytes(Function, Code, 5);
+}
+
+void PatchOwnImport(const char *Dll, const char *Name, void *Target)
+{
+	uint8 *Base = (uint8 *)GetModuleHandleA(NULL);
+	IMAGE_NT_HEADERS32 *NT = (IMAGE_NT_HEADERS32 *)(Base + ((IMAGE_DOS_HEADER *)Base)->e_lfanew);
+	IMAGE_DATA_DIRECTORY &Directory = NT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
+	for (IMAGE_IMPORT_DESCRIPTOR *D = (IMAGE_IMPORT_DESCRIPTOR *)(Base + Directory.VirtualAddress); D->Name != 0; D++) {
+		if (_stricmp((const char *)Base + D->Name, Dll) != 0)
+			continue;
+		uint32 *Names = (uint32 *)(Base + D->OriginalFirstThunk);
+		uint32 *Slots = (uint32 *)(Base + D->FirstThunk);
+		for (int i = 0; Names[i] != 0; i++) {
+			if ((Names[i] & 0x80000000) == 0 && strcmp((const char *)Base + Names[i] + 2, Name) == 0) {
+				PatchOwnBytes(&Slots[i], &Target, 4);
+				return;
+			}
+		}
+	}
+	printf("imageeh: difftest.exe does not import %s!%s\n", Dll, Name);
+}
+
 // The import slot of Dll!Name in the image's import address table.
 static uint32 *ImportSlot(const char *Dll, const char *Name)
 {
@@ -65,6 +108,11 @@ static void __cdecl ImportTrap(uint32 Index, uint32 ReturnAddress)
 {
 	printf("crash: the image called the unbound import %s from 0x%08x (imageeh.cpp)\n",
 		Index < 512 && TrapNames[Index] != NULL ? TrapNames[Index] : "?", ReturnAddress - 6);
+	const uint32 *Stack = &ReturnAddress + 2; // the caller's stack: return addresses show its callers
+	printf("crash: stack");
+	for (int i = 0; i < 24; i++)
+		printf(" %08x", Stack[i]);
+	printf("\n");
 	fflush(stdout);
 	TerminateProcess(GetCurrentProcess(), 0xc0000005);
 }
@@ -99,7 +147,7 @@ static void TrapUnboundImports()
 	}
 }
 
-static void BindImport(const char *Dll, const char *Name, void *Target)
+void BindImageImport(const char *Dll, const char *Name, void *Target)
 {
 	uint32 *Slot = ImportSlot(Dll, Name);
 	if (Slot == NULL) {
@@ -241,7 +289,7 @@ void EnableImageExceptions()
 		"InterlockedExchange",
 	};
 	for (const char *Name : KernelImports)
-		BindImport("KERNEL32.dll", Name, (void *)GetProcAddress(Kernel, Name));
+		BindImageImport("KERNEL32.dll", Name, (void *)GetProcAddress(Kernel, Name));
 	TrapUnboundImports();
 	Dispatcher = AddVectoredExceptionHandler(1, RedirectImageHandlers);
 	ReplacedCount = 0;
@@ -252,8 +300,12 @@ void DisableImageExceptions()
 {
 	if (!Enabled)
 		return;
-	for (size_t i = Saved.size(); i-- > 0;)
+	for (size_t i = Saved.size(); i-- > 0;) {
+		DWORD Old;
+		VirtualProtect((void *)(uintptr_t)Saved[i].Address, Saved[i].Size, PAGE_EXECUTE_READWRITE, &Old);
 		memcpy((void *)(uintptr_t)Saved[i].Address, Saved[i].Old, Saved[i].Size);
+		VirtualProtect((void *)(uintptr_t)Saved[i].Address, Saved[i].Size, Old, &Old);
+	}
 	Saved.clear();
 	RemoveVectoredExceptionHandler(Dispatcher);
 	FlushInstructionCache(GetCurrentProcess(), NULL, 0);
@@ -288,6 +340,14 @@ void MakeImageString(void *String, const char *Text)
 		*(char **)(S + 4) = Buffer;
 		*(uint32 *)(S + 0x18) = Size;
 	}
+}
+
+void FreeImageString(void *String)
+{
+	uint8 *S = (uint8 *)String;
+	if (*(uint32 *)(S + 0x18) >= 16)
+		At<void (__cdecl *)(void *)>(0x51165d)(*(char **)(S + 4)); // the image's free
+	memset(S, 0, 0x1c);
 }
 
 std::string TThrown::Describe() const
