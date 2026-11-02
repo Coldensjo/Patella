@@ -1,38 +1,55 @@
 // Container.h: CipSoft's container templates (c:\mud\tibiaplayer\Container.h).
 //
-// Only the parts whose instantiations have been reconstructed are here. The
-// assertion texts and line numbers come from the instantiations; member names
-// other than space and block are ours.
+// Every member here is written once and compiles to all of the binary's
+// instances listed below (issue #13: each checked against its disassembly and
+// exception table). The assertion texts and line numbers come from the
+// instances; member names other than space and block are ours.
 //
 // vector<T> is a growable array indexed from min to max. Indexing outside the
 // current range grows it by block entries at a time (by its current size
 // when block is 0) and, if initialized is set, fills new entries with init.
 //
-// Instantiations reconstructed so far:
-//   vector<TMessage>        constructor 0x4e7f50, operator() 0x4e7390 (Status.cpp)
-//   vector<TErrorReport>    constructor 0x4e8230, operator() 0x4e7860 (Status.cpp)
-//   vector<TContentWindowSize>  constructor 0x4dbe90, operator() 0x4db880 (Preferences.cpp)
-//   vector<TBuddy>          constructor 0x4dc170, operator() 0x4dba60 (Preferences.cpp)
-//   vector<TTalkFilter *>   initialized constructor 0x4fd6e0 (Talk.cpp),
-//                           operator() folded with vector<int> at 0x452ac0
-//   vector<TMark>           constructor 0x426170, operator() 0x425b20 (Map.cpp; the
-//                           linker kept the copies of an object before Map.obj)
-// Preferences.cpp also uses vector<int>, whose code the linker kept from an
-// earlier object: constructors 0x453300 (with init) and 0x4a2b90,
-// operator() 0x452ac0. 0x453300 and 0x452ac0 sit at the start of
-// DialogElements.obj (the first user), next to its other instance:
-//   vector<TListBoxLine>    constructor 0x453600, operator() 0x452eb0
-//                           (DialogElements.h's TFontListBox lines, 0x18 bytes,
-//                           the implicit element constructor 0x452c70)
-// DialogElements.cpp also uses vector<int> (TEditText's line starts) and
-// vector<TEditLine *> and vector<char *> (folded with vector<int>'s code).
-// The destructor's out-of-line instances are 0x452c50 (vector<int>, entry at
-// +0x1c) and 0x452c60 (vector<TListBoxLine>, entry at +0x30), called from
-// unwind funclets; the static initialisers register atexit handlers
-// (0x55a320 and following) that free entry inline. Dialogs.obj adds
+// The linker keeps one copy of an instance, normally in the first object that
+// uses it (objects are in alphabetical order), so most copies sit in an
+// object before the file that the instance is named after. Identical code of
+// different T is not folded when the functions have exception tables (the
+// constructors, one copy per object); the operator() of every vector of a
+// 4-byte element is the one copy 0x452ac0. Instances, by element type:
+//   vector<TLineFormat>     constructor 0x417aa0, operator() 0x417710
+//                           (ConsoleWindow.h's TTextWindow::Lines, 0x28 bytes;
+//                           new[] and init run TLineFormat's inline constructor)
+//   vector<TSkinButton *>   initialized constructor 0x425e70 (DialogElements.h's
+//                           TRadioButtonGroup, inline constructor in ContentWindows.obj)
+//   vector<TMark>           constructor 0x426170, operator() 0x425b20,
+//                           destructor 0x425b10 (Map.h's TAutomapBlock and the
+//                           automap windows of ContentWindows.cpp; kept in
+//                           ContentWindows.obj, before Map.obj)
+//   vector<int>             initialized constructor 0x453300, constructor
+//                           0x4a2b90, operator() 0x452ac0, destructor 0x452c50
+//                           (DialogElements.h's TEditText line starts,
+//                           Help.cpp's EventHelps, Preferences.cpp's lists;
+//                           0x452ac0 and 0x452c50 also serve vector<TEditLine *>,
+//                           vector<char *>, vector<TTimer *> and vector<TTalkFilter *>)
+//   vector<TListBoxLine>    constructor 0x453600, operator() 0x452eb0,
+//                           destructor 0x452c60 (DialogElements.h's TFontListBox
+//                           lines, 0x18 bytes, the implicit element constructor
+//                           0x452c70)
 //   vector<TIgnoreEntry>    constructor 0x46c0d0, operator() 0x46bb70,
 //                           destructor 0x46bb60 (Dialogs.h's 31-byte ignore
 //                           list entries, with an inline constructor)
+//   vector<THotkey>         constructor 0x4976f0, operator() 0x496570 (GUI.cpp's
+//                           Hotkeys; new[] and init run TCallback's inline constructor)
+//   vector<TTimer *>        initialized constructor 0x4973f0 (GUI.cpp's Timers)
+//   vector<TContentWindowSize>  constructor 0x4dbe90, operator() 0x4db880 (Preferences.cpp)
+//   vector<TBuddy>          constructor 0x4dc170, operator() 0x4dba60 (Preferences.cpp)
+//   vector<TMessage>        constructor 0x4e7f50, operator() 0x4e7390 (Status.cpp)
+//   vector<TErrorReport>    constructor 0x4e8230, operator() 0x4e7860 (Status.cpp)
+//   vector<TTalkFilter *>   initialized constructor 0x4fd6e0 (Talk.cpp's lists)
+// The four initialized constructors (0x425e70, 0x453300, 0x4973f0, 0x4fd6e0)
+// are the same code apart from addresses. The destructor is inline; its
+// out-of-line copies are called from unwind funclets and atexit thunks, the
+// other static vectors' atexit handlers (0x55a320 and following) free entry
+// inline.
 
 #pragma once
 
@@ -42,7 +59,7 @@
 // array<T> is a fixed array indexed from min to min+d-1 (lines 152-178;
 // it comes before vector in the original file). The class name is ours;
 // min, d, i, low() and high() are named in the assertions and in the
-// error message of operator(). Instantiations reconstructed so far:
+// error message of operator(). Instances:
 //   array<TProperties>  constructor 0x4cfa30, operator() 0x4d1a10 (Objects.cpp)
 //   array<TMapPoint>    constructor 0x4b0bc0, operator() 0x4b5900 (Map.cpp)
 template <class T> class array {
@@ -89,7 +106,7 @@ template <class T> T &array<T>::operator()(int i)
 // in the assertions and error messages. x is the fastest index. The
 // destructors free the entries; their only out-of-line copy is matrix's at
 // 0x4b0b20, called when an exception unwinds Map.cpp's FindPath.
-// Instantiations reconstructed so far (Map.cpp):
+// Instances (Map.cpp):
 //   matrix<TPathNode>  constructor 0x4b1100, operator() 0x4b5e90, destructor 0x4b0b20
 //   matrix3d<int>      constructor 0x4b0d70, operator() 0x4b5b40
 template <class T> class matrix {
@@ -200,7 +217,8 @@ public:
 	T *entry;
 };
 
-// Lines 353-358 (vector<int> at 0x453300). Every entry starts as init.
+// Lines 353-358 (0x453300, 0x425e70, 0x4973f0, 0x4fd6e0). Every entry starts
+// as init.
 template <class T> vector<T>::vector(int min, int max, int block, T init)
 {
 	this->min = min;
@@ -217,7 +235,9 @@ template <class T> vector<T>::vector(int min, int max, int block, T init)
 		entry[i] = init;
 }
 
-// Lines 368-370. No try block; the two assertions are the only EH states.
+// Lines 368-370. No try block; the two assertions are the only EH states (ten),
+// plus one for new[] when T has a constructor (eleven: TLineFormat, TMark,
+// TListBoxLine, TIgnoreEntry, THotkey, TErrorReport).
 template <class T> vector<T>::vector(int min, int max, int block)
 {
 	this->min = min;

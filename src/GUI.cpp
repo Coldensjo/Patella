@@ -19,9 +19,9 @@
 
 // Data, in .bss order.
 static int NumberOfHotkeys;                    // 0x5ccf98, used entries of Hotkeys
-static vector<TTimer *> Timers(0, 0, 2, NULL); // 0x5ccfa4, initialiser 0x559e30 (constructor 0x4973f0)
+static vector<TTimer *> Timers(0, 0, 2, NULL); // 0x5ccfa4, initialiser 0x559e30 (constructor 0x4973f0, operator() 0x452ac0)
 TSkinProperties SkinProperties;                // 0x5ccfc8, initialiser 0x559e50 (constructor 0x496800)
-static vector<THotkey> Hotkeys(0, 50, 10);     // 0x5ce4f0, initialiser 0x559e60 (constructor 0x4976f0)
+static vector<THotkey> Hotkeys(0, 50, 10);     // 0x5ce4f0, initialiser 0x559e60 (constructor 0x4976f0, operator() 0x496570)
 // UpdateTimers' static LastTime is at 0x5ce518 (guard 0x5ce51c).
 
 // --- Functions without exception frame (no line evidence) ------------------

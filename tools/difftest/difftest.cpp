@@ -369,9 +369,9 @@ int main(int argc, char **argv)
 	TestSysinc();
 #else
 	// DIFFTEST_ONLY=MainWindow, DialogWindow, ContextMenus, ConsoleWindow,
-	// ContentWindows, DialogElements, Dialogs or SurfaceDX9 runs only mainwindowtest.cpp,
+	// ContentWindows, DialogElements, Dialogs, SurfaceDX9 or Container runs only mainwindowtest.cpp,
 	// dialogwindowtest.cpp, contextmenustest.cpp, consolewindowtest.cpp,
-	// contentwindowstest.cpp, dialogelementstest.cpp, dialogstest.cpp or surfacedx9test.cpp
+	// contentwindowstest.cpp, dialogelementstest.cpp, dialogstest.cpp, surfacedx9test.cpp or containertest.cpp
 	// (they need none of the earlier tests), for quick runs while working on
 	// them.
 	const char *Only = getenv("DIFFTEST_ONLY");
@@ -415,6 +415,11 @@ int main(int argc, char **argv)
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
+	if (Only != NULL && strcmp(Only, "Container") == 0) {
+		TestContainer();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
 	if (Only != NULL && strcmp(Only, "SurfaceDX9") == 0) {
 		TestSurfaceDX9();
 		printf("%d checks, %d failures\n", Checks, Failures);
@@ -448,6 +453,7 @@ int main(int argc, char **argv)
 	TestDialogs();
 	TestSurfaceDX();
 	TestSurfaceDX9();
+	TestContainer();
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif
