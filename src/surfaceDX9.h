@@ -1,0 +1,134 @@
+// surfaceDX9.h: the Direct3D 9 surface (curEngine 2).
+//
+// Reconstructed from Tibia.exe 7.72; surfaceDX9.obj is 0x4efd10-0x4f46ef
+// (notes/decisions.md, "surfaceDX9.cpp"). Names from the binary: the file,
+// Direct3D, DirectDraw, Surface9, Rect, hWindow, ViewMode, VMode, GMode,
+// FromRect, ToRect, NUMBER_OF_SURFACES_DX9 and the surface names
+// (assertions); the rest are ours.
+//
+// d3d9.dll is not in the import table: IsDirect3D9Installed loads it and
+// Direct3DCreate9 at run time. DirectDraw 4 (ddraw.dll, imported) is used
+// only for the display modes, the stretch capabilities and the desktop
+// depth. The interfaces are the Windows SDK's d3d9.h and ddraw.h.
+
+#pragma once
+
+#include "Surface.h"
+#include "graphics.h"
+#include <d3d9.h>
+#include <ddraw.h>
+
+// The surfaces (Surface9[] and Rect[] are indexed with them).
+enum {
+	PRIMARY_SURFACE = 0,   // the main render target, Rect[TEMP_SURFACE]'s size
+	SCREEN_SURFACE = 1,    // the back buffer; its texture is the 106x106 ScreenTexture
+	TEMP_SURFACE = 2,      // 640x480
+	STRETCH_SURFACE = 3,   // 64x64
+	CACHE_SURFACE = 4,     // 512x384
+	AUTOMAP_SURFACE = 5,   // 106x106
+	SPRITE_SURFACE = 6,    // 6-21: the video cache surfaces, CacheSurfaceWidth x CacheSurfaceHeight
+	NUMBER_OF_SURFACES_DX9 = 22
+};
+
+enum {
+	WINDOWED_MODE = 1,
+	FULLSCREEN_MODE = 2
+};
+
+// One vertex of the vertex buffers (D3DFVF_XYZRHW | D3DFVF_DIFFUSE |
+// D3DFVF_TEX1, 0x1c bytes).
+struct TVertexDX9 {
+	float x, y, z, rhw;
+	D3DCOLOR Color;
+	float u, v;
+};
+
+// 0x2c0 bytes, vtable 0x56f480 (after SurfaceDX.cpp's TSurfaceDX).
+class TSurfaceDX9 : public TSurface {
+public:
+	TSurfaceDX9();                                                         // inline, in CreateSurfaceDX9
+	~TSurfaceDX9();                                                        // 0x4f03f0
+
+	void SetPixel(int Surface, int x, int y, TRGBColor Color);             // +0x0c, 0x4f0630
+	void FillRectangleClipped(int Surface, TRect Rect, TRGBColor Color, TRect Clip); // +0x10, 0x4f0770
+	void FillRectangle(int Surface, TRect Rect, TRGBColor Color);         // +0x14, 0x4f06b0
+	void DrawHorizontalLine(int Surface, int x, int y, int Width, TRGBColor Color); // +0x18, 0x4f0870
+	void DrawVerticalLine(int Surface, int x, int y, int Height, TRGBColor Color); // +0x1c, 0x4f0920
+	void DrawFrameClipped(int Surface, TRect Rect, int LineWidth, TRGBColor Color, TRect Clip); // +0x20 (copy 0x4fa2c0)
+	void DrawFrame(int Surface, TRect Rect, int LineWidth, TRGBColor Color); // +0x24 (copy 0x4fa110)
+	void WriteImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data); // +0x28, 0x4f09d0
+	void WriteMaskedImage(int ToSurface, int x, int y, int Width, int Height, uint8 *Data, uint8 *Mask,
+		TRGBColor *Colors);                                                // +0x2c, 0x4f2040
+	void BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Source); // +0x30, 0x4f3040
+	void Blit(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width, int Height,
+		TRGBColor ColorKey);                                               // +0x34, 0x4f2e20
+	void BlitRectClipped(int ToSurface, int x, int y, int FromSurface, TRect Source, TRect Clip); // +0x38, 0x4f1b70
+	void BlitClipped(int ToSurface, int x, int y, int FromSurface, int FromX, int FromY, int Width,
+		int Height, TRGBColor ColorKey, TRect Clip);                       // +0x3c (copy 0x4fab70)
+	void StretchBlitRect(int ToSurface, TRect Destination, int FromSurface, TRect Source); // +0x40, 0x4f1a40
+	void StretchBlitUnclipped(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
+		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight); // +0x44, 0x4f18d0
+	void StretchBlit(int ToSurface, int x, int y, int Width, int Height, int FromSurface, int FromX,
+		int FromY, int FromWidth, int FromHeight, TRGBColor ColorKey, TRGBColor Highlight, TRect Clip); // +0x48, 0x4f2620
+	void ShadeRectangles(int Surface, int Count, TRect *Rects, TRGBColor *Colors); // +0x4c, 0x4f0e50
+	void SetColorKey(int ToSurface, TRGBColor ColorKey);                  // +0x54, 0x4f1eb0
+	bool ClipRect(TRect Clip, RECT *Rect, RECT *Source);                  // +0x58, 0x4f0410
+	void InitFramerate();                                                  // +0x5c, 0x4f04d0
+	void LimitFramerate();                                                 // +0x60, 0x4f0510
+	void UpdateWindowRect();                                               // +0x68, 0x4f05d0
+	void SetDisplayMode(int VMode, TFullscreenMode *GMode);               // +0x6c, 0x4f3240
+	void ExitDevice();                                                     // +0x70, 0x4f1040
+	void InitDevice();                                                     // +0x74, 0x4f3740
+	void ChangeDisplayMode(int VMode, TFullscreenMode *GMode);            // +0x78, 0x4f1160
+	void CheckDevice(int ViewMode, TFullscreenMode *Resolution);          // +0x7c, 0x4f11f0
+	void FinishFrame();                                                    // +0x84, 0x4f0f80
+	bool Init(HWND *Window, int ViewMode, TFullscreenMode *Resolution, bool Force); // +0x88, 0x4f1240
+	int GetFullscreenModes(TFullscreenMode **Modes);                      // +0x8c, 0x4f1320
+	int GetCacheSurfaces();                                                // +0x90 (copy 0x4fb5e0)
+	void GetSurfaceRect(int Surface, TRect *Rect);                        // +0x94, 0x4f4560
+	void SetSurfaceRect(int Surface, int x, int y, int Width, int Height); // +0x98, 0x4f1370
+	bool Unknown9C(int Value);                                             // +0x9c, 0x4f13e0
+	bool IsUnavailable();                                                  // +0xa0 (copy 0x4fb5f0)
+	bool CanShadeRectangles();                                             // +0xa4, 0x4f13f0
+	int IsSurfaceCreated(int Surface);                                    // +0xa8, 0x4f03e0
+	void SetFramerateLimit(int Limit);                                     // +0xac (copy 0x4eb000)
+	double GetFPS();                                                       // +0xb0 (copy 0x4f9d00)
+	void InitSurfaces();                                                   // +0xb4, 0x4f1cd0
+	void ExitSurfaces();                                                   // +0xb8, 0x4f1400
+	bool TestEngine();                                                     // +0xbc, 0x4efd40
+
+	void AddShadeQuad(int Left, int Top, int Right, int Bottom, D3DCOLOR TopLeft, D3DCOLOR TopRight,
+		D3DCOLOR BottomRight, D3DCOLOR BottomLeft);                        // 0x4efe70
+	void FlushVertices();                                                  // 0x4f02a0
+	void SetTexture(int Surface);                                          // 0x4f0330
+	void SetRenderTarget(int Surface);                                     // 0x4f0380
+	void ApplyColorKey(int Surface, TRGBColor ColorKey);                  // 0x4f0c60
+	void FlushShade();                                                     // 0x4f0d50
+	void AddQuad(int Left, int Top, int Right, int Bottom, double Left_u, double Right_u, double Top_v,
+		double Bottom_v, D3DCOLOR TopLeft, D3DCOLOR TopRight, D3DCOLOR BottomRight, D3DCOLOR BottomLeft); // 0x4f14c0
+
+	// The frame clock (the same members as in the other engines; the copies of
+	// InitFramerate, ClipRect, SetFramerateLimit and GetFPS are shared).
+	double StartTime;        // +0x48
+	double NextFrameTime;    // +0x50
+	double FrameTime;        // +0x58, milliseconds per frame
+	double FPS;              // +0x60
+	int FramerateLimit;      // +0x68, 0xffff when unlimited
+	int Data6C;              // +0x6c, never used
+	bool Ready;              // +0x70, set when InitDevice has finished (Unknown9C)
+	RECT Rect[NUMBER_OF_SURFACES_DX9]; // +0x74
+	RECT WindowRect;         // +0x1d4, the client area on the screen
+	RECT SurfaceArea;        // +0x1e4, SetSurfaceRect
+	IDirect3D9 *Direct3D;    // +0x1f4
+	IDirect3DDevice9 *Device; // +0x1f8
+	IDirectDraw4 *DirectDraw; // +0x1fc, DirectDraw 4 (IID_IDirectDraw4)
+	IDirect3DTexture9 *Surface9[NUMBER_OF_SURFACES_DX9]; // +0x200
+	IDirect3DSurface9 *RenderTarget[NUMBER_OF_SURFACES_DX9]; // +0x258, level 0 of Surface9[] (SCREEN_SURFACE: the back buffer)
+	IDirect3DSurface9 *CurrentTarget; // +0x2b0
+	IDirect3DVertexBuffer9 *VertexBuffer; // +0x2b4, the quads (Vertices)
+	IDirect3DVertexBuffer9 *ShadeBuffer;  // +0x2b8, the shaded rectangles (ShadeVertices)
+	IDirect3DTexture9 *ScreenTexture;     // +0x2bc, the texture of SCREEN_SURFACE
+};
+
+bool IsDirect3D9Installed();   // 0x4efd10
+TSurface *CreateSurfaceDX9();  // 0x4f1430

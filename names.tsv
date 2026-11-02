@@ -2132,3 +2132,49 @@ address	name	kind	confidence	note
 0x484620	TRuleViolationDialog_ctor	game	medium	Dialogs.cpp TRuleViolationDialog::TRuleViolationDialog, line 3056
 0x484e70	TRuleViolationDialog_HandleEvent	game	medium	Dialogs.cpp TRuleViolationDialog::HandleEvent, lines 3124-3128
 0x485290	CreateRuleViolationDialog	game	medium	Dialogs.cpp CreateRuleViolationDialog, line 490
+0x4efd10	IsDirect3D9Installed	game	medium	surfaceDX9.cpp: LoadLibrary d3d9.dll, keeps Direct3DCreate9 (0x71d278); SurfaceInitInstance and InitDevice call it
+0x4efd40	TSurfaceDX9_TestEngine	game	high	surfaceDX9.cpp vtable 0x56f480 +0xbc: TSurface::TestEngine, a windowed device created and released
+0x4efe70	TSurfaceDX9_AddShadeQuad	game	low	surfaceDX9.cpp: six vertices with corner colours into the shade buffer (0x71d200/0x71d270)
+0x4f02a0	TSurfaceDX9_FlushVertices	game	low	surfaceDX9.cpp: draws the collected quads (unlock, DrawPrimitive, lock with DISCARD)
+0x4f0330	TSurfaceDX9_SetTexture	game	medium	surfaceDX9.cpp: texture stage 0 (SCREEN_SURFACE: ScreenTexture), current one in 0x71d260
+0x4f0380	TSurfaceDX9_SetRenderTarget	game	medium	surfaceDX9.cpp: render target (current number in 0x5c2574, surface in +0x2b0)
+0x4f03e0	TSurfaceDX9_IsSurfaceCreated	game	low	surfaceDX9.cpp vtable +0xa8: SurfaceCreated[Surface] (0x71d208)
+0x4f03f0	TSurfaceDX9_dtor	game	high	surfaceDX9.cpp: clears NumberOfVideoSurfaces (0x71d0f0), ~TSurface
+0x4f0410	TSurfaceDX9_ClipRect	game	medium	surfaceDX9.cpp vtable +0x58 (also TSurfaceDX's and TSurfaceGL's, folded): clips a RECT to a TRect, moves a second one
+0x4f04d0	TSurfaceDX9_InitFramerate	game	low	surfaceDX9.cpp vtable +0x5c (shared by all three engines, folded): the frame clock, no limit
+0x4f0510	TSurfaceDX9_LimitFramerate	game	medium	surfaceDX9.cpp vtable +0x60: FPS once a second, Sleep until the next frame
+0x4f05d0	TSurfaceDX9_UpdateWindowRect	game	low	surfaceDX9.cpp vtable +0x68: client rectangles in windowed mode
+0x4f0630	TSurfaceDX9_SetPixel	game	medium	surfaceDX9.cpp vtable +0x0c: ColorFill of one pixel
+0x4f06b0	TSurfaceDX9_FillRectangle	game	medium	surfaceDX9.cpp vtable +0x14: ColorFill
+0x4f0770	TSurfaceDX9_FillRectangleClipped	game	medium	surfaceDX9.cpp vtable +0x10: ColorFill after ClipRect
+0x4f0870	TSurfaceDX9_DrawHorizontalLine	game	medium	surfaceDX9.cpp vtable +0x18
+0x4f0920	TSurfaceDX9_DrawVerticalLine	game	medium	surfaceDX9.cpp vtable +0x1c
+0x4f09d0	TSurfaceDX9_WriteImage	game	medium	surfaceDX9.cpp vtable +0x28: RGB data into a texture, the colour key transparent; below 6 via ScreenTexture to the automap
+0x4f0c60	TSurfaceDX9_ApplyColorKey	game	low	surfaceDX9.cpp: 64x64 of a target through TempSurface, the key colour transparent, to STRETCH_SURFACE
+0x4f0d50	TSurfaceDX9_FlushShade	game	low	surfaceDX9.cpp: TEMP_SURFACE to PRIMARY_SURFACE, then the shade buffer into TEMP_SURFACE
+0x4f0e50	TSurfaceDX9_ShadeRectangles	game	medium	surfaceDX9.cpp vtable +0x4c: the light rectangles with corner colours (TEMP_SURFACE only)
+0x4f0f80	TSurfaceDX9_FinishFrame	game	medium	surfaceDX9.cpp vtable +0x84: frame limit, statistics, Present
+0x4f1040	TSurfaceDX9_ExitDevice	game	low	surfaceDX9.cpp vtable +0x70: releases device, textures, buffers, Direct3D
+0x4f1160	TSurfaceDX9_ChangeDisplayMode	game	low	surfaceDX9.cpp vtable +0x78: +0x6c and +0x74 in a try; catch PROGRAM_ERROR: ExitDevice, rethrow
+0x4f11f0	TSurfaceDX9_CheckDevice	game	low	surfaceDX9.cpp vtable +0x7c: TestCooperativeLevel, D3DERR_DEVICENOTRESET: Reset, ExitDevice, InitSurfaces
+0x4f1240	TSurfaceDX9_Init	game	medium	surfaceDX9.cpp vtable +0x88: switches the view mode when it changes (or with Force)
+0x4f1320	TSurfaceDX9_GetFullscreenModes	game	medium	surfaceDX9.cpp vtable +0x8c: DirectDraw 7 EnumDisplayModes with the callback 0x4ec810 (folded)
+0x4f1370	TSurfaceDX9_SetSurfaceRect	game	low	surfaceDX9.cpp vtable +0x98: Rect[Surface] and the rectangle at +0x1e4 (missing braces)
+0x4f13e0	TSurfaceDX9_Unknown9C	game	low	surfaceDX9.cpp vtable +0x9c (also TSurfaceDX's, folded): returns Ready (+0x70)
+0x4f13f0	TSurfaceDX9_CanShadeRectangles	game	medium	surfaceDX9.cpp vtable +0xa4: Direct3D != NULL
+0x4f1400	TSurfaceDX9_ExitSurfaces	game	high	surfaceDX9.cpp vtable +0xb8: ExitDevice, releases DirectDraw
+0x4f1430	CreateSurfaceDX9	game	low	surfaceDX9.cpp: new TSurfaceDX9 (0x2c0 bytes, inline constructor); GetSurface for engine 2
+0x4f14c0	TSurfaceDX9_AddQuad	game	low	surfaceDX9.cpp: six vertices of a textured quad (0x71d204/0x71d26c), draws a full buffer (9600)
+0x4f18b0	TSurfaceDX9_scalar_deleting_dtor	stl	high	compiler-generated, kept in surfaceDX9.obj
+0x4f18d0	TSurfaceDX9_StretchBlitUnclipped	game	low	surfaceDX9.cpp vtable +0x44: unscaled: Blit, else one quad
+0x4f1a40	TSurfaceDX9_StretchBlitRect	game	medium	surfaceDX9.cpp vtable +0x40
+0x4f1b70	TSurfaceDX9_BlitRectClipped	game	low	surfaceDX9.cpp vtable +0x38: blit without colour key after ClipRect
+0x4f1cd0	TSurfaceDX9_InitSurfaces	game	high	surfaceDX9.cpp vtable +0xb4: start state, DirectDraw 7, stretch caps, frame clock
+0x4f1eb0	TSurfaceDX9_SetColorKey	game	medium	surfaceDX9.cpp vtable +0x54, line 496 (ToSurface)
+0x4f2040	TSurfaceDX9_WriteMaskedImage	game	medium	surfaceDX9.cpp vtable +0x2c, lines 982-983
+0x4f2620	TSurfaceDX9_StretchBlit	game	medium	surfaceDX9.cpp vtable +0x48, lines 1199-1204 (FromRect, ToRect)
+0x4f2e20	TSurfaceDX9_Blit	game	medium	surfaceDX9.cpp vtable +0x34, line 1302 (FromRect.width, FromRect.height)
+0x4f3040	TSurfaceDX9_BlitRect	game	medium	surfaceDX9.cpp vtable +0x30, line 1315
+0x4f3240	TSurfaceDX9_SetDisplayMode	game	medium	surfaceDX9.cpp vtable +0x6c, lines 1465-1468 (VMode, GMode)
+0x4f3740	TSurfaceDX9_InitDevice	game	medium	surfaceDX9.cpp vtable +0x74, lines 1639-1647: Direct3D, device, states, buffers, textures
+0x4f4560	TSurfaceDX9_GetSurfaceRect	game	medium	surfaceDX9.cpp vtable +0x94, line 2055 (Surface, bug0000290)

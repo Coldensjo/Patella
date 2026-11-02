@@ -9,12 +9,25 @@
 #include "Surface.h"
 #include "Preferences.h"
 #include "external.h"
+#include "surfaceDX9.h"
 
 // Data, in .bss order.
 static HWND SurfaceWindow;          // 0x71d0c0, the main window, from SurfaceInitInstance
 int curEngine;                      // 0x71d0c4
 static uint8 AvailableEngines;      // 0x71d0c8, bit 0 OpenGL works, bit 1 DirectX 9 passed TestEngine
 static TSurface *Surface;           // 0x71d0cc
+int FrameBlits;                    // 0x71d0d0 (Surface.h)
+int FramePixels;                   // 0x71d0d4
+int FrameStateChanges;             // 0x71d0d8
+int ScreenWidth;                   // 0x71d0dc
+int ScreenHeight;                  // 0x71d0e0
+int LastFrameBlits;                // 0x71d0e8
+int LastFramePixels;               // 0x71d0ec
+int NumberOfVideoSurfaces;         // 0x71d0f0
+
+// .data, after the "engine N" value 0x5c2564.
+int CacheSurfaceWidth = 256;       // 0x5c2568
+int CacheSurfaceHeight = 256;      // 0x5c256c
 
 // 0x4eaa80. Written to error.txt as "Graphic Engine".
 int GetCurrentEngine()
@@ -30,7 +43,7 @@ TSurface *GetSurface()
 			Surface = new TSurfaceGL;
 	} else if (curEngine == 2) {
 		if (Surface == NULL)
-			Surface = FUN_004f1430();
+			Surface = CreateSurfaceDX9();
 	} else if (curEngine == 0 && Surface == NULL) {
 		Surface = FUN_004eca00();
 	}
@@ -48,23 +61,23 @@ void SurfaceExitInstance()
 // 0x4eab80. The default test only takes the main window.
 bool TSurface::TestEngine()
 {
-	Window = SurfaceWindow;
+	hWindow = SurfaceWindow;
 	return true;
 }
 
 // 0x4eab90
 TSurface::TSurface()
 {
-	Data38 = 0;
+	NumberOfModes = 0;
 	Data3C = 0;
-	Data40 = 0;
+	NumberOfCacheSurfaces = 0;
 	Flag26 = false;
 }
 
 // 0x4eabb0
 void TSurface::Unknown50(int Surface, TRGBColor ColorKey)
 {
-	Unknown54(Surface, ColorKey);
+	SetColorKey(Surface, ColorKey);
 }
 
 // 0x4eabd0
@@ -80,7 +93,7 @@ uint8 TSurface::GetAvailableEngines()
 }
 
 // 0x4eabf0
-void TSurface::Unknown98(int a, int b, int c, int d, int e)
+void TSurface::SetSurfaceRect(int Surface, int x, int y, int Width, int Height)
 {
 }
 
@@ -126,9 +139,9 @@ void SurfaceInitInstance(HWND *Window)
 	if (Engine >= 0 && Engine < 3)
 		Chosen = true;
 	try {
-		if (FUN_004efd10()) {
+		if (IsDirect3D9Installed()) {
 			curEngine = 2;
-			GetSurface()->Window = *Window;
+			GetSurface()->hWindow = *Window;
 			if (GetSurface()->TestEngine()) {
 				if (Surface != NULL)
 					delete Surface;

@@ -5048,71 +5048,71 @@ address	size	name	kind	file	how	assert_lines	parent	params
 0x4ecdd0	498	FUN_004ecdd0	game	SurfaceDX.cpp	range			
 0x4ecfd0	463	FUN_004ecfd0	game	SurfaceDX.cpp	range			
 0x4eed40	3618	FUN_004eed40	game	SurfaceDX.cpp	assert	1106,1107,1108,1109,1110,1111,1112,1113,1114		
-0x4efd10	41	FUN_004efd10	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4efd40	303	FUN_004efd40	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4efe70	1062	FUN_004efe70	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f02a0	134	FUN_004f02a0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0330	71	FUN_004f0330	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0380	89	FUN_004f0380	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f03f0	21	FUN_004f03f0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0410	178	FUN_004f0410	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f05d0	83	FUN_004f05d0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0630	128	FUN_004f0630	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f06b0	180	FUN_004f06b0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0770	241	FUN_004f0770	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0870	171	FUN_004f0870	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0920	171	FUN_004f0920	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f09d0	642	FUN_004f09d0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0c60	233	FUN_004f0c60	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0d50	252	FUN_004f0d50	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f0f80	178	FUN_004f0f80	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f1160	86	FUN_004f1160	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f11b6	42	Catch@004f11b6	catch	SurfaceDX.cpp|surfaceDX9.cpp	gap		0x4f1160	
-0x4f11e0	6	Catch@004f11e0	catch	SurfaceDX.cpp|surfaceDX9.cpp	gap		0x4f1160	
-0x4f11f0	72	FUN_004f11f0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f1320	76	FUN_004f1320	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f1400	36	FUN_004f1400	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f1430	134	FUN_004f1430	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f14c0	998	FUN_004f14c0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f18b0	30	FUN_004f18b0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f1a40	293	FUN_004f1a40	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f1b70	349	FUN_004f1b70	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
-0x4f1cd0	468	FUN_004f1cd0	game	SurfaceDX.cpp|surfaceDX9.cpp	gap			
+0x4efd10	41	FUN_004efd10	game	surfaceDX9.cpp	range			
+0x4efd40	303	FUN_004efd40	game	surfaceDX9.cpp	range			
+0x4efe70	1062	FUN_004efe70	game	surfaceDX9.cpp	range			
+0x4f02a0	134	FUN_004f02a0	game	surfaceDX9.cpp	range			
+0x4f0330	71	FUN_004f0330	game	surfaceDX9.cpp	range			
+0x4f0380	89	FUN_004f0380	game	surfaceDX9.cpp	range			
+0x4f03f0	21	FUN_004f03f0	game	surfaceDX9.cpp	range			
+0x4f0410	178	FUN_004f0410	game	surfaceDX9.cpp	range			
+0x4f05d0	83	FUN_004f05d0	game	surfaceDX9.cpp	range			
+0x4f0630	128	FUN_004f0630	game	surfaceDX9.cpp	range			
+0x4f06b0	180	FUN_004f06b0	game	surfaceDX9.cpp	range			
+0x4f0770	241	FUN_004f0770	game	surfaceDX9.cpp	range			
+0x4f0870	171	FUN_004f0870	game	surfaceDX9.cpp	range			
+0x4f0920	171	FUN_004f0920	game	surfaceDX9.cpp	range			
+0x4f09d0	642	FUN_004f09d0	game	surfaceDX9.cpp	range			
+0x4f0c60	233	FUN_004f0c60	game	surfaceDX9.cpp	range			
+0x4f0d50	252	FUN_004f0d50	game	surfaceDX9.cpp	range			
+0x4f0f80	178	FUN_004f0f80	game	surfaceDX9.cpp	range			
+0x4f1160	86	FUN_004f1160	game	surfaceDX9.cpp	range			
+0x4f11b6	42	Catch@004f11b6	catch	surfaceDX9.cpp	range		0x4f1160	
+0x4f11e0	6	Catch@004f11e0	catch	surfaceDX9.cpp	range		0x4f1160	
+0x4f11f0	72	FUN_004f11f0	game	surfaceDX9.cpp	range			
+0x4f1320	76	FUN_004f1320	game	surfaceDX9.cpp	range			
+0x4f1400	36	FUN_004f1400	game	surfaceDX9.cpp	range			
+0x4f1430	134	FUN_004f1430	game	surfaceDX9.cpp	range			
+0x4f14c0	998	FUN_004f14c0	game	surfaceDX9.cpp	range			
+0x4f18b0	30	FUN_004f18b0	game	surfaceDX9.cpp	range			
+0x4f1a40	293	FUN_004f1a40	game	surfaceDX9.cpp	range			
+0x4f1b70	349	FUN_004f1b70	game	surfaceDX9.cpp	range			
+0x4f1cd0	468	FUN_004f1cd0	game	surfaceDX9.cpp	range			
 0x4f2040	1490	FUN_004f2040	game	surfaceDX9.cpp	assert	982,983		
-0x4f46f0	18765	FUN_004f46f0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9040	539	FUN_004f9040	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
+0x4f46f0	18765	FUN_004f46f0	game	SurfaceGL.cpp	range			
+0x4f9040	539	FUN_004f9040	game	SurfaceGL.cpp	range			
 0x4f9260	682	FUN_004f9260	game	glh_extensions.h	header			
-0x4f9510	57	FUN_004f9510	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9550	119	FUN_004f9550	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f95d0	305	FUN_004f95d0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9710	320	FUN_004f9710	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9850	6	Catch@004f9850	catch	surfaceDX9.cpp|SurfaceGL.cpp	gap		0x4f9710	
-0x4f9860	21	FUN_004f9860	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9890	18	FUN_004f9890	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f98a2	732	FUN_004f98a2	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9d10	169	FUN_004f9d10	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9dc0	132	FUN_004f9dc0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9e50	149	FUN_004f9e50	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9ef0	242	FUN_004f9ef0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4f9ff0	135	FUN_004f9ff0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fa080	135	FUN_004fa080	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fa110	421	FUN_004fa110	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fa2c0	581	FUN_004fa2c0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fa700	420	FUN_004fa700	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fabd0	324	FUN_004fabd0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fad20	123	FUN_004fad20	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fada0	323	FUN_004fada0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4faef0	314	FUN_004faef0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fb030	60	FUN_004fb030	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fb1f0	75	FUN_004fb1f0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fb23b	43	Catch@004fb23b	catch	surfaceDX9.cpp|SurfaceGL.cpp	gap		0x4fb1f0	
-0x4fb266	21	Catch@004fb266	catch	surfaceDX9.cpp|SurfaceGL.cpp	gap		0x4fb1f0	
-0x4fb280	65	FUN_004fb280	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fb2c1	21	Catch@004fb2c1	catch	surfaceDX9.cpp|SurfaceGL.cpp	gap		0x4fb280	
-0x4fb2e0	505	FUN_004fb2e0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fb600	106	FUN_004fb600	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fb670	97	FUN_004fb670	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
-0x4fb6e0	30	FUN_004fb6e0	game	surfaceDX9.cpp|SurfaceGL.cpp	gap			
+0x4f9510	57	FUN_004f9510	game	SurfaceGL.cpp	range			
+0x4f9550	119	FUN_004f9550	game	SurfaceGL.cpp	range			
+0x4f95d0	305	FUN_004f95d0	game	SurfaceGL.cpp	range			
+0x4f9710	320	FUN_004f9710	game	SurfaceGL.cpp	range			
+0x4f9850	6	Catch@004f9850	catch	SurfaceGL.cpp	range		0x4f9710	
+0x4f9860	21	FUN_004f9860	game	SurfaceGL.cpp	range			
+0x4f9890	18	FUN_004f9890	game	SurfaceGL.cpp	range			
+0x4f98a2	732	FUN_004f98a2	game	SurfaceGL.cpp	range			
+0x4f9d10	169	FUN_004f9d10	game	SurfaceGL.cpp	range			
+0x4f9dc0	132	FUN_004f9dc0	game	SurfaceGL.cpp	range			
+0x4f9e50	149	FUN_004f9e50	game	SurfaceGL.cpp	range			
+0x4f9ef0	242	FUN_004f9ef0	game	SurfaceGL.cpp	range			
+0x4f9ff0	135	FUN_004f9ff0	game	SurfaceGL.cpp	range			
+0x4fa080	135	FUN_004fa080	game	SurfaceGL.cpp	range			
+0x4fa110	421	FUN_004fa110	game	SurfaceGL.cpp	range			
+0x4fa2c0	581	FUN_004fa2c0	game	SurfaceGL.cpp	range			
+0x4fa700	420	FUN_004fa700	game	SurfaceGL.cpp	range			
+0x4fabd0	324	FUN_004fabd0	game	SurfaceGL.cpp	range			
+0x4fad20	123	FUN_004fad20	game	SurfaceGL.cpp	range			
+0x4fada0	323	FUN_004fada0	game	SurfaceGL.cpp	range			
+0x4faef0	314	FUN_004faef0	game	SurfaceGL.cpp	range			
+0x4fb030	60	FUN_004fb030	game	SurfaceGL.cpp	range			
+0x4fb1f0	75	FUN_004fb1f0	game	SurfaceGL.cpp	range			
+0x4fb23b	43	Catch@004fb23b	catch	SurfaceGL.cpp	range		0x4fb1f0	
+0x4fb266	21	Catch@004fb266	catch	SurfaceGL.cpp	range		0x4fb1f0	
+0x4fb280	65	FUN_004fb280	game	SurfaceGL.cpp	range			
+0x4fb2c1	21	Catch@004fb2c1	catch	SurfaceGL.cpp	range		0x4fb280	
+0x4fb2e0	505	FUN_004fb2e0	game	SurfaceGL.cpp	range			
+0x4fb600	106	FUN_004fb600	game	SurfaceGL.cpp	range			
+0x4fb670	97	FUN_004fb670	game	SurfaceGL.cpp	range			
+0x4fb6e0	30	FUN_004fb6e0	game	SurfaceGL.cpp	range			
 0x4fb7f0	955	FUN_004fb7f0	game	SurfaceGL.cpp	assert	767,768		
 0x4fbbb0	1392	FUN_004fbbb0	game	SurfaceGL.cpp	assert	802,803		
 0x4fc130	840	FUN_004fc130	game	SurfaceGL.cpp	assert	1023		
