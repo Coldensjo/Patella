@@ -12,6 +12,7 @@
 
 #include "Status.h"
 #include "Utils.h"
+#include "Extern/regexp/regexp.h"
 
 // Data, in .data/.bss order.
 static char *LinkPattern =                    // 0x5c2560, used by InitStatus

@@ -2,6 +2,7 @@
 //
 // The image's malloc (0x512d18) and free (0x51165d) are redirected to ours,
 // so operator new/delete and regcomp of the original work without its CRT.
+// Our side links src/Extern/regexp/regexp.c (regexptest.cpp compares it).
 // The functions that would reach Windows (timeGetTime, remove, the
 // clipboard) are redirected to recorders here, and the reconstructed side
 // gets the same recorders as its definitions of those external functions.
@@ -33,8 +34,6 @@ static void Record(char *Buffer, size_t Size, const char *Text)
 int GetMilliseconds() { return Clock; }
 bool RemoveFile(const char *FileName) { Record(Removed[OURS], 64, FileName); RemoveCalls[OURS]++; return true; }
 bool SetClipboardText(const char *textdata) { Record(Clipboard[OURS], 4096, textdata); ClipboardCalls[OURS]++; return true; }
-regexp *regcomp(char *exp) { return At<regexp *(__cdecl *)(char *)>(0x50fa40)(exp); }
-int regexec(regexp *prog, char *string) { return At<int (__cdecl *)(regexp *, char *)>(0x50f360)(prog, string); }
 
 // Replacements patched into the image.
 static void *__cdecl ImageMalloc(size_t Size) { return malloc(Size); }

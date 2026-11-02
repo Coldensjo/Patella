@@ -2706,3 +2706,106 @@ Reconstructed by Claude Opus 5.5, November 2, 2026.
   as before. Every test's check count in the full run is unchanged (DialogWindow 24,567, ContextMenus 33,088,
   ConsoleWindow 30,948, ContentWindows 52,506, DialogElements 135,478, Dialogs 98,889, Graphics 570,954,
   MapWindow 115,169, MainWindow 14,164); the full run passes 14,068,269 checks with SurfaceGL's 53,082.
+
+## Library region (issue #15)
+
+Classified by Claude Opus 5.5, November 2, 2026.
+
+- **Scope** (high). The library region is symbols.tsv's 1,102 functions of kind library from 0x50eae8
+  (after vlong.obj) to the end of .text; the 14,716 Unwind@ funclets after 0x52fc20 are the whole
+  program's EH cleanup code (kind eh-funclet) and are not counted. Every one of the 1,102 has a
+  names.tsv row now (kind stl, the library first in the note; one row of kind game). Ghidra missed
+  further code in MFC and the CRT (342 addresses that code or data refers to are no function start in
+  symbols.tsv: vtable slots and SEH filters and handlers inside Ghidra's function bodies); they belong to the same
+  library objects as their neighbours (file-ranges.tsv) and have no rows of their own.
+- **Counts** (names.tsv notes): MFC 7.1 523, CRT 441, C++ library 58, ATL 7.1 45, Henry Spencer's
+  regexp 15, import thunks 8, delay-load 6, Windows SDK multimon.h stubs 5, game code 1. By object block
+  (file-ranges.tsv, symbols.tsv's file column): nafxcw.lib 569 (MFC with the ATL string templates and
+  the multimon stubs it instantiates), libcmt.lib 441, libcpmt.lib 58, ATL 7.1 4 (CAtlBaseModule),
+  delay-load 6, import thunks 8, regexp.c 15, Inventory.cpp 1.
+- **How** (high for the named, medium/low for some helper names). Tibia.exe imports no CRT or MFC DLL,
+  so the CRT is the static multithreaded libcmt.lib (with _mtinit/_getptd), MFC the static ANSI
+  nafxcw.lib, the C++ library libcpmt.lib ("Copyright (c) 1992-2001 by P.J. Plauger" at 0x5c42e2). 850
+  functions carry Ghidra's FID names (VS 2003 libraries); they keep them, made identifiers
+  (`CWnd::~CWnd` -> CWnd_dtor, templates dropped, one leading underscore of C names dropped; duplicates
+  get the address). The 252 others were classified by script (build/scratch/rx/classify.py) and by
+  hand: their neighbours' library, RTTI of the vtables they set or sit in (scalar deleting destructors,
+  destructors, vtable slots), message-map entries, __finally blocks (`push n; call _unlock`) named after
+  their function, throw infos (AfxThrowMemory/InvalidArg/Resource/UserException), and the code itself
+  for the ones game code calls (strstr, strchr, srand, localeconv, _ftol2, floor, rename, remove,
+  _unlink, _fileno, bad_cast, std::_Lockit, std::_Mutex, _Mtxinit..., _String_base::_Xlen/_Xran,
+  CWnd::Get/SetWindowPlacement, AfxGetAfxWndProc, AfxGetThread, CFrameWnd::OnSize, CAsyncSocket's
+  constructor, AfxThrowOleException). 36 helper names stay low (MFC_<address>, <Class>_vslot_<n>):
+  the library is certain, the function within it is not identified; none is called by game code.
+- **atoi** (high). 0x51262a, called by the game (Dialogs, Player, Preferences, vlong), is `jmp atol`:
+  atox.c's atoi. names.tsv called it atol; it is atoi now, 0x5125a2 is atol. The sources still write
+  atol (same result on Win32): issue #30.
+- **Game code in the region** (high). 0x559ea0 (Ghidra found it after the EH funclets) is Inventory.obj's
+  dynamic initialiser of Containers (0x5cedd8), like the other objects' initialisers 0x559df0-0x559f81;
+  file-ranges.tsv gives it to Inventory.cpp, tools/triage.py now applies file-ranges.tsv to library
+  rows as well and makes such a row kind game. No other CipSoft code sits in the region: no zlib, MD5
+  or other third-party strings; the sprintf/_snprintf family is the CRT's.
+- **_fileno** (high). 0x523017 is the CRT's _fileno although the linker placed it among the MFC objects
+  (after AfxInitialize); a one-function libcmt.lib row in file-ranges.tsv.
+- **regexp: origin and version** (high). 0x50eb00-0x50fbb8 is Henry Spencer's regexp(3) of 1986 (the
+  University of Toronto version posted to Usenet): its 19 messages are that version's ("NULL argument",
+  "regexp too big", "out of space", "too many ()", "unmatched ()", "junk on end", "*+ operand could be
+  empty", "nested *?+", "invalid [] range", "unmatched []", "internal urp", "?+* follows nothing",
+  "trailing \\", "internal disaster", "NULL parameter", "corrupted program", "memory corruption",
+  "corrupted pointers", "internal foulup"), MAGIC is 0234 (0x9c), NSUBEXP 10 (OPEN 20, CLOSE 30, the
+  jump tables end at CLOSE+9), sizeof(regexp) 0x60 (the 1986 layout: startp, endp, regstart, reganch,
+  regmust, regmlen, program), the size limit 32767 and `regsize` counting as in the original. Later
+  versions differ in visible ways the binary does not have (the 4.4BSD/Tcl/Vim descendants rename the
+  error function, add const, regsub's "damaged regexp fed to regsub" and regerror's "regexp(3): %s"
+  belong to separate files). Not in the client: regsub.c, regerror.c, DEBUG's regdump/regprop/regnarrate
+  and the STRCSPN fallback (the CRT's strcspn 0x511ee0 is called). The text was written from memory of
+  the original (nothing was downloaded) and checked function by function against the assembly
+  (build/scratch/rx/rx.asm): every node, flag, test, jump table (regatom 0x50f990/0x50f9b4, regmatch
+  0x50efdc/0x50f010, regrepeat 0x50ec88) and message agrees. No function has EH tables.
+- **regexp: the client's changes** (the behaviour high, the form low). (1) regerror: every message
+  goes through `if (p != NULL) p(message)` with p the .bss word 0x71f034, which nothing writes, so a
+  failing regcomp returns NULL and regexec 0 silently. Written as a static regerror in regexp.c calling
+  the global `regerrorhandler` (our name; it may have been static in the original); the call sites keep
+  the original text. (2) Includes: the client's own "regexp.h" and <string.h>/<stdlib.h> in place of the
+  K&R `extern char *malloc();`/`extern char *strchr();` declarations (modern headers reject them with
+  malloc's prototype; the binary calls the CRT's functions directly, strlen is inlined). (3) regexp.h has
+  prototypes with extern "C" for the C++ callers (the original's K&R declarations mean no parameters in
+  C++); regsub and regerror are no longer declared. The file is compiled as C (src/Extern/regexp/
+  regexp.c, K&R definitions kept); `#pragma warning(disable: 4018)` keeps /W3 quiet about the original's
+  unsigned `strlen(...) >= len`. The order of the source is the original's; the binary's order is the
+  compiler's (callees first), and its static functions take register arguments (regc in CL, regnext
+  and regrepeat in EAX, regtail in EAX/ECX, regtry in ESI/EBX ...), which our compiler chooses itself.
+- **regexp: data** (high). .bss 0x71f010 regdummy, 0x71f014 regsize, 0x71f018 regnpar, 0x71f01c regbol,
+  0x71f020 regstartp, 0x71f024 regparse, 0x71f028 regcode, 0x71f02c regendp, 0x71f030 reginput,
+  0x71f034 the error hook; .rdata 0x574094-0x5741e1 the messages and META. The object is 16-byte
+  aligned like the game's (the libraries are not) and follows vlong.obj, so it is a project file (in a
+  subfolder: src/Extern/regexp like glh's Extern\glh). Licence: Spencer's 1986 terms (redistribution
+  allowed, altered versions marked) are in the file; the alteration is marked at its top.
+- **Callers**. external.h's regcomp/regexec declarations are gone; Status.cpp includes
+  Extern/regexp/regexp.h (the names were already the original's). statustest.cpp no longer forwards our
+  regcomp/regexec to the image: difftest.exe links regexp.c, so Status.cpp's tests run ours.
+- **tools/callcheck.py** (medium). names.tsv's new library rows would have made callcheck count calls
+  such as memcpy, strlen, operator new and strcpy in our sources while the pseudocode keeps Ghidra's
+  names (_memcpy, ...) or inlines them; a library-region name now counts only when Ghidra left the
+  function unnamed and this file's pseudocode calls it by that name. Every file's count is the same or
+  lower than before (Dialogs, Preferences, Script and sysinc lose the old atol/_fileno/rename/remove/
+  srand differences).
+- **Tests**. tools/difftest/regexptest.cpp (new, DIFFTEST_ONLY=Regexp, RX_SEED, RX_ROUNDS, RX_TRACE):
+  both regcomps on hand-made patterns for every message and boundary (9 and 10 groups, ranges with ]
+  and -, invalid ranges, quantifier errors, backslashes, chars above 0x7f, the size limit at exactly
+  32766/32767), random strings of pattern characters, patterns from a small grammar and the client's
+  LinkPattern (the image's 0x5c2560) with URL-like texts; compared: NULL or not, the messages, the
+  allocation size, regstart/reganch/regmust/regmlen and every program byte; regexec on both programs
+  (own and cross) with the result, the messages and all ten startp/endp (from a common sentinel), plus
+  hand-made corrupted programs (wrong magic, unknown opcodes, a missing next node, STAR/PLUS of a
+  BRANCH or BACK) and NULL arguments; a quarter of the rounds with both hooks NULL as in the client.
+  229,958 checks, 0 failures. Coverage (RX_TRACE): every opcode including OPEN1-9/CLOSE1-9, regmust
+  with rejections, anchored and regstart programs; every message except four: "junk on end",
+  "internal urp" and "internal disaster" cannot happen (the original says so for the first; regpiece is
+  never called on '\0', '|' or ')', and strcspn is at least 1 for a non-META character), "out of space"
+  needs a failing malloc (not simulated). Mutation check (build/scratch/rx/rxmutate.py, 1,500 rounds): 44
+  changes in every function, 41 detected; the three survivors are equivalent: SIMPLE for a two-character
+  EXACTLY (regatom backs off before a quantifier, so a multi-character node is never a STAR/PLUS operand),
+  reganch's shortcut in regexec (an anchored program fails at every later position anyway and leaves the
+  same NULL startp/endp) and ANYBUT's `*reginput == '\0'` test (strchr finds the terminator, so the
+  remaining test fails too).

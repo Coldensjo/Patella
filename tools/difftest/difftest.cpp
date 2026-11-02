@@ -425,6 +425,11 @@ int main(int argc, char **argv)
 		printf("%d checks, %d failures\n", Checks, Failures);
 		return Failures == 0 ? 0 : 1;
 	}
+	if (Only != NULL && strcmp(Only, "Regexp") == 0) {
+		TestRegexp();
+		printf("%d checks, %d failures\n", Checks, Failures);
+		return Failures == 0 ? 0 : 1;
+	}
 	TestXTEA();
 	TestCharacters();
 	TestColors();
@@ -454,6 +459,7 @@ int main(int argc, char **argv)
 	TestSurfaceDX();
 	TestSurfaceDX9();
 	TestSurfaceGL();
+	TestRegexp();
 	TestMapWindow(argc > 2 ? argv[2] : "C:\\Tibia\\Tibia.exe");
 	TestMainWindow();
 #endif
