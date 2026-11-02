@@ -631,15 +631,14 @@ void TSubWindow::SetSize(int Width, int Height)
 		if (Height < getMinimumHeight())
 			Height = getMinimumHeight();
 		TWindow::SetSize(Width, Height);
-		SetChildArea(Body, SkinProperties.Style194.Data50.x, SkinProperties.Style194.Data50.y,
-			SkinProperties.Style194.Data50.width, SkinProperties.Style194.Data50.height);
+		SetChildArea(Body, SkinProperties.Style194.Data50);
 		FitToChild(Body, SkinProperties.Style194.Data50, false);
 		if (Resizer1 != NULL)
-			SetChildArea(Resizer1, SkinProperties.Style194.Data60.x, SkinProperties.Style194.Data60.y,
-				SkinProperties.Style194.Data68.x, SkinProperties.Style194.Data68.y);
+			SetChildArea(Resizer1, TRect(SkinProperties.Style194.Data60.x, SkinProperties.Style194.Data60.y,
+				SkinProperties.Style194.Data68.x, SkinProperties.Style194.Data68.y));
 		if (Resizer2 != NULL)
-			SetChildArea(Resizer2, SkinProperties.Style194.Data70.x, SkinProperties.Style194.Data70.y,
-				SkinProperties.Style194.Data78.x, SkinProperties.Style194.Data78.y);
+			SetChildArea(Resizer2, TRect(SkinProperties.Style194.Data70.x, SkinProperties.Style194.Data70.y,
+				SkinProperties.Style194.Data78.x, SkinProperties.Style194.Data78.y));
 	}
 	Arrange();
 	if (Column != NULL) {
@@ -866,8 +865,7 @@ void TSubWindow::SetIcon(TComponent *_Icon)
 	}
 	Icon = _Icon;
 	InsertChild(_Icon);
-	SetChildArea(Icon, SkinProperties.Style194.Data00.x, SkinProperties.Style194.Data00.y,
-		SkinProperties.Style194.Data00.width, SkinProperties.Style194.Data00.height);
+	SetChildArea(Icon, SkinProperties.Style194.Data00);
 	TEND
 }
 
@@ -883,7 +881,7 @@ void TSubWindow::SetTitle(TComponent *_Title)
 	}
 	Title = _Title;
 	InsertChild(_Title);
-	SetChildArea(Title, SkinProperties.Style194.Data28.x, SkinProperties.Style194.Data28.y,
-		SkinProperties.Style194.Data30.x, SkinProperties.Style194.Data30.y);
+	SetChildArea(Title, TRect(SkinProperties.Style194.Data28.x, SkinProperties.Style194.Data28.y,
+		SkinProperties.Style194.Data30.x, SkinProperties.Style194.Data30.y));
 	TEND
 }

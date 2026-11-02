@@ -583,7 +583,7 @@ static void TreeOperation()
 			if (Op == 8)
 				W[s]->SetChildPosition(Nodes[c].Side[s], x, y);
 			else
-				W[s]->SetChildArea(Nodes[c].Side[s], x, y, Width, Height);
+				W[s]->SetChildArea(Nodes[c].Side[s], TRect(x, y, Width, Height));
 		}
 		break;
 	}

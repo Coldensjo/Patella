@@ -40,6 +40,9 @@ confirmed by the binary or a test, two static objects added (MainFrm.cpp's NoCal
 scripttest.cpp tests nextToken's length limits; summary table at the end of notes/decisions.md.
 TRect's members (issue #29, November 2, 2026): TRect is {x, y, width, height} and the blit slots take
 TRect FromRect/ToRect, both from the assertion texts and the callers' 16-byte blocks.
+SetChildArea (issue #27, November 2, 2026): TWindow::SetChildArea(TComponent *Child, TRect Area); all 136
+calls in the binary build the area as a 16-byte block. Ten areas built from two SkinProperties points are
+#31.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -62,7 +65,7 @@ None.
 ## Last difftest
 
 14,492,680 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11, #13, #15, #30 and #24, unchanged by #29; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
+(after merging #11, #13, #15, #30 and #24, unchanged by #29 and #27; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
 Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 
 ## Notes for later files
@@ -207,8 +210,8 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   SetFramerateLimit (+0xac) and the member GetAvailableEngines.
 - SkinProperties: build/scratch/dg8/retype.py relayouts blocks from a table (offset, type, name), checks the
   constructor-zeroed bytes and rewrites every use by offset; reuse it for later retypes.
-- The original's SetChildArea takes a TRect by value (callers build a 16-byte block); GUI.h keeps the five
-  ints (same stack layout; issue #27).
+- SetChildArea takes a TRect by value: TWindow::SetChildArea(TComponent *Child, TRect Area) (issue #27; every
+  caller builds a 16-byte block). Pass a SkinProperties TRect itself, build TRect(...) for computed areas.
 - The image's iostreams cannot run in the test child (the CRT's static initialisers are not run and call
   imports): functions that build a std::stringstream in the image (the error report dialog's constructor,
   Container.h's index errors) cannot be called on the image side.
@@ -254,8 +257,9 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   signatures (testsurface.h). When a slot's callers build a 16-byte block (`sub esp,0x10` and four stores)
   the parameter is a TRect; build/scratch/slotcalls.py (i29 worktree) lists the argument pattern of every
   slot call.
-- Issue #27 (SetChildArea) can now take TRect Area and use Area.width/Area.height; Dialogs.cpp's callers
-  pass R.x, R.y, R.width, R.height of SkinProperties' TRects today.
+- Settled in #27: SetChildArea takes TRect Area, the callers pass SkinProperties' TRects themselves.
+  build/scratch/areacalls.py (i27 worktree) lists the argument pattern of every +0x8c slot call and of
+  every direct call of 0x49f5d0.
 - Unknown-owner data (issue #12, notes/decisions.md): every object that includes the text header has
   a full copy of its table (147 entries, 0x24c bytes, "You are poisoned" ... "Report Rule Violation");
   the object whose code reads an entry owns that copy (Player.obj 0x5c22cc, MapWindow.obj 0x5c2064,

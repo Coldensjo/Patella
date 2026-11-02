@@ -108,8 +108,7 @@ void THelpBubble::SetSize(int Width, int Height)
 			Height = MaxHeight;
 	}
 	TWindow::SetSize(Width, Height);
-	SetChildArea(Text, SkinProperties.Data160.x, SkinProperties.Data160.y, SkinProperties.Data160.width,
-		SkinProperties.Data160.height);
+	SetChildArea(Text, SkinProperties.Data160);
 	Arrange();
 	TEND2(Width, Height)
 }

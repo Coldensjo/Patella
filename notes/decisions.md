@@ -1037,11 +1037,13 @@ finished it), November 1, 2026.
   with sub esp,0x10 and four stores, which MSVC does for a struct argument,
   not for four ints (the WIP had four ints; the stack layout is the same, so
   the difftest could not tell). SetChildArea and SetChildPosition get plain
-  pushes at all their call sites. The only known 16-byte struct is TRect;
+  pushes at all their call sites (wrong for SetChildArea, see below). The only known 16-byte struct is TRect;
   its x, y, Width, Height are the left, top, right, bottom margins. The
   SkinProperties members passed this way (+0x0a0, Style194+0x50) became
   TRects.
   Settled in #29: TRect's members are x, y, width, height (the margins are Area.width/Area.height now).
+  Settled in #27: SetChildArea gets a 16-byte block at all its 136 call sites too and takes TRect Area
+  now; SetChildPosition does get three plain pushes.
   Reviewed in #24: confirmed: the 16-byte block is the binary's; which struct type it is cannot change the
   code.
 - **Names from the binary**: SkinProperties and its member paths
@@ -1260,6 +1262,8 @@ Reconstructed by Claude Opus 5.5 (issue #1), November 1, 2026.
   16-byte block (sub esp,0x10 and four stores) while GUI.h's SetChildArea
   takes four ints; the stack is the same. GUI.cpp's decision found plain
   pushes elsewhere, so the signature was left.
+  Settled in #27: SetChildArea takes a TRect; Arrange passes TRect(Data140.x, Data140.y, Data148.x,
+  Data148.y) (the two points may be one TRect, #31).
 - **callcheck** (14 of 26 functions differ, all explained): constructor calls
   (TWindow's, TCallback's, TMapWindow's, TBlinkingButton's, the vector
   constructor iterator of DrawCreature's colours) are not lexical; qualified
@@ -2509,6 +2513,7 @@ Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
   Dialogs.obj builds a 16-byte block (sub esp,0x10) for the area, so the
   original signature is SetChildArea(TComponent *, TRect); GUI.h's five-int
   form has the same stack layout, so the source keeps it (issue #27).
+  Settled in #27: SetChildArea(TComponent *Child, TRect Area); the callers pass the TRects themselves.
 - **callcheck** (all differences explained): constructors of base classes,
   members and new-expressions (TWindow, TCallback, TTimer, TLabel, the
   controls, the vectors, TDrawing's vector constructor iterator) are not
@@ -3044,7 +3049,8 @@ patch names, Talk.cpp's table, Objects.cpp's TProperties and flag names, the Pre
 ContextMenus/Control and start/Communication gaps, sysinc.cpp, Help.cpp's names, Inventory.cpp's function
 names, surfaceDX9.cpp, Resources, Header code and every "Names"/"Classes" entry). Skipped as other issues':
 TRect width/height and FromRect/ToRect (#29), SetChildArea's TRect (#27). Line numbers are those before this
-review. (Settled in #29: see "TRect's members (issue #29)" below.)
+review. (Settled in #29: see "TRect's members (issue #29)" below. Settled in #27: see "SetChildArea
+(issue #27)" below.)
 
 Tools (new): tools/xctable.py lists the __xc initialiser table with what each initialiser builds and the
 atexit thunk it registers; tools\listing.cmd compiles src files like compile-check.cmd with assembly listings
@@ -3229,3 +3235,81 @@ Claude Opus 5.5, November 2, 2026.
   *Child, TRect Area) can use Area.width/Area.height; GUI.cpp's FitToChild/FitToChildren already take a
   TRect by value. The callers in Dialogs.cpp pass R.x, R.y, R.width, R.height of SkinProperties' TRects
   today and can pass the TRect itself.
+  Settled in #27: see "SetChildArea (issue #27)" below.
+
+## SetChildArea (issue #27)
+
+Claude Opus 5.5, November 2, 2026.
+
+- **Evidence** (build/scratch/areacalls.py: every indirect call through slot +0x8c and every direct call of
+  0x49f5d0, with the argument pattern since the previous call and the function from names.tsv). The slot
+  calls of the surface engines (TSurfaceDX9's D3D device calls, 0x479d3c's GetSurface()->+0x8c) are other
+  vtables and are left out. That leaves 136 calls (102 direct, 34 through the slot), and every one of them
+  builds the area as a 16-byte block: `sub esp,0x10`, four stores and one push of the child. The Arrange
+  functions with a larger frame have `sub esp,0x184`/`0x18c` for the frame and then the same block. No call
+  pushes four separate values. The source had 136 calls as well, and the counts per file are the same
+  (ConsoleWindow 4, ContentWindows 16, ContextMenus 1, DialogElements 6, DialogWindow 5, Dialogs 103,
+  MapWindow 1). The calls by file, with the address of each call instruction (all build a block):
+  - ConsoleWindow.cpp (4): TConsoleWindow_SetSize (0x41deec, 0x41df22, 0x41df58); TConsole_Arrange (0x4214f9).
+  - ContentWindows.cpp (16): TInventoryView_ctor (0x42a873, 0x42a8d7, 0x42a937); TTradeOffers_SetSize
+    (0x43183e); TTradeNames_SetSize (0x432b6c, 0x432ba2, 0x432bd8); TTradeButtons_SetSize (0x43353c,
+    0x433596); TTradeWindowBody_SetSize (0x4340d5, 0x43410b, 0x434141); CreateSmallInventoryWindow (0x436690,
+    0x4366f7, 0x43675a); TAutomapWindow_ctor (0x436bf8).
+  - ContextMenus.cpp (1): THelpBubble_SetSize (0x43d838).
+  - DialogElements.cpp (6): TLink_Arrange (0x456c70); TListBox_StartEdit (0x46310f); TFontListBox_StartEdit
+    (0x464926); TCheckBox_ctor (0x467779); TEditText_Arrange (0x468768); TListBox_Arrange (0x46a1aa).
+  - DialogWindow.cpp (5): TSubWindow_SetSize (0x4882b0, 0x488322, 0x48835c); TSubWindow_SetIcon (0x48a143);
+    TSubWindow_SetTitle (0x48a333).
+  - Dialogs.cpp (103): TDialog_Arrange (0x46cd7b, 0x46cdb1, 0x46cde7); TReconnectWindow_ctor (0x46e6e4,
+    0x46e70a, 0x46e730); TLoginDialog_ctor (0x46ee66, 0x46eea2, 0x46eed8, 0x46ef6d, 0x46effa);
+    TCharacterListDialog_ctor (0x46f6a5, 0x46f729, 0x46f8bf); TMoveObjectsDialog_ctor (0x47098c, 0x470a05);
+    TTextDialog_ctor (0x471704, 0x4717a2, 0x471836); TBugReportDialog_ctor (0x472fdb, 0x473068);
+    TNewChannelDialog_ctor (0x4736a7, 0x4736d7, 0x47379d, 0x4737cd); TPrivateChannelDialog_ctor (0x473f7e,
+    0x473fae); TReportDialog_ctor (0x4745d0, 0x4745fe); TAddBuddyDialog_ctor (0x474c3d, 0x474c6b);
+    TEditBuddyDialog_ctor (0x475348, 0x4753a6, 0x47543c, 0x4755ac, 0x475612, 0x47569f); TUpdateDialog_ctor
+    (0x475b4c, 0x475bab); THintsDialog_ctor (0x476db1, 0x476e33); TEditMarkDialog_ctor (0x477e86, 0x477f07,
+    0x477f9d); TOptionsDialog_ctor (0x478cfc); TGeneralOptionsDialog_ctor (0x4794a5, 0x4794d8, 0x479509,
+    0x47953a, 0x47956d); TGraphicsOptionsDialog_ctor (0x479c6b, 0x479c9e, 0x479ccc, 0x479cfa);
+    TAdvancedGraphicsDialog_ctor (0x47a754, 0x47a785, 0x47a7b8, 0x47a7e9); TConsoleOptionsDialog_ctor
+    (0x47b145, 0x47b178, 0x47b1a9, 0x47b1da, 0x47b20d); TNetworkOptionsDialog_ctor (0x47b69c);
+    TOutfitDialog_ctor (0x47d1d2); TEditListDialog_ctor (0x47d910, 0x47d9f5); TIgnoreListDialog_ctor
+    (0x47dc36, 0x47dcc4, 0x47dd55, 0x47de77, 0x47df05, 0x47df6a, 0x47dfcf, 0x47e310, 0x47e3a6, 0x47e437,
+    0x47e559, 0x47e5e7, 0x47e64c); THotkeyDialog_ctor (0x47eee0, 0x47ef7d, 0x47f00c, 0x47f0c2, 0x47f12c);
+    TErrorReportDialog_ctor (0x47f448, 0x47f47b, 0x47f4a9, 0x47f4da); CreateInfoDialog (0x480a5a, 0x480a8d,
+    0x480ac0); TRuleViolationDialog_ctor (0x484744, 0x4847fa, 0x48488e, 0x484912, 0x48499f, 0x484a0e,
+    0x484a9b, 0x484b0c, 0x484b99, 0x484c46, 0x484cc2).
+  - MapWindow.cpp (1): TMapWindow_Arrange (0x4bfe40).
+- **SetChildArea(TComponent *Child, TRect Area)** (high for the 16-byte block; the type is TRect because it
+  is the only 16-byte struct, and FitToChild/FitToChildren take theirs the same way). The parameter name
+  Area is ours (low). The function's three assertions ("Child->Parent==this", "Width>0" and "Height>0"
+  with the values "Width" and "Height") read the window's Width and Height at this+0x1c/+0x20. The catch
+  block (line 1690) names nothing, so the binary does not name the area. Area matches FitToChild's
+  parameter and the function's name. The body changes Area.x, Area.y, Area.width and Area.height in place,
+  as it changed the four int parameters before. The binary keeps them in registers and locals, and the
+  values are the same. The stack layout is the old one: the four ints were at the same offsets as the
+  TRect's members.
+- **The callers**: 118 pass a SkinProperties TRect whose x, y, width and height they used to pass one by
+  one; they pass the TRect itself now (Dialogs.cpp 100, ContentWindows.cpp 10, ConsoleWindow.cpp 4,
+  DialogWindow.cpp 2, ContextMenus.cpp 1, DialogElements.cpp 1). 18 build TRect(...):
+  - computed areas (8): DialogElements.cpp's TLink::Arrange, TEditText::Arrange, TListBox::Arrange and the
+    two StartEdits, Dialogs.cpp's TReconnectWindow constructor (three; 0x46e6cc builds the block from the
+    computed heights). guitest.cpp's tree operation 9 does the same.
+  - pairs of TGUIPoints (10): the position and the size are two points in SkinProperties (MapWindow.cpp's
+    Data140/Data148, DialogWindow.cpp's Style194 Data28/30, Data60/68, Data70/78, ContentWindows.cpp's six
+    Style6FC pairs). In the binary each pair is copied as 16 contiguous bytes (0x4bfe1d copies
+    0x5cd108..0x5cd117), the same code a TRect copy gives. Whether these pairs are TRects is a SkinProperties
+    retype: issue #31. The source builds TRect(P.x, P.y, Q.x, Q.y) (medium; the values and the layout are
+    the binary's either way).
+- **Tests**: no test fake overrides SetChildArea; guitest.cpp's call builds a TRect. Totals unchanged
+  (14,492,680 checks in difftest.exe, 67 in sysinctest.exe, 3,201 vlong; 0 failures). tools\compile-check.cmd
+  is clean. The first full run had 125 "dialogs differ" failures in the outfit dialog, caused by the
+  harness and not by this change, so it was run again. The original side's TColorButton Next pointers sat at
+  0x00abab98-like addresses, and dialogstest's IsPattern prints those as fill pattern. Main's build (from
+  git archive 82ae6f9) fails the same way with the default %TEMP% (2 failures in the rule violation dialog,
+  a word printed P on one side and hex on the other), and both builds pass with build.cmd's TEMP. The
+  second full run passed. The dump's dependence on addresses is issue #32.
+- **callcheck**: identical output before and after for GUI.cpp (20 of 63 functions differ), ConsoleWindow.cpp
+  (55 of 76), ContentWindows.cpp (82 of 140), ContextMenus.cpp (24 of 36), DialogElements.cpp (112 of 160),
+  DialogWindow.cpp (23 of 47), Dialogs.cpp (111 of 139) and MapWindow.cpp (14 of 26). SetChildArea is a
+  virtual call (indirect) or a qualified TWindow:: call in the decompile, so the tool does not count it, and
+  TRect's constructor is not a names.tsv function.

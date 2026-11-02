@@ -2101,23 +2101,24 @@ void TWindow::StopDragging()
 
 // 0x49f5d0, lines 1679-1690. Negative coordinates count from the right and
 // bottom edges, sizes below 1 are relative to the space left. The
-// assertions are before the try block.
-void TWindow::SetChildArea(TComponent *Child, int x, int y, int width, int height)
+// assertions are before the try block; they name the window's Width and
+// Height, not the area (whose name is ours, as FitToChild's).
+void TWindow::SetChildArea(TComponent *Child, TRect Area)
 {
 	TASSERT(Child->Parent==this);
 	TASSERT1(Width>0, Width);
 	TASSERT1(Height>0, Height);
 	TBEGIN
-	if (x < 0)
-		x = Width + x;
-	if (y < 0)
-		y = Height + y;
-	Child->SetPosition(x, y);
-	if (width < 1)
-		width = (Width - x) + width;
-	if (height < 1)
-		height = (Height - y) + height;
-	Child->SetSize(width, height);
+	if (Area.x < 0)
+		Area.x = Width + Area.x;
+	if (Area.y < 0)
+		Area.y = Height + Area.y;
+	Child->SetPosition(Area.x, Area.y);
+	if (Area.width < 1)
+		Area.width = (Width - Area.x) + Area.width;
+	if (Area.height < 1)
+		Area.height = (Height - Area.y) + Area.height;
+	Child->SetSize(Area.width, Area.height);
 	TEND
 }
 

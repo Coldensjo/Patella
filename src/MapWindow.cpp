@@ -94,14 +94,14 @@ void TMapWindow::SetSize(int Width, int Height)
 	TEND2(Width, Height)
 }
 
-// 0x4bfde0, line 164. The binary passes the four values as one 16-byte block
-// (sub esp,0x10 and four stores), although SetChildArea takes ints.
+// 0x4bfde0, line 164. The area is one 16-byte block (sub esp,0x10 and four
+// stores) built from two points, the position and the size.
 void TMapWindow::Arrange()
 {
 	TBEGIN
 	if (HintButton != NULL)
-		SetChildArea(HintButton, SkinProperties.Data140.x, SkinProperties.Data140.y,
-			SkinProperties.Data148.x, SkinProperties.Data148.y);
+		SetChildArea(HintButton, TRect(SkinProperties.Data140.x, SkinProperties.Data140.y,
+			SkinProperties.Data148.x, SkinProperties.Data148.y));
 	TEND
 }
 

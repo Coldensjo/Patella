@@ -671,8 +671,7 @@ void TConsole::Arrange()
 	int LeftEdge = Skins[173].width;
 	ScrollBar->SetSize(ScrollBar->Width, Height - Skins[176].height - Top);
 	ScrollBar->SetPosition(WindowWidth - RightEdge - LeftEdge - ScrollBar->Width + LeftEdge, Top);
-	SetChildArea(TextWindow, SkinProperties.Style9E8.Data8C.x, SkinProperties.Style9E8.Data8C.y,
-		SkinProperties.Style9E8.Data8C.width, SkinProperties.Style9E8.Data8C.height);
+	SetChildArea(TextWindow, SkinProperties.Style9E8.Data8C);
 	TWindow::Arrange();
 	int Visible = TextWindow->getLastLineNumber() - TextWindow->getFirstLineNumber() - TextWindow->InvisibleLines;
 	int Minimum = TextWindow->getFirstLineNumber() + Visible;
@@ -1314,12 +1313,9 @@ void TConsoleWindow::SetSize(int Width, int Height)
 {
 	TBEGIN
 	TComponent::SetSize(Width, Height);
-	SetChildArea(TabBar, SkinProperties.Style9E8.Data04.x, SkinProperties.Style9E8.Data04.y,
-		SkinProperties.Style9E8.Data04.width, SkinProperties.Style9E8.Data04.height);
-	SetChildArea(Input, SkinProperties.Style9E8.Data24.x, SkinProperties.Style9E8.Data24.y,
-		SkinProperties.Style9E8.Data24.width, SkinProperties.Style9E8.Data24.height);
-	SetChildArea(CurrentConsole, SkinProperties.Style9E8.Data44.x, SkinProperties.Style9E8.Data44.y,
-		SkinProperties.Style9E8.Data44.width, SkinProperties.Style9E8.Data44.height);
+	SetChildArea(TabBar, SkinProperties.Style9E8.Data04);
+	SetChildArea(Input, SkinProperties.Style9E8.Data24);
+	SetChildArea(CurrentConsole, SkinProperties.Style9E8.Data44);
 	if (IsChild(VolumeButton))
 		SetChildPosition(VolumeButton, SkinProperties.Style9E8.Data64.x, SkinProperties.Style9E8.Data64.y);
 	SetChildPosition(IgnoreButton, SkinProperties.Style9E8.Data7C.x, SkinProperties.Style9E8.Data7C.y);

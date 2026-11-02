@@ -75,16 +75,13 @@ TContentWindow *CreateSmallInventoryWindow(TMainWindow *Receiver)
 	Window->SetChildPosition(Maximise, SkinProperties.Data550.width, SkinProperties.Data550.height);
 	TCapacityLabel *Capacity = new TCapacityLabel;
 	Window->InsertChild(Capacity);
-	Window->SetChildArea(Capacity, SkinProperties.Data560.x, SkinProperties.Data560.y, SkinProperties.Data560.width,
-		SkinProperties.Data560.height);
+	Window->SetChildArea(Capacity, SkinProperties.Data560);
 	TSoulLabel *Soul = new TSoulLabel;
 	Window->InsertChild(Soul);
-	Window->SetChildArea(Soul, SkinProperties.Data570.x, SkinProperties.Data570.y, SkinProperties.Data570.width,
-		SkinProperties.Data570.height);
+	Window->SetChildArea(Soul, SkinProperties.Data570);
 	TPlayerStates *States = new TPlayerStates(false);
 	Window->InsertChild(States);
-	Window->SetChildArea(States, SkinProperties.Data580.x, SkinProperties.Data580.y, SkinProperties.Data580.width,
-		SkinProperties.Data580.height);
+	Window->SetChildArea(States, SkinProperties.Data580);
 	return Window;
 	TEND
 }
@@ -280,8 +277,7 @@ TAutomapWindow::TAutomapWindow()
 	InsertChild(ZoomInButton);
 	InsertChild(ZoomOutButton);
 	InsertChild(CompassRose);
-	SetChildArea(View, SkinProperties.Data234.x, SkinProperties.Data234.y, SkinProperties.Data234.width,
-		SkinProperties.Data234.height);
+	SetChildArea(View, SkinProperties.Data234);
 	SetChildPosition(CompassRose, SkinProperties.Data264.width, SkinProperties.Data264.height);
 	CompassRose->SetSize(Skins[65].width, Skins[65].height);
 	Arrange();
@@ -1027,16 +1023,13 @@ TInventoryView::TInventoryView(TMainWindow *Receiver)
 	SetChildPosition(Minimise, SkinProperties.Style288.Data08.x, SkinProperties.Style288.Data08.y);
 	TCapacityLabel *Capacity = new TCapacityLabel;
 	InsertChild(Capacity);
-	SetChildArea(Capacity, SkinProperties.Style288.Data128.x, SkinProperties.Style288.Data128.y,
-		SkinProperties.Style288.Data128.width, SkinProperties.Style288.Data128.height);
+	SetChildArea(Capacity, SkinProperties.Style288.Data128);
 	TSoulLabel *Soul = new TSoulLabel;
 	InsertChild(Soul);
-	SetChildArea(Soul, SkinProperties.Style288.Data138.x, SkinProperties.Style288.Data138.y,
-		SkinProperties.Style288.Data138.width, SkinProperties.Style288.Data138.height);
+	SetChildArea(Soul, SkinProperties.Style288.Data138);
 	TPlayerStates *States = new TPlayerStates(true);
 	InsertChild(States);
-	SetChildArea(States, SkinProperties.Style288.Data148.x, SkinProperties.Style288.Data148.y,
-		SkinProperties.Style288.Data148.width, SkinProperties.Style288.Data148.height);
+	SetChildArea(States, SkinProperties.Style288.Data148);
 	Arrange();
 	TEND
 }
@@ -2499,8 +2492,8 @@ void TTradeOffers::SetSize(int Width, int Height)
 	TWindow::SetSize(Width, Height);
 	ScrollBar->SetPosition(Width - ScrollBarWidth, 0);
 	ScrollBar->SetSize(ScrollBar->Width, Height);
-	SetChildArea(Separator, SkinProperties.Style6FC.DataA8.x, SkinProperties.Style6FC.DataA8.y,
-		SkinProperties.Style6FC.DataB0.x, SkinProperties.Style6FC.DataB0.y);
+	SetChildArea(Separator, TRect(SkinProperties.Style6FC.DataA8.x, SkinProperties.Style6FC.DataA8.y,
+		SkinProperties.Style6FC.DataB0.x, SkinProperties.Style6FC.DataB0.y));
 	Arrange();
 	TEND2(Width, Height)
 }
@@ -2653,12 +2646,10 @@ void TTradeNames::SetSize(int Width, int Height)
 {
 	TBEGIN
 	TWindow::SetSize(Width, Height);
-	SetChildArea(OwnName, SkinProperties.Style6FC.Data14.x, SkinProperties.Style6FC.Data14.y,
-		SkinProperties.Style6FC.Data14.width, SkinProperties.Style6FC.Data14.height);
-	SetChildArea(CounterName, SkinProperties.Style6FC.Data24.x, SkinProperties.Style6FC.Data24.y,
-		SkinProperties.Style6FC.Data24.width, SkinProperties.Style6FC.Data24.height);
-	SetChildArea(Separator, SkinProperties.Style6FC.Data34.x, SkinProperties.Style6FC.Data34.y,
-		SkinProperties.Style6FC.Data3C.x, SkinProperties.Style6FC.Data3C.y);
+	SetChildArea(OwnName, SkinProperties.Style6FC.Data14);
+	SetChildArea(CounterName, SkinProperties.Style6FC.Data24);
+	SetChildArea(Separator, TRect(SkinProperties.Style6FC.Data34.x, SkinProperties.Style6FC.Data34.y,
+		SkinProperties.Style6FC.Data3C.x, SkinProperties.Style6FC.Data3C.y));
 	TEND2(Width, Height)
 }
 
@@ -2708,13 +2699,12 @@ void TTradeButtons::SetSize(int Width, int Height)
 {
 	TBEGIN
 	TWindow::SetSize(Width, Height);
-	SetChildArea(Separator, SkinProperties.Style6FC.DataE8.x, SkinProperties.Style6FC.DataE8.y,
-		SkinProperties.Style6FC.DataF0.x, SkinProperties.Style6FC.DataF0.y);
+	SetChildArea(Separator, TRect(SkinProperties.Style6FC.DataE8.x, SkinProperties.Style6FC.DataE8.y,
+		SkinProperties.Style6FC.DataF0.x, SkinProperties.Style6FC.DataF0.y));
 	if (CancelButton != NULL)
 		SetChildPosition(CancelButton, SkinProperties.Style6FC.DataC8.width, SkinProperties.Style6FC.DataC8.height);
 	if (WaitLabel != NULL)
-		SetChildArea(WaitLabel, SkinProperties.Style6FC.DataD8.x, SkinProperties.Style6FC.DataD8.y,
-			SkinProperties.Style6FC.DataD8.width, SkinProperties.Style6FC.DataD8.height);
+		SetChildArea(WaitLabel, SkinProperties.Style6FC.DataD8);
 	if (AcceptButton != NULL)
 		SetChildPosition(AcceptButton, SkinProperties.Style6FC.DataC8.x, SkinProperties.Style6FC.DataC8.y);
 	TEND2(Width, Height)
@@ -2810,12 +2800,12 @@ void TTradeWindowBody::SetSize(int Width, int Height)
 	TBEGIN
 	Limit(&Height, (std::min)(GetMaximumHeight(), getMinimumHeight()), (std::max)(GetMaximumHeight(), getMinimumHeight()));
 	TWindow::SetSize(Width, Height);
-	SetChildArea(Buttons, SkinProperties.Style6FC.DataB8.x, SkinProperties.Style6FC.DataB8.y,
-		SkinProperties.Style6FC.DataC0.x, SkinProperties.Style6FC.DataC0.y);
-	SetChildArea(Offers, SkinProperties.Style6FC.Data58.x, SkinProperties.Style6FC.Data58.y,
-		SkinProperties.Style6FC.Data60.x, SkinProperties.Style6FC.Data60.y);
-	SetChildArea(Names, SkinProperties.Style6FC.Data04.x, SkinProperties.Style6FC.Data04.y,
-		SkinProperties.Style6FC.Data0C.x, SkinProperties.Style6FC.Data0C.y);
+	SetChildArea(Buttons, TRect(SkinProperties.Style6FC.DataB8.x, SkinProperties.Style6FC.DataB8.y,
+		SkinProperties.Style6FC.DataC0.x, SkinProperties.Style6FC.DataC0.y));
+	SetChildArea(Offers, TRect(SkinProperties.Style6FC.Data58.x, SkinProperties.Style6FC.Data58.y,
+		SkinProperties.Style6FC.Data60.x, SkinProperties.Style6FC.Data60.y));
+	SetChildArea(Names, TRect(SkinProperties.Style6FC.Data04.x, SkinProperties.Style6FC.Data04.y,
+		SkinProperties.Style6FC.Data0C.x, SkinProperties.Style6FC.Data0C.y));
 	Arrange();
 	TEND2(Width, Height)
 }

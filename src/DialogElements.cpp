@@ -717,7 +717,7 @@ void TLink::Arrange()
 		ButtonY = (Label->Height - Button->Height) / 2;
 	else
 		LabelY = (Button->Height - Label->Height) / 2;
-	SetChildArea(Label, 0, LabelY, Width, Label->Height);
+	SetChildArea(Label, TRect(0, LabelY, Width, Label->Height));
 	SetChildPosition(Button, -Button->Width, ButtonY);
 	TEND
 }
@@ -1181,8 +1181,7 @@ TCheckBox::TCheckBox(const char *_Text)
 	Label = new TLabel(SkinProperties.CheckBox.Data18, _Text);
 	TWindow::InsertChild(Label);
 	TWindow::FitToChild(Label, SkinProperties.CheckBox.Data08, true);
-	TWindow::SetChildArea(Label, SkinProperties.CheckBox.Data08.x, SkinProperties.CheckBox.Data08.y,
-		SkinProperties.CheckBox.Data08.width, SkinProperties.CheckBox.Data08.height);
+	TWindow::SetChildArea(Label, SkinProperties.CheckBox.Data08);
 	TEND
 }
 
@@ -1774,8 +1773,8 @@ void TEditText::Arrange()
 {
 	TBEGIN
 	int ScrollBarWidth = ScrollBar->Width;
-	SetChildArea(ScrollBar, -(Skins[10].width + ScrollBarWidth), Skins[9].height, ScrollBarWidth,
-		Height - Skins[11].width - Skins[10].width);
+	SetChildArea(ScrollBar, TRect(-(Skins[10].width + ScrollBarWidth), Skins[9].height, ScrollBarWidth,
+		Height - Skins[11].width - Skins[10].width));
 	FieldWidth = Width - 2 * SkinProperties.Data99C - ScrollBar->Width;
 	FieldHeight = Height - 2 * SkinProperties.Data99C;
 	VisibleLines = FieldHeight / GetFontLineHeight(Font.FontNumber);
@@ -2671,8 +2670,8 @@ void TListBox::Arrange()
 {
 	TBEGIN
 	TextWidth = Width - 2 * SkinProperties.Style9A0.Data20 - ScrollBar->Width;
-	SetChildArea(ScrollBar, -(Skins[10].width + ScrollBar->Width), Skins[9].height, ScrollBar->Width,
-		Height - Skins[11].width - Skins[10].width);
+	SetChildArea(ScrollBar, TRect(-(Skins[10].width + ScrollBar->Width), Skins[9].height, ScrollBar->Width,
+		Height - Skins[11].width - Skins[10].width));
 	VisibleLines = (Height - 2 * SkinProperties.Style9A0.Data20)
 		/ GetFontLineHeight(SkinProperties.Style9A0.Data0C.FontNumber);
 	if (VisibleLines < Lines)
@@ -2881,7 +2880,8 @@ void TListBox::StartEdit()
 		Editing = true;
 		EditLine->SetText(GetLine(Selected));
 		InsertChild(EditLine);
-		SetChildArea(EditLine, 0, (Selected - ScrollBar->Range->Value) * LineHeight, ListWidth - ScrollBarWidth, 16);
+		SetChildArea(EditLine, TRect(0, (Selected - ScrollBar->Range->Value) * LineHeight,
+			ListWidth - ScrollBarWidth, 16));
 		EditScroll = ScrollBar->Range->Value;
 	}
 	TEND
@@ -3027,7 +3027,7 @@ void TFontListBox::StartEdit()
 		Editing = true;
 		EditLine->SetText(Edited);
 		InsertChild(EditLine);
-		SetChildArea(EditLine, 0, (Selected - ScrollBar->Range->Value) * LineHeight, EditWidth, 16);
+		SetChildArea(EditLine, TRect(0, (Selected - ScrollBar->Range->Value) * LineHeight, EditWidth, 16));
 		EditLine->SetActive(true);
 		EditLine->SetSelection(0);
 		int End = strlen(Edited);

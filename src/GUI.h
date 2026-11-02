@@ -164,7 +164,9 @@ public:
 	void StopDragging();                                           // +0x80, 0x49f430, line 1668
 	virtual TComponent *GetCapture() { return Capture; }           // +0x84, 0x4176b0
 	virtual void SetChildPosition(TComponent *Child, int x, int y); // +0x88, 0x49fa40, lines 1700-1708
-	virtual void SetChildArea(TComponent *Child, int x, int y, int width, int height); // +0x8c, 0x49f5d0, lines 1679-1690
+	// The area is a 16-byte block passed by value (every caller builds it
+	// with sub esp,0x10 and four stores, issue #27).
+	virtual void SetChildArea(TComponent *Child, TRect Area); // +0x8c, 0x49f5d0, lines 1679-1690
 	virtual void Fit(bool Notify) { FitToChildren(TRect(0, 0, 0, 0), Notify); } // +0x90, 0x4176c0
 	// The margins are one 16-byte block passed by value (the callers, Fit and
 	// ContextMenus.cpp, build it with sub esp,0x10): a TRect whose x, y,
