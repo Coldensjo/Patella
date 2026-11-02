@@ -102,6 +102,14 @@ struct TErrorRound {
 		(Round).Compare(What, Ours_, ImageThrow([&] { ImageCall; })); \
 	} while (0)
 
+// Throws an assertion of one side's own code, for the test objects of the
+// window tests whose methods throw on demand (the callers' TEND blocks wrap
+// it): TComponent::SetSize's "_Width>=0" (GUI.cpp, no test redirects it),
+// ours or the image's (0x49bee0), with Value (negative) as the printed
+// width. A test object on the image side must throw the image's exception:
+// ours would pass through the image's catch (TMyException &) and be read
+// with the image's layout. Defined in guitest.cpp.
+void ThrowSideAssertion(bool Image, int Value);
 // A function that starts with a jump now is a test's fake (earlier tests
 // redirect some functions for good): such comparisons are skipped.
 bool Redirected(const void *Code);

@@ -979,6 +979,15 @@ static void TestHotkeys()
 
 // --- Error paths (issue #34) -------------------------------------------------
 
+void ThrowSideAssertion(bool Image, int Value)
+{
+	static uint8 Dummy[sizeof(TComponent)]; // the assertion comes before any write
+	if (Image)
+		At<void (__fastcall *)(void *, void *, int, int)>(0x49bee0)(Dummy, NULL, Value, 0);
+	else
+		((TComponent *)Dummy)->TComponent::SetSize(Value, 0);
+}
+
 // A leaf whose virtual methods throw on demand: an assertion of its own side
 // (DrawSkin's "x>=0"), so the callers' TEND blocks wrap it.
 class TGuiThrower : public TElement {

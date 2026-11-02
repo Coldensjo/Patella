@@ -22,6 +22,9 @@
 // three classes) are compared. Failing assertions are not exercised: the
 // operations keep to what the game does (windows wider than their title,
 // bodies at least one pixel high, no structural change while dragging).
+// The error paths have a round of their own (issue #34, TestDialogWindowErrors,
+// "DialogWindow errors: ..."): the bodies and elements throw on demand, the
+// assertions get bad arguments.
 
 #include "difftest.h"
 #include "elementfakes.h"
@@ -33,6 +36,7 @@
 #include "../../src/Surface.h"
 #include "testsurface.h"
 #include "../../src/graphics.h"
+#include "imageeh.h"
 #include <map>
 #include <new>
 #include <stdarg.h>
@@ -139,46 +143,103 @@ static int Class(int s, const void *Object)
 
 static int Answer(int a, int b, int c) { return (a * 7 + b * 3 + c) % 4 == 0; }
 
+// The error round's throwing test objects: a method whose bit is set throws
+// an assertion of the side that calls it (Side), with -Bit as its value.
+static int ThrowMask;
+static void MaybeThrow(int Bit)
+{
+	if ((ThrowMask & Bit) != 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Bit);
+}
+
 // The test body reports the calls of TSubWindow's Minimize and Maximize (the
 // body's +0xa0, +0xa4).
 class TTestBody : public TSubWindowBody {
 public:
 	int MinHeight;
-	void Minimize() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A0"); }
-	void Maximize() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A4"); }
-	int GetInitialHeight() { return MinHeight; }
-	int GetContentHeight() { return MinHeight; }
-	int getMinimumHeight() { return MinHeight; }
-	void Draw(int Surface, int x, int y) { Logf("DBody%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+	void Minimize() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A0"); MaybeThrow(32); }
+	void Maximize() { if (DialogFakes.Body != NULL) DialogFakes.Body(this, "A4"); MaybeThrow(32); }
+	int GetInitialHeight() { MaybeThrow(16); return MinHeight; }
+	int GetContentHeight() { MaybeThrow(16); return MinHeight; }
+	int getMinimumHeight() { MaybeThrow(16); return MinHeight; }
+	void Draw(int Surface, int x, int y)
+	{
+		Logf("DBody%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y);
+		MaybeThrow(1);
+	}
 	bool LeftButtonDown(int x, int y, int Flags)
 	{
 		Logf("PBody%s,%d,%d,%d;", Name(this).c_str(), x, y, Flags);
+		MaybeThrow(2);
 		return Answer(x, y, MinHeight) != 0;
 	}
 	bool MouseMove(int x, int y)
 	{
 		Logf("MBody%s,%d,%d;", Name(this).c_str(), x, y);
+		MaybeThrow(4);
 		return false;
 	}
 	bool LeftButtonDoubleClick(int x, int y, int Flags)
 	{
 		Logf("WBody%s,%d,%d;", Name(this).c_str(), x, y);
+		MaybeThrow(8);
 		return Answer(y, x, 1) != 0;
+	}
+	void SetPosition(int x, int y)
+	{
+		MaybeThrow(64);
+		TSubWindowBody::SetPosition(x, y);
+	}
+	void SetSize(int Width, int Height)
+	{
+		MaybeThrow(64);
+		TSubWindowBody::SetSize(Width, Height);
+	}
+	void Arrange()
+	{
+		MaybeThrow(128);
+		TSubWindowBody::Arrange();
 	}
 };
 
 class TTestElement : public TElement {
 public:
-	void Draw(int Surface, int x, int y) { Logf("DElem%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
+	void Draw(int Surface, int x, int y)
+	{
+		Logf("DElem%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y);
+		MaybeThrow(1);
+	}
 	bool LeftButtonDown(int x, int y, int Flags)
 	{
 		Logf("PElem%s,%d,%d;", Name(this).c_str(), x, y);
+		MaybeThrow(2);
 		return Answer(x, y, 2) != 0;
 	}
 	bool LeftButtonDoubleClick(int x, int y, int Flags)
 	{
 		Logf("WElem%s,%d,%d;", Name(this).c_str(), x, y);
+		MaybeThrow(8);
 		return Answer(x, y, 3) != 0;
+	}
+	void SetPosition(int x, int y)
+	{
+		MaybeThrow(64);
+		TElement::SetPosition(x, y);
+	}
+	void SetSize(int Width, int Height)
+	{
+		MaybeThrow(64);
+		TElement::SetSize(Width, Height);
+	}
+	void Arrange()
+	{
+		MaybeThrow(128);
+		TElement::Arrange();
+	}
+	bool LeftButtonUp(int x, int y, int Flags)
+	{
+		MaybeThrow(2);
+		return TElement::LeftButtonUp(x, y, Flags);
 	}
 };
 
@@ -237,8 +298,14 @@ static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int PictureNu
 {
 	Logf("Part%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, PictureNumber, srcx, srcy, Width, Height);
 }
+// Not a thrower: ~TSubWindow calls it, and our destructors are noexcept
+// (C++11; the original's were not), so a throw there ends the child.
 static void __cdecl FakeSetContentWindowSize(int ID, int Size) { Logf("CWSize%d,%d;", ID, Size); }
-static void __cdecl FakeAddOpenDialog(int Identifier) { Logf("Open%d;", Identifier); }
+static void __cdecl FakeAddOpenDialog(int Identifier)
+{
+	Logf("Open%d;", Identifier);
+	MaybeThrow(256);
+}
 
 class TDialogSurface : public TTestSurface {
 public:
@@ -962,6 +1029,295 @@ static void Operation()
 	Compare(What);
 }
 
+// --- Error paths (issue #34) ----------------------------------------------------------
+
+// One call on both sides (Side set for the fakes and the throwing test
+// objects), the exceptions compared, then the logs and both trees. A
+// Rearrange that threw leaves Busy set (both sides), a drag that threw its
+// Dragged window: cleared for the next call (a later deletion would leave
+// Dragged dangling, and the next strategy 1 would call through freed memory).
+template <class F> static void ErrorCall(TErrorRound &R, const char *What, F Call)
+{
+	ROUND_COMPARE(R, What, (Side = OURS, Call(OURS)), (Side = ORIGINAL, Call(ORIGINAL)));
+	for (int s = 0; s < 2; s++)
+		for (int c = 0; c < 2; c++) {
+			Column[s][c]->Busy = false;
+			Column[s][c]->UpdateFreeHeight = true;
+			if (Column[s][c]->Capture == NULL)
+				Column[s][c]->Dragged = NULL;
+		}
+	Compare(What);
+}
+
+typedef bool (__fastcall *BoolFn)(void *, void *);
+typedef void (__fastcall *PositionFn)(void *, void *, bool);
+
+// Every TASSERT/TERROR of DialogWindow.cpp that the columns can reach, and
+// the TEND blocks: the bodies, elements and fakes throw (ThrowMask, one kind
+// of method per batch), the column functions, the sub-window functions and
+// the setters run on both sides, then the assertions get bad arguments.
+static void TestDialogWindowErrors()
+{
+	TErrorRound R("DialogWindow");
+	static const int Masks[] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 511};
+	char What[96];
+	for (int Round = 0; Round < 30; Round++) {
+		RandomSkinProperties();
+		int Width = 70 + Random() % 180, Height[2] = {100 + (int)(Random() % 600), 100 + (int)(Random() % 400)};
+		Both([&](int s) {
+			for (int c = 0; c < 2; c++) {
+				Column[s][c] = NewColumn(s);
+				Column[s][c]->SetSize(Width, Height[c]);
+			}
+		});
+		ThrowMask = 0;
+		for (int i = 0; i < 40; i++)
+			Operation();
+		for (int c = 0; c < 2; c++)
+			if (Column[OURS][c]->Capture != NULL)
+				Both([&](int s) { Column[s][c]->LeftButtonUp(0, 0, 0); });
+		Compare("errors: setup");
+		ThrowMask = Masks[Round % 10];
+		int Mask = ThrowMask;
+		for (int c = 0; c < 2; c++) {
+			TDialogWindow *O = Column[OURS][c];
+			int x = (int)(Random() % (O->Width + 20)) - 10, y = (int)(Random() % (O->Height + 40)) - 20;
+			int Dx = Random() % 30, Dy = Random() % 30;
+			snprintf(What, sizeof(What), "column %d mask %d", c, Mask);
+			if (CanDraw(c, Dx, Dy))
+				ErrorCall(R, "TDialogWindow::Draw", [&](int s) { Column[s][c]->Draw(1, Dx, Dy); });
+			ErrorCall(R, "TDialogWindow::LeftButtonDown", [&](int s) { Column[s][c]->LeftButtonDown(x, y, 0); });
+			ErrorCall(R, "TDialogWindow::MouseMove", [&](int s) { Column[s][c]->MouseMove(x + 3, y + 7); });
+			ErrorCall(R, "TDialogWindow::LeftButtonUp", [&](int s) { Column[s][c]->LeftButtonUp(x + 3, y + 7, 0); });
+			ThrowMask = 0;
+			if (Column[OURS][c]->Capture != NULL)
+				Both([&](int s) { Column[s][c]->LeftButtonUp(0, 0, 0); });
+			Compare("errors: release");
+			ThrowMask = Mask;
+			ErrorCall(R, "TDialogWindow::LeftButtonDoubleClick",
+				[&](int s) { Column[s][c]->LeftButtonDoubleClick(x, y, 0); });
+			ErrorCall(R, "TDialogWindow::Arrange", [&](int s) { Column[s][c]->Arrange(); });
+			ErrorCall(R, "TDialogWindow::getMinimumHeight", [&](int s) { Column[s][c]->getMinimumHeight(); });
+			int Wd = 70 + Random() % 180, Ht = Random() % 3 == 0 ? (int)(Random() % 120) : 100 + (int)(Random() % 600);
+			ErrorCall(R, "TDialogWindow::SetSize", [&](int s) { Column[s][c]->SetSize(Wd, Ht); });
+			static const int Strategies[] = {1, 2, 4, 8, 16, 32};
+			int Index = RandomIndex(c), Strategy = Strategies[Random() % 6];
+			if (Index >= 0 && Strategy != 16)
+				ErrorCall(R, "TDialogWindow::Rearrange", [&](int s) { Column[s][c]->Rearrange(Strategy, Counterpart(s, c, Index)); });
+			ErrorCall(R, "TDialogWindow::StoreOpenDialogs", [&](int s) {
+				if (s == OURS) Column[s][c]->StoreOpenDialogs(); else At<VoidFn>(0x4865b0)(Column[s][c], NULL); });
+			ErrorCall(R, "TDialogWindow::GetFreeHeight", [&](int s) {
+				if (s == OURS) Column[s][c]->GetFreeHeight(); else At<GetFn>(0x487060)(Column[s][c], NULL); });
+			ErrorCall(R, "TDialogWindow::PositionChildren", [&](int s) {
+				if (s == OURS) Column[s][c]->PositionChildren(false); else At<PositionFn>(0x486760)(Column[s][c], NULL, false); });
+			ErrorCall(R, "TDialogWindow::FitChildren", [&](int s) {
+				if (s == OURS) Column[s][c]->FitChildren(); else At<VoidFn>(0x486930)(Column[s][c], NULL); });
+			ErrorCall(R, "TDialogWindow::Shrink", [&](int s) {
+				if (s == OURS) Column[s][c]->Shrink(); else At<BoolFn>(0x48a990)(Column[s][c], NULL); });
+			Index = RandomIndex(c);
+			if (Index >= 0) {
+				ErrorCall(R, "TDialogWindow::Grow", [&](int s) {
+					TComponent *W = Counterpart(s, c, Index);
+					if (s == OURS) Column[s][c]->Grow(W); else At<SetFn>(0x48acb0)(Column[s][c], NULL, W); });
+				Index = RandomIndex(c);
+				ErrorCall(R, "TDialogWindow::DeleteChild", [&](int s) { Column[s][c]->DeleteChild(Counterpart(s, c, Index)); });
+			}
+			// The child functions with a new window (they arrange the column).
+			int Identifier = NewIdentifier(c), MinHeight = 1 + Random() % 40, How = Random() % 3;
+			bool Resizable = Random() % 2 != 0, Background = Random() % 2 != 0;
+			int NewHeight = c == 0 ? FrameHeight() + MinHeight + Random() % 60 : 10 + Random() % 120, Parts = Random() % 32;
+			Index = RandomIndex(c);
+			if (How == 2 && Index < 0)
+				How = 0;
+			ThrowMask = 0;
+			TComponent *New[2];
+			Both([&](int s) {
+				if (c == 0) {
+					New[s] = MakeSub(s, Identifier, MinHeight, Resizable, Background, NewHeight, Parts);
+				} else {
+					New[s] = NewContent(s, Identifier, Background);
+					New[s]->SetSize(Column[s][1]->Width, NewHeight);
+				}
+			});
+			Log[OURS].clear();
+			Log[ORIGINAL].clear();
+			ThrowMask = Mask;
+			ErrorCall(R, "TDialogWindow child functions", [&](int s) {
+				if (How == 0)
+					Column[s][c]->InsertChild(New[s]);
+				else if (How == 1)
+					Column[s][c]->AppendChild(New[s]);
+				else
+					Column[s][c]->InsertChildAfter(Counterpart(s, c, Index), New[s]);
+			});
+		}
+		// The sub-windows of column 0: their own functions and the setters.
+		std::vector<TComponent *> Subs = ChildrenOf(Column[OURS][0]);
+		for (int i = 0; i < (int)Subs.size() && i < 3; i++) {
+			if (Column[OURS][0]->Capture != NULL)
+				break;
+			auto Sub = [&](int s) { return (TSubWindow *)Counterpart(s, 0, i); };
+			auto Gone = [&]() { return Sub(OURS) == NULL || Sub(ORIGINAL) == NULL; };
+			if (Gone())
+				break;
+			int x = Random() % (Sub(OURS)->Width + 1), y = Random() % (Sub(OURS)->Height + 1);
+			ErrorCall(R, "TSubWindow::Arrange", [&](int s) { Sub(s)->Arrange(); });
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::SetSize", [&](int s) { Sub(s)->SetSize(Sub(s)->Width, Sub(s)->Height + 3); });
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::MouseMove", [&](int s) { Sub(s)->MouseMove(x, y); });
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::LeftButtonDown", [&](int s) { Sub(s)->LeftButtonDown(x, y, 0); });
+			ThrowMask = 0;
+			if (Gone())
+				break;
+			if (Column[OURS][0]->Capture != NULL || Sub(OURS)->Capture != NULL)
+				Both([&](int s) { Sub(s)->LeftButtonUp(x, y, 0); Column[s][0]->LeftButtonUp(0, 0, 0); });
+			Compare("errors: release");
+			ThrowMask = Mask;
+			if (Column[OURS][0]->Capture != NULL)
+				break;
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::LeftButtonDoubleClick", [&](int s) { Sub(s)->LeftButtonDoubleClick(x, y, 0); });
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::HandleEvent", [&](int s) { Sub(s)->HandleEvent(9); });
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::Minimize/Maximize", [&](int s) {
+				if (Sub(s)->IsMinimized) Sub(s)->Maximize(); else Sub(s)->Minimize(); });
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::ShowUpButton", [&](int s) {
+				if (s == OURS) Sub(s)->ShowUpButton(); else At<VoidFn>(0x4897d0)(Sub(s), NULL); });
+			if (Gone())
+				break;
+			ErrorCall(R, "TSubWindow::HideUpButton", [&](int s) {
+				if (s == OURS) Sub(s)->HideUpButton(); else At<VoidFn>(0x489970)(Sub(s), NULL); });
+			// The setters with a new part (the old one goes).
+			if (Gone())
+				break;
+			int Which = Random() % 5;
+			static const uint32 Setters[] = {0x489b10, 0x489cf0, 0x489ed0, 0x48a0b0, 0x48a2a0};
+			ThrowMask = 0;
+			TComponent *Part = Which == 2 ? (TComponent *)new TTestSkinButton : (TComponent *)new TTestElement;
+			Side = OURS;
+			Register(Part, "Part");
+			TComponent *Part2 = Which == 2 ? (TComponent *)new TTestSkinButton : (TComponent *)new TTestElement;
+			Side = ORIGINAL;
+			Register(Part2, "Part");
+			Part->SetSize(5, 5);
+			Part2->SetSize(5, 5);
+			ThrowMask = Mask;
+			ErrorCall(R, "TSubWindow setter", [&](int s) {
+				TComponent *P = s == OURS ? Part : Part2;
+				if (s == ORIGINAL)
+					At<SetFn>(Setters[Which])(Sub(s), NULL, P);
+				else if (Which == 0)
+					Sub(s)->SetUpButton(P);
+				else if (Which == 1)
+					Sub(s)->SetCloseButton(P);
+				else if (Which == 2)
+					Sub(s)->SetMinimizeButton((TSkinButton *)P);
+				else if (Which == 3)
+					Sub(s)->SetIcon(P);
+				else
+					Sub(s)->SetTitle(P);
+			});
+		}
+		ThrowMask = 0;
+		// The assertions with bad arguments.
+		for (int c = 0; c < 2; c++) {
+			static const int Bad[] = {4, 16, 0, 3, 5, 64, 999, -1};
+			int Strategy = Bad[Random() % 8];
+			snprintf(What, sizeof(What), "TDialogWindow::Rearrange(%d, NULL)", Strategy);
+			if (Column[OURS][c]->Capture == NULL)
+				ErrorCall(R, What, [&](int s) { Column[s][c]->Rearrange(Strategy, NULL); });
+			// DragChild of a window that is not a child.
+			TTestElement *Stranger = new TTestElement;
+			for (Side = 0; Side < 2; Side++)
+				Register(Stranger, "Stranger");
+			ErrorCall(R, "TDialogWindow::DragChild stranger", [&](int s) {
+				if (s == OURS) Column[s][c]->DragChild(Stranger); else At<SetFn>(0x486b30)(Column[s][c], NULL, Stranger); });
+			delete Stranger;
+			// Shrink with a child below its minimum height and no room.
+			std::vector<TComponent *> Children = ChildrenOf(Column[OURS][c]);
+			if (!Children.empty()) {
+				int Index = (int)Children.size() - 1;
+				int SavedHeight[2], SavedColumn[2];
+				for (int s = 0; s < 2; s++) {
+					TComponent *W = Counterpart(s, c, Index);
+					SavedHeight[s] = W->Height;
+					SavedColumn[s] = Column[s][c]->Height;
+					W->Height = 0;
+					Column[s][c]->Height = 1;
+				}
+				ErrorCall(R, "TDialogWindow::Shrink below the minimum", [&](int s) {
+					if (s == OURS) Column[s][c]->Shrink(); else At<BoolFn>(0x48a990)(Column[s][c], NULL); });
+				for (int s = 0; s < 2; s++) {
+					Counterpart(s, c, Index)->Height = SavedHeight[s];
+					Column[s][c]->Height = SavedColumn[s];
+				}
+			}
+			// TContentWindow::Draw left of or above the surface.
+			Children = ChildrenOf(Column[OURS][c]);
+			if (!Children.empty()) {
+				int Index = (int)(Random() % Children.size()), Neg = -1 - (int)(Random() % 30), Which = Random() % 2;
+				ErrorCall(R, "TContentWindow::Draw outside", [&](int s) {
+					TComponent *W = Counterpart(s, c, Index);
+					if (Which == 0) W->Draw(1, Neg - W->OffsetX, 0); else W->Draw(1, 0, Neg - W->OffsetY); });
+			}
+		}
+		// The sub-window's assertions: no body, Minimize twice, Maximize unminimized.
+		Subs = ChildrenOf(Column[OURS][0]);
+		if (!Subs.empty() && Column[OURS][0]->Capture == NULL) {
+			int i = (int)(Random() % Subs.size());
+			auto Sub = [&](int s) { return (TSubWindow *)Counterpart(s, 0, i); };
+			TSubWindowBody *Saved[2] = {Sub(OURS)->Body, Sub(ORIGINAL)->Body};
+			ErrorCall(R, "TSubWindow::Arrange without a body", [&](int s) { Sub(s)->Body = NULL; Sub(s)->Arrange(); });
+			for (int s = 0; s < 2; s++)
+				Sub(s)->Body = Saved[s];
+			// The state set directly (calling the other one first would
+			// rearrange the column): each assertion comes before the try block.
+			for (int Minimized = 0; Minimized < 2; Minimized++) {
+				bool Saved[2] = {Sub(OURS)->IsMinimized, Sub(ORIGINAL)->IsMinimized};
+				ErrorCall(R, Minimized ? "TSubWindow::Minimize minimized" : "TSubWindow::Maximize not minimized",
+					[&](int s) {
+						Sub(s)->IsMinimized = Minimized != 0;
+						if (Minimized) Sub(s)->Minimize(); else Sub(s)->Maximize();
+					});
+				for (int s = 0; s < 2; s++)
+					Sub(s)->IsMinimized = Saved[s];
+			}
+		}
+		int Identifier = 0x40 + (int)(Random() % 16);
+		ROUND_COMPARE(R, "TSubWindow without a body", delete new TSubWindow(Identifier, NULL, false, false),
+			At<SubCtorFn>(0x487e80)(operator new(sizeof(TSubWindow)), NULL, Identifier, NULL, false, false));
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+		// The columns go, as in the test.
+		for (int c = 0; c < 2; c++)
+			if (Column[OURS][c]->Capture != NULL)
+				Both([&](int s) { Column[s][c]->LeftButtonUp(0, 0, 0); });
+		Both([&](int s) {
+			for (int c = 0; c < 2; c++) {
+				delete Column[s][c];
+				Column[s][c] = NULL;
+			}
+		});
+		Log[OURS].clear();
+		Log[ORIGINAL].clear();
+		Info[OURS].clear();
+		Info[ORIGINAL].clear();
+		Serials[OURS] = Serials[ORIGINAL] = 0;
+	}
+	R.Finish();
+}
+
 void TestDialogWindow()
 {
 	int Before = Checks, BeforeFailures = Failures;
@@ -1043,6 +1399,11 @@ void TestDialogWindow()
 		Serials[OURS] = Serials[ORIGINAL] = 0;
 	}
 
+	int RoundChecks = Checks, SavedKinds[24];
+	memcpy(SavedKinds, KindCount, sizeof(SavedKinds));
+	TestDialogWindowErrors();
+	memcpy(KindCount, SavedKinds, sizeof(SavedKinds));
+	RoundChecks = Checks - RoundChecks;
 	DialogFakes = TDialogFakes();
 	RestoreAll();
 	delete Surface;
@@ -1051,6 +1412,6 @@ void TestDialogWindow()
 	int Least = KindCount[0];
 	for (int i = 1; i < 24; i++)
 		Least = KindCount[i] < Least ? KindCount[i] : Least;
-	printf("DialogWindow: %d checks, %d failures (each of the 24 operations at least %d times)\n", Checks - Before,
-		Failures - BeforeFailures, Least);
+	printf("DialogWindow: %d checks, %d failures (each of the 24 operations at least %d times)\n",
+		Checks - Before - RoundChecks, Failures - BeforeFailures, Least);
 }
