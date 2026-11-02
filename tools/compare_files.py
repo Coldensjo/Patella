@@ -37,12 +37,10 @@ Scenarios (--only takes their names):
            Tibia.exe as the patch's input, so both patch the same file.
 
 Masked, after two runs of Tibia.exe showed that they differ from run to run: the time in
-error.txt (ctime of the crash) and in Default.txt ("Channel saved at"). The line numbers in
-error.txt's "<file> <line>" are compared through a map instead: our sources do not keep the
-original's line numbers (notes/decisions.md "Error paths (issue #22)"), so every pair must name
-the same function (our line inside the function's source, the original's among that function's
-assertion and catch lines in symbols.tsv). Report: <out>\report.txt; exit code 0 when nothing
-differs.
+error.txt (ctime of the crash) and in Default.txt ("Channel saved at"). Everything else is
+compared byte for byte, error.txt's "<file> <line>" too: every error site of our sources names
+the original's line (issue #35, tools/lines.py). Report: <out>\report.txt; exit code 0 when
+nothing differs.
 """
 
 import argparse
@@ -944,16 +942,13 @@ def run_patch(client, out, events, name="patch"):
 
 # ctime's text as MSVC 7.1's CRT writes it: the day with two digits (src/compat/crt71.h)
 CTIME = rb"[A-Z][a-z]{2} [A-Z][a-z]{2} \d\d \d\d:\d\d:\d\d \d{4}"
-SITE = re.compile(rb"\b([A-Za-z0-9_]+\.(?:cpp|h)) (\d+)\b")
 
 
 def mask(name, data):
 	"""The bytes a file is compared by: times masked (error.txt: the ctime line of each report;
-	<channel>.txt: "Channel saved at <ctime>"), error.txt's line numbers replaced (compared through
-	check_lines instead)."""
+	<channel>.txt: "Channel saved at <ctime>")."""
 	if name.lower() == "error.txt":
-		data = re.sub(rb"(?m)^" + CTIME + rb"(?=\r?$)", b"<time>", data)
-		return SITE.sub(rb"\1 <line>", data)
+		return re.sub(rb"(?m)^" + CTIME + rb"(?=\r?$)", b"<time>", data)
 	if name.lower().endswith(".txt"):
 		return re.sub(rb"Channel saved at " + CTIME, b"Channel saved at <time>", data)
 	return data
@@ -966,75 +961,6 @@ def masked_spans(name, data):
 	if name.lower().endswith(".txt"):
 		return [m.group(0).decode() for m in re.finditer(rb"Channel saved at " + CTIME, data)]
 	return []
-
-
-SOURCE_FUNCTIONS = {}
-FUNCTION_LINES = None
-
-
-def function_at(file, line):
-	"""The address of the function our src/<file> has at that line: the last "// 0x..." comment
-	before it (notes/reconstruction.md: every function starts with one)."""
-	if file not in SOURCE_FUNCTIONS:
-		marks = []
-		path = os.path.join(ROOT, "src", file)
-		if os.path.isfile(path):
-			with open(path, encoding="latin-1") as f:
-				for number, text in enumerate(f, 1):
-					m = re.match(r"//\s*(0x[0-9a-fA-F]+)", text)
-					if m:
-						marks.append((number, int(m.group(1), 16)))
-		SOURCE_FUNCTIONS[file] = marks
-	address = None
-	for number, value in SOURCE_FUNCTIONS[file]:
-		if number < line:
-			address = value
-	return address
-
-
-def original_lines(address):
-	"""The original's line numbers of a function: its assertion lines and those of its catch
-	blocks (symbols.tsv)."""
-	global FUNCTION_LINES
-	if FUNCTION_LINES is None:
-		FUNCTION_LINES = {}
-		with open(os.path.join(ROOT, "symbols.tsv"), encoding="utf-8") as f:
-			header = f.readline().rstrip("\n").split("\t")
-			for text in f:
-				row = dict(zip(header, text.rstrip("\n").split("\t")))
-				lines = {int(x) for x in row.get("assert_lines", "").split(",") if x.strip().isdigit()}
-				owner = int(row["parent"], 16) if row.get("parent") else int(row["address"], 16)
-				FUNCTION_LINES.setdefault(owner, set()).update(lines)
-	return FUNCTION_LINES.get(address, set())
-
-
-def check_lines(orig, patella):
-	"""error.txt's "<file> <line>" pairs in order: the same files; each Patella line that differs
-	from Tibia.exe's in a function whose original lines include Tibia.exe's line; one original line
-	per Patella line. Returns
-	(pairs checked, problems)."""
-	a = SITE.findall(orig)
-	b = SITE.findall(patella)
-	problems = []
-	if [x[0] for x in a] != [x[0] for x in b]:
-		return [], ["the file names differ: %s against %s" % ([x[0].decode() for x in a], [x[0].decode() for x in b])]
-	pairs = []
-	seen = {}
-	for (file, o), (_, p) in zip(a, b):
-		file, o, p = file.decode(), int(o), int(p)
-		if o == p:
-			continue  # the same text in both (an earlier report the scenario put into error.txt)
-		if seen.setdefault((file, p), o) != o:
-			problems.append("%s %d stands for %d and %d" % (file, p, seen[(file, p)], o))
-		address = function_at(file, p)
-		lines = original_lines(address) if address else set()
-		ok = o in lines
-		pairs.append("%s %d -> %d (0x%x, original lines %s)%s" % (file, o, p, address or 0,
-			",".join(str(x) for x in sorted(lines)) or "-", "" if ok else " MISMATCH"))
-		if not ok:
-			problems.append("%s: Tibia.exe's line %d is not a line of the function at our line %d (0x%x)"
-				% (file, o, p, address or 0))
-	return sorted(set(pairs)), problems
 
 
 def client_packets(events):
@@ -1073,13 +999,6 @@ def compare_files(say, name, results, repeat=None):
 		if not same and masked_same:
 			spans = masked_spans(file, x), masked_spans(file, y)
 			say("      masked: Tibia.exe %s, Patella.exe %s" % spans)
-			if file.lower() == "error.txt":
-				pairs, problems = check_lines(x, y)
-				for pair in pairs:
-					say("      line map: " + pair)
-				for problem in problems:
-					say("      LINE MAP: " + problem)
-				failed |= bool(problems)
 	removed = o["removed"]
 	if removed:
 		say("    removed by both: %s" % ", ".join(removed))

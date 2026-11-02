@@ -46,7 +46,7 @@ TDialog *CreateMessageDialog(const char *Caption, const char *Text)
 	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
 	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
 	return Dialog;
-	TEND
+	TEND(48)
 }
 
 // 0x47faf0, line 67. A message with formatting tokens.
@@ -60,7 +60,7 @@ TDialog *CreateFormattedMessageDialog(const char *Caption, const char *Text)
 	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
 	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
 	return Dialog;
-	TEND
+	TEND(67)
 }
 
 // 0x47fd30, line 84. "Connecting": Abort (and Escape) send 29 to the
@@ -74,7 +74,7 @@ TDialog *CreateConnectingDialog(const char *Caption, const char *Text, TComponen
 	Dialog->SetCancelButton(NULL, TCallback(Receiver, 29));
 	Dialog->CancelCallback = TCallback(Receiver, 29);
 	return Dialog;
-	TEND
+	TEND(84)
 }
 
 // 0x47ff60, line 102. "Please wait": Abort clears the message queue; a
@@ -90,7 +90,7 @@ TDialog *CreateWaitDialog(const char *Caption, const char *Text, int Timeout)
 	if (Timeout > 0)
 		Label->SetTimer(Timeout, TCallback(Label, 31));
 	return Dialog;
-	TEND
+	TEND(102)
 }
 
 // 0x4801c0, line 119. The reconnect countdown (timeout in seconds).
@@ -103,7 +103,7 @@ TDialog *CreateReconnectDialog(const char *Caption, const char *Text, int timeou
 	Dialog->SetCancelButton(NULL, TCallback(Window, 29));
 	Dialog->CancelCallback = TCallback(Window, 29);
 	return Dialog;
-	TEND
+	TEND(119)
 }
 
 // 0x4803f0, line 134. A yes/no question whose answers go to the receiver.
@@ -117,7 +117,7 @@ TDialog *CreateQuestionDialog(const char *Caption, const char *Text, TComponent 
 	Dialog->SetOkButton("Yes", TCallback(Receiver, YesEvent));
 	Dialog->SetCancelButton("No", TCallback(Receiver, NoEvent));
 	return Dialog;
-	TEND
+	TEND(134)
 }
 
 // 0x480640, line 149. Logout (506), Cancel (2) and Exit (7) go to the
@@ -132,7 +132,7 @@ TDialog *CreateLogoutDialog(const char *Caption, const char *Text, TComponent *R
 	Dialog->SetCancelButton("Cancel", TCallback(Receiver, 2));
 	Dialog->SetExtraButton("Exit", TCallback(Receiver, 7));
 	return Dialog;
-	TEND
+	TEND(149)
 }
 
 // 0x4808b0, line 177. "Info": the client version and a link to the web
@@ -158,7 +158,7 @@ TDialog *CreateInfoDialog(void (*OpenURL)(const char *URL))
 	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
 	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
 	return Dialog;
-	TEND
+	TEND(177)
 }
 
 // 0x480cd0, line 200. Only for a dragged pile of 1-100 objects; otherwise
@@ -177,7 +177,7 @@ TDialog *CreateMoveObjectsDialog()
 	}
 	SetActionState(0);
 	return NULL;
-	TEND
+	TEND(200)
 }
 
 // 0x480f40, line 214
@@ -189,7 +189,7 @@ TDialog *CreateLoginDialog(void (*OpenURL)(const char *URL))
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
 	return Dialog;
-	TEND
+	TEND(214)
 }
 
 // 0x481160, line 230. Timeout in tenths of a second, 0 for none.
@@ -202,7 +202,7 @@ TDialog *CreateCharacterListDialog(int Timeout)
 	if (Timeout > 0)
 		Body->SetTimeout(Timeout);
 	return Dialog;
-	TEND1(Timeout)
+	TEND1(230, Timeout)
 }
 
 // 0x481370, line 280. ObjectData holds the server's object number, the
@@ -247,7 +247,7 @@ TDialog *CreateTextDialog(int *ObjectData, const char *Author, const char *Text)
 	}
 	Dialog->OkCallback = NoCallback;
 	return Dialog;
-	TEND
+	TEND(280)
 }
 
 // 0x4817c0, line 294. HouseData holds the list's type and identifier.
@@ -259,7 +259,7 @@ TDialog *CreateEditListDialog(int *HouseData, const char *Text)
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->OkCallback = NoCallback;
 	return Dialog;
-	TEND
+	TEND(294)
 }
 
 // 0x4819f0, line 307
@@ -270,7 +270,7 @@ TDialog *CreateOutfitDialog(int *Data)
 	TDialog *Dialog = new TDialog("Select Outfit", Body);
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	return Dialog;
-	TEND
+	TEND(307)
 }
 
 // 0x481bf0, line 321
@@ -282,7 +282,7 @@ TDialog *CreateBugReportDialog()
 	Dialog->SetOkButton("Send", TCallback(Body, 1));
 	Dialog->OkCallback = NoCallback;
 	return Dialog;
-	TEND
+	TEND(321)
 }
 
 // 0x481e00, line 334
@@ -293,7 +293,7 @@ TDialog *CreateNewChannelDialog(int NumberOfChannels, int *ChannelIDs, const cha
 	TDialog *Dialog = new TDialog("New Channel", Body);
 	Dialog->SetOkButton("Open", TCallback(Body, 1));
 	return Dialog;
-	TEND
+	TEND(334)
 }
 
 // 0x482010, line 347
@@ -304,7 +304,7 @@ TDialog *CreateInviteDialog()
 	TDialog *Dialog = new TDialog("Invite player to private chat channel", Body);
 	Dialog->SetOkButton("Add", TCallback(Body, 1));
 	return Dialog;
-	TEND
+	TEND(347)
 }
 
 // 0x482210, line 360. The OK button says "Add" here too.
@@ -315,7 +315,7 @@ TDialog *CreateExcludeDialog()
 	TDialog *Dialog = new TDialog("Exclude player from private chat channel", Body);
 	Dialog->SetOkButton("Add", TCallback(Body, 1));
 	return Dialog;
-	TEND
+	TEND(360)
 }
 
 // 0x482410, line 375. OK sends 602.
@@ -328,7 +328,7 @@ TDialog *CreateIgnoreListDialog()
 	Dialog->OkCallback = NoCallback;
 	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
 	return Dialog;
-	TEND
+	TEND(375)
 }
 
 // 0x482640, line 407. Only one open request at a time (a rule violation
@@ -344,7 +344,7 @@ TDialog *CreateReportDialog()
 	TDialog *Dialog = new TDialog("Report Rule Violation", Body);
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	return Dialog;
-	TEND
+	TEND(407)
 }
 
 // 0x482870, line 420
@@ -355,7 +355,7 @@ TDialog *CreateAddBuddyDialog()
 	TDialog *Dialog = new TDialog("Add to VIP list", Body);
 	Dialog->SetOkButton("Add", TCallback(Body, 1));
 	return Dialog;
-	TEND
+	TEND(420)
 }
 
 // 0x482a70, line 434
@@ -367,7 +367,7 @@ TDialog *CreateEditBuddyDialog(int CharacterID)
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->OkCallback = NoCallback;
 	return Dialog;
-	TEND1(CharacterID)
+	TEND1(434, CharacterID)
 }
 
 // 0x482c80, line 448. Abort (and Escape) send 2.
@@ -379,7 +379,7 @@ TDialog *CreateUpdateDialog(const char *FileName, int DataSize)
 	Dialog->SetOkButton("Abort", TCallback(Body, 2));
 	Dialog->SetCancelButton(NULL, TCallback(Body, 2));
 	return Dialog;
-	TEND1(DataSize)
+	TEND1(448, DataSize)
 }
 
 // 0x482ea0, line 462. OK goes to the frame (which closes the dialog).
@@ -391,7 +391,7 @@ TDialog *CreateHelpDialog(void (*OpenURL)(const char *URL))
 	Dialog->SetOkButton("Ok", TCallback(Dialog, 1));
 	Dialog->SetCancelButton(NULL, TCallback(Dialog, 1));
 	return Dialog;
-	TEND
+	TEND(462)
 }
 
 // 0x4830c0, line 476. Cancel goes to the frame.
@@ -403,7 +403,7 @@ TDialog *CreateHintsDialog()
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetCancelButton("Cancel", TCallback(Dialog, 2));
 	return Dialog;
-	TEND
+	TEND(476)
 }
 
 // 0x485290, line 490. Name and Statement may be NULL.
@@ -415,7 +415,7 @@ TDialog *CreateRuleViolationDialog(const char *Name, TTalkLine *Statement)
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
 	return Dialog;
-	TEND
+	TEND(490)
 }
 
 // 0x4832e0, line 504. The body deletes the coordinate and the mark.
@@ -427,7 +427,7 @@ TDialog *CreateEditMarkDialog(TCoordinate *Coordinate, TMark *Mark)
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
 	return Dialog;
-	TEND
+	TEND(504)
 }
 
 // 0x483500, line 533. Escape is OK here (both save the options).
@@ -440,7 +440,7 @@ TDialog *CreateOptionsDialog()
 	Dialog->SetCancelButton(NULL, TCallback(Body, 1));
 	Dialog->CancelCallback = TCallback(Body, 1);
 	return Dialog;
-	TEND
+	TEND(533)
 }
 
 // 0x483730, line 547
@@ -452,7 +452,7 @@ TDialog *CreateGeneralOptionsDialog(void (*OpenURL)(const char *URL))
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetExtraButton("Help", TCallback(Body, 701));
 	return Dialog;
-	TEND
+	TEND(547)
 }
 
 // 0x483950, line 561
@@ -465,7 +465,7 @@ TDialog *CreateGraphicsOptionsDialog(void (*OpenURL)(const char *URL), void (*Se
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetExtraButton("Help", TCallback(Body, 701));
 	return Dialog;
-	TEND
+	TEND(561)
 }
 
 // 0x483b80, line 576
@@ -478,7 +478,7 @@ TDialog *CreateAdvancedGraphicsDialog(void (*OpenURL)(const char *URL), TCompone
 	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
 	Dialog->SetExtraButton("Help", TCallback(Body, 701));
 	return Dialog;
-	TEND
+	TEND(576)
 }
 
 // 0x483dc0, line 590
@@ -490,7 +490,7 @@ TDialog *CreateConsoleOptionsDialog(void (*OpenURL)(const char *URL))
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetExtraButton("Help", TCallback(Body, 701));
 	return Dialog;
-	TEND
+	TEND(590)
 }
 
 // 0x483fe0, line 604
@@ -502,7 +502,7 @@ TDialog *CreateNetworkOptionsDialog(void (*OpenURL)(const char *URL))
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	Dialog->SetExtraButton("Help", TCallback(Body, 701));
 	return Dialog;
-	TEND
+	TEND(604)
 }
 
 // 0x484200, line 617
@@ -513,7 +513,7 @@ TDialog *CreateHotkeyDialog(void (*OpenURL)(const char *URL))
 	TDialog *Dialog = new TDialog("Hotkey Options", Body);
 	Dialog->SetOkButton("Ok", TCallback(Body, 1));
 	return Dialog;
-	TEND
+	TEND(617)
 }
 
 // 0x484400, line 631
@@ -525,7 +525,7 @@ TDialog *CreateErrorReportDialog()
 	Dialog->SetOkButton("Send", TCallback(Body, 1));
 	Dialog->SetCancelButton("Cancel", TCallback(Body, 2));
 	return Dialog;
-	TEND
+	TEND(631)
 }
 
 // --- TDialog ----------------------------------------------------------------------
@@ -536,9 +536,9 @@ TDialog *CreateErrorReportDialog()
 // changes them.
 TDialog::TDialog(const char *_Caption, TComponent *_Dialog)
 {
-	TASSERT(_Caption!=NULL);
-	TASSERT1(strlen(_Caption)<100, strlen(_Caption));
-	TASSERT(_Dialog!=NULL);
+	TASSERT(650, _Caption!=NULL);
+	TASSERT1(651, strlen(_Caption)<100, strlen(_Caption));
+	TASSERT(652, _Dialog!=NULL);
 	TBEGIN
 	DrawingListLength = 9;
 	DrawingList = new TDrawing[9];
@@ -558,7 +558,7 @@ TDialog::TDialog(const char *_Caption, TComponent *_Dialog)
 	FitToChild(Dialog, SkinProperties.StyleB08.Data54, true);
 	SetOkButton("Ok", TCallback(this, 1));
 	SetCancelButton("Cancel", TCallback(this, 2));
-	TEND
+	TEND(677)
 }
 
 // 0x46c3e0, lines 687-700
@@ -566,7 +566,7 @@ void TDialog::SetOkButton(const char *Text, TCallback Callback)
 {
 	TBEGIN
 	if (Text == NULL) {
-		TASSERT(OkButton!=NULL);
+		TASSERT(687, OkButton!=NULL);
 		DeleteChild(OkButton);
 		OkButton = NULL;
 		OkCallback = NoCallback;
@@ -580,7 +580,7 @@ void TDialog::SetOkButton(const char *Text, TCallback Callback)
 		InsertChild(OkButton);
 	}
 	Arrange();
-	TEND
+	TEND(700)
 }
 
 // 0x46c710, lines 710-723. Without a button Escape still sends (this, 2).
@@ -588,7 +588,7 @@ void TDialog::SetCancelButton(const char *Text, TCallback Callback)
 {
 	TBEGIN
 	if (Text == NULL) {
-		TASSERT(CancelButton!=NULL);
+		TASSERT(710, CancelButton!=NULL);
 		DeleteChild(CancelButton);
 		CancelButton = NULL;
 		CancelCallback = TCallback(this, 2);
@@ -602,7 +602,7 @@ void TDialog::SetCancelButton(const char *Text, TCallback Callback)
 		InsertChild(CancelButton);
 	}
 	Arrange();
-	TEND
+	TEND(723)
 }
 
 // 0x46ca40, lines 734-744
@@ -610,7 +610,7 @@ void TDialog::SetExtraButton(const char *Text, TCallback Callback)
 {
 	TBEGIN
 	if (Text == NULL) {
-		TASSERT(ExtraButton!=NULL);
+		TASSERT(734, ExtraButton!=NULL);
 		DeleteChild(ExtraButton);
 		ExtraButton = NULL;
 	} else {
@@ -620,7 +620,7 @@ void TDialog::SetExtraButton(const char *Text, TCallback Callback)
 		InsertChild(ExtraButton);
 	}
 	Arrange();
-	TEND
+	TEND(744)
 }
 
 // 0x46cd20, line 812. The buttons take the positions from the right in the
@@ -661,7 +661,7 @@ void TDialog::Arrange()
 	DrawingList[7] = TDrawing(46, Width - Skins[46].width, Height - Skins[46].height, 0, 0, 0, 0);
 	DrawingList[8] = TDrawing(51, Skins[47].width, Skins[49].height, Width - Skins[48].width - Skins[47].width,
 		Height - Skins[50].height - Skins[49].height, 0, 0);
-	TEND
+	TEND(812)
 }
 
 // 0x46d220, line 831
@@ -679,7 +679,7 @@ void TDialog::KeyPress(int Key)
 		return;
 	}
 	Dialog->KeyPress(Key);
-	TEND1(Key)
+	TEND1(831, Key)
 }
 
 // 0x46d410, line 848. A drag keeps the dialog inside the game window. The new
@@ -696,7 +696,7 @@ bool TDialog::MouseMove(int x, int y)
 	Limit(&NewY, 0, GetWindowHeight() - Height);
 	SetPosition(NewX, NewY);
 	return true;
-	TEND2(x, y)
+	TEND2(848, x, y)
 }
 
 // 0x46d660, line 867. A press on the caption line that no child takes
@@ -710,7 +710,7 @@ bool TDialog::LeftButtonDown(int x, int y, int Flags)
 		DragY = y;
 	}
 	return true;
-	TEND2(x, y)
+	TEND2(867, x, y)
 }
 
 // 0x46d830, line 880
@@ -721,7 +721,7 @@ bool TDialog::LeftButtonUp(int x, int y, int Flags)
 		return TWindow::LeftButtonUp(x, y, Flags);
 	Dragging = false;
 	return true;
-	TEND2(x, y)
+	TEND2(880, x, y)
 }
 
 // 0x46d9f0, line 891. Events 1 and 2 (the default callbacks) close the
@@ -730,7 +730,7 @@ void TDialog::HandleEvent(int Event)
 {
 	TBEGIN
 	SetActionState(0);
-	TEND
+	TEND(891)
 }
 
 // --- TQuestionLabel, TLogoutLabel ----------------------------------------------
@@ -743,7 +743,7 @@ void TQuestionLabel::KeyPress(int Key)
 		YesCallback.Send();
 	if (Key == 27 || Key == 'n' || Key == 'N')
 		NoAnswerCallback.Send();
-	TEND
+	TEND(915)
 }
 
 // 0x46dd40, line 952
@@ -758,7 +758,7 @@ void TLogoutLabel::KeyPress(int Key)
 		ExitCallback.Send();
 	if (Key == 27 || Key == 'c' || Key == 'C')
 		SetActionState(0);
-	TEND1(Key)
+	TEND1(952, Key)
 }
 
 // --- TWaitLabel ---------------------------------------------------------------------
@@ -769,7 +769,7 @@ void TWaitLabel::SetTimer(int Time, TCallback Callback)
 	TBEGIN
 	delete Timer;
 	Timer = new TTimer(Time, Callback);
-	TEND
+	TEND(985)
 }
 
 // 0x46e0e0, line 1000. The timer's ticks wait until it runs out.
@@ -783,7 +783,7 @@ void TWaitLabel::HandleEvent(int Event)
 		ClearMessages();
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(1000, Event)
 }
 
 // 0x46e2b0, line 1011
@@ -793,7 +793,7 @@ void TWaitLabel::Draw(int Surface, int x, int y)
 	TLabel::Draw(Surface, x, y);
 	if (CloseOnMessage && PeekMessageType() != 0)
 		HandleEvent(29);
-	TEND1(Surface)
+	TEND1(1011, Surface)
 }
 
 // --- TReconnectWindow ----------------------------------------------------------
@@ -829,7 +829,7 @@ TReconnectWindow::TReconnectWindow(const char *Text, int timeout)
 	ProgressBar->SetMaximum(Timeout);
 	ProgressBar->SetCurrent(0);
 	Arrange();
-	TEND1(timeout)
+	TEND1(1052, timeout)
 }
 
 // 0x46e8b0, line 1073
@@ -839,7 +839,7 @@ void TReconnectWindow::Draw(int Surface, int x, int y)
 	TWindow::Draw(Surface, x, y);
 	if (PeekMessageType() != 0)
 		SetActionState(0);
-	TEND1(Surface)
+	TEND1(1073, Surface)
 }
 
 // 0x46ea60, line 1122. When the time is up it logs out of a running game
@@ -868,7 +868,7 @@ void TReconnectWindow::HandleEvent(int Event)
 		}
 		SetActionState(0);
 	}
-	TEND1(Event)
+	TEND1(1122, Event)
 }
 
 // --- TLoginDialog -------------------------------------------------------------------
@@ -899,7 +899,7 @@ TLoginDialog::TLoginDialog(void (*OpenURL)(const char *URL))
 	SetChildArea(Label, SkinProperties.DataBBC);
 	FocusGroup->SetActive(Account);
 	Arrange();
-	TEND
+	TEND(1162)
 }
 
 // 0x46f160, lines 1183-1187
@@ -912,10 +912,10 @@ void TLoginDialog::KeyPress(int Key)
 		HandleEvent(2);
 	} else {
 		TEditLine *FocusEdit = FocusGroup->Active;
-		TASSERT(FocusEdit!=NULL);
+		TASSERT(1183, FocusEdit!=NULL);
 		FocusEdit->KeyPress(Key);
 	}
-	TEND1(Key)
+	TEND1(1187, Key)
 }
 
 // 0x46f3e0, line 1203. OK (1) logs in with the account and password.
@@ -928,7 +928,7 @@ void TLoginDialog::HandleEvent(int Event)
 		AddMessage(3, 0, 0);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(1203, Event)
 }
 
 // --- TCharacterListDialog ------------------------------------------------------
@@ -983,7 +983,7 @@ TCharacterListDialog::TCharacterListDialog()
 	InsertChild(StatusText);
 	SetChildArea(StatusText, SkinProperties.DataC18);
 	Arrange();
-	TEND
+	TEND(1262)
 }
 
 // 0x46fa10, line 1274. Every click starts the timeout again.
@@ -992,7 +992,7 @@ bool TCharacterListDialog::LeftButtonDown(int x, int y, int Flags)
 	TBEGIN
 	SetTimeout(Seconds);
 	return TWindow::LeftButtonDown(x, y, Flags);
-	TEND2(x, y)
+	TEND2(1274, x, y)
 }
 
 // 0x46fbc0, line 1286
@@ -1001,7 +1001,7 @@ bool TCharacterListDialog::RightButtonUp(int x, int y, int Flags)
 	TBEGIN
 	SetTimeout(Seconds);
 	return TWindow::RightButtonUp(x, y, Flags);
-	TEND2(x, y)
+	TEND2(1286, x, y)
 }
 
 // 0x46fd70, line 1298
@@ -1010,7 +1010,7 @@ bool TCharacterListDialog::MouseWheel(int x, int y, int Code)
 	TBEGIN
 	SetTimeout(Seconds);
 	return TWindow::MouseWheel(x, y, Code);
-	TEND1(Code)
+	TEND1(1298, Code)
 }
 
 // 0x46ff20, line 1309
@@ -1018,7 +1018,7 @@ void TCharacterListDialog::PositionChanged()
 {
 	TBEGIN
 	SetTimeout(Seconds);
-	TEND
+	TEND(1309)
 }
 
 // 0x4700b0, line 1335. Another key stops the timer before the list gets it;
@@ -1036,7 +1036,7 @@ void TCharacterListDialog::KeyPress(int Key)
 		ListBox->KeyPress(Key);
 	}
 	SetTimeout(Seconds);
-	TEND1(Key)
+	TEND1(1335, Key)
 }
 
 // 0x470280, line 1361. OK (1) or a double click enters the game with the
@@ -1060,7 +1060,7 @@ void TCharacterListDialog::HandleEvent(int Event)
 		return;
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(1361, Event)
 }
 
 // 0x470490, line 1374
@@ -1070,7 +1070,7 @@ void TCharacterListDialog::SetTimeout(int seconds)
 	delete Timer;
 	Timer = new TTimer(seconds, TCallback(this, 31));
 	Seconds = seconds;
-	TEND1(seconds)
+	TEND1(1374, seconds)
 }
 
 // --- TMoveObjectsDialog ---------------------------------------------------------
@@ -1082,8 +1082,8 @@ TMoveObjectsDialog::TMoveObjectsDialog()
 	LastDigit = 0;
 	DraggedObject = *GetDragObject(&SourceIndex, &SourceX, &SourceY, &SourceZ);
 	GetDragTarget(&DestinationX, &DestinationY, &DestinationZ);
-	TASSERT(DraggedObject!=0);
-	TASSERT2(In(DraggedObject.Data,1,100), DraggedObject.Data, DraggedObject);
+	TASSERT(1392, DraggedObject!=0);
+	TASSERT2(1393, In(DraggedObject.Data,1,100), DraggedObject.Data, DraggedObject);
 	TComponent::SetSize(SkinProperties.DataC28, SkinProperties.DataC2C);
 	TLabel *Label = new TLabel(0, 0, SkinProperties.StyleB08.Data78, TextSetNumberOfItems);
 	InsertChild(Label);
@@ -1092,7 +1092,7 @@ TMoveObjectsDialog::TMoveObjectsDialog()
 	InsertChild(ScrollBar);
 	SetChildArea(ScrollBar, SkinProperties.DataC30);
 	Arrange();
-	TEND
+	TEND(1406)
 }
 
 // 0x470b60, line 1423. The pile is drawn with the chosen count; the
@@ -1109,7 +1109,7 @@ void TMoveObjectsDialog::Draw(int Surface, int x, int y)
 		TRGBColor(0, 0, 0), TRect(SkinProperties.DataC50.x + x, SkinProperties.DataC50.y + y, 32, 32),
 		SkinProperties.Data498, true);
 	TWindow::Draw(Surface, x, y);
-	TEND1(Surface)
+	TEND1(1423, Surface)
 }
 
 // 0x470de0, line 1459. Digits type the count (the last two digits);
@@ -1140,7 +1140,7 @@ void TMoveObjectsDialog::KeyPress(int Key)
 	} else {
 		ScrollBar->KeyPress(Key);
 	}
-	TEND1(Key)
+	TEND1(1459, Key)
 }
 
 // 0x471080, line 1475
@@ -1154,7 +1154,7 @@ void TMoveObjectsDialog::HandleEvent(int Event)
 				DestinationZ, Count);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(1475, Event)
 }
 
 // --- TOutfitDialog ------------------------------------------------------------------
@@ -1173,7 +1173,7 @@ static inline TRGBColor OutfitColor(int Color)
 // 19 from SkinProperties.DataCA8; the head is the first part shown.
 TOutfitDialog::TOutfitDialog(int *Data)
 {
-	TASSERT(Data!=NULL);
+	TASSERT(1488, Data!=NULL);
 	TBEGIN
 	Outfit = Data[0];
 	FirstOutfit = Data[5];
@@ -1227,7 +1227,7 @@ TOutfitDialog::TOutfitDialog(int *Data)
 	SetChildPosition(Label, SkinProperties.DataCB8.x, SkinProperties.DataCB8.y);
 	PartGroup->Selected = PartButtons[0];
 	HandleEvent(1000);
-	TEND
+	TEND(1542)
 }
 
 // 0x471250, line 1586. A part button selects the colour button of its
@@ -1258,7 +1258,7 @@ void TOutfitDialog::HandleEvent(int Event)
 	} else if (Event == 2) {
 		SetActionState(0);
 	}
-	TEND1(Event)
+	TEND1(1586, Event)
 }
 
 // --- TTextDialog ----------------------------------------------------------------
@@ -1268,7 +1268,7 @@ void TOutfitDialog::HandleEvent(int Event)
 TTextDialog::TTextDialog(int MaximumLength, const char *Text, uint32 _ObjectNumber, TObject _Obj,
 	const char *Description)
 {
-	TASSERT(Text!=NULL);
+	TASSERT(1702, Text!=NULL);
 	TBEGIN
 	ObjectNumber = _ObjectNumber;
 	Obj = _Obj;
@@ -1288,7 +1288,7 @@ TTextDialog::TTextDialog(int MaximumLength, const char *Text, uint32 _ObjectNumb
 		SetChildArea(Label, SkinProperties.DataCE4);
 	}
 	Arrange();
-	TEND2(MaximumLength, _ObjectNumber)
+	TEND2(1727, MaximumLength, _ObjectNumber)
 }
 
 // 0x4719b0, line 1739
@@ -1298,7 +1298,7 @@ void TTextDialog::HandleEvent(int Event)
 	if (Event == 1)
 		SendEditText(ObjectNumber, EditText->Text);
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(1739, Event)
 }
 
 // --- TEditListDialog ----------------------------------------------------------
@@ -1307,8 +1307,8 @@ void TTextDialog::HandleEvent(int Event)
 TEditListDialog::TEditListDialog(int MaxLength, const char *Text, int _Type, uint32 _Identifier,
 	const char *Description)
 {
-	TASSERT(Text!=NULL);
-	TASSERT2((int)strlen(Text)<MaxLength, strlen(Text), MaxLength);
+	TASSERT(1752, Text!=NULL);
+	TASSERT2(1753, (int)strlen(Text)<MaxLength, strlen(Text), MaxLength);
 	TBEGIN
 	Type = _Type;
 	Identifier = _Identifier;
@@ -1326,7 +1326,7 @@ TEditListDialog::TEditListDialog(int MaxLength, const char *Text, int _Type, uin
 		SetChildArea(Label, SkinProperties.DataD1C);
 	}
 	Arrange();
-	TEND
+	TEND(1775)
 }
 
 // 0x471b60. TBEGIN/TEND without a try block; the children keep their
@@ -1336,7 +1336,7 @@ void TEditListDialog::Arrange()
 	TBEGIN
 	DrawingList[0] = TDrawing(217, SkinProperties.DataD0C.x, SkinProperties.DataD0C.y, Skins[217].width,
 		Skins[217].height, 0, 0);
-	TEND
+	TEND(1787)
 }
 
 // 0x471be0, line 1800
@@ -1346,7 +1346,7 @@ void TEditListDialog::HandleEvent(int Event)
 	if (Event == 1)
 		SendEditHouseText(Type, Identifier, EditText->Text);
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(1800, Event)
 }
 
 // --- TIgnoreListDialog --------------------------------------------------------
@@ -1406,7 +1406,7 @@ TIgnoreListDialog::TIgnoreListDialog()
 				Text[i] = 0;
 				NewLine = true;
 			} else if (NewLine) {
-				TASSERT2(Number < AllocationNumber, Number, AllocationNumber);
+				TASSERT2(1875, Number < AllocationNumber, Number, AllocationNumber);
 				Names[Number] = Text + i;
 				Number++;
 				NewLine = false;
@@ -1471,7 +1471,7 @@ TIgnoreListDialog::TIgnoreListDialog()
 				Text[i] = 0;
 				NewLine = true;
 			} else if (NewLine) {
-				TASSERT2(Number < AllocationNumber, Number, AllocationNumber);
+				TASSERT2(1944, Number < AllocationNumber, Number, AllocationNumber);
 				Names[Number] = Text + i;
 				Number++;
 				NewLine = false;
@@ -1494,7 +1494,7 @@ TIgnoreListDialog::TIgnoreListDialog()
 		delete[] Text;
 	Arrange();
 	HandleEvent(11);
-	TEND
+	TEND(1975)
 }
 
 // 0x471d90, line 1987
@@ -1502,7 +1502,7 @@ void TIgnoreListDialog::Arrange()
 {
 	TBEGIN
 	TWindow::Arrange();
-	TEND
+	TEND(1987)
 }
 
 // 0x471f20, line 2171. OK (602) replaces Talk.cpp's lists with the lines of
@@ -1646,7 +1646,7 @@ void TIgnoreListDialog::HandleEvent(int Event)
 	} else {
 		SetActionState(0);
 	}
-	TEND1(Event)
+	TEND1(2171, Event)
 }
 
 // 0x472970, line 2205. A click that changes a permanent check box recolours
@@ -1686,7 +1686,7 @@ bool TIgnoreListDialog::LeftButtonUp(int x, int y, int Flags)
 		WhiteEntries(Selection) = Entry;
 	}
 	return Result;
-	TEND2(x, y)
+	TEND2(2205, x, y)
 }
 
 // 0x472d80, line 2216
@@ -1695,7 +1695,7 @@ void TIgnoreListDialog::KeyPress(int Key)
 	TBEGIN
 	IgnoreList->KeyPress(Key);
 	WhiteList->KeyPress(Key);
-	TEND1(Key)
+	TEND1(2216, Key)
 }
 
 // --- TBugReportDialog ------------------------------------------------------------
@@ -1713,7 +1713,7 @@ TBugReportDialog::TBugReportDialog()
 	SetChildArea(Label, SkinProperties.DataE58);
 	EditText->SetActive(true);
 	Arrange();
-	TEND
+	TEND(2240)
 }
 
 // 0x4731e0, line 2252
@@ -1726,7 +1726,7 @@ void TBugReportDialog::HandleEvent(int Event)
 			SendBugReport(Text);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(2252, Event)
 }
 
 // --- TNewChannelDialog -----------------------------------------------------------
@@ -1734,8 +1734,8 @@ void TBugReportDialog::HandleEvent(int Event)
 // 0x4733a0, lines 2265-2297
 TNewChannelDialog::TNewChannelDialog(int _NumberOfChannels, int *_ChannelIDs, const char (*ChannelNames)[30])
 {
-	TASSERT(_ChannelIDs!=NULL);
-	TASSERT1(_NumberOfChannels>0, _NumberOfChannels);
+	TASSERT(2265, _ChannelIDs!=NULL);
+	TASSERT1(2266, _NumberOfChannels>0, _NumberOfChannels);
 	TBEGIN
 	TComponent::SetSize(SkinProperties.DataECC, SkinProperties.DataED0);
 	ListBox = new TListBox(NoCallback, TCallback(this, 301));
@@ -1758,7 +1758,7 @@ TNewChannelDialog::TNewChannelDialog(int _NumberOfChannels, int *_ChannelIDs, co
 	}
 	NameEdit->SetActive(true);
 	Arrange();
-	TEND1(_NumberOfChannels)
+	TEND1(2297, _NumberOfChannels)
 }
 
 // 0x473980, line 2321. Return sends 301 (join the selected channel)
@@ -1777,7 +1777,7 @@ void TNewChannelDialog::KeyPress(int Key)
 	} else {
 		NameEdit->KeyPress(Key);
 	}
-	TEND1(Key)
+	TEND1(2321, Key)
 }
 
 // 0x473b80, lines 2333-2349. OK (1) with a name opens a private
@@ -1790,7 +1790,7 @@ void TNewChannelDialog::HandleEvent(int Event)
 		const char *Name = NameEdit->Text;
 		if (strlen(Name) != 0) {
 			TCreature *Creature = GetCreature(GetPlayerID());
-			TASSERT(Creature!=NULL);
+			TASSERT(2333, Creature!=NULL);
 			if (CompareStrings(Creature->Name, Name, -1) == 0)
 				SetStatusMessage(TextNoPrivateChannelWithYourself, false);
 			else
@@ -1810,7 +1810,7 @@ void TNewChannelDialog::HandleEvent(int Event)
 		}
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(2349, Event)
 }
 
 // --- TPrivateChannelDialog -------------------------------------------------------
@@ -1829,7 +1829,7 @@ TPrivateChannelDialog::TPrivateChannelDialog(bool _Exclude)
 	SetChildArea(Label, SkinProperties.DataF2C);
 	NameEdit->SetActive(true);
 	Arrange();
-	TEND
+	TEND(2378)
 }
 
 // 0x474110, line 2392
@@ -1842,7 +1842,7 @@ void TPrivateChannelDialog::KeyPress(int Key)
 		HandleEvent(2);
 	else
 		NameEdit->KeyPress(Key);
-	TEND1(Key)
+	TEND1(2392, Key)
 }
 
 // 0x4742e0, line 2406
@@ -1859,7 +1859,7 @@ void TPrivateChannelDialog::HandleEvent(int Event)
 		}
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(2406, Event)
 }
 
 // --- TReportDialog ----------------------------------------------------------------
@@ -1877,7 +1877,7 @@ TReportDialog::TReportDialog()
 	SetChildArea(Label, SkinProperties.DataF54);
 	TextEdit->SetActive(true);
 	Arrange();
-	TEND
+	TEND(2551)
 }
 
 // 0x474760, line 2565
@@ -1890,7 +1890,7 @@ void TReportDialog::KeyPress(int Key)
 		HandleEvent(2);
 	else
 		TextEdit->KeyPress(Key);
-	TEND1(Key)
+	TEND1(2565, Key)
 }
 
 // 0x474930, line 2580. The request goes to Control.cpp's event queue as a
@@ -1904,7 +1904,7 @@ void TReportDialog::HandleEvent(int Event)
 		AddMessage(0x33, (INT_PTR)Text, 0);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(2580, Event)
 }
 
 // --- TAddBuddyDialog ------------------------------------------------------------
@@ -1922,7 +1922,7 @@ TAddBuddyDialog::TAddBuddyDialog()
 	SetChildArea(Label, SkinProperties.DataF7C);
 	NameEdit->SetActive(true);
 	Arrange();
-	TEND
+	TEND(2607)
 }
 
 // 0x474dd0, line 2621
@@ -1935,7 +1935,7 @@ void TAddBuddyDialog::KeyPress(int Key)
 		HandleEvent(2);
 	else
 		NameEdit->KeyPress(Key);
-	TEND1(Key)
+	TEND1(2621, Key)
 }
 
 // 0x474fa0, line 2635
@@ -1948,7 +1948,7 @@ void TAddBuddyDialog::HandleEvent(int Event)
 			SendAddBuddy(Name);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(2635, Event)
 }
 
 // --- TEditBuddyDialog -----------------------------------------------------------
@@ -1959,7 +1959,7 @@ TEditBuddyDialog::TEditBuddyDialog(int _CharacterID)
 	TBEGIN
 	CharacterID = _CharacterID;
 	int Position = GetBuddyPosition(_CharacterID);
-	TASSERT2(Position >= 0, Position, CharacterID);
+	TASSERT2(2652, Position >= 0, Position, CharacterID);
 	TComponent::SetSize(SkinProperties.StyleF8C.Data00, SkinProperties.StyleF8C.Data04);
 	TLabel *Label = new TLabel(SkinProperties.StyleB08.Data64, GetBuddyListName(Position));
 	InsertChild(Label);
@@ -1998,7 +1998,7 @@ TEditBuddyDialog::TEditBuddyDialog(int _CharacterID)
 	Notify->SetChecked(GetBuddyListNotify(Position));
 	Description->SetActive(true);
 	Arrange();
-	TEND1(_CharacterID)
+	TEND1(2696, _CharacterID)
 }
 
 // 0x475820, line 2720. Without a selected icon the icon is 0.
@@ -2016,7 +2016,7 @@ void TEditBuddyDialog::HandleEvent(int Event)
 		EditBuddy(CharacterID, Icon, Description->Text, Notify->IsChecked());
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(2720, Event)
 }
 
 // --- TUpdateDialog -----------------------------------------------------------------
@@ -2049,7 +2049,7 @@ TUpdateDialog::TUpdateDialog(const char *FileName, int _DataSize)
 	InsertChild(ProgressBar);
 	SetChildArea(ProgressBar, SkinProperties.Data1074);
 	Arrange();
-	TEND
+	TEND(2761)
 }
 
 // 0x475d00, line 2793. The progress -1 ends the download.
@@ -2070,7 +2070,7 @@ void TUpdateDialog::Draw(int Surface, int x, int y)
 			ProgressBar->SetCurrent(Progress);
 	}
 	TWindow::Draw(Surface, x, y);
-	TEND1(Surface)
+	TEND1(2793, Surface)
 }
 
 // 0x475f00, line 2806. The try block is inside the test (the catch block
@@ -2082,7 +2082,7 @@ void TUpdateDialog::HandleEvent(int Event)
 		if (!Done)
 			CancelPatch();
 		SetActionState(0);
-		TEND1(Event)
+		TEND1(2806, Event)
 	}
 }
 
@@ -2130,7 +2130,7 @@ THelpDialog::THelpDialog(void (*_OpenURL)(const char *URL))
 	SetChildPosition(Button, SkinProperties.Style1084.Data30.x, SkinProperties.Style1084.Data30.y);
 	InsertChild(Label);
 	SetChildPosition(Label, SkinProperties.Style1084.Data60.x, SkinProperties.Style1084.Data60.y);
-	TEND
+	TEND(2869)
 }
 
 // 0x476770, line 2882
@@ -2141,7 +2141,7 @@ void THelpDialog::KeyPress(int Key)
 		HandleEvent(1);
 	else if (Key == 27)
 		HandleEvent(2);
-	TEND1(Key)
+	TEND1(2882, Key)
 }
 
 // 0x476930, lines 2914-2918. Client Help (702) closes first and then asks
@@ -2181,9 +2181,9 @@ void THelpDialog::HandleEvent(int Event)
 		SetActionState(0);
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(2914, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(2918, Event)
 }
 
 // --- THintsDialog ------------------------------------------------------------------
@@ -2203,7 +2203,7 @@ THintsDialog::THintsDialog()
 		if (IsKnownHint(i))
 			ListBox->AddLine(GetEventHelpTitle(i));
 	}
-	TEND
+	TEND(2945)
 }
 
 // 0x476fb0, line 2959
@@ -2216,7 +2216,7 @@ void THintsDialog::KeyPress(int Key)
 		HandleEvent(2);
 	else
 		ListBox->KeyPress(Key);
-	TEND1(Key)
+	TEND1(2959, Key)
 }
 
 // 0x477180, lines 2974-2983. The selected hint is shown again: the help
@@ -2233,7 +2233,7 @@ void THintsDialog::HandleEvent(int Event)
 				break;
 			}
 		}
-		TASSERT(Number!=-1);
+		TASSERT(2974, Number!=-1);
 		const char *HelpText = GetEventHelpText(Number);
 		char *Text = new char[strlen(HelpText) + 1];
 		strcpy(Text, HelpText);
@@ -2241,7 +2241,7 @@ void THintsDialog::HandleEvent(int Event)
 		AddMessageFirst(2, (INT_PTR)GetEventHelpTitle(Number), (INT_PTR)Text);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(2983, Event)
 }
 
 // --- TRuleViolationDialog --------------------------------------------------------
@@ -2311,7 +2311,7 @@ TRuleViolationDialog::TRuleViolationDialog(const char *Name, TTalkLine *Statemen
 	UpdateActions();
 	FocusGroup->SetActive(NameEdit->ReadOnly ? CommentEdit : NameEdit);
 	Arrange();
-	TEND
+	TEND(3056)
 }
 
 // 0x4774d0, line 3080
@@ -2325,7 +2325,7 @@ void TRuleViolationDialog::KeyPress(int Key)
 	} else if (FocusGroup->Active != NULL) {
 		FocusGroup->Active->KeyPress(Key);
 	}
-	TEND1(Key)
+	TEND1(3080, Key)
 }
 
 // 0x484e70, lines 3124-3128. Every missing part gets a status message; the
@@ -2376,10 +2376,10 @@ void TRuleViolationDialog::HandleEvent(int Event)
 		UpdateActions();
 		return;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(3124, "unknown event", Event);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(3128, Event)
 }
 
 // 0x47eae0, line 3158. The actions the reason allows; the statement line
@@ -2401,7 +2401,7 @@ void TRuleViolationDialog::UpdateActions()
 		StatementEdit->SetDisabled(!(CheckRight(Reason, 0) || CheckRight(Reason, 2) || CheckRight(Reason, 6))
 			|| ((Reason < 9 || Reason > 27) && Reason != 29));
 	}
-	TEND
+	TEND(3158)
 }
 
 // 0x4776b0, line 3171
@@ -2412,7 +2412,7 @@ int TRuleViolationDialog::GetReason()
 	if (Selection == -1)
 		return -1;
 	return Reasons[Selection];
-	TEND
+	TEND(3171)
 }
 
 // 0x477860, line 3191. The action of the selected line, by its name.
@@ -2427,7 +2427,7 @@ int TRuleViolationDialog::GetAction()
 			return i;
 	}
 	return -1;
-	TEND
+	TEND(3191)
 }
 
 // --- TEditMarkDialog ------------------------------------------------------------
@@ -2440,7 +2440,7 @@ TEditMarkDialog::TEditMarkDialog(TCoordinate *_Coordinate, TMark *_Mark)
 	Coordinate.y = 0;
 	Coordinate.z = 0;
 	TComponent::SetSize(SkinProperties.Data11CC, SkinProperties.Data11D0);
-	TASSERT(_Coordinate != NULL);
+	TASSERT(3207, _Coordinate != NULL);
 	Coordinate = *_Coordinate;
 	if (_Mark != NULL)
 		Mark = *_Mark;
@@ -2469,7 +2469,7 @@ TEditMarkDialog::TEditMarkDialog(TCoordinate *_Coordinate, TMark *_Mark)
 	delete _Coordinate;
 	if (_Mark != NULL)
 		delete _Mark;
-	TEND
+	TEND(3242)
 }
 
 // 0x478200, line 3268
@@ -2482,7 +2482,7 @@ void TEditMarkDialog::KeyPress(int Key)
 		HandleEvent(2);
 	else
 		TextEdit->KeyPress(Key);
-	TEND
+	TEND(3268)
 }
 
 // 0x4783d0, lines 3294-3298. An edited mark is deleted and added again at
@@ -2506,10 +2506,10 @@ void TEditMarkDialog::HandleEvent(int Event)
 		}
 		AddAutomapMark(Coordinate, Mark.Text, Type);
 	} else if (Event != 2) {
-		TERROR1("unknown event", Event);
+		TERROR1(3294, "unknown event", Event);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(3298, Event)
 }
 
 // --- TOptionsDialog -----------------------------------------------------------------
@@ -2560,7 +2560,7 @@ TOptionsDialog::TOptionsDialog()
 	InsertChild(Separator);
 	SetChildArea(Separator, SkinProperties.Style1274.Data68);
 	Arrange();
-	TEND
+	TEND(3366)
 }
 
 // 0x478e50, line 3380
@@ -2571,7 +2571,7 @@ void TOptionsDialog::KeyPress(int Key)
 		HandleEvent(1);
 	else if (Key == 27)
 		HandleEvent(2);
-	TEND1(Key)
+	TEND1(3380, Key)
 }
 
 // 0x479010, lines 3422-3426. Closing saves the options; each button opens
@@ -2609,10 +2609,10 @@ void TOptionsDialog::HandleEvent(int Event)
 		AddMessage(0x21, 0, 0);
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(3422, "unknown event", Event);
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(3426, Event)
 }
 
 // --- TGeneralOptionsDialog ------------------------------------------------------
@@ -2644,7 +2644,7 @@ TGeneralOptionsDialog::TGeneralOptionsDialog(void (*_OpenURL)(const char *URL))
 	CreatureNames->SetChecked(GetCreatureInfo() != 0);
 	TextualEffects->SetChecked(GetTextualEffects());
 	Arrange();
-	TEND
+	TEND(3472)
 }
 
 // 0x479720, lines 3495-3498. The creature names are creature info 2 (names
@@ -2668,9 +2668,9 @@ void TGeneralOptionsDialog::HandleEvent(int Event)
 		OpenURL(TextOptionsURL);
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(3495, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(3498, Event)
 }
 
 // --- TGraphicsOptionsDialog ------------------------------------------------------
@@ -2715,7 +2715,7 @@ TGraphicsOptionsDialog::TGraphicsOptionsDialog(void (*_OpenURL)(const char *URL)
 			ResolutionList->SetSelection(i);
 	}
 	Arrange();
-	TEND
+	TEND(3549)
 }
 
 // 0x479f50, line 3573. Only the arrow keys up and down reach the list.
@@ -2736,7 +2736,7 @@ void TGraphicsOptionsDialog::KeyPress(int Key)
 		ResolutionList->KeyPress(0x10f);
 		break;
 	}
-	TEND1(Key)
+	TEND1(3573, Key)
 }
 
 // 0x47a150, line 3598. OK stores the selected mode and switches the
@@ -2765,7 +2765,7 @@ void TGraphicsOptionsDialog::HandleEvent(int Event)
 		return;
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(3598, Event)
 }
 
 // --- TAdvancedGraphicsDialog ------------------------------------------------------
@@ -2838,7 +2838,7 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(void (*_OpenURL)(const char *UR
 		}
 	}
 	Arrange();
-	TEND
+	TEND(3689)
 }
 
 // 0x47aa30, line 3723. Draws the frame rate texts over the children and
@@ -2869,7 +2869,7 @@ void TAdvancedGraphicsDialog::Draw(int Surface, int x, int y)
 		EngineGroup->Selected = DirectX9Button;
 		break;
 	}
-	TEND1(Surface)
+	TEND1(3723, Surface)
 }
 
 // 0x47ad10, line 3751. The frame rate bar (30) sets the limit while it
@@ -2897,7 +2897,7 @@ void TAdvancedGraphicsDialog::HandleEvent(int Event)
 		GetSurface()->SetFramerateLimit(GetConfineFramerate());
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(3751, Event)
 }
 
 // --- TConsoleOptionsDialog --------------------------------------------------------
@@ -2929,7 +2929,7 @@ TConsoleOptionsDialog::TConsoleOptionsDialog(void (*_OpenURL)(const char *URL))
 	TimeStamps->SetChecked(GetTimeStamps());
 	PrivateMessages->SetChecked(GetPrivateMessages());
 	Arrange();
-	TEND
+	TEND(3797)
 }
 
 // 0x47b3c0, line 3819
@@ -2948,7 +2948,7 @@ void TConsoleOptionsDialog::HandleEvent(int Event)
 		return;
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(3819, Event)
 }
 
 // --- TNetworkOptionsDialog ---------------------------------------------------------
@@ -2964,7 +2964,7 @@ TNetworkOptionsDialog::TNetworkOptionsDialog(void (*_OpenURL)(const char *URL))
 	SetChildArea(TestServerLogin, SkinProperties.Data146C);
 	TestServerLogin->SetChecked(GetTestServerLogin());
 	Arrange();
-	TEND
+	TEND(3843)
 }
 
 // 0x47b800, line 3860
@@ -2978,7 +2978,7 @@ void TNetworkOptionsDialog::HandleEvent(int Event)
 		return;
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(3860, Event)
 }
 
 // --- THotkeyDialog -------------------------------------------------------------------
@@ -3012,14 +3012,14 @@ THotkeyDialog::THotkeyDialog(void (*_OpenURL)(const char *URL))
 	SetChildArea(AutoSendCheckBox, SkinProperties.Data14C4);
 	Selected = -1;
 	Arrange();
-	TEND
+	TEND(3906)
 }
 
 // 0x47b9c0, lines 3914-3933. Hotkeys sent automatically are drawn in their
 // own colour.
 void THotkeyDialog::UpdateLine(int Number)
 {
-	TASSERT1(In(Number,0,HOTKEYS-1), Number);
+	TASSERT1(3914, In(Number,0,HOTKEYS-1), Number);
 	TBEGIN
 	char Line[732];
 	if (Number < 12)
@@ -3032,7 +3032,7 @@ void THotkeyDialog::UpdateLine(int Number)
 	if (AutoSend[Number])
 		Font.Color = SkinProperties.Data14D4;
 	ListBox->SetLine(Number, Line, Font);
-	TEND1(Number)
+	TEND1(3933, Number)
 }
 
 // 0x47bd40, line 3958. Every other key edits the selected hotkey's text; an
@@ -3066,7 +3066,7 @@ void THotkeyDialog::KeyPress(int Key)
 		}
 		break;
 	}
-	TEND1(Key)
+	TEND1(3958, Key)
 }
 
 // 0x47c010, lines 3993-3996. OK stores the hotkeys and saves the options
@@ -3101,9 +3101,9 @@ void THotkeyDialog::HandleEvent(int Event)
 			AutoSendCheckBox->SetChecked(false);
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(3993, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(3996, Event)
 }
 
 // 0x47c400, line 4010. A click may have changed the check box.
@@ -3116,7 +3116,7 @@ bool THotkeyDialog::LeftButtonUp(int x, int y, int Flags)
 		UpdateLine(Selected);
 	}
 	return Result;
-	TEND2(x, y)
+	TEND2(4010, x, y)
 }
 
 // --- TErrorReportDialog ---------------------------------------------------------------
@@ -3149,7 +3149,7 @@ TErrorReportDialog::TErrorReportDialog()
 	ReportText->SetText(Text.str().c_str(), false);
 	CommentEdit->SetActive(true);
 	Arrange();
-	TEND
+	TEND(4053)
 }
 
 // 0x47c5e0, line 4067
@@ -3162,7 +3162,7 @@ void TErrorReportDialog::KeyPress(int Key)
 		HandleEvent(2);
 	else
 		CommentEdit->KeyPress(Key);
-	TEND1(Key)
+	TEND1(4067, Key)
 }
 
 // 0x47c7b0, line 4084. Send (1) adds the comment (Control.cpp sends the
@@ -3177,5 +3177,5 @@ void TErrorReportDialog::HandleEvent(int Event)
 		DeleteErrorFile();
 	}
 	SetActionState(0);
-	TEND1(Event)
+	TEND1(4084, Event)
 }

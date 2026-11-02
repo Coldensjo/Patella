@@ -235,7 +235,7 @@ const char *GetHelpText(int Handle)
 			"<B>Books and Scrolls<N>\n<br=5>To read or edit a book right-click on it and select \'Use\' from the context menu.");
 		break;
 	default:
-		TERROR1("unknown handle", Handle);
+		TERROR1(354, "unknown handle", Handle);
 	}
 	return HelpText;
 }
@@ -243,7 +243,7 @@ const char *GetHelpText(int Handle)
 // 0x4a32e0, line 369. Queues an event help that was not shown before.
 void AddEventHelp(int Number)
 {
-	TASSERT1(In(Number,1,EVENTHELPS), Number);
+	TASSERT1(369, In(Number,1,EVENTHELPS), Number);
 	if (!IsKnownHint(Number)) {
 		AddKnownHint(Number);
 		EventHelps(NumberOfEventHelps) = Number;
@@ -255,7 +255,7 @@ void AddEventHelp(int Number)
 // Every name is tested on its own.
 void CheckEventHelpName(const char *Name)
 {
-	TASSERT(Name!=NULL);
+	TASSERT(381, Name!=NULL);
 	if (strcmp(Name, "Cipfried") == 0)
 		AddEventHelp(2);
 	if (strcmp(Name, "Seymour") == 0)
@@ -355,7 +355,7 @@ void CheckEventHelpPosition(int x, int y, int z)
 // 0x4a3b60, lines 571-602
 const char *GetEventHelpTitle(int Number)
 {
-	TASSERT1(In(Number,1,EVENTHELPS), Number);
+	TASSERT1(571, In(Number,1,EVENTHELPS), Number);
 	switch (Number) {
 	case 1:
 		return "First Login";
@@ -386,14 +386,14 @@ const char *GetEventHelpTitle(int Number)
 	case 14:
 		return "Level 20 and Security Information";
 	default:
-		TERROR1("unknown hint", Number);
+		TERROR1(602, "unknown hint", Number);
 	}
 }
 
 // 0x4a3fd0, lines 610-691
 const char *GetEventHelpText(int Number)
 {
-	TASSERT1(In(Number,1,EVENTHELPS), Number);
+	TASSERT1(610, In(Number,1,EVENTHELPS), Number);
 	switch (Number) {
 	case 1:
 		return "<b>Welcome to Tibia!\n<br=7><n>Greetings wanderer! You are about to enter the mysterious world of Tibia. Fight fearsome monsters, find untold treasures and make your character a true hero of the land! There are many different ways to play Tibia, but keep in mind that there are many others players out there who want to enjoy the game just like you, so please play fair and follow the Tibia Rules at all times.\n<br=7>To move your character use the cursor keys or click on a spot on the game window or in the automap. Right-clicking on items, monsters, characters or simply on the map will open context menus in which you can select appropriate actions such as attacking or using things. Items can be moved around by using drag&drop.\n<br=7>If you need assistance, click on the \'Help\' button to the right. There are several help options to choose from. For instance, the \'Client Help\' will provide you with information on important objects on the map or parts of the client program. Also, a flashing exclamation mark will appear in the top right corner from time to time to inform you that further hints like this one you are reading right now are available. To review previous hints click on \'Help\', then \'Hints\'. For detailed information please read the manual and the \'FAQ\' on our offical website www.tibia.com.";
@@ -424,7 +424,7 @@ const char *GetEventHelpText(int Number)
 	case 14:
 		return "<b>Congratulations!\n<br=7><n>You have reached level 20!\n<br=5>If you are a premium player and if your character has the necessary funds, you can now promote your character to the elite rank of his vocation!\n<br=7>We would like to take the opportunity to remind you that you should keep your account secure. Remember there might be people who try to steal it!\n<br=7>Please take a minute and read the following security hints carefully. For further information please see our website. \n<br=10>1.<INDENT=15>Never give your password and/or account number away! <INDENT=0>\n<br=2>2.<INDENT=15>Use a secure password.<INDENT=0>\n<br=2>3.<INDENT=15>Do not store account data on your computer.<INDENT=0>\n<br=2>3.<INDENT=15>Do not download modified clients or tools for Tibia!<INDENT=0>\n<br=2>4.<INDENT=15>Do not share or trade accounts!<INDENT=0>\n<br=2>5.<INDENT=15>Protect your computer.<INDENT=0>\n<br=2>6.<INDENT=15>Keep an eye on the registered email address.<INDENT=0>\n<br=2>7.<INDENT=15>Personalise your account!<INDENT=0>\n<br=2>";
 	default:
-		TERROR1("unknown hint", Number);
+		TERROR1(691, "unknown hint", Number);
 	}
 }
 

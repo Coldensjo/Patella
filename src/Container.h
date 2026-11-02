@@ -82,7 +82,7 @@ template <class T> array<T>::array(int min, int max)
 {
 	this->min = min;
 	d = max - min + 1;
-	TASSERT1(d>0, d);
+	TASSERT1(152, d>0, d);
 	entry = new T[d];
 }
 
@@ -95,7 +95,7 @@ template <class T> T &array<T>::operator()(int i)
 		std::stringstream s;
 		s << "index out of range (" << "original i: " << i + min << ", i: " << i << ", min: " << min
 			<< ", d: " << d << ")";
-		TERROR(s.str().c_str());
+		TERROR(178, s.str().c_str());
 	}
 	return entry[i];
 }
@@ -129,8 +129,8 @@ template <class T> matrix<T>::matrix(int xmin, int xmax, int ymin, int ymax)
 	this->ymin = ymin;
 	dx = xmax - xmin + 1;
 	dy = ymax - ymin + 1;
-	TASSERT1(dx>0, dx);
-	TASSERT1(dy>0, dy);
+	TASSERT1(217, dx>0, dx);
+	TASSERT1(218, dy>0, dy);
 	entry = new T[dx * dy];
 }
 
@@ -144,7 +144,7 @@ template <class T> T &matrix<T>::operator()(int x, int y)
 		s << "index out of range (" << "original x: " << x + xmin << ", original y: " << y + ymin
 			<< ", x: " << x << ", y: " << y << ", xmin: " << xmin << ", ymin: " << ymin << ", dx: " << dx
 			<< ", dy: " << dy << ")";
-		TERROR(s.str().c_str());
+		TERROR(253, s.str().c_str());
 	}
 	return entry[y * dx + x];
 }
@@ -173,9 +173,9 @@ template <class T> matrix3d<T>::matrix3d(int xmin, int xmax, int ymin, int ymax,
 	dx = xmax - xmin + 1;
 	dy = ymax - ymin + 1;
 	dz = zmax - zmin + 1;
-	TASSERT1(dx>0, dx);
-	TASSERT1(dy>0, dy);
-	TASSERT1(dz>0, dz);
+	TASSERT1(282, dx>0, dx);
+	TASSERT1(283, dy>0, dy);
+	TASSERT1(284, dz>0, dz);
 	entry = new T[dx * dy * dz];
 }
 
@@ -192,7 +192,7 @@ template <class T> T &matrix3d<T>::operator()(int x, int y, int z)
 			<< ", original z: " << z + zmin << ", x: " << x << ", y: " << y << ", z: " << z
 			<< ", xmin: " << xmin << ", ymin: " << ymin << ", zmin: " << zmin << ", dx: " << dx
 			<< ", dy: " << dy << ", dz: " << dz << ")";
-		throw TMYEXCEPTION(s.str().c_str(), "", 0, "", 0, "[bug0000013]");
+		throw TMYEXCEPTION(328, s.str().c_str(), "", 0, "", 0, "[bug0000013]");
 	}
 	return entry[(z * dy + y) * dx + x];
 }
@@ -228,8 +228,8 @@ template <class T> vector<T>::vector(int min, int max, int block, T init)
 	this->block = block;
 	initialized = true;
 	this->init = init;
-	TASSERT1(space>0, space);
-	TASSERT1(block>=0, block);
+	TASSERT1(355, space>0, space);
+	TASSERT1(356, block>=0, block);
 	entry = new T[space];
 	for (int i = 0; i < space; i++)
 		entry[i] = init;
@@ -246,8 +246,8 @@ template <class T> vector<T>::vector(int min, int max, int block)
 	space = max - min + 1;
 	this->block = block;
 	initialized = false;
-	TASSERT1(space>0, space);
-	TASSERT1(block>=0, block);
+	TASSERT1(369, space>0, space);
+	TASSERT1(370, block>=0, block);
 	entry = new T[space];
 }
 

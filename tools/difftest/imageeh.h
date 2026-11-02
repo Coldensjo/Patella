@@ -56,18 +56,18 @@ template <class F> static void ThrowThunk(void *Context) { (*(F *)Context)(); }
 template <class F> TThrown ImageThrow(F Function) { return ImageThrowCall(ThrowThunk<F>, &Function); }
 
 // Compares what both sides threw (errortest.cpp's comparison, shared since
-// issue #34): kind, type, PROGRAM_ERROR value, message and origin exactly,
-// except the line numbers. Every "<file> <line>: " that starts the message or
-// follows ", reason:\n", and the origin's, is compared with the line replaced,
-// and over the whole run each of our lines must stand for one original line
-// and each original line for one of ours (one map for all tests). Failures
+// issue #34): kind, type, PROGRAM_ERROR value, message and origin exactly.
+// Every "<file> <line>: " that starts the message or follows ", reason:\n",
+// and the origin's, is compared with the line replaced, then each line pair
+// exactly (since issue #35 our sites name the original's lines; EH_LINEMAP=1
+// compares through one map for the whole run instead, as before). Failures
 // are reported as "<Test> <What>: ...". One check per call and one per line
 // pair; ThrownCompared and ThrownThrew count the calls and those in which the
 // original threw.
 void CompareThrown(const char *Test, const char *What, const TThrown &Ours, const TThrown &Original);
 extern int ThrownCompared, ThrownThrew;
 typedef std::map<std::string, std::map<int, int>> TLineMap;
-const TLineMap &ThrownLineMap(); // file -> our line -> the original's line
+const TLineMap &ThrownLineMap(); // file -> our line -> the original's line (the lines seen)
 
 // The error round of a window or surface test (issue #34): the constructor
 // enables the image's exceptions, Compare compares one pair of calls,

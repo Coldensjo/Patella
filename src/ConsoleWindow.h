@@ -53,11 +53,11 @@ struct TLineFormat {
 	TLineFormat(TTalkLine *_TextLine, const char *_LineText, int _LineLength, int _OriginalOffset, int _Indent,
 		int _FontNumber, TRGBColor _Color, bool _LineEnd)
 	{
-		TASSERT(_TextLine!=NULL);
-		TASSERT(_LineText!=NULL);
-		TASSERT1(_LineLength>0, _LineLength);
-		TASSERT1(_Indent>=0, _Indent);
-		TASSERT1(_OriginalOffset>=0, _OriginalOffset);
+		TASSERT(47, _TextLine!=NULL);
+		TASSERT(48, _LineText!=NULL);
+		TASSERT1(49, _LineLength>0, _LineLength);
+		TASSERT1(53, _Indent>=0, _Indent);
+		TASSERT1(54, _OriginalOffset>=0, _OriginalOffset);
 		TextLine = _TextLine;
 		Color = _Color;
 		LineText = _LineText;

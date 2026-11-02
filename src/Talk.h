@@ -131,7 +131,7 @@ public:
 	void AddText(int Mode, const char *text, int DiffTime) override
 	{
 		(void)Mode; (void)text; (void)DiffTime;
-		TERROR("not possible");
+		TERROR(321, "not possible");
 	}
 	void Remove(int lineNumber) override;
 	void Remove(TTalkLine *line) override;

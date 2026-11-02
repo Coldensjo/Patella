@@ -101,7 +101,7 @@ void Resize(int Width, int Height)
 		if (ModalWindow != NULL && GetActionState() == 9)
 			((THelpBubble *)ModalWindow)->Place(MainWindow);
 	}
-	TEND2(Width, Height)
+	TEND2(93, Width, Height)
 }
 
 // 0x449010, line 124. Lets the surface check the window and display mode;
@@ -120,7 +120,7 @@ void CheckSurface(bool Force)
 		ChangeEngine(0);
 	if (GetSurface()->SurfaceRecreated(1))
 		ResetVideoCache();
-	TEND1(Force?1:0)
+	TEND1(124, Force?1:0)
 }
 
 // 0x445c20, lines 145-201. The engine test runs on a new surface; when it
@@ -136,45 +136,45 @@ void ChangeEngine(int engine)
 	try {
 		GetSurface()->ExitSurfaces();
 	} catch (TMyException &Exception) {
-		throw TMYEXCEPTION("ExitSurfaces failed", "oldEngine", oldEngine, "", 0, Exception);
+		throw TMYEXCEPTION(145, "ExitSurfaces failed", "oldEngine", oldEngine, "", 0, Exception);
 	} catch (...) {
-		TERROR1("ExitSurfaces failed with unknown exception", oldEngine);
+		TERROR1(148, "ExitSurfaces failed with unknown exception", oldEngine);
 	}
 	try {
 		SurfaceExitInstance();
 	} catch (TMyException &Exception) {
-		throw TMYEXCEPTION("SurfaceExitInstance failed", "curEngine", curEngine, "", 0, Exception);
+		throw TMYEXCEPTION(154, "SurfaceExitInstance failed", "curEngine", curEngine, "", 0, Exception);
 	} catch (...) {
-		TERROR1("SurfaceExitInstance failed with unknown exception", curEngine);
+		TERROR1(157, "SurfaceExitInstance failed with unknown exception", curEngine);
 	}
 	bool Success;
 	try {
 		Success = GetSurface()->TestEngine();
 	} catch (TMyException &Exception) {
-		throw TMYEXCEPTION("TestEngine failed", "curEngine", curEngine, "", 0, Exception);
+		throw TMYEXCEPTION(166, "TestEngine failed", "curEngine", curEngine, "", 0, Exception);
 	} catch (...) {
-		TERROR1("TestEngine failed with unknown exception", curEngine);
+		TERROR1(169, "TestEngine failed with unknown exception", curEngine);
 	}
 	if (!Success) {
 		curEngine = oldEngine;
 		try {
 			SurfaceExitInstance();
 		} catch (TMyException &Exception) {
-			throw TMYEXCEPTION("SurfaceExitInstance after test failed", "curEngine", curEngine, "", 0,
+			throw TMYEXCEPTION(180, "SurfaceExitInstance after test failed", "curEngine", curEngine, "", 0,
 				Exception);
 		} catch (...) {
-			TERROR1("SurfaceExitInstance after test failed with unknown exception", curEngine);
+			TERROR1(183, "SurfaceExitInstance after test failed with unknown exception", curEngine);
 		}
 	}
 	try {
 		GetSurface()->InitSurfaces();
 	} catch (TMyException &Exception) {
-		throw TMYEXCEPTION("InitSurfaces failed", "", 0, "", 0, Exception);
+		throw TMYEXCEPTION(192, "InitSurfaces failed", "", 0, "", 0, Exception);
 	} catch (...) {
-		TERROR("InitSurfaces failed with unknown exception");
+		TERROR(195, "InitSurfaces failed with unknown exception");
 	}
 	SetEngine(curEngine);
-	TEND1(engine)
+	TEND1(201, engine)
 }
 
 // 0x449210, lines 218-366. Draws the windows, the tooltip, the frame rate and
@@ -186,7 +186,7 @@ void Redraw(bool Force)
 	TBEGIN
 	TBEGIN
 	CheckSurface(Force);
-	TEND
+	TEND(218)
 	if (GetSurface()->IsUnavailable()) {
 		Sleep(10);
 		return;
@@ -290,7 +290,7 @@ void Redraw(bool Force)
 		}
 	}
 	GetSurface()->FinishFrame();
-	TEND1(Force?1:0)
+	TEND1(366, Force?1:0)
 }
 
 // 0x4463f0, line 392. Event 0x2b, posted when the game starts: sends the
@@ -306,7 +306,7 @@ void SendErrorReports()
 	ClearErrorReports();
 	if (FileExists("error.txt"))
 		RemoveFile("error.txt");
-	TEND1(i)
+	TEND1(392, i)
 }
 
 // 0x4465f0, line 418. Game packet 0x0a, once the connection state is 8.
@@ -324,7 +324,7 @@ void EnterGame()
 	ResetTalk();
 	ShowPermanentIgnoreWarning();
 	SetAmbientLight(-1, 0);
-	TEND
+	TEND(418)
 }
 
 // 0x4467d0, line 438. The game connection was closed.
@@ -341,7 +341,7 @@ void LeaveGame()
 	SavePreferences();
 	if (!Reconnect)
 		AddMessage(10, 300, 0);
-	TEND
+	TEND(438)
 }
 
 // 0x4469b0, lines 461-483. In help mode (action state 9) the help bubble is
@@ -360,7 +360,7 @@ void MouseMove(int x, int y)
 		break;
 	case 10:
 	case 11:
-		TASSERT1(ModalWindow!=NULL, GetActionState());
+		TASSERT1(461, ModalWindow!=NULL, GetActionState());
 		ModalWindow->MouseMove(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY);
 		break;
 	case 9:
@@ -379,7 +379,7 @@ void MouseMove(int x, int y)
 	}
 	LastMouseMove = GetActionNumber();
 	SetMouseOverText(NULL);
-	TEND1(GetActionState())
+	TEND1(483, GetActionState())
 }
 
 // 0x446d10, lines 503-511
@@ -398,14 +398,14 @@ void LeftButtonDown(int x, int y, int Flags)
 		break;
 	case 10:
 	case 11:
-		TASSERT(ModalWindow!=NULL);
+		TASSERT(503, ModalWindow!=NULL);
 		ModalWindow->LeftButtonDown(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		break;
 	}
 	SetPendingAction(6, GetActionNumber());
 	LastMouseMove = 0;
 	SetMouseOverText(NULL);
-	TEND2(x, y)
+	TEND2(511, x, y)
 }
 
 // 0x447000, lines 548-566. Releasing the second of both buttons (state 4)
@@ -436,7 +436,7 @@ void LeftButtonUp(int x, int y, int Flags)
 		break;
 	case 10:
 	case 11:
-		TASSERT(ModalWindow!=NULL);
+		TASSERT(548, ModalWindow!=NULL);
 		ModalWindow->LeftButtonUp(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		if (GetActionState() == 0 || GetActionState() == 7 || GetActionState() == 8) {
 			delete ModalWindow;
@@ -453,7 +453,7 @@ void LeftButtonUp(int x, int y, int Flags)
 	SetPendingAction(0, 0);
 	LastMouseMove = 0;
 	SetMouseOverText(NULL);
-	TEND2(x, y)
+	TEND2(566, x, y)
 }
 
 // 0x447390, lines 586-599
@@ -472,7 +472,7 @@ void LeftButtonDoubleClick(int x, int y, int Flags)
 		break;
 	case 10:
 	case 11:
-		TASSERT(ModalWindow!=NULL);
+		TASSERT(586, ModalWindow!=NULL);
 		ModalWindow->LeftButtonDoubleClick(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		if (GetActionState() == 0 || GetActionState() == 7 || GetActionState() == 8) {
 			delete ModalWindow;
@@ -484,7 +484,7 @@ void LeftButtonDoubleClick(int x, int y, int Flags)
 	SetPendingAction(6, GetActionNumber());
 	LastMouseMove = 0;
 	SetMouseOverText(NULL);
-	TEND2(x, y)
+	TEND2(599, x, y)
 }
 
 // 0x4476c0, line 619. Only changes the action state; the windows are not told
@@ -503,7 +503,7 @@ void RightButtonDown(int x, int y, int Flags)
 	}
 	LastMouseMove = 0;
 	SetMouseOverText(NULL);
-	TEND
+	TEND(619)
 }
 
 // 0x447880, lines 652-669. Releasing the second of both buttons (state 5)
@@ -529,7 +529,7 @@ void RightButtonUp(int x, int y, int Flags)
 		break;
 	case 10:
 	case 11:
-		TASSERT(ModalWindow!=NULL);
+		TASSERT(652, ModalWindow!=NULL);
 		ModalWindow->RightButtonUp(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Flags);
 		if (GetActionState() == 0) {
 			delete ModalWindow;
@@ -549,7 +549,7 @@ void RightButtonUp(int x, int y, int Flags)
 	}
 	LastMouseMove = 0;
 	SetMouseOverText(NULL);
-	TEND2(x, y)
+	TEND2(669, x, y)
 }
 
 // 0x447bd0, lines 681-692. Direction 1 up, 2 down (MainFrm's OnMouseWheel).
@@ -561,7 +561,7 @@ void MouseWheel(int x, int y, int Direction)
 		break;
 	case 10:
 	case 11:
-		TASSERT(ModalWindow!=NULL);
+		TASSERT(681, ModalWindow!=NULL);
 		ModalWindow->MouseWheel(x - ModalWindow->OffsetX, y - ModalWindow->OffsetY, Direction);
 		break;
 	default:
@@ -570,7 +570,7 @@ void MouseWheel(int x, int y, int Direction)
 	}
 	LastMouseMove = 0;
 	SetMouseOverText(NULL);
-	TEND2(x, y)
+	TEND2(692, x, y)
 }
 
 // 0x447e60, line 1086. Key 0x907 switches the frame rate display.
@@ -595,7 +595,7 @@ void KeyPress(int Key)
 	}
 	LastMouseMove = 0;
 	SetMouseOverText(NULL);
-	TEND1(Key)
+	TEND1(1086, Key)
 }
 
 // 0x4480b0, line 1117. False while a character is in the game; then the
@@ -618,7 +618,7 @@ bool CloseRequest()
 		return false;
 	}
 	return true;
-	TEND
+	TEND(1117)
 }
 
 // 0x44a770, line 1133. After the character list and similar login packets.
@@ -626,7 +626,7 @@ void HandleEvents()
 {
 	TBEGIN
 	ProcessEvents();
-	TEND
+	TEND(1133)
 }
 
 // 0x448290, line 1155. Callback for InitStatus.
@@ -635,7 +635,7 @@ void LinkCopyWarning()
 	TBEGIN
 	SetActionState(0);
 	AddMessage(11, (INT_PTR)"Link Copy Warning", 0);
-	TEND
+	TEND(1155)
 }
 
 // 0x448430, lines 1174-1182. The connect handler for InitNetwork: sends the
@@ -652,14 +652,14 @@ void ConnectionEstablished()
 		int OldConnectionState = GetConnectionState();
 		SetConnectionState(6);
 		OutfitRequested = false;
-		TASSERT2(In(GetActiveCharacter(),0,GetAccountCharacters()-1), GetActiveCharacter(), OldConnectionState);
+		TASSERT2(1174, In(GetActiveCharacter(),0,GetAccountCharacters()-1), GetActiveCharacter(), OldConnectionState);
 		SendGameLogin(GetAccountNumber(), GetCharacterName(GetActiveCharacter()), GetAccountPassword());
 		return;
 	}
 	SetConnectionState(0);
 	Disconnect(true);
 	SetActionState(0);
-	TEND
+	TEND(1182)
 }
 
 // 0x44a900, lines 1208-1280. The receive handler for InitNetwork. The
@@ -687,7 +687,7 @@ void ReceivePackets()
 			case 0x28: ReceiveLoginServerOverloaded(); break;
 			case 0x64: ReceiveCharacterList(); break;
 			default:
-				TERROR1("unknown packet type during login", Type);
+				TERROR1(1208, "unknown packet type during login", Type);
 			}
 		} else {
 			if (GetConnectionState() == 6)
@@ -772,12 +772,12 @@ void ReceivePackets()
 			case 0xd3: ReceiveBuddyLogin(); break;
 			case 0xd4: ReceiveBuddyLogout(); break;
 			default:
-				TERROR1("unknown packet type during game", Type);
+				TERROR1(1274, "unknown packet type during game", Type);
 			}
 		}
 		LastPacketType = Type;
 	}
-	TEND1(Type)
+	TEND1(1280, Type)
 }
 
 // 0x448720, line 1322. The close handler for InitNetwork. A pending
@@ -812,7 +812,7 @@ void ConnectionClosed()
 			AddMessage(3, 0, 0);
 		}
 	}
-	TEND
+	TEND(1322)
 }
 
 // 0x4489a0, line 1379. Called by the main frame's timer. Ten ticks after the
@@ -850,7 +850,7 @@ void TimerEvent()
 	CheckConnectionTimeout();
 	UpdateTimers();
 	UpdateSkulls();
-	TEND
+	TEND(1379)
 }
 
 // 0x4498a0, lines 1541-1560. Handles queued events until a window is open,
@@ -1150,7 +1150,7 @@ void ProcessEvents()
 			CloseCallback();
 			return;
 		default:
-			TERROR1("unknown message type", Type);
+			TERROR1(1541, "unknown message type", Type);
 		}
 		if (ModalWindow != NULL) {
 			if (Type < 0x34) {
@@ -1167,7 +1167,7 @@ Done:
 	if (GetConnectionState() == 8 && MoveCreatures())
 		SendWalk();
 	Redraw(false);
-	TEND1(Type)
+	TEND1(1560, Type)
 }
 
 // 0x448c50, line 1585. Called when the main frame window is created.
@@ -1185,7 +1185,7 @@ void InitWindow(HWND Window, void (*ExitProgram)(), void (*CloseProgram)(),
 	memset(LastPacketTypes, 0, sizeof(LastPacketTypes));
 	LastPacketIndex = 0;
 	Reconnect = false;
-	TEND
+	TEND(1585)
 }
 
 // 0x44b510, line 1633. Initialises the modules; on a PROGRAM_ERROR it shuts
@@ -1216,7 +1216,7 @@ void InitControl(bool Gamemaster)
 		}
 		throw Error;
 	}
-	TEND
+	TEND(1633)
 }
 
 // 0x448e30, line 1661. Called from the main frame's destructor. GetSurface
@@ -1244,5 +1244,5 @@ void ExitControl()
 	ExitMap();
 	ExitObjects();
 	ExitSysinc();
-	TEND
+	TEND(1661)
 }

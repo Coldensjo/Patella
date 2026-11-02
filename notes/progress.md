@@ -64,8 +64,14 @@ clients (the option dialogs; a replayed walk over three floors with automap mark
 forced errors; the error report flow; patches of all five files from crafted login server answers) and
 compares every file they write: Tibia.cfg, the *.map files, Default.txt, error.txt, the patched files and
 Tibia.bak are byte-identical, apart from the times (masked, two runs of Tibia.exe as evidence) and error.txt's
-line numbers (mapped; issue #35). One client bug fixed: the UCRT's ctime pads the day with a space, MSVC 7.1's
+line numbers (mapped then; equal since issue #35). One client bug fixed: the UCRT's ctime pads the day with a space, MSVC 7.1's
 with 0 (src/compat/crt71.h). notes/written-files.md.
+Original line numbers (issue #35, November 2, 2026): every error site names the original's line as its
+macro's first argument (TASSERT(66, s!=NULL), TEND1(1280, Type)); tools/lines.py reads the lines from
+Tibia.exe and checks all 2,089 sites (2,053 matched, 36 explained, 0 mismatches). The difftest compares the
+lines exactly (same check counts), tools/compare_files.py compares error.txt byte for byte except the time.
+Three reconstruction bugs fixed on the way (Talk.cpp IsTalkIgnored's TEND2, Map.cpp AppendObject's reason,
+Communication.cpp's "unknown talk mode" reason). notes/decisions.md "Original line numbers (issue #35)".
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -88,7 +94,9 @@ None.
 ## Last difftest
 
 16,685,370 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(main after merging #34's third part (issue-34c): the second part's 15,258,447 plus the error rounds of
+(issue #35, branch issue-35, full build.cmd, November 2, 2026: the line numbers of every compared exception
+now compared exactly; every count, the error rounds' too, is main's: the line pairs' checks became equality
+checks, one per pair as before. Main after merging #34's third part (issue-34c): the second part's 15,258,447 plus the error rounds of
 Dialogs 200,285 and DialogElements 1,226,638. The second part (issue-34b): the first part's 14,745,663 plus the error rounds of
 ConsoleWindow 287,934, ContentWindows 168,764, MapWindow 12,359 and MainWindow 43,150, statics now 8,496
 (NumberOfBuddies, SurfaceInitInstance); GUI 31,909, DialogWindow 9,501, ContextMenus 8,572, SurfaceDX 155,615,
@@ -114,11 +122,19 @@ no total. Full build.cmd, November 2, 2026).
 - Error paths (issue #22): tools/difftest/imageeh.cpp makes the image's exceptions work in the child
   (EnableImageExceptions ... DisableImageExceptions around the calls); ImageThrow([&] { ... }) and
   OurThrow([&] { ... }) return what escaped as a TThrown, errortest.cpp's Compare compares two of them (line
-  numbers mapped, see notes/decisions.md "Error paths (issue #22)"). With it the image's stringstream works
+  numbers exactly since issue #35; mapped before, see notes/decisions.md "Error paths (issue #22)"). With it the image's stringstream works
   (TMyException messages, error.txt); its ofstream needs errortest.cpp's VC7.1 FILE fakes. A fake of a
   function the original compiled as noreturn (FatalError) must not return. An unbound import the image calls
   while it is enabled is named in a "crash:" line. DIFFTEST_ONLY=Errors runs errortest.cpp alone (ER_TRACE=1,
   ER_LINES=1, ER_SEED=<n>, ER_WATCHDOG=<seconds> prints where a hung run is).
+- Original line numbers (issue #35): every TASSERT*/TERROR*/TEND*/TMYEXCEPTION site (and the file-local
+  TASSERTB*, TASSERT*_BUG, TERROR1B) takes the original's line as its first argument: TASSERT(66, s!=NULL),
+  TEND(1280), TEND1(1280, Type). A new site gets the line the binary pushes for it: `python -I tools/lines.py
+  binary` lists every unit (file, line, strings, function addresses; a TEND's two catch blocks are one unit);
+  then `python -I tools/lines.py check` must report 0 mismatches. A site the binary has no code for (a TEND
+  whose catch blocks the compiler dropped, an assertion it folded or dropped) gets an estimate between its
+  neighbours' lines and an entry in lines.py's EXPLAINED with the reason. A new error macro needs an entry in
+  lines.py's MACROS (how its arguments make the strings). lines.py needs objdump (mingw64) on PATH.
 - Error paths of the window and surface files (issue #34): a test's error round is a TErrorRound
   (imageeh.h) after its counted checks, with its own "<Test> errors: ..." line (the test's own count stays
   unchanged: subtract the round's checks if it runs before the test's print). Test objects throw on demand

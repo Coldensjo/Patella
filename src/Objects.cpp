@@ -39,72 +39,72 @@ static inline bool GetEntryFlag(TProperties &Entry, int Flag)
 static int GetEntryWaypoints(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT1(GetEntryFlag(Entry,BANK), *(int*)Entry.Flags);
+	TASSERT1(67, GetEntryFlag(Entry,BANK), *(int*)Entry.Flags);
 	return Entry.Waypoints;
-	TEND
+	TEND(70)
 }
 
 // 0x4cfe20, lines 91-94
 static int GetEntryBrightness(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT(GetEntryFlag(Entry,LIGHT));
+	TASSERT(91, GetEntryFlag(Entry,LIGHT));
 	return Entry.Brightness;
-	TEND
+	TEND(94)
 }
 
 // 0x4d0090, lines 103-106
 static int GetEntryLightColor(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT(GetEntryFlag(Entry,LIGHT));
+	TASSERT(103, GetEntryFlag(Entry,LIGHT));
 	return Entry.LightColor;
-	TEND
+	TEND(106)
 }
 
 // 0x4d0300, lines 115-118
 static int GetEntryShiftX(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT(GetEntryFlag(Entry,SHIFT));
+	TASSERT(115, GetEntryFlag(Entry,SHIFT));
 	return Entry.ShiftX;
-	TEND
+	TEND(118)
 }
 
 // 0x4d0570, lines 127-130
 static int GetEntryShiftY(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT(GetEntryFlag(Entry,SHIFT));
+	TASSERT(127, GetEntryFlag(Entry,SHIFT));
 	return Entry.ShiftY;
-	TEND
+	TEND(130)
 }
 
 // 0x4d07e0, lines 139-142
 static int GetEntryElevation(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT(GetEntryFlag(Entry,HEIGHT));
+	TASSERT(139, GetEntryFlag(Entry,HEIGHT));
 	return Entry.Elevation;
-	TEND
+	TEND(142)
 }
 
 // 0x4d0a50, lines 151-154
 static int GetEntryAutomapColor(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT(GetEntryFlag(Entry,AUTOMAP));
+	TASSERT(151, GetEntryFlag(Entry,AUTOMAP));
 	return Entry.AutomapColor;
-	TEND
+	TEND(154)
 }
 
 // 0x4d0cc0, lines 163-166
 static int GetEntryLensHelp(TProperties &Entry)
 {
 	TBEGIN
-	TASSERT(GetEntryFlag(Entry,LENSHELP));
+	TASSERT(163, GetEntryFlag(Entry,LENSHELP));
 	return Entry.LensHelp;
-	TEND
+	TEND(166)
 }
 
 // 0x4d0f30, lines 238-244. No try block. The binary inlines In() for the
@@ -113,13 +113,13 @@ static int GetEntryLensHelp(TProperties &Entry)
 static int GetEntrySpriteNumber(TProperties &Entry, int X, int Y, int Layer, int PatternX, int PatternY,
 	int PatternZ, int Phase)
 {
-	TASSERT2(In(X,1,Entry.Width), X, Entry.Width);
-	TASSERT2(In(Y,1,Entry.Height), Y, Entry.Height);
-	TASSERT2(In(Layer,1,Entry.Layers), Layer, Entry.Layers);
-	TASSERT2(In(PatternX,1,Entry.PatternWidth), PatternX, Entry.PatternWidth);
-	TASSERT2(In(PatternY,1,Entry.PatternHeight), PatternY, Entry.PatternHeight);
-	TASSERT2(In(PatternZ,1,Entry.PatternDepth), PatternZ, Entry.PatternDepth);
-	TASSERT2(In(Phase,1,Entry.Phases), Phase, Entry.Phases);
+	TASSERT2(238, In(X,1,Entry.Width), X, Entry.Width);
+	TASSERT2(239, In(Y,1,Entry.Height), Y, Entry.Height);
+	TASSERT2(240, In(Layer,1,Entry.Layers), Layer, Entry.Layers);
+	TASSERT2(241, In(PatternX,1,Entry.PatternWidth), PatternX, Entry.PatternWidth);
+	TASSERT2(242, In(PatternY,1,Entry.PatternHeight), PatternY, Entry.PatternHeight);
+	TASSERT2(243, In(PatternZ,1,Entry.PatternDepth), PatternZ, Entry.PatternDepth);
+	TASSERT2(244, In(Phase,1,Entry.Phases), Phase, Entry.Phases);
 	return Entry.Sprites[((((((Phase - 1) * Entry.PatternDepth + PatternZ - 1) * Entry.PatternHeight
 		+ PatternY - 1) * Entry.PatternWidth + PatternX - 1) * Entry.Layers + Layer - 1) * Entry.Height
 		+ Y - 1) * Entry.Width + X - 1];
@@ -133,9 +133,9 @@ bool GetObjectFlag(int Type, int Flag)
 	TBEGIN
 	if (Type == CREATURE)
 		return Flag == UNPASS;
-	TASSERT2(In(Type,ObjectProperties->low(),ObjectProperties->high()), Type, ObjectProperties->high());
+	TASSERT2(267, In(Type,ObjectProperties->low(),ObjectProperties->high()), Type, ObjectProperties->high());
 	return GetEntryFlag((*ObjectProperties)(Type), Flag);
-	TEND2(Type, Flag)
+	TEND2(270, Type, Flag)
 }
 
 // 0x4d1f30, line 281
@@ -143,7 +143,7 @@ int GetObjectWaypoints(int Type)
 {
 	TBEGIN
 	return GetEntryWaypoints((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(281, Type)
 }
 
 // 0x4d20d0, line 303
@@ -151,7 +151,7 @@ int GetObjectBrightness(int Type)
 {
 	TBEGIN
 	return GetEntryBrightness((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(303, Type)
 }
 
 // 0x4d2270, line 314
@@ -159,7 +159,7 @@ int GetObjectLightColor(int Type)
 {
 	TBEGIN
 	return GetEntryLightColor((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(314, Type)
 }
 
 // 0x4d2410, line 325
@@ -167,7 +167,7 @@ int GetObjectShiftX(int Type)
 {
 	TBEGIN
 	return GetEntryShiftX((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(325, Type)
 }
 
 // 0x4d25b0, line 336
@@ -175,7 +175,7 @@ int GetObjectShiftY(int Type)
 {
 	TBEGIN
 	return GetEntryShiftY((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(336, Type)
 }
 
 // 0x4d2750, line 347
@@ -183,7 +183,7 @@ int GetObjectElevation(int Type)
 {
 	TBEGIN
 	return GetEntryElevation((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(347, Type)
 }
 
 // 0x4d28f0, line 358
@@ -191,7 +191,7 @@ int GetObjectAutomapColor(int Type)
 {
 	TBEGIN
 	return GetEntryAutomapColor((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(358, Type)
 }
 
 // 0x4d2a90, line 369
@@ -199,7 +199,7 @@ int GetObjectLensHelp(int Type)
 {
 	TBEGIN
 	return GetEntryLensHelp((*ObjectProperties)(Type));
-	TEND1(Type)
+	TEND1(369, Type)
 }
 
 // 0x4d2c30, line 380
@@ -207,7 +207,7 @@ int GetObjectWidth(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).Width;
-	TEND1(Type)
+	TEND1(380, Type)
 }
 
 // 0x4d2dd0, line 391
@@ -215,7 +215,7 @@ int GetObjectHeight(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).Height;
-	TEND1(Type)
+	TEND1(391, Type)
 }
 
 // 0x4d2f70, line 402
@@ -223,7 +223,7 @@ int GetObjectExactSize(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).ExactSize;
-	TEND1(Type)
+	TEND1(402, Type)
 }
 
 // 0x4d3110, line 413
@@ -231,7 +231,7 @@ int GetObjectLayers(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).Layers;
-	TEND1(Type)
+	TEND1(413, Type)
 }
 
 // 0x4d32b0, line 424
@@ -239,7 +239,7 @@ int GetObjectPatternWidth(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).PatternWidth;
-	TEND1(Type)
+	TEND1(424, Type)
 }
 
 // 0x4d3450, line 435
@@ -247,7 +247,7 @@ int GetObjectPatternHeight(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).PatternHeight;
-	TEND1(Type)
+	TEND1(435, Type)
 }
 
 // 0x4d35f0, line 446
@@ -255,7 +255,7 @@ int GetObjectPatternDepth(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).PatternDepth;
-	TEND1(Type)
+	TEND1(446, Type)
 }
 
 // 0x4d3790, line 457
@@ -263,7 +263,7 @@ int GetObjectPhases(int Type)
 {
 	TBEGIN
 	return (*ObjectProperties)(Type).Phases;
-	TEND1(Type)
+	TEND1(457, Type)
 }
 
 // 0x4d3930, line 468
@@ -273,7 +273,7 @@ int GetObjectSpriteNumber(int Type, int X, int Y, int Layer, int PatternX, int P
 	TBEGIN
 	return GetEntrySpriteNumber((*ObjectProperties)(Type), X, Y, Layer, PatternX, PatternY, PatternZ,
 		Phase);
-	TEND1(Type)
+	TEND1(468, Type)
 }
 
 // --- Outfits -----------------------------------------------------------------
@@ -283,7 +283,7 @@ bool GetOutfitFlag(int Number, int Flag)
 {
 	TBEGIN
 	return GetEntryFlag((*OutfitProperties)(Number), Flag);
-	TEND2(Number, Flag)
+	TEND2(484, Number, Flag)
 }
 
 // 0x4d3cc0, line 495
@@ -291,7 +291,7 @@ int GetOutfitBrightness(int Number)
 {
 	TBEGIN
 	return GetEntryBrightness((*OutfitProperties)(Number));
-	TEND1(Number)
+	TEND1(495, Number)
 }
 
 // 0x4d3e60, line 506
@@ -299,7 +299,7 @@ int GetOutfitLightColor(int Number)
 {
 	TBEGIN
 	return GetEntryLightColor((*OutfitProperties)(Number));
-	TEND1(Number)
+	TEND1(506, Number)
 }
 
 // 0x4d4000, line 517
@@ -307,7 +307,7 @@ int GetOutfitShiftX(int Number)
 {
 	TBEGIN
 	return GetEntryShiftX((*OutfitProperties)(Number));
-	TEND1(Number)
+	TEND1(517, Number)
 }
 
 // 0x4d41a0, line 528
@@ -315,7 +315,7 @@ int GetOutfitShiftY(int Number)
 {
 	TBEGIN
 	return GetEntryShiftY((*OutfitProperties)(Number));
-	TEND1(Number)
+	TEND1(528, Number)
 }
 
 // 0x4d4340, line 539
@@ -323,7 +323,7 @@ int GetOutfitWidth(int Number)
 {
 	TBEGIN
 	return (*OutfitProperties)(Number).Width;
-	TEND1(Number)
+	TEND1(539, Number)
 }
 
 // 0x4d44e0, line 550. Comes before the height, unlike the object accessors.
@@ -331,7 +331,7 @@ int GetOutfitExactSize(int Number)
 {
 	TBEGIN
 	return (*OutfitProperties)(Number).ExactSize;
-	TEND1(Number)
+	TEND1(550, Number)
 }
 
 // 0x4d4680, line 561
@@ -339,7 +339,7 @@ int GetOutfitHeight(int Number)
 {
 	TBEGIN
 	return (*OutfitProperties)(Number).Height;
-	TEND1(Number)
+	TEND1(561, Number)
 }
 
 // 0x4d4820, line 572
@@ -347,7 +347,7 @@ int GetOutfitLayers(int Number)
 {
 	TBEGIN
 	return (*OutfitProperties)(Number).Layers;
-	TEND1(Number)
+	TEND1(572, Number)
 }
 
 // 0x4d49c0, line 583
@@ -355,7 +355,7 @@ int GetOutfitPhases(int Number)
 {
 	TBEGIN
 	return (*OutfitProperties)(Number).Phases;
-	TEND1(Number)
+	TEND1(583, Number)
 }
 
 // 0x4d4b60, line 594
@@ -363,7 +363,7 @@ int GetOutfitSpriteNumber(int Number, int X, int Y, int Layer, int Direction, in
 {
 	TBEGIN
 	return GetEntrySpriteNumber((*OutfitProperties)(Number), X, Y, Layer, Direction + 1, 1, 1, Phase);
-	TEND1(Number)
+	TEND1(594, Number)
 }
 
 // --- Effects -----------------------------------------------------------------
@@ -373,7 +373,7 @@ bool GetEffectFlag(int Number, int Flag)
 {
 	TBEGIN
 	return GetEntryFlag((*EffectProperties)(Number), Flag);
-	TEND2(Number, Flag)
+	TEND2(610, Number, Flag)
 }
 
 // 0x4d4ef0, line 621
@@ -381,7 +381,7 @@ int GetEffectBrightness(int Number)
 {
 	TBEGIN
 	return GetEntryBrightness((*EffectProperties)(Number));
-	TEND1(Number)
+	TEND1(621, Number)
 }
 
 // 0x4d5090, line 632
@@ -389,7 +389,7 @@ int GetEffectLightColor(int Number)
 {
 	TBEGIN
 	return GetEntryLightColor((*EffectProperties)(Number));
-	TEND1(Number)
+	TEND1(632, Number)
 }
 
 // 0x4d5230, line 643
@@ -397,7 +397,7 @@ int GetEffectWidth(int Number)
 {
 	TBEGIN
 	return (*EffectProperties)(Number).Width;
-	TEND1(Number)
+	TEND1(643, Number)
 }
 
 // 0x4d53d0, line 654
@@ -405,7 +405,7 @@ int GetEffectHeight(int Number)
 {
 	TBEGIN
 	return (*EffectProperties)(Number).Height;
-	TEND1(Number)
+	TEND1(654, Number)
 }
 
 // 0x4d5570, line 665
@@ -413,7 +413,7 @@ int GetEffectLayers(int Number)
 {
 	TBEGIN
 	return (*EffectProperties)(Number).Layers;
-	TEND1(Number)
+	TEND1(665, Number)
 }
 
 // 0x4d5710, line 676
@@ -421,7 +421,7 @@ int GetEffectPhases(int Number)
 {
 	TBEGIN
 	return (*EffectProperties)(Number).Phases;
-	TEND1(Number)
+	TEND1(676, Number)
 }
 
 // 0x4d58b0, line 687
@@ -429,7 +429,7 @@ int GetEffectSpriteNumber(int Number, int X, int Y, int Layer, int Phase)
 {
 	TBEGIN
 	return GetEntrySpriteNumber((*EffectProperties)(Number), X, Y, Layer, 1, 1, 1, Phase);
-	TEND1(Number)
+	TEND1(687, Number)
 }
 
 // --- Missiles ----------------------------------------------------------------
@@ -439,7 +439,7 @@ bool GetMissileFlag(int Number, int Flag)
 {
 	TBEGIN
 	return GetEntryFlag((*MissileProperties)(Number), Flag);
-	TEND2(Number, Flag)
+	TEND2(703, Number, Flag)
 }
 
 // 0x4d5c40, line 714
@@ -447,7 +447,7 @@ int GetMissileBrightness(int Number)
 {
 	TBEGIN
 	return GetEntryBrightness((*MissileProperties)(Number));
-	TEND1(Number)
+	TEND1(714, Number)
 }
 
 // 0x4d5de0, line 725
@@ -455,7 +455,7 @@ int GetMissileLightColor(int Number)
 {
 	TBEGIN
 	return GetEntryLightColor((*MissileProperties)(Number));
-	TEND1(Number)
+	TEND1(725, Number)
 }
 
 // 0x4d5f80, line 736
@@ -463,7 +463,7 @@ int GetMissileWidth(int Number)
 {
 	TBEGIN
 	return (*MissileProperties)(Number).Width;
-	TEND1(Number)
+	TEND1(736, Number)
 }
 
 // 0x4d6120, line 747
@@ -471,7 +471,7 @@ int GetMissileHeight(int Number)
 {
 	TBEGIN
 	return (*MissileProperties)(Number).Height;
-	TEND1(Number)
+	TEND1(747, Number)
 }
 
 // 0x4d62c0, line 758
@@ -479,7 +479,7 @@ int GetMissileLayers(int Number)
 {
 	TBEGIN
 	return (*MissileProperties)(Number).Layers;
-	TEND1(Number)
+	TEND1(758, Number)
 }
 
 // 0x4d6460, lines 766-780. The assertion comes before the try block. The
@@ -488,7 +488,7 @@ int GetMissileLayers(int Number)
 // binary returns 0 there.
 int GetMissileSpriteNumber(int Number, int X, int Y, int Layer, int Direction)
 {
-	TASSERT1(In(Direction,0,7), Direction);
+	TASSERT1(766, In(Direction,0,7), Direction);
 	TBEGIN
 	switch (Direction) {
 	case 0:
@@ -509,7 +509,7 @@ int GetMissileSpriteNumber(int Number, int X, int Y, int Layer, int Direction)
 		return GetEntrySpriteNumber((*MissileProperties)(Number), X, Y, Layer, 1, 1, 1, 1);
 	}
 	return 0;
-	TEND2(Number, Direction)
+	TEND2(780, Number, Direction)
 }
 
 // --- Patterns ----------------------------------------------------------------
@@ -520,7 +520,7 @@ int GetMissileSpriteNumber(int Number, int X, int Y, int Layer, int Direction)
 void GetCumulativePattern(TObject &Obj, int *PatternX, int *PatternY)
 {
 	TBEGIN
-	TASSERT(GetObjectFlag(Obj,CUMULATIVE));
+	TASSERT(796, GetObjectFlag(Obj,CUMULATIVE));
 	int Count = Obj.Data;
 	if (Count < 2) {
 		*PatternX = 0;
@@ -547,17 +547,17 @@ void GetCumulativePattern(TObject &Obj, int *PatternX, int *PatternY)
 	}
 	*PatternX = *PatternX % GetObjectPatternWidth(Obj.Type) + 1;
 	*PatternY = *PatternY % GetObjectPatternHeight(Obj.Type) + 1;
-	TEND
+	TEND(810)
 }
 
 // 0x4d6b20, lines 821-826. Obj.Data is the liquid: four columns per row.
 void GetLiquidPattern(TObject &Obj, int *PatternX, int *PatternY)
 {
 	TBEGIN
-	TASSERT(GetObjectFlag(Obj,LIQUIDPOOL) || GetObjectFlag(Obj,LIQUIDCONTAINER));
+	TASSERT(821, GetObjectFlag(Obj,LIQUIDPOOL) || GetObjectFlag(Obj,LIQUIDCONTAINER));
 	*PatternX = Obj.Data % 4 % GetObjectPatternWidth(Obj.Type) + 1;
 	*PatternY = Obj.Data / 4 % GetObjectPatternHeight(Obj.Type) + 1;
-	TEND
+	TEND(826)
 }
 
 // 0x4d6df0, lines 837-853. Obj.Data2 holds the wall flag the object hangs
@@ -566,7 +566,7 @@ void GetLiquidPattern(TObject &Obj, int *PatternX, int *PatternY)
 void GetHangPattern(TObject &Obj, int *PatternX, int *PatternY)
 {
 	TBEGIN
-	TASSERT(GetObjectFlag(Obj,HANG));
+	TASSERT(837, GetObjectFlag(Obj,HANG));
 	if (Obj.Data2 == HOOKSOUTH)
 		*PatternX = (GetObjectPatternWidth(Obj.Type) >= 2) ? 2 : 1;
 	else if (Obj.Data2 == HOOKEAST)
@@ -574,7 +574,7 @@ void GetHangPattern(TObject &Obj, int *PatternX, int *PatternY)
 	else
 		*PatternX = 1;
 	*PatternY = 1;
-	TEND
+	TEND(853)
 }
 
 // --- Loading -------------------------------------------------------------------
@@ -607,7 +607,7 @@ void ReleaseObjects()
 		delete MissileProperties;
 		MissileProperties = NULL;
 	}
-	TEND
+	TEND(888)
 }
 
 // 0x4d1650, line 939. Reads one entry: flags with their values up to 0xff,
@@ -679,7 +679,7 @@ static void LoadProperties(TReadBinaryFile *File, TProperties *Entry)
 	Entry->Sprites = new uint16[Count];
 	for (int i = 0; i < Count; i++)
 		Entry->Sprites[i] = File->readWord();
-	TEND
+	TEND(939)
 }
 
 // 0x4d7380, lines 948-978. The assertion comes before the try block.
@@ -688,7 +688,7 @@ static void LoadProperties(TReadBinaryFile *File, TProperties *Entry)
 // by close() and by the destructor.
 void LoadObjects(const char *FileName)
 {
-	TASSERT(FileName!=NULL);
+	TASSERT(948, FileName!=NULL);
 	TBEGIN
 	ReleaseObjects();
 	TReadBinaryFile File;
@@ -711,7 +711,7 @@ void LoadObjects(const char *FileName)
 	for (int i = 1; i <= Missiles; i++)
 		LoadProperties(&File, &(*MissileProperties)(i));
 	File.close();
-	TEND
+	TEND(978)
 }
 
 // 0x4d77f0, line 1000. A TMyException while loading becomes PROGRAM_ERROR 1
@@ -730,7 +730,7 @@ void InitObjects()
 	} catch (TMyException &) {
 		throw (PROGRAM_ERROR)1;
 	}
-	TEND
+	TEND(1000)
 }
 
 // 0x4d7b40, line 1012. After Tibia.dat was patched (event 0x45).
@@ -739,7 +739,7 @@ void ReloadObjects()
 	TBEGIN
 	ExitObjects();
 	InitObjects();
-	TEND
+	TEND(1012)
 }
 
 // 0x4d79b0, line 1023
@@ -747,5 +747,5 @@ void ExitObjects()
 {
 	TBEGIN
 	ReleaseObjects();
-	TEND
+	TEND(1023)
 }

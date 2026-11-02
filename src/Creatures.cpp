@@ -28,10 +28,10 @@
 #include <stdlib.h>
 
 // Assertions whose text carries a bug number after the expression.
-#define TASSERT1_BUG(Expr, Bug, V1) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", #V1, V1, "", 0, #Expr " [" #Bug "]")
-#define TASSERT2_BUG(Expr, Bug, V1, V2) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", #V1, V1, #V2, V2, #Expr " [" #Bug "]")
+#define TASSERT1_BUG(Line, Expr, Bug, V1) \
+	if (!(Expr)) throw TMYEXCEPTION(Line, "assertion failed", #V1, V1, "", 0, #Expr " [" #Bug "]")
+#define TASSERT2_BUG(Line, Expr, Bug, V1, V2) \
+	if (!(Expr)) throw TMYEXCEPTION(Line, "assertion failed", #V1, V1, #V2, V2, #Expr " [" #Bug "]")
 
 // Data, in .bss order. 0x5c456c and 0x5c68ac are not used by any code.
 static int BuddySortMethods[3];             // 0x5c4560, 0 name, 1 icon, 2 online; most significant first
@@ -413,7 +413,7 @@ void TCreature::SetPosition(int x, int y, int z)
 		Moving = false;
 		CheckMonsterHint(this);
 	}
-	TEND1(CreatureID)
+	TEND1(108, CreatureID)
 }
 
 // 0x44bbf0. For the player the step not confirmed yet is already drawn.
@@ -487,7 +487,7 @@ void TCreature::StartMovement(int dx, int dy, int Waypoints)
 	}
 	NextStep = GetMilliseconds() + Duration;
 	Moving = true;
-	TEND1(CreatureID)
+	TEND1(142, CreatureID)
 }
 
 // 0x44bf20, line 154
@@ -496,14 +496,14 @@ void TCreature::SetMark(int Mark)
 	TBEGIN
 	this->Mark = Mark;
 	MarkTime = GetMilliseconds() + 1000;
-	TEND1(CreatureID)
+	TEND1(154, CreatureID)
 }
 
 // 0x44c0d0, lines 163-169. Phase 1 stands still; walking runs through
 // phases 2 to AvailablePhases, one every 8 pixels.
 int TCreature::GetAnimationPhase(int AvailablePhases)
 {
-	TASSERT1(AvailablePhases>=1, AvailablePhases);
+	TASSERT1(163, AvailablePhases>=1, AvailablePhases);
 	TBEGIN
 	if (AvailablePhases == 1)
 		return 1;
@@ -513,7 +513,7 @@ int TCreature::GetAnimationPhase(int AvailablePhases)
 	if (Distance <= abs(DeltaY))
 		Distance = abs(DeltaY);
 	return Distance / 8 % (AvailablePhases - 1) + 2;
-	TEND2(CreatureID, AvailablePhases)
+	TEND2(169, CreatureID, AvailablePhases)
 }
 
 // --- The player's walk -----------------------------------------------------
@@ -521,7 +521,7 @@ int TCreature::GetAnimationPhase(int AvailablePhases)
 // 0x44c3c0, line 259. No try block.
 int GetPlayerStep(int Step)
 {
-	TASSERT2(In(Step,0,NumberOfPlayerSteps-1), Step, NumberOfPlayerSteps-1);
+	TASSERT2(259, In(Step,0,NumberOfPlayerSteps-1), Step, NumberOfPlayerSteps-1);
 	return PlayerSteps[Step];
 }
 
@@ -531,7 +531,7 @@ int GetPlayerStep(int Step)
 // stands at (8,6).
 void DoPlayerStep()
 {
-	TASSERT1(CurrentPlayerStep<NumberOfPlayerSteps, CurrentPlayerStep);
+	TASSERT1(278, CurrentPlayerStep<NumberOfPlayerSteps, CurrentPlayerStep);
 	TBEGIN
 	if (NewPlayerDestination || PlayerHealth == 0)
 		return;
@@ -573,7 +573,7 @@ void DoPlayerStep()
 		PlayerStepDirection = 0;
 	else if (dy > 0)
 		PlayerStepDirection = 2;
-	TEND
+	TEND(312)
 }
 
 // 0x4510f0, line 347. Computes the path to the destination and starts its
@@ -620,7 +620,7 @@ int FindPlayerPath()
 		return 0;
 	}
 	return 0;
-	TEND
+	TEND(347)
 }
 
 // 0x451400, line 383. 0 if nothing is to be sent, otherwise the result of
@@ -658,7 +658,7 @@ int SetPlayerDestination(int x, int y, int z, bool Exact, bool Diagonal)
 		}
 	}
 	return 0;
-	TEND
+	TEND(383)
 }
 
 // 0x4516e0, line 413
@@ -678,7 +678,7 @@ void StopPlayer()
 		Player->DeltaX = 0;
 		Player->DeltaY = 0;
 	}
-	TEND
+	TEND(413)
 }
 
 // 0x4518b0, line 435. The server refused a step: turn to NewDirection and
@@ -699,7 +699,7 @@ bool CancelPlayerWalk(int NewDirection)
 		}
 	}
 	return false;
-	TEND2(NewDirection, GetPlayerID())
+	TEND2(435, NewDirection, GetPlayerID())
 }
 
 // --- The creature table ----------------------------------------------------
@@ -711,7 +711,7 @@ bool CancelPlayerWalk(int NewDirection)
 // throw, so the compiler dropped it with its catch blocks.
 TCreature *AddCreature(uint32 RemoveID, uint32 NewCreatureID)
 {
-	TASSERT(NewCreatureID!=0);
+	TASSERT(450, NewCreatureID!=0);
 	TBEGIN
 	int Index = -1;
 	for (int i = 0; i < CREATURES; i++) {
@@ -730,13 +730,13 @@ TCreature *AddCreature(uint32 RemoveID, uint32 NewCreatureID)
 	Creature->SkullTime = 0;
 	Creature->CreatureID = NewCreatureID;
 	return Creature;
-	TEND
+	TEND(470)
 }
 
 // 0x44c6e0, line 476. No try block.
 TCreature *GetCreature(uint32 CreatureID)
 {
-	TASSERT(CreatureID!=0);
+	TASSERT(476, CreatureID!=0);
 	for (int i = 0; i < CREATURES; i++) {
 		if (Creatures[i].CreatureID == CreatureID)
 			return &Creatures[i];
@@ -757,7 +757,7 @@ void UpdateSkulls()
 			Creature->PKFlag = 0;
 		}
 	}
-	TEND
+	TEND(504)
 }
 
 // 0x44c8c0, line 517
@@ -767,7 +767,7 @@ void HideCreature(int CreatureID)
 	TCreature *Creature = GetCreature(CreatureID);
 	if (Creature != NULL)
 		Creature->Visible = false;
-	TEND1(CreatureID)
+	TEND1(517, CreatureID)
 }
 
 // 0x451ab0, line 549. Advances the walk animations; when the player's step
@@ -808,7 +808,7 @@ bool MoveCreatures()
 		}
 	}
 	return Result;
-	TEND
+	TEND(549)
 }
 
 // 0x451db0, lines 573-592. Help hints (CheckEventHelpName) for the monsters next
@@ -816,7 +816,7 @@ bool MoveCreatures()
 // fails IsOpponent's assertion.
 void CheckMonsterHint(TCreature *Creature)
 {
-	TASSERT(Creature!=NULL);
+	TASSERT(573, Creature!=NULL);
 	TBEGIN
 	if (!Creature->Visible)
 		return;
@@ -825,7 +825,7 @@ void CheckMonsterHint(TCreature *Creature)
 		int Number = GetNumberOfOpponents();
 		for (int i = 0; i < Number; i++) {
 			TCreature *Opponent = GetOpponent(i);
-			TASSERT(Opponent!=NULL);
+			TASSERT(585, Opponent!=NULL);
 			if (!IsPlayer(Opponent->CreatureID) && abs(Opponent->RealX - Player->RealX) <= 2
 					&& abs(Opponent->RealY - Player->RealY) <= 2)
 				CheckEventHelpName(Opponent->Name);
@@ -834,7 +834,7 @@ void CheckMonsterHint(TCreature *Creature)
 			&& abs(Creature->RealX - Player->RealX) <= 2 && abs(Creature->RealY - Player->RealY) <= 2) {
 		CheckEventHelpName(Creature->Name);
 	}
-	TEND
+	TEND(592)
 }
 
 // 0x44ca60, line 604. Communication.cpp passes the skull of every creature
@@ -844,7 +844,7 @@ void NotifySkull(int Flag)
 	TBEGIN
 	if (Flag != 0)
 		AddEventHelp(13);
-	TEND1(Flag)
+	TEND1(604, Flag)
 }
 
 // --- Experience and skills -------------------------------------------------
@@ -853,7 +853,7 @@ void NotifySkull(int Flag)
 // levels 2, 8 and 20; none while the level is unknown (0).
 void SetPlayerExperience(int Experience, int Level, int Progress)
 {
-	TASSERT1_BUG(In(Progress,-1,100), bug0000038, Progress);
+	TASSERT1_BUG(634, In(Progress,-1,100), bug0000038, Progress);
 	TBEGIN
 	if (PlayerLevel != 0 && PlayerExperience == 0 && Experience > 0)
 		AddEventHelp(7);
@@ -866,39 +866,39 @@ void SetPlayerExperience(int Experience, int Level, int Progress)
 	PlayerExperience = Experience;
 	PlayerLevel = Level;
 	PlayerLevelProgress = Progress;
-	TEND
+	TEND(644)
 }
 
 // 0x44cf10, lines 687-693. SkillNumber is not checked.
 void SetPlayerSkill(int SkillNumber, int Value, int Progress)
 {
-	TASSERT1(In(Progress,0,100), Progress);
+	TASSERT1(687, In(Progress,0,100), Progress);
 	TBEGIN
 	if (PlayerSkillValue[SkillNumber] != 0 && PlayerSkillValue[SkillNumber] < Value)
 		AddEventHelp(9);
 	PlayerSkillProgress[SkillNumber] = Progress;
 	PlayerSkillValue[SkillNumber] = Value;
-	TEND2(SkillNumber, Value)
+	TEND2(693, SkillNumber, Value)
 }
 
 // 0x44d1c0, line 804. No try block.
 int GetPlayerSkillValue(int SkillNumber)
 {
-	TASSERT1(In(SkillNumber,0,SKILLS-1), SkillNumber);
+	TASSERT1(804, In(SkillNumber,0,SKILLS-1), SkillNumber);
 	return PlayerSkillValue[SkillNumber];
 }
 
 // 0x44d320, line 813. No try block.
 int GetPlayerSkillProgress(int SkillNumber)
 {
-	TASSERT1(In(SkillNumber,0,SKILLS-1), SkillNumber);
+	TASSERT1(813, In(SkillNumber,0,SKILLS-1), SkillNumber);
 	return PlayerSkillProgress[SkillNumber];
 }
 
 // 0x44d480, line 822. No try block.
 const char *GetSkillName(int SkillNumber)
 {
-	TASSERT1(In(SkillNumber,0,SKILLS-1), SkillNumber);
+	TASSERT1(822, In(SkillNumber,0,SKILLS-1), SkillNumber);
 	switch (SkillNumber) {
 	case 0: return "Fist Fighting";
 	case 1: return "Club Fighting";
@@ -938,7 +938,7 @@ int GetPlayerPartyFlag()
 // (outfit 0 showing object 0).
 bool IsOpponent(TCreature *Creature)
 {
-	TASSERT(Creature!=NULL);
+	TASSERT(987, Creature!=NULL);
 	if (Creature->CreatureID == 0 || Creature->CreatureID == GetPlayerID() || !Creature->Visible)
 		return false;
 	if (!IsPlayer(Creature->CreatureID) && Creature->OutfitType == 0 && Creature->Colors[0] == 0)
@@ -946,7 +946,7 @@ bool IsOpponent(TCreature *Creature)
 	if (Creature->Health < 1)
 		return false;
 	TCreature *Player = GetCreature(GetPlayerID());
-	TASSERT(Player!=NULL);
+	TASSERT(994, Player!=NULL);
 	if (Creature->RealZ != Player->RealZ || abs(Creature->RealX - Player->RealX) > 7)
 		return false;
 	return abs(Creature->RealY - Player->RealY) <= 5;
@@ -986,13 +986,13 @@ int GetNumberOfOpponents()
 		}
 	}
 	return Number;
-	TEND
+	TEND(1029)
 }
 
 // 0x44dc70, line 1037. No try block. Number counts from 0 in list order.
 TCreature *GetOpponent(int Number)
 {
-	TASSERT1(Number>=0, Number);
+	TASSERT1(1037, Number>=0, Number);
 	int i = FirstOpponent;
 	while (i != -1 && Number > 0) {
 		i = Creatures[i].NextOpponent;
@@ -1009,9 +1009,9 @@ TCreature *GetOpponent(int Number)
 // before buddy j (also when they are equal).
 bool CompareBuddies(int i, int j)
 {
-	TASSERT1(i!=j, i);
-	TASSERT2(In(i,0,NumberOfBuddies-1), i, NumberOfBuddies-1);
-	TASSERT2(In(j,0,NumberOfBuddies-1), j, NumberOfBuddies-1);
+	TASSERT1(1069, i!=j, i);
+	TASSERT2(1070, In(i,0,NumberOfBuddies-1), i, NumberOfBuddies-1);
+	TASSERT2(1071, In(j,0,NumberOfBuddies-1), j, NumberOfBuddies-1);
 	for (int k = 0; k < 3; k++) {
 		switch (BuddySortMethods[k]) {
 		case 0: {
@@ -1042,9 +1042,9 @@ bool CompareBuddies(int i, int j)
 // 0x44e260, lines 1097-1099. No try block.
 void SwapBuddies(int i, int j)
 {
-	TASSERT1(i!=j, i);
-	TASSERT2(In(i,0,NumberOfBuddies-1), i, NumberOfBuddies-1);
-	TASSERT2(In(j,0,NumberOfBuddies-1), j, NumberOfBuddies-1);
+	TASSERT1(1097, i!=j, i);
+	TASSERT2(1098, In(i,0,NumberOfBuddies-1), i, NumberOfBuddies-1);
+	TASSERT2(1099, In(j,0,NumberOfBuddies-1), j, NumberOfBuddies-1);
 	TBuddyEntry Help = Buddies[i];
 	Buddies[i] = Buddies[j];
 	Buddies[j] = Help;
@@ -1060,14 +1060,14 @@ void SortBuddies()
 				SwapBuddies(i, j);
 		}
 	}
-	TEND
+	TEND(1116)
 }
 
 // 0x44e7d0, lines 1124-1135. Moves buddy i to its place. CompareBuddies is
 // also true for equal buddies, so i first moves up past every equal one.
 void SortBuddy(int i)
 {
-	TASSERT2(In(i,0,NumberOfBuddies-1), i, NumberOfBuddies-1);
+	TASSERT2(1124, In(i,0,NumberOfBuddies-1), i, NumberOfBuddies-1);
 	TBEGIN
 	while (i > 0 && CompareBuddies(i, i - 1)) {
 		SwapBuddies(i, i - 1);
@@ -1077,24 +1077,24 @@ void SortBuddy(int i)
 		SwapBuddies(i, i + 1);
 		i++;
 	}
-	TEND1(i)
+	TEND1(1135, i)
 }
 
 // 0x44eab0, lines 1144-1170. Adds the buddy or updates the entry. An
 // entry that was online and is updated as offline stays counted as online.
 void AddBuddy(uint32 CharacterID, const char *Name, bool Online)
 {
-	TASSERT(Name!=NULL);
-	TASSERT1(strlen(Name)<30, strlen(Name));
+	TASSERT(1144, Name!=NULL);
+	TASSERT1(1145, strlen(Name)<30, strlen(Name));
 	TBEGIN
 	int Position = GetBuddyPosition(CharacterID);
 	if (Position == -1) {
-		TASSERT1(NumberOfBuddies<BUDDIES, NumberOfBuddies);
+		TASSERT1(1151, NumberOfBuddies<BUDDIES, NumberOfBuddies);
 		Position = NumberOfBuddies++;
 		if (Online)
 			NumberOfOnlineBuddies++;
 	} else {
-		TASSERT1(NumberOfBuddies<=BUDDIES, NumberOfBuddies);
+		TASSERT1(1156, NumberOfBuddies<=BUDDIES, NumberOfBuddies);
 		if (Online && !Buddies[Position].Online)
 			NumberOfOnlineBuddies++;
 	}
@@ -1105,7 +1105,7 @@ void AddBuddy(uint32 CharacterID, const char *Name, bool Online)
 	Buddy->LoginAction = 0;
 	Buddy->Icon = GetBuddyIcon(CharacterID);
 	SortBuddy(Position);
-	TEND1(CharacterID)
+	TEND1(1170, CharacterID)
 }
 
 // 0x44f000, line 1192
@@ -1128,15 +1128,15 @@ void SetBuddyState(uint32 CharacterID, bool Online)
 		SetStatusMessage(Text, false);
 	}
 	SortBuddy(Position);
-	TEND1(CharacterID)
+	TEND1(1192, CharacterID)
 }
 
 // 0x44f230, lines 1200-1210. Stores the buddy's data in the preferences
 // (an empty entry deletes it there) and resorts the list.
 void EditBuddy(int CharacterID, int Icon, const char *Description, bool Notify)
 {
-	TASSERT(CharacterID!=0);
-	TASSERT(Description!=NULL);
+	TASSERT(1200, CharacterID!=0);
+	TASSERT(1201, Description!=NULL);
 	TBEGIN
 	if (Icon == 0 && Description[0] == 0 && !Notify)
 		DeleteBuddy(CharacterID);
@@ -1147,7 +1147,7 @@ void EditBuddy(int CharacterID, int Icon, const char *Description, bool Notify)
 		Buddies[Position].Icon = Icon;
 		SortBuddy(Position);
 	}
-	TEND1(CharacterID)
+	TEND1(1210, CharacterID)
 }
 
 // 0x44f5e0, line 1227. Message 0x1a (Status.cpp) gets a copy of the name.
@@ -1164,7 +1164,7 @@ void RemoveBuddy(uint32 CharacterID)
 		Buddies[i] = Buddies[i + 1];
 	NumberOfBuddies--;
 	DeleteBuddy(CharacterID);
-	TEND1(CharacterID)
+	TEND1(1227, CharacterID)
 }
 
 // 0x44f810, line 1247. Method becomes the most significant sort key. With
@@ -1186,7 +1186,7 @@ void SetBuddySortMethod(int Method)
 	for (int i = 0; i < 3; i++)
 		Methods[i] = BuddySortMethods[i];
 	SetBuddySortmethods(Methods);
-	TEND1(Method)
+	TEND1(1247, Method)
 }
 
 // 0x44fa00, line 1259
@@ -1196,7 +1196,7 @@ void HideOfflineBuddies(bool Hide)
 	SetBuddyHideOffline(Hide);
 	if (Hide)
 		SetBuddySortMethod(2);
-	TEND
+	TEND(1259)
 }
 
 // 0x44fba0, line 1280
@@ -1206,27 +1206,27 @@ int GetNumberOfBuddies()
 	if (GetBuddyHideOffline())
 		return NumberOfOnlineBuddies;
 	return NumberOfBuddies;
-	TEND
+	TEND(1280)
 }
 
 // 0x44fd40, line 1288. No try block.
 uint32 GetBuddyListID(int Position)
 {
-	TASSERT2(In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
+	TASSERT2(1288, In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
 	return Buddies[Position].CharacterID;
 }
 
 // 0x44feb0, line 1297. No try block.
 const char *GetBuddyListName(int Position)
 {
-	TASSERT2(In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
+	TASSERT2(1297, In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
 	return Buddies[Position].Name;
 }
 
 // 0x450020, line 1306. No try block.
 bool GetBuddyListOnline(int Position)
 {
-	TASSERT2(In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
+	TASSERT2(1306, In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
 	return Buddies[Position].Online;
 }
 
@@ -1234,7 +1234,7 @@ bool GetBuddyListOnline(int Position)
 // actions ago.
 bool GetBuddyListNew(int Position)
 {
-	TASSERT2(In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
+	TASSERT2(1316, In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
 	if (Buddies[Position].Online && GetActionNumber() - 10 < Buddies[Position].LoginAction)
 		return true;
 	return false;
@@ -1243,26 +1243,26 @@ bool GetBuddyListNew(int Position)
 // 0x450330, line 1325. No try block.
 int GetBuddyListIcon(int Position)
 {
-	TASSERT2_BUG(In(Position,0,NumberOfBuddies-1), bug0000289, Position, NumberOfBuddies-1);
+	TASSERT2_BUG(1325, In(Position,0,NumberOfBuddies-1), bug0000289, Position, NumberOfBuddies-1);
 	return Buddies[Position].Icon;
 }
 
 // 0x4504a0, lines 1334-1338
 const char *GetBuddyListDescription(int Position)
 {
-	TASSERT2(In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
+	TASSERT2(1334, In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
 	TBEGIN
 	return GetBuddyDescription(Buddies[Position].CharacterID);
-	TEND1(Position)
+	TEND1(1338, Position)
 }
 
 // 0x450740, lines 1346-1350
 bool GetBuddyListNotify(int Position)
 {
-	TASSERT2(In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
+	TASSERT2(1346, In(Position,0,NumberOfBuddies-1), Position, NumberOfBuddies-1);
 	TBEGIN
 	return GetBuddyNotify(Buddies[Position].CharacterID);
-	TEND1(Position)
+	TEND1(1350, Position)
 }
 
 // --- Initialisation --------------------------------------------------------
@@ -1272,7 +1272,7 @@ void InitCreatures()
 {
 	TBEGIN
 	ResetCreatures();
-	TEND
+	TEND(1366)
 }
 
 // 0x4509e0, line 1414. Called by InitCreatures and EnterGame. The beat,
@@ -1321,7 +1321,7 @@ void ResetCreatures()
 		if (In(Methods[i],0,2))
 			BuddySortMethods[i] = Methods[i];
 	}
-	TEND
+	TEND(1414)
 }
 
 // Empty; the linker kept one copy of the identical empty functions (0x496160,

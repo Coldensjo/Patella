@@ -29,7 +29,7 @@ public:
 	// Utils.h line 50 (inline, emitted at 0x4ca300).
 	void SetSize(int NewSize)
 	{
-		TASSERT1(NewSize>=0, NewSize);
+		TASSERT1(50, NewSize>=0, NewSize);
 		Size = NewSize;
 	}
 

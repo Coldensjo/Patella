@@ -19,8 +19,8 @@
 #include <mmsystem.h>
 
 // The image's assertions with a bug number append it to the expression text.
-#define TASSERTB1(Expr, V1, Bug) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", #V1, V1, "", 0, #Expr " " Bug)
+#define TASSERTB1(Line, Expr, V1, Bug) \
+	if (!(Expr)) throw TMYEXCEPTION(Line, "assertion failed", #V1, V1, "", 0, #Expr " " Bug)
 
 // The factory allocates 0x250 bytes.
 static_assert(sizeof(TSurfaceDX) == 0x250, "TSurfaceDX's size");
@@ -832,9 +832,9 @@ void TSurfaceDX::InitSurfaces()
 // (PROGRAM_ERROR 9 when no clipper can be made).
 void TSurfaceDX::AttachWindow()
 {
-	TASSERT(DirectDraw!=NULL);
-	TASSERT(hWindow!=NULL);
-	TASSERT(Surface[PRIMARY_SURFACE]!=NULL);
+	TASSERT(267, DirectDraw!=NULL);
+	TASSERT(268, hWindow!=NULL);
+	TASSERT(269, Surface[PRIMARY_SURFACE]!=NULL);
 	IDirectDrawClipper *Clipper;
 	if (DirectDraw->CreateClipper(0, &Clipper, NULL) != DD_OK)
 		throw (PROGRAM_ERROR)9;
@@ -854,12 +854,12 @@ void TSurfaceDX::StretchBlitUnclipped(int ToSurface, TRect ToRect, int FromSurfa
 		Blit(ToSurface, ToRect.x, ToRect.y, FromSurface, FromRect, ColorKey);
 		return;
 	}
-	TASSERT(FromSurface!=TEMP_SURFACE);
-	TASSERT(FromSurface!=STRETCH_SURFACE);
-	TASSERT(ToSurface!=TEMP_SURFACE);
-	TASSERT(ToSurface!=STRETCH_SURFACE);
-	TASSERT(FromRect.width+1<=Rect[TEMP_SURFACE].right && FromRect.height+1<=Rect[TEMP_SURFACE].bottom);
-	TASSERT(ToRect.width<=Rect[STRETCH_SURFACE].right && ToRect.height<=Rect[STRETCH_SURFACE].bottom);
+	TASSERT(614, FromSurface!=TEMP_SURFACE);
+	TASSERT(615, FromSurface!=STRETCH_SURFACE);
+	TASSERT(616, ToSurface!=TEMP_SURFACE);
+	TASSERT(617, ToSurface!=STRETCH_SURFACE);
+	TASSERT(618, FromRect.width+1<=Rect[TEMP_SURFACE].right && FromRect.height+1<=Rect[TEMP_SURFACE].bottom);
+	TASSERT(619, ToRect.width<=Rect[STRETCH_SURFACE].right && ToRect.height<=Rect[STRETCH_SURFACE].bottom);
 	FillRectangle(TEMP_SURFACE, TRect(0, 0, FromRect.width + 1, FromRect.height + 1), Highlight);
 	Blit(TEMP_SURFACE, 0, 0, FromSurface, FromRect, ColorKey);
 	StretchBlitRect(STRETCH_SURFACE, TRect(0, 0, ToRect.width, ToRect.height), TEMP_SURFACE,
@@ -875,12 +875,12 @@ void TSurfaceDX::StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect
 		BlitClipped(ToSurface, ToRect.x, ToRect.y, FromSurface, FromRect, ColorKey, Clip);
 		return;
 	}
-	TASSERT(FromSurface!=TEMP_SURFACE);
-	TASSERT(FromSurface!=STRETCH_SURFACE);
-	TASSERT(ToSurface!=TEMP_SURFACE);
-	TASSERT(ToSurface!=STRETCH_SURFACE);
-	TASSERT(FromRect.width+1<=Rect[TEMP_SURFACE].right && FromRect.height+1<=Rect[TEMP_SURFACE].bottom);
-	TASSERT(ToRect.width<=Rect[STRETCH_SURFACE].right && ToRect.height<=Rect[STRETCH_SURFACE].bottom);
+	TASSERT(678, FromSurface!=TEMP_SURFACE);
+	TASSERT(679, FromSurface!=STRETCH_SURFACE);
+	TASSERT(680, ToSurface!=TEMP_SURFACE);
+	TASSERT(681, ToSurface!=STRETCH_SURFACE);
+	TASSERT(682, FromRect.width+1<=Rect[TEMP_SURFACE].right && FromRect.height+1<=Rect[TEMP_SURFACE].bottom);
+	TASSERT(683, ToRect.width<=Rect[STRETCH_SURFACE].right && ToRect.height<=Rect[STRETCH_SURFACE].bottom);
 	FillRectangle(TEMP_SURFACE, TRect(0, 0, FromRect.width + 1, FromRect.height + 1), Highlight);
 	Blit(TEMP_SURFACE, 0, 0, FromSurface, FromRect, ColorKey);
 	StretchBlitRect(STRETCH_SURFACE, TRect(0, 0, ToRect.width, ToRect.height), TEMP_SURFACE,
@@ -892,7 +892,7 @@ void TSurfaceDX::StretchBlit(int ToSurface, TRect ToRect, int FromSurface, TRect
 // 0x4ee410, line 811. Clipped to the destination surface.
 void TSurfaceDX::Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRect, TRGBColor ColorKey)
 {
-	TASSERT(FromRect.width>0 && FromRect.height>0);
+	TASSERT(811, FromRect.width>0 && FromRect.height>0);
 	TRect Clip;
 	GetSurfaceRect(ToSurface, &Clip);
 	BlitClipped(ToSurface, x, y, FromSurface, FromRect, ColorKey, Clip);
@@ -901,7 +901,7 @@ void TSurfaceDX::Blit(int ToSurface, int x, int y, int FromSurface, TRect FromRe
 // 0x4ee630, line 824
 void TSurfaceDX::BlitRect(int ToSurface, int x, int y, int FromSurface, TRect FromRect)
 {
-	TASSERT(FromRect.width>0 && FromRect.height>0);
+	TASSERT(824, FromRect.width>0 && FromRect.height>0);
 	TRect Clip;
 	GetSurfaceRect(ToSurface, &Clip);
 	BlitRectClipped(ToSurface, x, y, FromSurface, FromRect, Clip);
@@ -911,10 +911,10 @@ void TSurfaceDX::BlitRect(int ToSurface, int x, int y, int FromSurface, TRect Fr
 // mode, the display mode (PROGRAM_ERROR 10 and 11 when they fail).
 void TSurfaceDX::InitDisplay(int VMode, TFullscreenMode *GMode)
 {
-	TASSERT(DirectDraw!=NULL);
-	TASSERT(hWindow!=NULL);
-	TASSERT(VMode==WINDOWED_MODE || VMode==FULLSCREEN_MODE);
-	TASSERT(VMode==WINDOWED_MODE || GMode!=NULL);
+	TASSERT(972, DirectDraw!=NULL);
+	TASSERT(973, hWindow!=NULL);
+	TASSERT(974, VMode==WINDOWED_MODE || VMode==FULLSCREEN_MODE);
+	TASSERT(975, VMode==WINDOWED_MODE || GMode!=NULL);
 	if (VMode == WINDOWED_MODE) {
 		if (DirectDraw->SetCooperativeLevel(hWindow, DDSCL_NORMAL) != DD_OK)
 			throw (PROGRAM_ERROR)10;
@@ -951,15 +951,15 @@ void TSurfaceDX::InitDisplay(int VMode, TFullscreenMode *GMode)
 // not created; GetDisplayMode's Desc is not zeroed.
 void TSurfaceDX::CreateSurfaces()
 {
-	TASSERT(DirectDraw!=NULL);
-	TASSERT(Direct3D==NULL);
-	TASSERT(Surface[PRIMARY_SURFACE]==NULL);
-	TASSERT(Surface[SCREEN_SURFACE]==NULL);
-	TASSERT(Surface[TEMP_SURFACE]==NULL);
-	TASSERT(Surface[CACHE_SURFACE]==NULL);
-	TASSERT(Surface[AUTOMAP_SURFACE]==NULL);
-	TASSERT(Surface[SPRITE_SURFACE]==NULL);
-	TASSERT(ViewMode==WINDOWED_MODE || ViewMode==FULLSCREEN_MODE);
+	TASSERT(1106, DirectDraw!=NULL);
+	TASSERT(1107, Direct3D==NULL);
+	TASSERT(1108, Surface[PRIMARY_SURFACE]==NULL);
+	TASSERT(1109, Surface[SCREEN_SURFACE]==NULL);
+	TASSERT(1110, Surface[TEMP_SURFACE]==NULL);
+	TASSERT(1111, Surface[CACHE_SURFACE]==NULL);
+	TASSERT(1112, Surface[AUTOMAP_SURFACE]==NULL);
+	TASSERT(1113, Surface[SPRITE_SURFACE]==NULL);
+	TASSERT(1114, ViewMode==WINDOWED_MODE || ViewMode==FULLSCREEN_MODE);
 	NumberOfSurfaces = 0;
 	DDSURFACEDESC2 Desc;
 	Desc.dwSize = sizeof(Desc);
@@ -1067,7 +1067,7 @@ void TSurfaceDX::CreateSurfaces()
 // 0x4efb70, line 1411
 void TSurfaceDX::GetSurfaceRect(int Surface, TRect *Rect)
 {
-	TASSERTB1(In(Surface,0,NUMBER_OF_SURFACES-1), Surface, "[bug0000290]");
+	TASSERTB1(1411, In(Surface,0,NUMBER_OF_SURFACES-1), Surface, "[bug0000290]");
 	Rect->x = this->Rect[Surface].left;
 	Rect->y = this->Rect[Surface].top;
 	Rect->width = this->Rect[Surface].right - this->Rect[Surface].left;
