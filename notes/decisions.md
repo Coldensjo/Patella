@@ -2527,8 +2527,9 @@ Claude Opus 5.5 (issue #23), November 2, 2026.
   address of the function whose /GS cookie was overwritten. SetThreadStackGuarantee(64 KB) leaves the
   vectored handler stack after a stack overflow. Child exit codes: 0 passed, 1 failures, 2 could not
   start, 3 abort, 4 heap check failed.
-- **_heapchk() after every test, always** (high). It costs nothing measurable (runs took 181-200 s
-  before and after). It finds corruption of the heap's own structures (a large-block overrun is reported
+- **_heapchk() after every test, always** (high). It costs nothing measurable (full build.cmd runs took
+  174-201 s before, 177-273 s after with other worktrees building at the same time; 30 final runs, 10
+  each from cmd, PowerShell and Git Bash, all with 14,015,187 + 67 + 3,201 checks and 0 failures). It finds corruption of the heap's own structures (a large-block overrun is reported
   "in the heap check after TestX"); an overrun inside the low-fragmentation heap's small blocks can stay
   unnoticed until the heap trips over it.
 - **Job object and timeout** (high). The child is in a job with KILL_ON_JOB_CLOSE (it dies with the
