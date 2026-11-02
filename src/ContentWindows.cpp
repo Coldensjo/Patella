@@ -2795,11 +2795,19 @@ int TTradeWindowBody::GetContentHeight()
 }
 
 // 0x434010, line 3066. The height is limited to the range between the
-// minimum and the maximum height (both read twice, in either order).
+// minimum and the maximum height (both read twice, in either order). The
+// calls go in the binary's order (0x43403f-0x434064: maximum, minimum, for
+// the lower bound, then again for the upper one) in their own variables:
+// in one expression our compiler called them in another order (issue #34).
 void TTradeWindowBody::SetSize(int Width, int Height)
 {
 	TBEGIN
-	Limit(&Height, (std::min)(GetMaximumHeight(), getMinimumHeight()), (std::max)(GetMaximumHeight(), getMinimumHeight()));
+	int Maximum = GetMaximumHeight();
+	int Minimum = getMinimumHeight();
+	int Lower = (std::min)(Maximum, Minimum);
+	Maximum = GetMaximumHeight();
+	Minimum = getMinimumHeight();
+	Limit(&Height, Lower, (std::max)(Maximum, Minimum));
 	TWindow::SetSize(Width, Height);
 	SetChildArea(Buttons, SkinProperties.Style6FC.DataB8);
 	SetChildArea(Offers, SkinProperties.Style6FC.Data58);
@@ -3059,12 +3067,14 @@ int TBuddylistWindowBody::GetContentHeight()
 }
 
 // 0x4360c0, line 3389. The row under x, y; -1 for none. Odd, kept: y is
-// not tested against the top.
+// not tested against the top. y gets the scroll position in place
+// (0x43611f, the parameter's slot): TEND2(x, y) prints the moved y (issue #34).
 int TBuddylistWindowBody::GetBuddyAt(int x, int y)
 {
 	TBEGIN
 	if (!IsMinimized()) {
-		int Position = (y + ScrollBar->Range->Value) / SkinProperties.BuddylistWindow.Data04;
+		y += ScrollBar->Range->Value;
+		int Position = y / SkinProperties.BuddylistWindow.Data04;
 		if (x >= 0 && x <= Width - ScrollBar->Width && Position < GetNumberOfBuddies())
 			return Position;
 	}

@@ -260,7 +260,12 @@ class TCWTestScrollBar : public TFakeScrollBar {
 public:
 	TCWTestScrollBar() : TFakeScrollBar(TRect(0, 0, 0, 0), 0, 0, 0, 0, 0) {}
 	~TCWTestScrollBar() {}
-	int getMinimumHeight() { return ScrollMinimumHeight; }
+	int getMinimumHeight()
+	{
+		Tick(); // (the error round: a call of the bodies' getMinimumHeight may fail here)
+		return ScrollMinimumHeight;
+	}
+	bool LeftButtonDown(int x, int y, int Flags); // TWindow's, after a tick (below)
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d,%dx%d;", Name(this).c_str(), Surface, x, y, Width, Height); }
 	bool MouseWheel(int x, int y, int Code)
 	{
@@ -286,6 +291,16 @@ static void *TestVtable(void *Ours)
 	void *Hybrid = ImageSideVtable(Ours, Window ? OurWindowBase : OurElementBase, Window ? 0x564528 : 0x5645c8);
 	Kinds[ORIGINAL][Hybrid] = Kinds[ORIGINAL][Ours];
 	return Hybrid;
+}
+// The scroll bar's press is TWindow's (the image's in the error round, as
+// ImageSideVtable gives the methods it does not override), after a tick:
+// the presses of the bodies that pass a press on to their children may fail.
+bool TCWTestScrollBar::LeftButtonDown(int x, int y, int Flags)
+{
+	Tick();
+	if (ContentRound != NULL && Side == ORIGINAL)
+		return At<bool (__fastcall *)(void *, void *, int, int, int)>(0x49dff0)(this, NULL, x, y, Flags);
+	return TFakeScrollBar::LeftButtonDown(x, y, Flags);
 }
 
 // Replaces "@<pointer>" in the reported arguments by the object's name.
@@ -1964,9 +1979,434 @@ static void Build()
 
 // --- Error paths (issue #34) ---------------------------------------------------
 
+// One call on both sides (consolewindowtest.cpp's ConsoleCall): the Fail-th
+// fake call it makes throws (0: none); what both threw is compared, then the
+// logs and, unless it threw or a member was cleared for it (Dump false), the
+// windows.
+template <class F> static void ContentCall(const char *What, F Call, bool Dump = true, int Fail = 0)
+{
+	Stage = What;
+	ContentRound->Calling(What, "ours");
+	FakeOurPrintf(true);
+	TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Call(OURS); });
+	FakeOurPrintf(false);
+	ContentRound->Calling(What, "the original");
+	TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Call(ORIGINAL); });
+	FailAt = 0;
+	Side = OURS;
+	ContentRound->Compare(What, A, B);
+	bool Thrown = A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING, Before = Threw;
+	Threw = Before || Thrown || !Dump;
+	Compare(What);
+	Threw = Before || Thrown;
+}
+
+static bool Parts(const char *Kind, TComponent **P)
+{
+	P[OURS] = Find(OURS, Kind);
+	P[ORIGINAL] = Find(ORIGINAL, Kind);
+	return P[OURS] != NULL && P[ORIGINAL] != NULL;
+}
+static TScrollBar *ScrollOf(TComponent *C, const std::string &Kind)
+{
+	if (Kind == "ContainerBody")
+		return ((TContainerWindowBody *)C)->ScrollBar;
+	if (Kind == "SkillsBody")
+		return ((TSkillsWindowBody *)C)->ScrollBar;
+	if (Kind == "BattleBody")
+		return ((TBattleWindowBody *)C)->ScrollBar;
+	if (Kind == "TradeOffers")
+		return ((TTradeOffers *)C)->ScrollBar;
+	return ((TBuddylistWindowBody *)C)->ScrollBar;
+}
+
+// The assertions the actions keep to (each before a change: the windows
+// are the same after one), on the round's windows; the world is restored
+// after them.
+static void DirectAssertions()
+{
+	typedef void *(__fastcall *IntCtorFn)(void *, void *, int);
+	TMainWindow *Main = (TMainWindow *)(TWindow *)Receiver;
+	TComponent *P[2];
+	char What[128];
+	TContentWorld Saved = World;
+	for (int i = 0; i < 9; i++)
+		World.States[i] = Random() % 2 == 0;
+	// Drawing at negative coordinates.
+	static const char *const Drawn[] = {"States", "InvView", "Status", "ContainerBody", "SkillsBody", "BattleBody",
+		"TradeOffers", "TradeNames", "TradeButtons", "BuddyBody"};
+	for (const char *Kind : Drawn) {
+		if (!Parts(Kind, P))
+			continue;
+		int Neg = -1 - (int)(Random() % 200), Which = Random() % 3;
+		int x = Which != 1 ? Neg : (int)(Random() % 5), y = Which != 0 ? Neg : (int)(Random() % 5);
+		sprintf(What, "errors: %s Draw at %d,%d", Kind, x, y);
+		ContentCall(What, [&](int s) { P[s]->Draw(1, x, y); });
+		Threw = false;
+	}
+	// A VIP list scrolled by part of a row, drawn at 0, 0: the first row's icon
+	// is above the edge.
+	if (Parts("BuddyBody", P) && World.Buddies > 0) {
+		for (int i = 0; i < NBUDDIES; i++)
+			World.BuddyIcon[i] = 1 + i % 10;
+		ContentCall("errors: BuddyBody Draw", [&](int s) { P[s]->Draw(1, 0, 0); });
+		Threw = false;
+		TScrollBar *Bar = ScrollOf(P[OURS], "BuddyBody");
+		int Maximum = ((int *)((TFakeScrollBarRange *)Bar->Range)->Data00)[1];
+		if (Maximum > 0) {
+			int Value = 1 + (int)(Random() % Maximum);
+			for (int s = 0; s < 2; s++)
+				ScrollOf(P[s], "BuddyBody")->Range->Value = Value;
+			sprintf(What, "errors: BuddyBody Draw scrolled by %d", Value);
+			ContentCall(What, [&](int s) { P[s]->Draw(1, 0, 0); });
+			Threw = false;
+		}
+	}
+	// Help mode without a parent.
+	static const char *const Helped[] = {"InvView", "Combat", "ContainerBody", "SkillsBody", "BattleBody", "TradeBody",
+		"BuddyBody"};
+	for (const char *Kind : Helped) {
+		if (!Parts(Kind, P))
+			continue;
+		TComponent *Parent[2] = {P[OURS]->Parent, P[ORIGINAL]->Parent};
+		P[OURS]->Parent = P[ORIGINAL]->Parent = NULL;
+		sprintf(What, "errors: %s HelpMouseMove without a parent", Kind);
+		ContentCall(What, [&](int s) { P[s]->HelpMouseMove(3, 3); }, false);
+		P[OURS]->Parent = Parent[OURS];
+		P[ORIGINAL]->Parent = Parent[ORIGINAL];
+		Threw = false;
+	}
+	// A width without room for the scroll bar.
+	static const char *const Scrolled[] = {"ContainerBody", "SkillsBody", "BattleBody", "BuddyBody"};
+	for (const char *Kind : Scrolled) {
+		if (!Parts(Kind, P))
+			continue;
+		int Width = ScrollOf(P[OURS], Kind)->Width - (int)(Random() % 4), Height = P[OURS]->Height;
+		sprintf(What, "errors: %s SetSize %d", Kind, Width);
+		ContentCall(What, [&](int s) { P[s]->SetSize(Width, Height); });
+		Threw = false;
+	}
+	// A use object that is empty or a creature (action state 7), an empty
+	// trade object (8), released over a slot or row with an object.
+	World.UseObject = TObject();
+	if (Random() % 2 == 0)
+		World.UseObject.Type = CREATURE;
+	World.TradeObject = TObject();
+	World.ActionState = 7;
+	if (Parts("InvView", P)) {
+		int Slot = Random() % 10;
+		World.Body[Slot + 1] = RandomObject(false);
+		TRect &Area = SkinProperties.Style288.Data60[Slot];
+		int x = Area.x + 1, y = Area.y + 1;
+		sprintf(What, "errors: InvView LeftButtonUp use object %d", World.UseObject.Type);
+		ContentCall(What, [&](int s) { P[s]->LeftButtonUp(x, y, 0); });
+		Threw = false;
+	}
+	if (Parts("ContainerBody", P)) {
+		TContainerWindowBody *B = (TContainerWindowBody *)P[OURS];
+		World.ContainerOpen[B->Container] = true;
+		if (World.ObjectCount[B->Container] == 0)
+			World.ObjectCount[B->Container] = 1;
+		World.Contents[B->Container][0] = RandomObject(false);
+		int x = SkinProperties.Data630.x + 1, y = SkinProperties.Data630.y + 1 - B->ScrollBar->Range->Value;
+		sprintf(What, "errors: ContainerBody LeftButtonUp use object %d", World.UseObject.Type);
+		ContentCall(What, [&](int s) { P[s]->LeftButtonUp(x, y, 0); });
+		Threw = false;
+	}
+	if (Parts("BattleBody", P) && World.Opponents > 0) {
+		TBattleWindowBody *B = (TBattleWindowBody *)P[OURS];
+		int y = 1 - B->ScrollBar->Range->Value;
+		for (int State = 7; State <= 8; State++) {
+			World.ActionState = State;
+			sprintf(What, "errors: BattleBody LeftButtonUp action state %d, use object %d", State,
+				World.UseObject.Type);
+			ContentCall(What, [&](int s) { P[s]->LeftButtonUp(1, y, 0); });
+			Threw = false;
+		}
+	}
+	World = Saved;
+	// The members' arguments.
+	if (Parts("States", P)) {
+		int Position = Random() % 2 == 0 ? -1 - (int)(Random() % 3)
+			: SkinProperties.PlayerStates.NumberOfIcons + (int)(Random() % 3);
+		sprintf(What, "errors: TPlayerStates::GetIcon %d", Position);
+		ContentCall(What, [&](int s) {
+			if (s == OURS) ((TPlayerStates *)P[s])->GetIcon(Position);
+			else At<IntIntFn>(0x429990)(P[s], NULL, Position); });
+		Threw = false;
+	}
+	if (Parts("SkillsBody", P)) {
+		TSkillsWindowBody *B = (TSkillsWindowBody *)P[OURS];
+		int Line = Random() % 2 == 0 ? -(int)(Random() % 3) : B->Lines + 1 + (int)(Random() % 3);
+		switch (Random() % 4) {
+		case 0: // a negative value
+			Line = 1 + Random() % 7;
+			if (Line == 2 || Line == 7)
+				Line = 3;
+			World.Experience = World.Health = World.Mana = World.Soul = World.Capacity = -1 - (int)(Random() % 50);
+			break;
+		case 1: // a progress out of range
+			Line = Random() % 2 == 0 ? 2 : Random() % 2 == 0 ? 7 : 9 + (int)(Random() % 7);
+			World.LevelBar = World.MagLevelBar = true;
+			for (int i = 0; i < 7; i++)
+				World.SkillBar[i] = true;
+			World.LevelProgress = World.MagicProgress = World.SkillProgress[Line < 9 ? 0 : Line - 9]
+				= Random() % 2 == 0 ? -2 - (int)(Random() % 5) : 101 + (int)(Random() % 5);
+			break;
+		}
+		sprintf(What, "errors: TSkillsWindowBody::GetLine %d", Line);
+		ContentCall(What, [&](int s) {
+			char Text[100] = "";
+			int Value = 0, Progress = 0;
+			if (s == OURS) ((TSkillsWindowBody *)P[s])->GetLine(Line, Text, Value, Progress);
+			else At<LineFn>(0x42f6a0)(P[s], NULL, Line, Text, &Value, &Progress); });
+		Threw = false;
+		World = Saved;
+	}
+	// The trade parts sized to nothing: SetChildArea's assertions (GUI.cpp).
+	static const char *const Trade[] = {"TradeNames", "TradeButtons"};
+	for (const char *Kind : Trade) {
+		if (!Parts(Kind, P))
+			continue;
+		int Width = Random() % 2 == 0 ? 0 : P[OURS]->Width, Height = Width == 0 ? P[OURS]->Height : 0;
+		sprintf(What, "errors: %s SetSize %d,%d", Kind, Width, Height);
+		ContentCall(What, [&](int s) { P[s]->SetSize(Width, Height); });
+		Threw = false;
+	}
+	if (Parts("TradeButtons", P)) {
+		ContentCall("errors: TTradeButtons::ShowAcceptButton NULL", [&](int s) {
+			if (s == OURS) ((TTradeButtons *)P[s])->ShowAcceptButton(NULL);
+			else At<PointerArgFn>(0x433940)(P[s], NULL, NULL); });
+		Threw = false;
+	}
+	// The constructors' checks (the objects are left).
+	ContentCall("errors: TButtonsWindow::TButtonsWindow NULL", [&](int s) {
+		if (s == OURS) new TButtonsWindow(NULL, Main);
+		else At<ButtonsCtorFn>(0x426480)(PatternNew(0x58), NULL, NULL, Main); });
+	Threw = false;
+	int Skin = NumberOfSkins + (int)(Random() % 3);
+	ContentCall("errors: TCompassRose::TCompassRose", [&](int s) {
+		if (s == OURS) new TCompassRose(Skin);
+		else At<IntCtorFn>(0x428680)(PatternNew(0x28), NULL, Skin); });
+	Threw = false;
+}
+
+// The TEND blocks the actions rarely reach: calls whose Fail-th fake call
+// fails, in a random order until one throws.
+static void DirectFailures()
+{
+	TComponent *P[2];
+	char What[128];
+	int Order[25];
+	for (int i = 0; i < 25; i++)
+		Order[i] = i < 23 ? i : 16; // (the mouse events and drawing of any part three times)
+	for (int i = 24; i > 0; i--)
+		std::swap(Order[i], Order[Random() % (i + 1)]);
+	static const char *const Minimum[] = {"ContainerBody", "SkillsBody", "BattleBody", "TradeOffers", "TradeBody",
+		"BuddyBody"};
+	static const char *const Wheeled[] = {"ContainerBody", "SkillsBody", "TradeOffers", "BuddyBody"};
+	for (int i = 0; i < 25 && !Threw; i++) {
+		int Fail = 1 + (int)(Random() % 3);
+		const char *Kind = NULL;
+		switch (Order[i]) {
+		case 0:
+			if (Parts(Kind = "Automap", P))
+				ContentCall("errors: Automap HelpMouseMove", [&](int s) { P[s]->HelpMouseMove(5, 5); }, true, Fail);
+			break;
+		case 1:
+			if (Parts(Kind = "Automap", P))
+				ContentCall("errors: Automap Arrange", [&](int s) { P[s]->Arrange(); }, true, Fail);
+			break;
+		case 2:
+			if (Parts(Kind = "Automap", P)) {
+				int Event = 3 + Random() % 2;
+				ContentCall("errors: Automap HandleEvent 106", [&](int s) { P[s]->HandleEvent(106); });
+				sprintf(What, "errors: Automap HandleEvent %d", Event);
+				ContentCall(What, [&](int s) { P[s]->HandleEvent(Event); }, true, Fail);
+			}
+			break;
+		case 3:
+			if (Parts(Kind = "Rose", P))
+				ContentCall("errors: Rose MouseHover", [&](int s) { P[s]->MouseHover(3, 3); }, true, Fail);
+			break;
+		case 4:
+			if (Parts(Kind = "Capacity", P))
+				ContentCall("errors: Capacity Draw", [&](int s) { P[s]->Draw(1, 5, 5); }, true, Fail);
+			break;
+		case 5:
+			if (Parts(Kind = Minimum[Random() % 6], P)) {
+				sprintf(What, "errors: %s getMinimumHeight", Kind);
+				ContentCall(What, [&](int s) { P[s]->getMinimumHeight(); }, true, Fail);
+			}
+			break;
+		case 6:
+			if (Parts(Kind = Wheeled[Random() % 4], P)) {
+				int x = (int)(Random() % (P[OURS]->Width + 1)), y = (int)(Random() % (P[OURS]->Height + 1));
+				int Code = 1 + Random() % 2;
+				sprintf(What, "errors: %s MouseWheel %d,%d,%d", Kind, x, y, Code);
+				ContentCall(What, [&](int s) { P[s]->MouseWheel(x, y, Code); }, true, Fail);
+			}
+			break;
+		case 7:
+			if (Parts(Kind = "ContainerBody", P)) {
+				for (int s = 0; s < 2; s++)
+					((TContainerWindowBody *)P[s])->HasParent = true;
+				ContentCall("errors: ContainerBody HandleEvent 3", [&](int s) { P[s]->HandleEvent(3); }, true, Fail);
+			}
+			break;
+		case 8:
+			if (Parts(Kind = Random() % 2 == 0 ? "SkillsBody" : "BattleBody", P)) {
+				sprintf(What, "errors: %s GetInitialHeight", Kind);
+				ContentCall(What, [&](int s) { ((TSubWindowBody *)P[s])->GetInitialHeight(); }, true, Fail);
+			}
+			break;
+		case 9:
+			// (a press on the scroll bar, or anywhere)
+			if (Parts(Kind = "BattleBody", P) || Parts(Kind = "TradeOffers", P)) {
+				int x = Random() % 3 != 0 ? ScrollOf(P[OURS], Kind)->OffsetX + 1 : (int)(Random() % (P[OURS]->Width + 1));
+				int y = 1 + (int)(Random() % 4);
+				sprintf(What, "errors: %s LeftButtonDown %d,%d", Kind, x, y);
+				ContentCall(What, [&](int s) { P[s]->LeftButtonDown(x, y, 0); }, true, Fail);
+			}
+			break;
+		case 10:
+		case 11:
+			if (Parts(Kind = Order[i] == 10 ? "TradeNames" : "TradeButtons", P)) {
+				int Width = P[OURS]->Width, Height = P[OURS]->Height;
+				sprintf(What, "errors: %s SetSize", Kind);
+				ContentCall(What, [&](int s) { P[s]->SetSize(Width, Height); }, true, Fail);
+			}
+			break;
+		case 12: {
+			TComponent *Made[2] = {NULL, NULL};
+			ContentCall("errors: TTradeButtons::TTradeButtons", [&](int s) {
+				Made[s] = s == OURS ? (TComponent *)new TTradeButtons
+					: (TComponent *)At<CtorFn>(0x432f00)(PatternNew(0x4c), NULL); }, true, Fail);
+			if (!Threw && Made[OURS] != NULL && Made[ORIGINAL] != NULL)
+				ContentCall("errors: TTradeButtons deleted", [&](int s) { delete Made[s]; });
+			break;
+		}
+		case 13:
+			if (Parts(Kind = "Status", P))
+				ContentCall("errors: Status Arrange", [&](int s) { P[s]->Arrange(); }, true, Fail);
+			break;
+		case 14:
+			if (Parts(Kind = Random() % 2 == 0 ? "TradeBody" : "TradeButtons", P)) {
+				sprintf(What, "errors: %s Arrange", Kind);
+				ContentCall(What, [&](int s) { P[s]->Arrange(); }, true, Fail);
+			}
+			break;
+		case 15:
+			if (Parts(Kind = "BuddyBody", P))
+				ContentCall("errors: BuddyBody HelpMouseMove", [&](int s) { P[s]->HelpMouseMove(3, 3); }, true, Fail);
+			break;
+		case 16:
+			// A mouse event or drawing of any part.
+			if ((Kind = RandomTarget()) != NULL && Parts(Kind, P)) {
+				int x, y, Method = Random() % 7, Flags = RandomFlags();
+				RandomPoint(P[OURS], Kind, x, y);
+				static const char *const Names[] = {"LeftButtonDown", "LeftButtonUp", "RightButtonUp", "MouseWheel",
+					"MouseHover", "HelpMouseMove", "Draw"};
+				char Text[128];
+				sprintf(Text, "errors: %s %s %d,%d", Kind, Names[Method], x, y);
+				ContentCall(Text, [&](int s) {
+					switch (Method) {
+					case 0: P[s]->LeftButtonDown(x, y, Flags); break;
+					case 1: P[s]->LeftButtonUp(x, y, Flags); break;
+					case 2: P[s]->RightButtonUp(x, y, Flags); break;
+					case 3: P[s]->MouseWheel(x, y, 1 + Flags % 2); break;
+					case 4: P[s]->MouseHover(x, y); break;
+					case 5: P[s]->HelpMouseMove(x, y); break;
+					case 6: P[s]->Draw(1, x, y); break;
+					} }, true, Fail);
+			}
+			break;
+		case 17:
+			if (Parts(Kind = "TradeButtons", P))
+				ContentCall("errors: TTradeButtons::Wait", [&](int s) {
+					if (s == OURS) ((TTradeButtons *)P[s])->Wait();
+					else At<VoidFn>(0x433c40)(P[s], NULL); }, true, Fail);
+			break;
+		case 18:
+			if (Parts(Kind = "Combat", P)) {
+				int Event = 99 + Random() % 8;
+				sprintf(What, "errors: Combat HandleEvent %d", Event);
+				ContentCall(What, [&](int s) { P[s]->HandleEvent(Event); }, true, Fail);
+			}
+			break;
+		case 19:
+			if (Parts(Kind = "TradeButtons", P)) {
+				bool Cancel = Random() % 2 == 0;
+				ContentCall("errors: TTradeButtons::SetCancelButton", [&](int s) {
+					if (s == OURS) ((TTradeButtons *)P[s])->SetCancelButton(Cancel);
+					else At<BoolArgFn>(0x433720)(P[s], NULL, Cancel); }, true, Fail);
+			}
+			break;
+		case 20:
+			if (Parts(Kind = "TradeButtons", P))
+				ContentCall("errors: TradeButtons Draw", [&](int s) { P[s]->Draw(1, 4, 4); }, true, Fail);
+			break;
+		case 21:
+			// An arm of the compass rose of a centred view (Scroll reads the map position).
+			if (Parts(Kind = "Automap", P)) {
+				TComponent *Rose[2] = {Find(OURS, "Rose"), Find(ORIGINAL, "Rose")};
+				int x, y;
+				RandomPoint(Rose[OURS], "Rose", x, y);
+				ContentCall("errors: Automap HandleEvent 106", [&](int s) { P[s]->HandleEvent(106); });
+				sprintf(What, "errors: Rose LeftButtonUp %d,%d", x, y);
+				ContentCall(What, [&](int s) { Rose[s]->LeftButtonUp(x, y, 0); }, true, Fail);
+			}
+			break;
+		case 22:
+			// A press on a body slot (it may drag the slot's object).
+			if (Parts(Kind = "InvView", P)) {
+				TRect &Area = SkinProperties.Style288.Data60[Random() % 10];
+				int x = Area.x + 2, y = Area.y + 2;
+				sprintf(What, "errors: InvView LeftButtonDown %d,%d", x, y);
+				ContentCall(What, [&](int s) { P[s]->LeftButtonDown(x, y, 0); }, true, Fail);
+			}
+			break;
+		}
+	}
+}
+
+// New windows for an error round (false: the construction threw).
+static bool NewWindows()
+{
+	Threw = false;
+	for (int s = 0; s < 2; s++) {
+		Roles[s].clear();
+		Arguments[s].clear();
+		LabelTexts[s].clear();
+	}
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+	RandomWorld(true);
+	Stage = "errors: constructor";
+	CurrentAction = 12;
+	Build();
+	Compare("errors: constructor");
+	return !Threw;
+}
+static void DeleteWindows()
+{
+	Stage = "errors: destructor";
+	CurrentAction = 13;
+	Both([&](int s) {
+		delete Column[s];
+		delete Checked[s];
+		Column[s] = Checked[s] = NULL;
+	});
+	CHECK(Log[OURS] == Log[ORIGINAL], "ContentWindows errors destructor (%s): logs differ\n  ours: %s\n  orig: %s",
+		ScenarioNames[Scenario], Log[OURS].c_str(), Log[ORIGINAL].c_str());
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+}
+
 // Every TASSERT/TERROR of ContentWindows.cpp and the TEND blocks: the test's
 // actions on new windows, the calls of one action per round failing at one
-// of the fake calls such a call made before, until one throws.
+// of the fake calls such a call made before, until one throws; then direct
+// calls with failing arguments and failing fakes.
 static void TestContentWindowsErrors()
 {
 	TErrorRound R("ContentWindows");
@@ -2006,6 +2446,23 @@ static void TestContentWindowsErrors()
 			ScenarioNames[Scenario], Log[OURS].c_str(), Log[ORIGINAL].c_str());
 		Log[OURS].clear();
 		Log[ORIGINAL].clear();
+	}
+	// The direct calls, on new windows after a few actions.
+	TargetAction = -1;
+	for (int Round = 0; Round < 800; Round++) {
+		if (!NewWindows())
+			continue;
+		int Actions = Random() % 10;
+		for (int i = 0; i < Actions && !Threw; i++) {
+			Action();
+			Compare("errors: action");
+		}
+		if (Threw)
+			continue;
+		DirectAssertions();
+		DirectFailures();
+		if (!Threw)
+			DeleteWindows();
 	}
 	TargetAction = -1;
 	Threw = false;
