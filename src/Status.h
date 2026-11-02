@@ -136,6 +136,41 @@ const char *GetCharacterName(int Number);
 const char *GetCharacterWorld(int Number);
 const char *GetCharacterIPAddress(int Number);
 int GetCharacterPort(int Number);
+
+// The regular expression of a link (a domain or an IPv4 address), which
+// CheckClipboardText looks for in copied text; InitStatus compiles it.
+// Defined here with internal linkage: every object that includes this
+// header has its own copy of the pointer in .data (all point to the text
+// 0x55b758), 17 in the image (notes/decisions.md, "LinkPattern (issue
+// #33)"):
+//
+//   0x5c039c Communication.obj   0x5c16f4 graphics.obj
+//   0x5c0668 ConsoleWindow.obj   0x5c1704 GUI.obj
+//   0x5c08c4 ContentWindows.obj  0x5c1bac MainFrm.obj
+//   0x5c0b20 ContextMenus.obj    0x5c1e08 MainWindow.obj
+//   0x5c0b30 Control.obj         0x5c22b0 MapWindow.obj
+//   0x5c0fdc Creatures.obj       0x5c22c0 Network.obj
+//   0x5c122c DialogElements.obj  0x5c22c8 Player.obj
+//   0x5c1488 Dialogs.obj         0x5c2560 Status.obj (the one InitStatus reads)
+//   0x5c16e4 DialogWindow.obj
+//
+// MainFrm.obj, MainWindow.obj and Player.obj medium (they use Status.cpp,
+// their neighbours do not), the others high. Only Status.cpp reads it. The
+// name is ours.
+static char *LinkPattern =
+	"(^|[ .,:;/@<>|()\"\n\r%])(([a-z0-9-]+(\\.|\\%2e))+(ac|ad|ae|aero|af|ag|ai|al|am|an|ao|aq|a"
+	"r|arpa|as|at|au|aw|az|ba|bb|bd|be|bf|bg|bh|bi|biz|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|c"
+	"d|cf|cg|ch|ci|ck|cl|cm|cn|co|com|coop|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|edu|ee|eg|er|"
+	"es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gov|gp|gq|gr|gs|gt|gu|gw|gy|hk"
+	"|hm|hn|hr|ht|hu|id|ie|il|im|in|info|int|io|iq|ir|is|it|je|jm|jo|jobs|jp|ke|kg|kh|ki|km|kn|"
+	"kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mil|mk|ml|mm|mn|mo|mobi|mp|mq|"
+	"mr|ms|mt|mu|museum|mv|mw|mx|my|mz|na|name|nc|ne|net|nf|ng|ni|nl|no|np|nr|nu|nz|om|org|pa|p"
+	"e|pf|pg|ph|pk|pl|pm|pn|pr|pro|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|"
+	"sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|travel|tt|tv|tw|tz|ua|ug"
+	"|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)\\.?|[0-9][0-9]?[0-9]?(\\.|\\"
+	"%2e)[0-9][0-9]?[0-9]?(\\.|\\%2e)[0-9][0-9]?[0-9]?(\\.|\\%2e)[0-9][0-9]?[0-9]?)([?#& .,:;/@"
+	"<>|()\"\r\n%]|$)";
+
 void CheckClipboardText(const char *Text, int Length);
 void CopyToClipboard(const char *text);
 void CopyTaintedClipboardText();

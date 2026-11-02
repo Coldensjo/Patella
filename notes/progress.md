@@ -106,6 +106,8 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 - The text header's table is copied into every object that includes it; use
   the copy of the object at hand: include src/Text.h in the .cpp (its entries
   are static; Text.h lists the sixteen copies and their objects).
+- Status.h defines LinkPattern (static, issue #33): every object that includes Status.h has a copy in
+  .data (17 in the image); only Status.cpp reads its own. A .cpp that uses Status.cpp includes Status.h.
 - mapwindowtest.cpp's PatchWorld redirects many functions of our Map, Creatures,
   Status, Preferences, Talk, Help, graphics, GUI and Inventory code for good;
   keep it the last test in difftest.cpp or restore them.
