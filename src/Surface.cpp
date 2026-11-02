@@ -13,6 +13,7 @@
 
 // Data, in .data and .bss order. The shared data the engines use (Surface.h)
 // lies around this file's own; 0x71d0f8 and up are SurfaceDX.cpp's.
+int CommandLineEngine = -1;         // 0x5c2564, set by Player.cpp from "engine N"
 int CacheSurfaceWidth = 256;        // 0x5c2568
 int CacheSurfaceHeight = 256;       // 0x5c256c
 int InitStep;                       // 0x71d0bc
@@ -132,8 +133,8 @@ void SurfaceInitInstance(HWND *Window)
 {
 	SurfaceWindow = *Window;
 	bool Chosen = false;
-	if (DAT_005c2564 >= 0 && DAT_005c2564 < 3) {
-		curEngine = DAT_005c2564;
+	if (CommandLineEngine >= 0 && CommandLineEngine < 3) {
+		curEngine = CommandLineEngine;
 		SetEngine(curEngine);
 		return;
 	}

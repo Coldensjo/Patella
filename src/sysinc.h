@@ -19,3 +19,8 @@ void ExitSysinc();
 void ResizeClipboardBuffer(unsigned int Size);
 char *GetClipboardText();
 bool SetClipboardText(const char *Text);
+
+// One half of the XOR-encoded window title and class name; Player.cpp has the
+// keys and decodes them.
+extern const int TitleCode[8];       // 0x5733a4
+extern const int ClassNameCode[11];  // 0x5733c4

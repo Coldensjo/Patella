@@ -232,3 +232,12 @@ None.
   be large enough for every write (a too small test texture corrupted the heap once). DIFFTEST_ONLY=SurfaceDX9
   runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).
 - TRect's members may be width/height in the original (issue #29).
+- Unknown-owner data (issue #12, notes/decisions.md): every object that includes the text header has
+  a full copy of its table (147 entries, 0x24c bytes, "You are poisoned" ... "Report Rule Violation");
+  the object whose code reads an entry owns that copy (Player.obj 0x5c22cc, MapWindow.obj 0x5c2064,
+  Control.obj 0x5c0b34). The window objects' unused NoCallback sits at the end of their .bss, one
+  __xc initialiser per object (Control.obj 0x5c4558, Creatures.obj 0x5cc418). The "engine N" value
+  is Surface.cpp's CommandLineEngine (Surface.h).
+- SurfaceGL.cpp (#11): the XOR code tables right after its last .rdata string (0x5733a4/0x5733c4) were
+  given to sysinc.cpp (low: file-scope data comes first in an object's .rdata); if SurfaceGL.cpp turns
+  out to define file-scope data after its functions, move them there.

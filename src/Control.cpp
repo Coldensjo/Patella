@@ -48,6 +48,11 @@ static void (*CloseCallback)();               // 0x5c4534, called by event 0x48
 static void (*ExitCallback)();                // 0x5c4538, stored but not used here
 static HWND WindowHandle;                     // 0x5c453c
 static bool ShowFPS;                          // 0x5c4554, toggled by key 0x907
+// At 0x5c4558, constructed by the static initialiser 0x559df0 as
+// TCallback(NULL, 0) and never used (the other window files have one too);
+// the end of Control.obj's .bss, after ShowFPS and before Creatures.obj's
+// BuddySortMethods (0x5c4560).
+static TCallback NoCallback(NULL, 0);
 
 // 0x445900. For error.txt (Player.cpp's HandleException): the last ten
 // packet types, newest first.

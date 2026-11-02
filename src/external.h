@@ -126,7 +126,7 @@ public:
 };
 bool FUN_004f9710(HDC Context);         // 0x4f9710, SurfaceGL.cpp (file-ranges.tsv): OpenGL works on the context
 
-// Text table (owner unknown, .data 0x5c0c80-0x5c0d7c).
+// Control.obj's copy of the text table (.data 0x5c0b34-0x5c0d7f; only Control.cpp reads it).
 extern const char *TextCharacterListLoading; // 0x5c0ce8
 extern const char *TextConnectingGameWorld;  // 0x5c0cec
 extern const char *TextWaitForCharacterList; // 0x5c0cf0
@@ -292,10 +292,6 @@ extern const char *TextNetworkOptionsURL;             // 0x5c1474, "...options#n
 // MainFrm.cpp (MainFrm.h)
 #include "MainFrm.h"
 
-// Owner unknown (.data after Status.cpp's 0x5c2560): set by "engine N" on
-// the command line, read by SurfaceInitInstance; -1 = none.
-extern int DAT_005c2564;                // 0x5c2564
-
-
-// Owner unknown: a table of message texts in .data (0x5c2480-0x5c2517).
-extern const char *DAT_005c249c;        // 0x5c249c, "The Tibia client encountered a critical error ..."
+// Player.obj's copy of the text table (.data 0x5c22cc-0x5c2517; name ours),
+// the entry Player.cpp reads:
+extern const char *TextCriticalError;   // 0x5c249c, "The Tibia client encountered a critical error ..."

@@ -316,11 +316,11 @@ callcheck differences, caller integration and differential coverage.
   CMainFrame::OutputErrorInformations (0x4a8360) are named after Player.cpp's
   catch texts (high).
 - **The XOR code tables at 0x5733a4/0x5733c4** are in another object's
-  .rdata (owner unknown; the key tables at 0x56dd98/0x56ddb8 are Player's,
-  next to its vtable). Both are written as static tables in Player.cpp.
-- **The critical-error text pointer 0x5c249c** is part of a table of UI
-  texts (0x5c2480-0x5c2517) whose owner is unknown; declared in external.h
-  as DAT_005c249c.
+  .rdata (the key tables at 0x56dd98/0x56ddb8 are Player's, next to its
+  vtable); issue #12 gave them to sysinc.cpp (see "Unknown-owner data").
+- **The critical-error text pointer 0x5c249c** is an entry of Player.obj's
+  copy of the text table (0x5c22cc-0x5c2517): TextCriticalError in external.h
+  (issue #12, see "Unknown-owner data").
 - **Source order**: no line evidence for the message map, constructor,
   FatalError, CountTibiaWindows, the error handlers and ReadErrorFile; they
   are in binary order around the decoders (62, 75); InitInstance (255-347),
@@ -394,9 +394,9 @@ callcheck differences, caller integration and differential coverage.
   states around ChoosePixelFormat/DescribePixelFormat without a try-block
   entry; the compiler drops handlers that only guard C functions. The catch
   body is unknown; it is written like the first one (PROGRAM_ERROR 12), low.
-- **0x5c2564** (the "engine N" value) stays DAT_005c2564 in external.h: it is
-  in .data after Status.cpp's 0x5c2560, written by Player.cpp and read here;
-  its owner is not clear.
+- **0x5c2564** (the "engine N" value) is Surface.cpp's CommandLineEngine
+  (issue #12, see "Unknown-owner data"): in .data after Status.cpp's 0x5c2560
+  and before CacheSurfaceWidth, written by Player.cpp and read here.
 
 ## sysinc.cpp and the SurfaceGL/sysinc gap
 
@@ -543,7 +543,8 @@ Reconstructed by Claude Opus 5.5, November 1, 2026.
   8-byte (0,0) object at 0x5c4558, just before Creatures data, and
   0x559e00-0x559e20 three at 0x5cc418-0x5cc42f just after it (0x5cc420 is used
   by Dialogs.cpp). The same constructor (0x496130) builds such objects in
-  several objects; which object owns 0x5c4558 is not settled.
+  several objects. Issue #12 settled them: 0x5c4558 is Control.obj's
+  NoCallback, 0x5cc418 Creatures.obj's (see "Unknown-owner data").
 - **Source order** (medium for the rule, low for the gap functions' place).
   The binary order is the line order except that a function calling a
   function defined further down comes after the last of them: lines 278-592,
@@ -2529,3 +2530,62 @@ PR #28, merged first into this branch).
   a workaround for rc.exe's formats (the version information's padding is the same).
 - **Final check is #16's.** Patella.exe cannot be linked yet; notes/resources.md says how #16 adds the
   .res (no afxres.rc, /MANIFEST:NO) and runs compare_resources.py on Patella.exe.
+
+## Unknown-owner data (issue #12)
+
+Settled by Claude Opus 5.5, November 2, 2026. Method: the neighbours of each datum in .data, .rdata
+and .bss (each object's contributions are contiguous, in link order), the code that references
+those neighbours (objdump of the whole image), and the static initialisers listed per object in
+the __xc table 0x5c0004-0x5c00ff. Names ours unless noted. No names.tsv or file-ranges.tsv rows:
+both list code only (names.tsv has no data rows).
+
+- **0x5c249c is Player.obj's copy of the text table** (high): TextCriticalError. The "table of UI
+  texts 0x5c2480-0x5c2517" is not a table of its own but the tail of a full copy of the text
+  header's table, 0x5c22cc-0x5c2517 (147 entries from "You are poisoned" to "Report Rule
+  Violation", the same entries as MapWindow.obj's copy 0x5c2064-0x5c22af and Control.obj's
+  0x5c0b34-0x5c0d7f). Every object that includes the text header has its own copy (the entries
+  have internal linkage), so the object whose code reads an entry owns that copy: only 0x4d9ed5
+  (Player.cpp's HandleException) reads it, and Player.cpp's LastMouseCursor (0x5c2518) follows
+  directly, then the type descriptors of out_of_range/bad_alloc that Player.cpp's catch blocks
+  need, then Preferences.cpp's WindowedWidth (0x5c2558). Like the other copies it stays declared
+  in external.h, under "Player.obj's copy of the text table" (the text header is not
+  reconstructed); playertest.cpp defines it for difftest.exe. No other entry of Player's copy is
+  read (the crash report texts 0x5c24a0/0x5c24a4 are read through other objects' copies, if at all).
+- **0x5c2564 is Surface.cpp's** (medium): CommandLineEngine, initialised to -1. It lies between
+  Status.cpp's LinkPattern (0x5c2560, its only .data) and Surface.cpp's CacheSurfaceWidth/Height
+  (0x5c2568/0x5c256c), so it is the end of Status.obj's .data or the start of Surface.obj's.
+  Status.cpp never uses it; Surface.cpp's SurfaceInitInstance (0x4eac49) reads it to choose the
+  engine (curEngine is Surface.cpp's too), Player.cpp's command-line parser (0x4da5c6) writes it.
+  Defined in Surface.cpp, extern in Surface.h; Surface.cpp is linked into difftest.exe, so
+  playertest.cpp's definition went.
+- **The XOR code tables 0x5733a4/0x5733c4 are sysinc.cpp's** (low): TitleCode and ClassNameCode
+  (names from the Player.cpp reconstruction), extern in sysinc.h, defined in sysinc.cpp;
+  playertest.cpp keeps a test definition (sysinc.cpp is not in difftest.exe). They lie exactly
+  between SurfaceGL.obj's last .rdata string ("Type>=0 && Type<3" 0x573390, read by 0x4fca8c) and
+  sysinc.obj's first ("Unknown error." 0x5733f0, GetErrorText's), so the owner is one of the two
+  (an object with data only and no code between them would be a file this project has never seen;
+  rejected). Both are referenced only by Player.cpp's decoders (0x4d9270, 0x4d93e0). The deciding
+  argument is the order within an object's .rdata: Player.obj's own file-scope data (after
+  the "error.txt" literal 0x56dd8c: the key tables 0x56dd98/0x56ddb8, then the message map 0x56dde4)
+  comes before the vtable and the strings of its functions, i.e. file-scope definitions are
+  emitted where they are in the source. As SurfaceGL.cpp's, the tables would have to be defined
+  after the last function that uses a string (TSurfaceGL's vtable 0x573250 and the strings of its
+  later functions precede them); as sysinc.cpp's they are its first .rdata, defined at the top of
+  the file as usual. If #11's reconstruction of SurfaceGL.cpp finds file-scope data at the end of
+  that file, revisit this.
+- **0x5c4558 is Control.cpp's NoCallback** (high): the static initialiser 0x559df0 constructs it as
+  TCallback(NULL, 0) (0x496130, no atexit), nothing else references it. The __xc table lists one
+  initialiser per object in link order: ContextMenus.obj's 0x559de0 (0x5c4508), then 0x559df0, then
+  0x559e00 for 0x5cc418, then Dialogs.obj's 0x559e10 (0x5cc420). 0x5cc418 is the end of
+  Creatures.obj's .bss (directly after the creature table 0x5c68b0-0x5cc417; DialogElements.obj
+  has no statics), so Creatures.obj's NoCallback is 0x5cc418, and 0x5c4558, after Control.cpp's
+  ShowFPS (0x5c4554) and before Creatures.cpp's first datum (0x5c4560), is Control.obj's. Both
+  objects keep it at the end of their .bss, as ContentWindows.obj does (0x5c4500). Both are now
+  written as static NoCallback (Control.cpp, Creatures.cpp; the second was not in the issue but
+  is settled by the same evidence).
+- **0x5d16b4 was already settled** (medium, issue #2): MainWindow.cpp's static NoCallback
+  (initialiser 0x559f30, between MainFrm.obj's 0x559f20 and Map.obj's 0x559f40); the issue text
+  was stale. Nothing changed.
+- **The text table "owner unknown, .data 0x5c0c80-0x5c0d7c"** in external.h is Control.obj's copy
+  (0x5c0b34-0x5c0d7f, before Control.cpp's LastPacketType 0x5c0d8c; every entry declared there is
+  read only by Control.cpp, 0x4499c8-0x449f1a): the comment says so now.

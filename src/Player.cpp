@@ -23,7 +23,9 @@
 #include "Network.h"
 #include "Preferences.h"
 #include "Status.h"
+#include "Surface.h"
 #include "Utils.h"
+#include "sysinc.h"
 #include "external.h"
 #include <fstream>
 #include <sstream>
@@ -34,12 +36,10 @@
 #include <process.h>
 
 // The window title and class name are stored XOR-encoded. The key of each
-// string is in this object's .rdata (0x56dd98, 0x56ddb8); the other half
-// lies at 0x5733a4 and 0x5733c4, in another object's .rdata (owner unknown).
+// string is in this object's .rdata (0x56dd98, 0x56ddb8); the other half,
+// TitleCode and ClassNameCode, is sysinc.cpp's (0x5733a4, 0x5733c4).
 static const int TitleKey[8] = {16, 34, 227, 56, 3, 110, 64, 173};                    // 0x56dd98
 static const int ClassNameKey[11] = {109, 168, 131, 83, 237, 53, 175, 191, 138, 154, 253}; // 0x56ddb8
-static const int TitleCode[8] = {68, 75, 129, 81, 98, 78, 96, 141};                   // 0x5733a4
-static const int ClassNameCode[11] = {57, 193, 225, 58, 140, 118, 195, 214, 239, 244, 137}; // 0x5733c4
 
 // Data, in .data/.bss order.
 static int LastMouseCursor = 1;    // 0x5c2518
@@ -200,7 +200,7 @@ void CPlayerApp::HandleException(TMyException &Exception)
 		Out << Exception.GetMessage() << std::endl << "----------------------------------------------------------------";
 		Out.close();
 	}
-	FatalError(DAT_005c249c, "Tibia Error - Debug Assertion");
+	FatalError(TextCriticalError, "Tibia Error - Debug Assertion");
 }
 
 // 0x4da140. Reads the reports in error.txt into the error report list
@@ -293,7 +293,7 @@ BOOL CPlayerApp::InitInstance()
 						Expected = 0;
 						break;
 					case 3:
-						DAT_005c2564 = atol(Token);
+						CommandLineEngine = atol(Token);
 						Expected = 0;
 						break;
 					}

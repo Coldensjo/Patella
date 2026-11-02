@@ -70,6 +70,10 @@ static int Beat;                            // 0x5c68a0, step durations are roun
 static int LastOpponent;                    // 0x5c68a4, battle list ends (slot numbers, -1: empty)
 static int FirstOpponent;                   // 0x5c68a8
 static TCreature Creatures[CREATURES];      // 0x5c68b0
+// At 0x5cc418, constructed by the static initialiser 0x559e00 as
+// TCallback(NULL, 0) and never used (the other window files have one too);
+// the end of Creatures.obj's .bss, before Dialogs.obj's NoCallback 0x5cc420.
+static TCallback NoCallback(NULL, 0);
 
 static_assert(sizeof(TCreature) == 0x9c, "TCreature is 0x9c bytes");
 static_assert(sizeof(TBuddyEntry) == 0x2c, "TBuddyEntry is 0x2c bytes");

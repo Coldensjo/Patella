@@ -1,7 +1,8 @@
 // sysinc.cpp: reconstructed from Tibia.exe 7.72 (0x4fcb90-0x4fd43f).
 //
 // System helpers: the millisecond clock, file checks, the PROGRAM_ERROR
-// texts, and the clipboard with its buffer. The functions without line
+// texts, the clipboard with its buffer, and half of the encoded window title
+// and class name. The functions without line
 // evidence (the gap after SurfaceGL.cpp, 0x4fcb90-0x4fcd4f) come first, in
 // binary order; they use only this file's data (0x71dbc4-0x71dbcc). The
 // asserted functions follow in line order. 0x4fcd50-0x4fce4f is ATL header
@@ -13,6 +14,13 @@
 #include <mmsystem.h>
 
 #pragma comment(lib, "winmm.lib")
+
+// The other half of Player.cpp's XOR-encoded window title ("Tibia   ") and
+// class name ("TibiaClient"); the keys are Player.cpp's. First in this
+// object's .rdata, before the PROGRAM_ERROR texts (owner: notes/decisions.md,
+// "Unknown-owner data (issue #12)"; low).
+const int TitleCode[8] = {68, 75, 129, 81, 98, 78, 96, 141};                   // 0x5733a4
+const int ClassNameCode[11] = {57, 193, 225, 58, 140, 118, 195, 214, 239, 244, 137}; // 0x5733c4
 
 // Data, in .bss order.
 static char *ClipboardBuffer;                // 0x71dbc4

@@ -152,6 +152,7 @@ int GetCurrentEngine();
 TSurface *GetSurface();
 void SurfaceExitInstance();
 void SurfaceInitInstance(HWND *Window);
+extern int CommandLineEngine;  // 0x5c2564, "engine N" on the command line (Player.cpp); -1 = none
 
 // surfaceDX9.cpp (surfaceDX9.h): declared here because SurfaceDX.h's DirectX 6
 // d3d.h and surfaceDX9.h's d3d9.h cannot be included together.
