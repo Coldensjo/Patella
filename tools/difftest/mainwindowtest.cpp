@@ -39,6 +39,7 @@
 #include "../../src/Status.h"
 #include "../../src/Surface.h"
 #include "testsurface.h"
+#include "imageeh.h"
 #include "../../src/Talk.h"
 #include <map>
 #include <new>
@@ -66,10 +67,27 @@ static bool Quiet;
 static bool Running; // the shared fakes (TTextButton, TLabel, TObjectIcon) register only while this test runs
 static std::string Log[2];
 
+// The error round (issue #34): the FailAt-th logged call of a fake throws an
+// assertion of the calling side (0: none); Ticks counts one side's calls. The
+// fakes that destructors call (ours are noexcept) do not count (TNoTick).
+static int FailAt, Ticks;
+static void Tick()
+{
+	Ticks++;
+	if (FailAt > 0 && --FailAt == 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Ticks);
+}
+struct TNoTick {
+	int Saved;
+	TNoTick() : Saved(FailAt) { FailAt = 0; }
+	~TNoTick() { FailAt = Saved; }
+};
+
 static void Logf(const char *Format, ...)
 {
 	if (Quiet)
 		return;
+	Tick();
 	char Buffer[512];
 	va_list Args;
 	va_start(Args, Format);
@@ -155,7 +173,7 @@ static int ConsoleMinHeight, BodyMinHeight, BorderMinHeight, FrameMinHeight;
 class TFakeConsole : public TWindow {
 public:
 	TFakeConsole();
-	int getMinimumHeight() { return ConsoleMinHeight; }
+	int getMinimumHeight() { Tick(); return ConsoleMinHeight; }
 	void Draw(int Surface, int x, int y) { Logf("DCons%d,%d,%d;", Surface, x, y); }
 	void Arrange() { Logf("ACons;"); }
 	void KeyPress(int Key) { Logf("KCons%d;", Key); }
@@ -165,7 +183,8 @@ static_assert(sizeof(TFakeConsole) == sizeof(TConsoleWindow), "the fake console 
 class TMWTestBorder : public TFakeBorder {
 public:
 	TMWTestBorder(TWindow *Window) : TFakeBorder(Window, 0) {}
-	int getMinimumHeight() { return BorderMinHeight; }
+	int getMinimumHeight() { Tick(); return BorderMinHeight; }
+	void SetPosition(int x, int y) { Tick(); TFakeBorder::SetPosition(x, y); }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
 class TMWTestButton : public TFakeTextButton {
@@ -187,16 +206,18 @@ public:
 		HookBody(this, "A8");
 		return BodyAccepts;
 	}
-	int GetInitialHeight() { return BodyMinHeight; }
-	int GetContentHeight() { return BodyMinHeight; }
-	int getMinimumHeight() { return BodyMinHeight; }
+	int GetInitialHeight() { Tick(); return BodyMinHeight; }
+	int GetContentHeight() { Tick(); return BodyMinHeight; }
+	int getMinimumHeight() { Tick(); return BodyMinHeight; }
+	void SetSize(int Width, int Height) { Tick(); TSubWindowBody::SetSize(Width, Height); }
+	void SetPosition(int x, int y) { Tick(); TSubWindowBody::SetPosition(x, y); }
 	void HandleEvent(int Event) { Logf("HBody%s,%d;", Name(this).c_str(), Event); }
 	void Draw(int Surface, int x, int y) { Logf("D%s,%d,%d,%d;", Name(this).c_str(), Surface, x, y); }
 };
 // The map frame after construction (vtable only; TMapFrame's layout).
 class TFakeMapFrame : public TWindow {
 public:
-	int getMinimumHeight() { return FrameMinHeight; }
+	int getMinimumHeight() { Tick(); return FrameMinHeight; }
 	void SetSize(int Width, int Height) { Logf("SFrame%d,%d;", Width, Height); TWindow::SetSize(Width, Height - 3); }
 	void Draw(int Surface, int x, int y) { Logf("DFrame%d,%d,%d;", Surface, x, y); }
 	void Arrange() { Logf("AFrame;"); }
@@ -426,13 +447,16 @@ static bool Right, AnyRight;
 static TFullscreenMode Fullscreen[2];
 static int PlayerX = 1000, PlayerY = 1000, PlayerZ = 7, DestinationResult;
 
-static void __cdecl FakeClearOpenDialogs() { Logf("ClrDlg;"); OpenDialogs[Side].clear(); }
+// ~TMainWindow calls ClearOpenDialogs and AddOpenDialog, ~TSubWindow
+// SetContentWindowSize: they do not count for FailAt.
+static void __cdecl FakeClearOpenDialogs() { TNoTick NoTick; Logf("ClrDlg;"); OpenDialogs[Side].clear(); }
 static void __cdecl FakeAddOpenDialog(int Identifier)
 {
+	TNoTick NoTick;
 	Logf("AddDlg%d;", Identifier);
 	OpenDialogs[Side].push_back(Identifier);
 }
-static void __cdecl FakeSetContentWindowSize(int ID, int Size) { Logf("CWSize%d,%d;", ID, Size); }
+static void __cdecl FakeSetContentWindowSize(int ID, int Size) { TNoTick NoTick; Logf("CWSize%d,%d;", ID, Size); }
 static int __cdecl FakeGetOpenDialogs(int **List)
 {
 	int Count = (int)OpenDialogs[Side].size();
@@ -499,7 +523,7 @@ static void __cdecl FakeAddHotkey(int Key, TCallback Callback)
 {
 	Logf("AddKey%d,%s,%d;", Key, Name(Callback.Receiver).c_str(), Callback.Event);
 }
-static void __cdecl FakeRemoveHotkey(int Key) { Logf("RemKey%d;", Key); }
+static void __cdecl FakeRemoveHotkey(int Key) { TNoTick NoTick; Logf("RemKey%d;", Key); }
 static void __cdecl FakeDrawPicture(int Surface, int x, int y, int PictureNumber)
 {
 	Logf("Pic%d,%d,%d,%d;", Surface, x, y, PictureNumber);
@@ -755,10 +779,16 @@ static std::string Dump(int s)
 }
 
 static int Kind;
+// The error round: a call that threw may leave members of the main window
+// pointing to deleted windows; the trees are not dumped then, and the round
+// goes on with new main windows.
+static TErrorRound *MainRound;
+static bool Threw;
 
 static void Compare(const char *What)
 {
-	SwapFrames();
+	if (!Threw)
+		SwapFrames();
 	Checks++;
 	if (Log[OURS] != Log[ORIGINAL]) {
 		Failures++;
@@ -767,7 +797,7 @@ static void Compare(const char *What)
 				Log[OURS].c_str(), Log[ORIGINAL].c_str());
 		}
 	}
-	std::string A = Dump(OURS), B = Dump(ORIGINAL);
+	std::string A = Threw ? "" : Dump(OURS), B = Threw ? "" : Dump(ORIGINAL);
 	Checks++;
 	if (A != B) {
 		Failures++;
@@ -783,13 +813,50 @@ static void Compare(const char *What)
 	Log[ORIGINAL].clear();
 }
 
-// Runs one call on both sides: F(s) with Side set.
+// The most fake calls one call of each operation made (Kind 24: InitMainWindow,
+// 25 and 26: the start window's Draw and SetSize); the error round's calls
+// fail only in the operation of the round (TargetKind).
+static int MaxTicks[27], TargetKind = -1;
+
+static int FailIndex(int Count)
+{
+	int Choice = Random() % 3, Range = 1 << (Random() % 12);
+	Range = Range < Count ? Range : Count;
+	if (Choice == 0)
+		return 1 + (int)(Random() % Count);
+	if (Choice == 1)
+		return 1 + (int)(Random() % Range);
+	return Count - (int)(Random() % Range);
+}
+
+// Runs one call on both sides: F(s) with Side set. In the error round the
+// call fails at one of the fake calls the operation made before, and what
+// both sides threw is compared.
 template <class F> static void Both(F Call)
 {
-	Side = OURS;
-	Call(OURS);
-	Side = ORIGINAL;
-	Call(ORIGINAL);
+	if (MainRound == NULL) {
+		Side = OURS;
+		Ticks = 0;
+		Call(OURS);
+		Side = ORIGINAL;
+		Ticks = 0;
+		Call(ORIGINAL);
+		MaxTicks[Kind] = Ticks > MaxTicks[Kind] ? Ticks : MaxTicks[Kind];
+		return;
+	}
+	int Fail = MaxTicks[Kind] > 0 && (TargetKind < 0 || Kind == TargetKind) ? FailIndex(MaxTicks[Kind] + 1) : 0;
+	char What[64];
+	sprintf(What, "operation %d (fail at %d)", Kind, Fail);
+	MainRound->Calling(What, "ours");
+	TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Call(OURS); });
+	MainRound->Calling(What, "the original");
+	TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Call(ORIGINAL); });
+	FailAt = 0;
+	MainRound->Compare(What, A, B);
+	if (A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING)
+		Threw = true;
+	else
+		MaxTicks[Kind] = Ticks > MaxTicks[Kind] ? Ticks : MaxTicks[Kind];
 }
 
 static TContentWindow *Find(int s, TDialogWindow *Dialog, int Identifier)
@@ -890,7 +957,7 @@ static void Operation()
 				At<MemberInt>(0x4af5e0)(OriginalMainWindow, NULL, Game);
 		});
 		// The new splitters' drag position is left uninitialised on both sides.
-		for (int s = 0; s < 2 && Game; s++)
+		for (int s = 0; s < 2 && Game && !Threw; s++)
 			Main(s)->Splitter->DragX = Main(s)->Splitter->DragY = 0;
 		break;
 	}
@@ -952,6 +1019,8 @@ static void Operation()
 			else
 				At<MemberInt>(0x4ac610)(OriginalMainWindow, NULL, Height);
 		});
+		if (Threw)
+			break;
 		int A = MainWindow->GetConsoleWindowHeight();
 		int B = At<MemberGet>(0x4ac7c0)(OriginalMainWindow, NULL);
 		CHECK(A == B, "GetConsoleWindowHeight %d, original %d", A, B);
@@ -1135,11 +1204,247 @@ static void Operation()
 				At<InitFn>(0x4b05b0)(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
 			}
 		});
-		NameOurVtables();
+		if (!Threw)
+			NameOurVtables();
 		break;
 	}
 	}
 	Compare(What);
+}
+
+// --- Error paths (issue #34) ---------------------------------------------------
+
+// New main windows for the error round (the old ones stay: after a throw
+// their members may point to deleted windows).
+static void NewMainWindows(int Fail)
+{
+	MainWindow = NULL;
+	OriginalMainWindow = NULL;
+	ModalWindow = OriginalModalWindow = NULL;
+	Info[OURS].clear();
+	Info[ORIGINAL].clear();
+	Serials[OURS] = Serials[ORIGINAL] = 0;
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+	RandomWorld();
+	RandomSkinProperties();
+	ActionState[OURS] = ActionState[ORIGINAL] = 0;
+	int Width, Height;
+	RandomSize(Width, Height);
+	Kind = 24;
+	Threw = false;
+	TErrorRound *Saved = MainRound;
+	if (Fail == 0)
+		MainRound = NULL;
+	Both([&](int s) {
+		if (s == OURS)
+			InitMainWindow(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+		else
+			At<InitFn>(0x4b05b0)(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+	});
+	MainRound = Saved;
+	if (!Threw)
+		NameOurVtables();
+	Compare("errors: InitMainWindow");
+}
+
+// One call on both sides, failing at the Fail-th fake call (0: none), what
+// they threw compared.
+template <class F> static void MainCall(TErrorRound &R, const char *What, F Call, int Fail = 0)
+{
+	R.Calling(What, "ours");
+	TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Call(OURS); });
+	R.Calling(What, "the original");
+	TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Call(ORIGINAL); });
+	FailAt = 0;
+	R.Compare(What, A, B);
+	if (A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING)
+		Threw = true;
+	Compare(What);
+}
+
+static void ToGame(bool Game)
+{
+	Kind = 0;
+	TErrorRound *Saved = MainRound;
+	MainRound = NULL;
+	Both([&](int s) {
+		if (s == OURS)
+			MainWindow->ChangeMode(Game);
+		else
+			At<MemberInt>(0x4af5e0)(OriginalMainWindow, NULL, Game);
+	});
+	MainRound = Saved;
+	for (int s = 0; s < 2 && Game; s++)
+		Main(s)->Splitter->DragX = Main(s)->Splitter->DragY = 0;
+	Compare("errors: ChangeMode");
+}
+
+// Every TASSERT/TERROR of MainWindow.cpp and the TEND blocks: the test's
+// operations on new main windows, each failing at one of the fake calls it
+// made in the counted test, until one throws; then the assertions.
+static void TestMainWindowErrors()
+{
+	TErrorRound R("MainWindow");
+	MainRound = &R;
+	for (int Round = 0; Round < 405; Round++) {
+		TargetKind = Round % 27;
+		NewMainWindows(TargetKind == 24 ? 1 : 0);
+		if (Threw)
+			continue;
+		for (int i = 0; i < 40 && !Threw; i++) {
+			Operation();
+			// The start window's own functions (TMainWindow::Draw turns its
+			// errors into PROGRAM_ERROR 12).
+			if (Threw || Main(OURS)->InGame || (TargetKind != 25 && TargetKind != 26))
+				continue;
+			int Width, Height;
+			RandomSize(Width, Height);
+			Kind = TargetKind;
+			Both([&](int s) {
+				if (Kind == 25)
+					Main(s)->StartWindow->Draw(1, 0, 0);
+				else
+					Main(s)->StartWindow->SetSize(Width, Height);
+			});
+			Compare("errors: start window");
+		}
+	}
+	TargetKind = -1;
+	// The assertions, on new windows each.
+	for (int Round = 0; Round < 12; Round++) {
+		NewMainWindows(0);
+		// InitMainWindow in an action state: the new window is made before the
+		// assertion, and the round goes on with it.
+		int State = 1 + Random() % 9;
+		ActionState[OURS] = ActionState[ORIGINAL] = State;
+		int Width, Height;
+		RandomSize(Width, Height);
+		MainCall(R, "InitMainWindow in an action state", [&](int s) {
+			if (s == OURS)
+				InitMainWindow(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+			else
+				At<InitFn>(0x4b05b0)(Width, Height, FakeExitProgram, FakeSetDisplayMode, FakeOpenURL);
+		});
+		ActionState[OURS] = ActionState[ORIGINAL] = 0;
+		Threw = false;
+		NameOurVtables();
+		// Out of the game there is no dialog window.
+		int Container = Random() % 16;
+		MainCall(R, "TMainWindow::OpenContainer without a dialog window", [&](int s) {
+			if (s == OURS) MainWindow->OpenContainer(Container);
+			else At<MemberInt>(0x4ac9e0)(OriginalMainWindow, NULL, Container); });
+		MainCall(R, "TMainWindow::OpenTrade without a dialog window", [&](int s) {
+			if (s == OURS) MainWindow->OpenTrade(); else At<MemberVoid>(0x4afec0)(OriginalMainWindow, NULL); });
+		Threw = false;
+		ToGame(true);
+		// The trade window twice, then without a body.
+		MainCall(R, "TMainWindow::OpenTrade", [&](int s) {
+			if (s == OURS) MainWindow->OpenTrade(); else At<MemberVoid>(0x4afec0)(OriginalMainWindow, NULL); });
+		MainCall(R, "TMainWindow::OpenTrade again", [&](int s) {
+			if (s == OURS) MainWindow->OpenTrade(); else At<MemberVoid>(0x4afec0)(OriginalMainWindow, NULL); });
+		Threw = false;
+		TSubWindow *Trade[2];
+		for (int s = 0; s < 2; s++)
+			Trade[s] = (TSubWindow *)Find(s, Main(s)->DialogWindow, TRADE_WINDOW);
+		if (Trade[OURS] != NULL && Trade[ORIGINAL] != NULL) {
+			TSubWindowBody *Body[2] = {Trade[OURS]->Body, Trade[ORIGINAL]->Body};
+			Trade[OURS]->Body = Trade[ORIGINAL]->Body = NULL;
+			MainCall(R, "TMainWindow::UpdateTrade without a body", [&](int s) {
+				if (s == OURS) MainWindow->UpdateTrade(); else At<MemberVoid>(0x4acf60)(OriginalMainWindow, NULL); });
+			Trade[OURS]->Body = Body[OURS];
+			Trade[ORIGINAL]->Body = Body[ORIGINAL];
+			Threw = false;
+		}
+		// Identifiers OpenContentWindow does not know.
+		int Identifier = Random() % 2 ? 1 + (int)(Random() % 5) : 10 + (int)(Random() % 50);
+		MainCall(R, "TMainWindow::OpenContentWindow unknown", [&](int s) {
+			if (s == OURS) MainWindow->OpenContentWindow(Identifier);
+			else At<MemberInt>(0x4ad1e0)(OriginalMainWindow, NULL, Identifier); });
+		Threw = false; // (the error comes before any change)
+		// The splitter pressed while the main window has a capture, released
+		// while dragging without one.
+		for (int s = 0; s < 2; s++)
+			Main(s)->Capture = Main(s)->Console;
+		MainCall(R, "TSplitter::LeftButtonDown with a capture", [&](int s) { Main(s)->Splitter->LeftButtonDown(5, 6, 0); });
+		for (int s = 0; s < 2; s++) {
+			Main(s)->Capture = NULL;
+			Main(s)->Splitter->Dragging = true;
+		}
+		MainCall(R, "TSplitter::LeftButtonUp without the capture", [&](int s) { Main(s)->Splitter->LeftButtonUp(5, 6, 0); });
+		for (int s = 0; s < 2; s++)
+			Main(s)->Splitter->Dragging = false;
+		Threw = false;
+		// The inventory windows' swap without the window it replaces (half of
+		// the time after a swap).
+		if (Round % 2 == 0) {
+			int Swap = Find(OURS, MainWindow->SidePanel, 1) != NULL ? 0x17 : 0x18;
+			MainCall(R, "TMainWindow::HandleEvent swap", [&](int s) { Main(s)->HandleEvent(Swap); });
+			if (Threw)
+				continue;
+		}
+		int Event = Find(OURS, MainWindow->SidePanel, 1) != NULL ? 0x18 : 0x17;
+		MainCall(R, "TMainWindow::HandleEvent swap without the window", [&](int s) { Main(s)->HandleEvent(Event); });
+		Threw = false; // (the assertion comes before any change)
+		// The splitter's MouseMove: its first fake call (the cursor).
+		MainCall(R, "TSplitter::MouseMove", [&](int s) { Main(s)->Splitter->MouseMove(5, 6); }, 1);
+		Threw = false; // (nothing changed before)
+		// Opening and closing: a container, the trade window, a content window;
+		// the closing call fails at one of the fake calls it makes (the
+		// skills and battle windows stay: the column's rearrangement asks their
+		// bodies).
+		for (int Identifier = 6; Identifier <= 7; Identifier++) {
+			if (Find(OURS, MainWindow->DialogWindow, Identifier) == NULL)
+				MainCall(R, "errors: open", [&](int s) {
+					if (s == OURS) MainWindow->OpenContentWindow(Identifier);
+					else At<MemberInt>(0x4ad1e0)(OriginalMainWindow, NULL, Identifier); });
+		}
+		for (int What = 0; What < 3 && !Threw; What++) {
+			int Container = Random() % 16, Identifier = 9;
+			auto Open = [&](int s) {
+				if (What == 0) {
+					if (s == OURS) MainWindow->OpenContainer(Container);
+					else At<MemberInt>(0x4ac9e0)(OriginalMainWindow, NULL, Container);
+				} else if (What == 1) {
+					if (Find(s, Main(s)->DialogWindow, TRADE_WINDOW) == NULL) {
+						if (s == OURS) MainWindow->OpenTrade(); else At<MemberVoid>(0x4afec0)(OriginalMainWindow, NULL);
+					}
+				} else {
+					if (s == OURS) MainWindow->OpenContentWindow(Identifier);
+					else At<MemberInt>(0x4ad1e0)(OriginalMainWindow, NULL, Identifier);
+				}
+			};
+			auto Close = [&](int s) {
+				if (What == 0) {
+					if (s == OURS) MainWindow->CloseContainer(Container);
+					else At<MemberInt>(0x4acdb0)(OriginalMainWindow, NULL, Container);
+				} else if (What == 1) {
+					if (s == OURS) MainWindow->CloseTrade(); else At<MemberVoid>(0x4b0230)(OriginalMainWindow, NULL);
+				} else {
+					if (s == OURS) MainWindow->CloseContentWindow(Identifier);
+					else At<MemberInt>(0x4ad4a0)(OriginalMainWindow, NULL, Identifier);
+				}
+			};
+			static const char *const Names[] = {"TMainWindow::CloseContainer", "TMainWindow::CloseTrade",
+				"TMainWindow::CloseContentWindow"};
+			MainCall(R, "errors: open", Open);
+			MainCall(R, Names[What], Close);
+			int Count = Ticks;
+			if (Threw || Count == 0)
+				continue;
+			MainCall(R, "errors: open", Open);
+			if (!Threw)
+				MainCall(R, Names[What], Close, 1 + (int)(Random() % Count));
+		}
+		if (Threw)
+			continue;
+	}
+	MainWindow = NULL;
+	OriginalMainWindow = NULL;
+	ModalWindow = OriginalModalWindow = NULL;
+	Threw = false;
+	MainRound = NULL;
+	R.Finish();
 }
 
 void TestMainWindow()
@@ -1271,6 +1576,12 @@ void TestMainWindow()
 			At<void (__cdecl *)()>(0x4ac090)();
 	});
 	Compare("ExitMainWindow");
+	// The error round (issue #34): its checks are reported apart.
+	int RoundChecks = Checks, SavedKinds[24];
+	memcpy(SavedKinds, KindCount, sizeof(SavedKinds));
+	TestMainWindowErrors();
+	memcpy(KindCount, SavedKinds, sizeof(SavedKinds));
+	RoundChecks = Checks - RoundChecks;
 
 	DefaultTextBuffer = SavedBuffer;
 	OriginalBuffer = SavedOriginalBuffer;
@@ -1279,6 +1590,6 @@ void TestMainWindow()
 	int Least = KindCount[0];
 	for (int i = 1; i < 24; i++)
 		Least = KindCount[i] < Least ? KindCount[i] : Least;
-	printf("MainWindow: %d checks, %d failures (each of the 24 operations at least %d times)\n", Checks - Before,
-		Failures - BeforeFailures, Least);
+	printf("MainWindow: %d checks, %d failures (each of the 24 operations at least %d times)\n",
+		Checks - Before - RoundChecks, Failures - BeforeFailures, Least);
 }

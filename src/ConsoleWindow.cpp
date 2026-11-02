@@ -598,12 +598,15 @@ bool TTextWindow::GetPosition(int x, int y, int *Line, int *Offset, int *Length)
 					return false;
 				x = 0;
 			}
+			// The position in the text is a value of its own (0x41a0d8-0x41a0e5,
+			// in a register): TEND2(x, y) prints x without the indent (issue #34).
+			int TextX;
 			if (x < Format->Indent)
-				x = 0;
+				TextX = 0;
 			else
-				x -= Format->Indent;
+				TextX = x - Format->Indent;
 			*Line = LineNumber;
-			int Characters = GetFittingTextLength(Format->FontNumber, Format->LineText, x);
+			int Characters = GetFittingTextLength(Format->FontNumber, Format->LineText, TextX);
 			if (Characters > Format->LineLength)
 				Characters = Format->LineLength;
 			*Offset = Characters;

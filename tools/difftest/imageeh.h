@@ -110,6 +110,17 @@ struct TErrorRound {
 // ours would pass through the image's catch (TMyException &) and be read
 // with the image's layout. Defined in guitest.cpp.
 void ThrowSideAssertion(bool Image, int Value);
+// The vtable of a test class's object on the image side in an error round:
+// our class's vtable (Slots entries) with every entry it inherits unchanged
+// from our base class (OurBase, BaseSlots entries) replaced by the image's
+// base class's entry (the vtable at ImageBase). The image's code then calls
+// the image's base code for what the test class does not override: our
+// base code (GUI.cpp's TWindow::Draw, HelpMouseMove...) would catch the
+// image's exception in its TEND, read it with our layout and throw ours on.
+// One copy per vtable, kept for the run.
+void *ImageSideVtable(const void *OurVtable, const void *OurBase, uint32 ImageBase, int BaseSlots = 40,
+	int Slots = 64);
+
 // A function that starts with a jump now is a test's fake (earlier tests
 // redirect some functions for good): such comparisons are skipped.
 bool Redirected(const void *Code);

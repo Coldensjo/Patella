@@ -350,13 +350,19 @@ bool TMapWindow::HelpMouseMove(int x, int y)
 		return false;
 	TCreature *Player = GetCreature(GetPlayerID());
 	TASSERT(Player!=NULL);
+	// The help position goes into x and y (the binary stores it in the
+	// parameters' stack slots, 0x4c372a/0x4c3751 and 0x4c3793/0x4c37bd), so
+	// TEND2(x, y) prints it after an error in MoveHelpPosition or SetHelpSize
+	// (issue #34).
 	if (GetNoStretching()) {
-		MoveHelpPosition(FieldX * 32 - (480 - Width) / 2 - Player->GetDeltaX() - 32,
-			FieldY * 32 - (352 - Height) / 2 - Player->GetDeltaY() - 32);
+		x = FieldX * 32 - (480 - Width) / 2 - Player->GetDeltaX() - 32;
+		y = FieldY * 32 - (352 - Height) / 2 - Player->GetDeltaY() - 32;
+		MoveHelpPosition(x, y);
 		SetHelpSize(32, 32);
 	} else {
-		MoveHelpPosition((FieldX * 32 - Player->GetDeltaX() - 32) * Width / 480,
-			(FieldY * 32 - Player->GetDeltaY() - 32) * Height / 352);
+		x = (FieldX * 32 - Player->GetDeltaX() - 32) * Width / 480;
+		y = (FieldY * 32 - Player->GetDeltaY() - 32) * Height / 352;
+		MoveHelpPosition(x, y);
 		SetHelpSize(Width * 32 / 480, Height * 32 / 352);
 	}
 	SetHelpHandle(Handle);
@@ -799,7 +805,9 @@ void TMapWindow::DrawField(int posx, int posy, int FieldX, int FieldY, int Field
 		if (Elevation > 24)
 			Elevation = 24;
 	}
-	TEND
+	// The catch block prints the object (0x4c72da, line 874: "Obj" and the
+	// type at [ebp-0x4c]; issue #34).
+	TEND1(Obj)
 	TBEGIN
 	if (Lying) {
 		if (FieldX > 0) {

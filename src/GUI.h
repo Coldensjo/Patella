@@ -62,7 +62,7 @@ public:
 	// Inlined into the constructors of TWindow and TElement.
 	TComponent() : DrawingList(NULL), DrawingListLength(0), Parent(NULL), Next(NULL), OffsetX(0),
 		OffsetY(0), Width(0), Height(0) {}
-	virtual ~TComponent();                                          // +0x00, 0x496040 (deleting 0x496520)
+	virtual ~TComponent() noexcept(false);                          // +0x00, 0x496040 (deleting 0x496520)
 	virtual void InsertChild(TComponent *Child);                    // +0x04, 0x49b450, line 993
 	virtual void AppendChild(TComponent *Child);                    // +0x08, 0x49b570, line 1001
 	virtual void RemoveChild(TComponent *Child);                    // +0x0c, 0x49b690, line 1009

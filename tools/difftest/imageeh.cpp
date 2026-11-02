@@ -272,6 +272,22 @@ static LONG CALLBACK RedirectImageHandlers(EXCEPTION_POINTERS *Info)
 			printf("eh: C++ exception %s (ThrowInfo 0x%x) at %p\n", Name, ThrowInfo,
 				Info->ExceptionRecord->ExceptionAddress);
 	}
+	// A replaced registration that is alive is on the chain (a frame that a
+	// catch block's unwinding removed is gone): when the table fills up (deep
+	// call trees of the window tests leave many stale stack addresses behind),
+	// only the entries on the current chain are kept.
+	if (ReplacedCount > 192) {
+		int Kept = 0;
+		for (int i = 0; i < ReplacedCount; i++) {
+			bool Live = false;
+			for (TRegistration *R = (TRegistration *)__readfsdword(0); R != (TRegistration *)(intptr_t)-1 && !Live;
+				R = R->Next)
+				Live = R == Replaced[i].Registration;
+			if (Live)
+				Replaced[Kept++] = Replaced[i];
+		}
+		ReplacedCount = Kept;
+	}
 	for (TRegistration *R = (TRegistration *)__readfsdword(0); R != (TRegistration *)(intptr_t)-1; R = R->Next) {
 		if (InImage((uint32)(uintptr_t)R->Handler))
 			ReplaceHandler(R);
@@ -538,6 +554,20 @@ void CompareThrown(const char *Test, const char *What, const TThrown &Ours, cons
 	// every later comparison of the same lines fail.
 	if (A == B && OurLines.size() == OriginalLines.size())
 		MapLines(Test, What, OurLines, OriginalLines);
+}
+
+void *ImageSideVtable(const void *OurVtable, const void *OurBase, uint32 ImageBase, int BaseSlots, int Slots)
+{
+	static std::map<std::pair<const void *, uint32>, void **> Copies;
+	void **&Copy = Copies[std::make_pair(OurVtable, ImageBase)];
+	if (Copy == NULL) {
+		Copy = new void *[Slots];
+		void *const *Ours = (void *const *)OurVtable, *const *Base = (void *const *)OurBase;
+		void *const *Image = (void *const *)(uintptr_t)ImageBase;
+		for (int i = 0; i < Slots; i++)
+			Copy[i] = i < BaseSlots && Ours[i] == Base[i] ? Image[i] : Ours[i];
+	}
+	return Copy;
 }
 
 bool Redirected(const void *Code)
