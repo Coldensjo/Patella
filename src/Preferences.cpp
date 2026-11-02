@@ -595,7 +595,7 @@ bool SetMotD(const char *Text)
 	const char *Break = strchr(Text, '\n');
 	if (Break == NULL)
 		return false;
-	int Number = atol(Text);
+	int Number = atoi(Text);
 	bool New = Number != LastMotD;
 	LastMotD = Number;
 	if (MotD != NULL)

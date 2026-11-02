@@ -293,7 +293,7 @@ BOOL CPlayerApp::InitInstance()
 						Expected = 0;
 						break;
 					case 3:
-						CommandLineEngine = atol(Token);
+						CommandLineEngine = atoi(Token);
 						Expected = 0;
 						break;
 					}

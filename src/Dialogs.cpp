@@ -931,7 +931,7 @@ void TLoginDialog::HandleEvent(int Event)
 {
 	TBEGIN
 	if (Event == 1) {
-		SetAccount(atol(Account->Text), Password->Text);
+		SetAccount(atoi(Account->Text), Password->Text);
 		AddMessage(0x3d, 0, 0);
 		AddMessage(3, 0, 0);
 	}

@@ -490,17 +490,17 @@ vlong modinv(const vlong &a, const vlong &m)
 	return i;
 }
 
-// 0x50e360. Non-digit characters count as 0 (atol), as in the binary.
+// 0x50e360. Non-digit characters count as 0 (atoi), as in the binary.
 void DecimalToVlong(const char *pDecimal, vlong &Number)
 {
 	if (pDecimal == NULL)
 		throw "pDecimal pointer is NULL";
 	char Digit[2];
 	Digit[0] = 0;
-	Digit[1] = 1; // as in the binary; atol stops at it
+	Digit[1] = 1; // as in the binary; atoi stops at it
 	Number = 0;
 	for (Digit[0] = *pDecimal; Digit[0] != 0; Digit[0] = *++pDecimal) {
-		long Value = atol(Digit);
+		long Value = atoi(Digit);
 		if (Value < 0 || Value > 9)
 			throw "digit out of range";
 		Number = Number * 10L + Value;
