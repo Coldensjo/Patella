@@ -21,4 +21,8 @@ decomp/*.json
 decomp/*.err
 decomp/work/
 build/
+
+# Visual Studio state and per-user project settings (Patella.sln, issue #16)
+.vs/
+*.vcxproj.user
 decomp/clean/

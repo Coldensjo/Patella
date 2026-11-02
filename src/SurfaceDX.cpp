@@ -11,8 +11,12 @@
 // 0x4eae70 is d3dtypes.h's inline D3DTLVERTEX::D3DTLVERTEX() (D3D_OVERLOADS),
 // the constructor ShadeRectangles' and ShadeRectangle's vertex arrays run.
 
+// SurfaceDX.h's d3d.h must declare the DirectX 6/7 interfaces: real MFC's afxwin.h (common.h)
+// includes d3d9types.h, which would set DIRECT3D_VERSION to 0x0900 first (issue #16).
+#define DIRECT3D_VERSION 0x0700
 #include "SurfaceDX.h"
 #include "Preferences.h"
+#include <mmsystem.h>
 
 // The image's assertions with a bug number append it to the expression text.
 #define TASSERTB1(Expr, V1, Bug) \

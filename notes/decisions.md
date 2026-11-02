@@ -3786,3 +3786,105 @@ Claude Opus 5.5 (issue #22), November 2, 2026.
 - **Totals**: DIFFTEST_ONLY=Errors 32,822 checks (9,270 exceptions compared, 8,045 of the calls threw on the
   original's side); in the full run 31,912 (250 skipped), difftest.exe 14,524,592, sysinctest.exe 67, vlong
   3,201, no failures; the later tests' counts are unchanged. A DIFFTEST_ONLY=Errors run takes about a second.
+## Building Patella.exe (issue #16)
+
+Settled by Claude Opus 5.5, November 2, 2026, with the Visual Studio MFC component (VS 2026 Community,
+MSVC 14.51.36231 atlmfc) installed. Patella.exe builds from Patella.sln/Patella.vcxproj (root of the
+repository) and from `tools\build-patella.cmd`, starts and shows its start screen.
+
+- **The project** (decisions of form, not of behaviour). Patella.vcxproj (tabs, like the sources; VS reads
+  them), toolset v145, configurations Release|Win32 and Debug|Win32; the sources as wildcards (`src\*.cpp`,
+  `src\Extern\regexp\*.c`, which compile as C), so a new file needs no project change. The compiler flags
+  are compile-check's: `/std:c++17 /EHsc /O2 /W3 /permissive- /Zc:strictStrings- /D_WIN32_WINNT=0x0601`,
+  plus VS's usual WIN32, _WINDOWS and NDEBUG (no source uses assert), `/MT` (`/MTd` for Debug). UseOfMfc
+  Static, CharacterSet NotSet: neither _MBCS nor _UNICODE, as in compile-check, and MFC links nafxcw.lib,
+  the ANSI library the original has. Output build\<Configuration>\Patella.exe, intermediates
+  build\obj\<Configuration> (build/ is gitignored; .vs/ and *.vcxproj.user now too). `VcpkgEnabled` is
+  false and the per-user property sheet is not imported: this machine's user-wide vcpkg integration put
+  E:\vcpkg's include path and every library it has (`*.lib`) on the command lines.
+- **Libraries** (high). Tibia.exe imports GLU32, OPENGL32, DDRAW, WINMM, KERNEL32, USER32, GDI32,
+  WINSPOOL.DRV, ADVAPI32, SHELL32, COMCTL32, SHLWAPI, OLEAUT32 and WS2_32, and delay-loads OLEACC.dll
+  (dumpbin /dependents; tools/compare_imports.py reads both directories). The project links those import
+  libraries in that order plus dxguid.lib (IID_IDirectDraw4, IID_IDirect3D3, IID_IDirect3DHALDevice), with
+  `/DELAYLOAD:oleacc.dll` (MSBuild adds delayimp.lib); d3d9.dll is loaded at run time (surfaceDX9.cpp).
+  `/NODEFAULTLIB:wsock32.lib` (IgnoreSpecificDefaultLibraries): afxsock.h asks for wsock32.lib, and the
+  linker resolved MFC's socket calls from it (it searches the libraries after the one that pulled in an
+  object first), so 18 Windows Sockets functions came from WSOCK32.dll; Tibia.exe imports all of them from
+  WS2_32.dll, by the same ordinals. Now WS2_32's 23 functions are Tibia.exe's 23. `/MANIFEST:NO`
+  (GenerateManifest false): Tibia.exe has no manifest (notes/resources.md). The linker's other defaults stay
+  (/DYNAMICBASE, /NXCOMPAT, /SAFESEH; Tibia.exe has none of these flags): the code does not depend on its
+  load address.
+- **Resources** (high). src\res\Patella.rc is compiled with build\res on the include path; the project's
+  ExtractResources target runs `python -I tools/extract_resources.py Tibia.exe build/res` first when
+  build\res\resources.tsv is missing (python on PATH, Tibia.exe in the root). afxres.rc is not included.
+  `python -I tools/compare_resources.py Tibia.exe build\Release\Patella.exe`: "55 entries in the original,
+  55 in Patella.exe, 0 differences" (Release and Debug; build-patella.cmd runs it after every build).
+- **What real MFC changed in the sources.** The shim (src/compat/mfc_shim.h) declares only what the
+  sources use, so these showed only now. Each change keeps the generated calls and the behaviour:
+  - MainFrm.cpp: the 24 Win32 calls on `m_hWnd` (GetClientRect, GetWindowRect, SetTimer, KillTimer,
+    IsIconic, IsZoomed, ClientToScreen, ScreenToClient, SetCapture) are written `::GetClientRect(m_hWnd, ...)`.
+    Inside CMainFrame's members real MFC's CWnd members of the same names (one argument fewer) hide the
+    global functions; the shim had none. The binary calls the user32 functions with this->m_hWnd (MFC 7.1's
+    inline CWnd members expanded; the original source may have used the member forms, but MFC 14's members
+    are not all inline and some add checks, so the explicit calls are the faithful spelling).
+  - Player.cpp: `::LoadIconA(AfxGetResourceHandle(), ...)` twice (CWinApp::LoadIcon hides it).
+  - MainFrm.h/.cpp: OnNcHitTest returns LRESULT (MFC 8 changed ON_WM_NCHITTEST's handler type from MFC 7.1's
+    UINT; the same 32-bit value on x86), `return Default();` without the UINT cast.
+  - Surface.cpp and SurfaceDX.cpp define `DIRECT3D_VERSION 0x0700` before their first include, and SurfaceDX.h
+    stops with #error if it is defined to anything else. MFC 14's afxwin.h includes afxrendertarget.h
+    (Direct2D), which includes d3d9types.h, which sets DIRECT3D_VERSION to 0x0900 when it is unset; then the
+    SDK's d3d.h leaves out the DirectX 6/7 interfaces SurfaceDX.cpp uses (IDirect3D3, D3DTLVERTEX,
+    IID_IDirect3DHALDevice...). 0x0700 is d3d.h's own default, so the shim build sees what it saw before;
+    d3d9types.h is then empty, which MFC's Direct2D headers do not mind. surfaceDX9.cpp does not include
+    d3d.h and keeps 0x0900.
+  - SurfaceDX.cpp, surfaceDX9.cpp and SurfaceGL.cpp include <mmsystem.h> for timeGetTime: MFC's afxv_w32.h
+    defines WIN32_LEAN_AND_MEAN, so windows.h no longer brings it (the shim includes windows.h in full).
+    sysinc.cpp already included it.
+  Nothing else: the message map, CPlayerApp's and CMainFrame's overrides, CAsyncSocket's use in Network.cpp
+  and the order of afxwin.h/afxsock.h and winsock2.h compiled unchanged.
+- **Warnings** (high). None from the compiler or the linker, in Release and Debug (MSBuild "0 Warning(s)";
+  build-patella.cmd builds with -warnAsError, so a warning fails it). Nothing is suppressed.
+- **compile-check** uses real MFC now; `set TIBIA_MFC_SHIM=1` forces the shim (also chosen when the MFC
+  component is missing). Both modes are clean. The difftest and tools\listing.cmd keep the shim.
+- **Import tables** (tools/compare_imports.py Tibia.exe build\Release\Patella.exe; Release build).
+  Patella.exe imports 18 DLLs and delay-loads OLEACC.dll:
+
+  | DLL | Tibia.exe | Patella.exe | in both |
+  |---|---|---|---|
+  | GLU32 | 1 | 1 | 1 |
+  | OPENGL32 | 32 | 32 | 32 |
+  | DDRAW | 1 | 1 | 1 |
+  | WINMM | 1 | 2 | 1 (+ PlaySoundA) |
+  | KERNEL32 | 123 | 174 | 95 |
+  | USER32 | 133 | 228 | 131 (- LoadBitmapA, wsprintfA) |
+  | GDI32 | 37 | 101 | 37 |
+  | WINSPOOL.DRV | 3 | 3 | 3 |
+  | ADVAPI32 | 9 | 11 | 8 (- RegOpenKeyA; + RegDeleteValueA, RegEnumKeyExA, RegEnumValueA) |
+  | SHELL32 | 3 | 9 | 3 |
+  | COMCTL32 | 4 | - | 0 (InitCommonControls #17 and three ImageList functions of MFC 7.1) |
+  | SHLWAPI | 2 | 6 | 2 |
+  | OLEAUT32 | 3 | 13 | 3 |
+  | WS2_32 | 23 | 23 | 23 |
+  | MSIMG32, UxTheme, ole32, gdiplus, IMM32 | - | 2, 12, 21, 22, 3 | MFC 14 only |
+  | OLEACC (delay-load) | 2 | 3 | 2 (+ AccessibleObjectFromWindow) |
+
+  The differences are the libraries': MSVC 7.1's libcmt and MFC 7.1 against the UCRT/vcruntime and MFC 14
+  (KERNEL32's - side: the ANSI environment and locale functions, GetVersion, HeapCreate, IsBad*Ptr,
+  Interlocked*, lstr*, CreateProcessA and MoveFileA of _execl and rename; its + side: the W functions, Fls*,
+  SRW locks, CreateProcessW/MoveFileExW of the same CRT calls, ...; MFC 14's visual manager, GDI+, themes,
+  OLE drag and drop and IME support pull in the new DLLs). The game code's own imports agree: the IAT slots
+  that Tibia.exe's game objects (0x401000-0x50eae8) reference and the import symbols our objects leave
+  undefined (dumpbin /symbols of build\obj\Release) are the same 89 functions, except ATL 7.1 header code in
+  sysinc.obj (AtlGetConversionACP: GetThreadLocale, GetLocaleInfoA, GetACP, InterlockedExchange; names.tsv
+  0x4fcd50-0x4fcdc0) on Tibia's side and MSVC 14 header code on ours (critical sections, process heap,
+  DecodePointer, UnregisterClassA in every object that includes afxwin.h); DirectDrawCreate and gluOrtho2D
+  are called through import thunks on both sides (not seen by the slot scan in Tibia.exe). A slot match for
+  TlsAlloc at 0x4de36a was a call displacement, not a reference. Scripts: build/scratch/i16/gameimports.py
+  (i16 worktree).
+- **The start** (Release and Debug, from build\run with copies of Tibia.dat, .spr, .pic and .cfg and a copy
+  of Patella.exe; Engine = 2 in that Tibia.cfg, OpenGL): a visible top-level window, class "TibiaClient",
+  title "Tibia   " (the decoded GetWindowTitle), the start screen with Enter Game, Access Account, Options,
+  Info and Exit Game, responding; no error dialog, no error.txt. Closed with WM_CLOSE
+  (Process.CloseMainWindow): exit code 0 within the wait, so Stop-Process was not needed; it rewrote the copied
+  Tibia.cfg with the same bytes. Screenshot (PrintWindow) build\run\started.png. Nothing was clicked and
+  nothing connected.
