@@ -281,9 +281,10 @@ class StopSession(Exception):
 	pass
 
 
-def run_session(driver, wait, checkpoint, until=None):
+def run_session(driver, wait, checkpoint, until=None, with_login=True):
 	"""The scripted session. wait(name): until the server side is quiet; checkpoint(name): record
-	the client state. Returns the list of step names. until: stop before this step (testing)."""
+	the client state. Returns the list of step names. until: stop before this step (testing).
+	with_login False: the caller has logged in already (tools/compare_rendering.py, issue #20)."""
 	steps = []
 
 	def step(name, action, snapshot=True):
@@ -296,7 +297,8 @@ def run_session(driver, wait, checkpoint, until=None):
 		if snapshot:
 			checkpoint(name)
 
-	step("login", lambda: login(driver, wait, CHARACTER))
+	if with_login:
+		step("login", lambda: login(driver, wait, CHARACTER))
 	for name, vk in (("walk north", VK_UP), ("walk east", VK_RIGHT), ("walk south", VK_DOWN), ("walk west", VK_LEFT)):
 		step(name, lambda vk=vk: (driver.key(vk), time.sleep(1.0)))
 	step("turn south", lambda: driver.key(VK_DOWN, VK_CONTROL))
