@@ -63,8 +63,11 @@ None.
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
   which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with
   output were dialogstest.cpp's dump, which took a heap pointer 0x02abab30 for the 0xab fill
-  pattern (fixed: pattern bytes must include the top or low byte). Git Bash's larger environment
-  block moves the heap. From Git Bash run `cmd //c 'tools\difftest\build.cmd'` (`cmd /c` becomes
+  pattern (fixed: pattern bytes must include the top or low byte), or a number both sides hold that
+  was readable memory for the second dump only (fixed: Compare keeps each page's readability for both
+  dumps, reads check again). Git Bash's larger environment block moves the heap. A test that is
+  suspected of depending on the layout: run it alone (DIFFTEST_ONLY) many times with an environment
+  variable of growing length (issue #23 did 30-100 such runs of each window test). From Git Bash run `cmd //c 'tools\difftest\build.cmd'` (`cmd /c` becomes
   `cmd C:/`: an interactive cmd that runs nothing and exits 0). A locked difftest.exe no longer
   breaks the link: the child dies with its parent (job object) and build.cmd stops a copy of this
   checkout that still runs, by its full path. notes/reconstruction.md ("Checking") has the crash

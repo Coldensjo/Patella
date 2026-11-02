@@ -2495,7 +2495,13 @@ Claude Opus 5.5 (issue #23), November 2, 2026.
   the 0xab fill pattern (two 0xab bytes) and printed it as a number, ours as the string. Git Bash's larger
   environment block moves the heap, so only some shells hit the 256-byte window 0x..abab... IsPattern now
   needs a 0xab top byte (no pointer of a 32-bit process is that high) or low byte (no object is at an odd
-  address). (3) `cmd /c ...` from Git Bash: MSYS turns /c into C:/, so cmd starts interactively, prints
+  address). A second flake of the same dump (1 of 10 cmd runs): a number both sides hold, 0x00df64af in a
+  TRuleViolationDialog, was unreadable during our dump and readable during the original's (the heap grew
+  in between), so one side printed "P". Compare now keeps each page's first readability answer for both
+  dumps; every actual read checks the page again (PageReadable), because the cache alone let DumpWord read
+  a page the heap had decommitted meanwhile (an access violation in 2 of about 60 runs of
+  DIFFTEST_ONLY=Dialogs, found by running it under environment blocks of different sizes and pinned by the
+  new crash report plus a /MAP build). (3) `cmd /c ...` from Git Bash: MSYS turns /c into C:/, so cmd starts interactively, prints
   its banner, reads the empty stdin and exits 0 without running anything; run `cmd //c`. (4) A locked
   difftest.exe: a child left running (its parent killed, or Windows Error Reporting holding a crashed
   child) keeps the image locked and the link fails. No other environment difference mattered: vcvarsall,
