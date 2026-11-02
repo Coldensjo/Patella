@@ -59,6 +59,13 @@ Network traffic compared (issue #19, November 2, 2026): tools/compare_traffic.py
 sessions through tools/proxy.py (decrypted with the server's key), replays each recording to both
 clients and compares their packets, their memory state after every step (tools/client_state.py) and
 Tibia.cfg: no differences, no client bug. notes/traffic.md.
+Written files compared (issue #21, November 2, 2026): tools/compare_files.py plays seven sessions with both
+clients (the option dialogs; a replayed walk over three floors with automap marks and a saved channel; two
+forced errors; the error report flow; patches of all five files from crafted login server answers) and
+compares every file they write: Tibia.cfg, the *.map files, Default.txt, error.txt, the patched files and
+Tibia.bak are byte-identical, apart from the times (masked, two runs of Tibia.exe as evidence) and error.txt's
+line numbers (mapped; issue #35). One client bug fixed: the UCRT's ctime pads the day with a space, MSVC 7.1's
+with 0 (src/compat/crt71.h). notes/written-files.md.
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -84,6 +91,8 @@ None.
 (after merging #34 on top of #16, #18 and #19: #22's 14,524,592 plus the window and surface error rounds:
 GUI 31,909, DialogWindow 9,501, ContextMenus 8,572, SurfaceDX 155,615, SurfaceDX9 4,934, SurfaceGL 2,620,
 statics 7,920; every other test's count as before).
+Issue #21 (src/compat/crt71.h, Player.cpp and ConsoleWindow.cpp): the same totals, 0 failures (full build.cmd,
+November 2, 2026).
 
 ## Notes for later files
 
@@ -373,3 +382,13 @@ statics 7,920; every other test's count as before).
   only calls C functions is removed by our compiler too, so a guessed catch body is never emitted (difftest
   builds with /EHa, where it stays).
 - DIFFTEST_ONLY=Script runs scripttest.cpp alone; its TestLongTokens has its own random generator.
+- Library behaviour (issue #21): Patella links the UCRT, Tibia.exe MSVC 7.1's libcmt; where the two CRTs format
+  differently and the result reaches a file or a packet, the call site converts to MSVC 7.1's form
+  (src/compat/crt71.h, CRT71Time for ctime's two-digit day). The difftest replaces the image's CRT functions
+  (ctime, localtime, ...) with the test's, so it cannot see such differences; tools/compare_files.py runs the
+  real executables. Look for more when a session writes or sends text the CRT formats (asctime, strftime,
+  printf's %g/%e, ...).
+- tools/compare_files.py (issue #21) reuses compare_traffic.py's set-up through set_folder(); its replay()
+  runs any session(driver, wait, proxy) against recorded or crafted server packets (connection(),
+  s2c(), c2s_expected(), close_event() build a script). tools/client_state.py names more Tibia.exe vtables
+  (option and mark dialogs, TCheckBox, TAutomapView/Window, TTab, TStartWindow) and reads TTextButton's text.

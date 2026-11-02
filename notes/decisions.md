@@ -3975,6 +3975,57 @@ The scripts, the session and the results: notes/traffic.md. Decisions with a rea
   the driver's keys; the window (10,10,800,600) fits the 1024x768 screen of the monitor-off display, so the
   layout, and every click place, is the same in all runs.
 
+## Written files (issue #21)
+
+The scenarios, the masks and the results: notes/written-files.md. Decisions with a reasonable default:
+
+- **Replays, not live sessions, for every comparison** (high): the files follow the server's data (the
+  automap the map the server sends, error.txt the packets before the crash), and a live world moves on its
+  own; as in issue #19 one live session of Tibia.exe is recorded and both clients get its server packets.
+  The automap files of both replays are also identical to the live run's.
+- **Crafted server data for the errors and the patches** (high): the replay can send anything; the error is
+  an unknown packet type (Control.cpp ReceivePackets' two TERRORs, in the game and at the login), the patches
+  are the login server's own protocol (0x1e/0x1f/0x20), so nothing in either client is patched or injected.
+  A crafted script's expected client packets are computed independently of the clients where the form is
+  known (the login packets with the new signatures, the 0xe8 debug report from error.txt) and the clients
+  are also compared with each other.
+- **Patches that change their file** (high): each patched file gets a new signature (Tibia.exe: eight bytes
+  of the DOS stub), checked against the script's own result, so a patch that silently failed would differ.
+  The difference patch of Tibia.dat uses every operation and every count form of ApplyPatch.
+- **No patch.exe** (high): after a Tibia.exe patch the client runs patch.exe (CipSoft's separate patcher, not
+  ours, not available). The run folders have none, so `_execl` fails and the client ends; the scenario
+  compares Tibia.bak and the exit. What patch.exe does is out of scope (written into notes/written-files.md).
+- **ctime as MSVC 7.1 writes it** (high; a reconstruction bug, fixed): Tibia.exe's CRT (libcmt.lib 7.1,
+  asctime 0x517f6d: `tm_mday / 10 + '0'`, `tm_mday % 10 + '0'`) writes the day with two digits, "Mon Nov 02
+  12:14:46 2026"; the UCRT that Patella links pads it with a space, "Mon Nov  2". The client writes ctime's
+  text into error.txt (Player.cpp HandleException) and saved channels (ConsoleWindow.cpp SaveChannel), so
+  Patella's files differed on days 1-9 (found in the walk scenario's Default.txt on November 2). Fixed with
+  src/compat/crt71.h's CRT71Time, which turns the UCRT's form into MSVC 7.1's at both call sites (a compat
+  header, not part of the original source, like the MFC shim). The difftest never ran the image's own ctime
+  (errortest.cpp and consolewindowtest.cpp replace it with the test CRT's), and its fixed dates have two-digit
+  days, so its results do not change. Other formatting of the UCRT that reaches a written file: none found
+  (Talk.cpp's time stamps are sprintf'd from localtime with %02d; the rest is the client's own sprintf).
+- **Times masked, with evidence** (high): error.txt's ctime line and the channel file's "Channel saved at"
+  differ between two runs of Tibia.exe (the script runs it twice for walk, error and error-login and shows
+  that the runs differ exactly there); the masks accept only the two-digit day, so the bug above stays
+  visible.
+- **error.txt's line numbers compared through a map** (medium): our `__LINE__` differs from the original's
+  (known since issue #22); each differing pair must name the same function (our line inside the function's
+  source, the original line among the function's assertion and catch lines in symbols.tsv) and stand for one
+  line only. The real fix, the original's lines in our messages, is issue #35; until then error.txt and the
+  debug reports (0xe8) differ in these numbers.
+- **The driver's details** (medium): a step key that makes the client send nothing (a creature on the field,
+  which the client knows) is not part of the recorded session; the replay presses the directions of the
+  recording's step packets, each until the client sends it. The game connection counts when the proxy has
+  it, too (login_client's TCP table check missed an established connection twice). FatalError's box is closed
+  through its button's real ID (IDCANCEL in an MB_OK box: WM_COMMAND IDOK does nothing).
+- **Options driven through the dialogs** (high): every control of the five option dialogs except the
+  fullscreen check box (a display mode change on a monitor-off machine) and the help links (they open a
+  browser); the live switch to the OpenGL engine is included. The options set outside these dialogs that
+  the sessions touch (AutomapZoom, ConsoleHeight, OpenDialogs) are compared in the walk's Tibia.cfg;
+  the VIP list, ignore lists, channels and combat modes are not driven (low: they are other dialogs and
+  server data, a possible follow-up).
+
 ## Error paths of the window and surface files (issue #34)
 
 Claude Opus 5.5 (issue #34), November 2, 2026.

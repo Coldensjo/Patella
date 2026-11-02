@@ -106,6 +106,11 @@ use, trade, logout) with both clients against that server through a recording pr
 which decrypts with the server's key), replays each recording to both clients and compares their packets,
 their state in memory after every step and their Tibia.cfg: notes/traffic.md.
 
+`python -I tools/compare_files.py` (issue #21) compares the files both clients write after the same sessions
+(Tibia.cfg after the option dialogs, the automap files after a walk over three floors, a saved channel,
+error.txt after forced errors and the error report flow, the files a patch from the login server writes):
+notes/written-files.md.
+
 ## Checking
 
 - `tools\compile-check.cmd` compiles every `src/*.cpp` with MSVC 14.51 for x86 (`/W3`, no

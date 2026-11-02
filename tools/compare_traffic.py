@@ -118,6 +118,13 @@ def log(text):
 
 # --- set-up ------------------------------------------------------------------------------
 
+def set_folder(path):
+	"""Use other run folders (and server-scripts.log) than build\\traffic: tools/compare_files.py
+	(issue #21) runs its sessions in build\\files with the same set-up."""
+	global TRAFFIC
+	TRAFFIC = path
+
+
 def run_dir(name):
 	return os.path.join(TRAFFIC, name)
 

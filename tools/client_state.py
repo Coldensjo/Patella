@@ -94,6 +94,22 @@ ORIGINAL_VTABLES = {
 	0x560bb8: "TLabel",                # DialogElements.h
 	0x561c40: "TTextButton",           # DialogElements.h
 	0x563778: "TDialog",               # Dialogs.h
+	# issue #21 (tools/compare_files.py): the option and mark dialogs, their controls, the automap
+	# and the console's tabs
+	0x56c5c0: "TStartWindow",          # MainWindow.h
+	0x563258: "TOptionsDialog",        # Dialogs.h
+	0x563360: "TGeneralOptionsDialog", # Dialogs.h
+	0x5624b8: "TGraphicsOptionsDialog",  # Dialogs.h
+	0x562738: "TAdvancedGraphicsDialog",  # Dialogs.h
+	0x563598: "TConsoleOptionsDialog",  # Dialogs.h
+	0x563650: "TNetworkOptionsDialog",  # Dialogs.h
+	0x563a90: "THotkeyDialog",         # Dialogs.h
+	0x562698: "TEditMarkDialog",       # Dialogs.h
+	0x563b30: "TErrorReportDialog",    # Dialogs.h
+	0x561de8: "TCheckBox",             # DialogElements.h
+	0x55e688: "TAutomapView",          # ContentWindows.h (notes/decisions.md, ContentWindows.cpp)
+	0x55ea08: "TAutomapWindow",        # ContentWindows.h
+	0x55e098: "TTab",                  # ConsoleWindow.h
 }
 
 SKILLS = 7
@@ -198,7 +214,12 @@ class Client:
 		return struct.unpack("<i", self.read(address, 4))[0]
 
 	def cstr(self, address, limit=256):
-		data = self.read(address, limit)
+		# up to the end of the page first: a short string near the end of the last committed
+		# page of a heap region cannot be read with `limit` bytes
+		first = min(limit, 0x1000 - (address & 0xfff))
+		data = self.read(address, first)
+		if b"\0" not in data and first < limit:
+			data += self.read(address + first, limit - first)
 		return data.split(b"\0", 1)[0].decode("latin-1")
 
 	def var(self, name):
@@ -339,6 +360,8 @@ class Client:
 					node["text"] = self.cstr(text, 256) if text else None
 				elif node["class"] == "TContextMenuEntry":
 					node["text"] = self.cstr(component + 0x24, 50)
+				elif node["class"] == "TTextButton":  # Text[50] at +0x44 (DialogElements.h)
+					node["text"] = self.cstr(component + 0x44, 50)
 				nodes.append(node)
 				if self.is_window(vtable):
 					walk(self.u32(component + 0x24), depth + 1, x + ox, y + oy)

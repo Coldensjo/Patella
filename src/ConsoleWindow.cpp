@@ -35,6 +35,7 @@
 #include "Text.h"
 #include "Utils.h"
 #include "graphics.h"
+#include "compat/crt71.h"
 #include <sstream>
 #include <string.h>
 #include <time.h>
@@ -2005,7 +2006,7 @@ bool TConsoleWindow::SaveChannel()
 	TTalkBuffer *TextBuffer = GetTextBuffer();
 	TASSERT(TextBuffer!=NULL);
 	__time32_t Now = _time32(NULL);
-	fprintf(File, "\nChannel saved at %s", _ctime32(&Now));
+	fprintf(File, "\nChannel saved at %s", CRT71Time(_ctime32(&Now))); // the day as MSVC 7.1 writes it
 	TextBuffer->Write(File);
 	fclose(File);
 	char Message[100];

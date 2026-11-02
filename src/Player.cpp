@@ -28,6 +28,7 @@
 #include "Text.h"
 #include "Utils.h"
 #include "sysinc.h"
+#include "compat/crt71.h"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -146,7 +147,7 @@ void CPlayerApp::HandleException(TMyException &Exception)
 		Out << std::endl << "+---------------------------------------------------------------" << std::endl
 			<< "Debug Assertion " << "7.72" << " " << Exception.GetOrigin();
 		time_t Now = time(NULL);
-		Out << std::endl << ctime(&Now);
+		Out << std::endl << CRT71Time(ctime(&Now)); // the day as MSVC 7.1 writes it
 		OSVERSIONINFOA Version;
 		memset(&Version, 0, sizeof(Version));
 		Version.dwOSVersionInfoSize = sizeof(Version);
