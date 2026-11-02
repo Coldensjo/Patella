@@ -28,6 +28,7 @@
 #include "../../src/Help.h"
 #include "../../src/graphics.h"
 #include "../../src/Script.h"
+#include "testsurface.h"
 #include <direct.h>
 #include <time.h>
 #include <map>
@@ -1109,6 +1110,102 @@ static int *FindStatic(const uint8 *Code, int (__cdecl *Get)())
 	return NULL;
 }
 
+// --- Surface.cpp's SurfaceInitInstance (issue #34) --------------------------
+
+// Its try block around the DirectX 9 test turns every exception into
+// PROGRAM_ERROR 12: IsDirect3D9Installed, the surface's creation (GetSurface,
+// CreateSurfaceDX9) or its TestEngine throws an assertion of the calling side
+// (fakes on both sides; the engine from Tibia.cfg random, no command line
+// engine). The second try block (ChoosePixelFormat, DescribePixelFormat) has
+// no handler in the binary and is not reached.
+static int InitSide, InitMode, InitEngine; // 0 ours, 1 the image's; what fails
+static bool __cdecl FakeInitD3D9Installed()
+{
+	if (InitMode == 0)
+		ThrowSideAssertion(InitSide == 1, -1);
+	return true;
+}
+static int __cdecl FakeInitGetEngine() { return InitEngine; }
+class TInitTestSurface : public TTestSurface {
+public:
+	bool TestEngine()
+	{
+		ThrowSideAssertion(InitSide == 1, -3);
+		return true;
+	}
+};
+static TSurface *__cdecl FakeInitSurface()
+{
+	if (InitMode == 1)
+		ThrowSideAssertion(InitSide == 1, -2);
+	static TInitTestSurface *Made[2];
+	if (Made[InitSide] == NULL)
+		Made[InitSide] = new TInitTestSurface;
+	return Made[InitSide];
+}
+struct TCodePatch {
+	uint8 *Code;
+	uint8 Old[5];
+};
+static void PatchSaved(std::vector<TCodePatch> &List, void *Function, void *Target, bool Image)
+{
+	TCodePatch P;
+	P.Code = (uint8 *)Function;
+	memcpy(P.Old, P.Code, 5);
+	List.push_back(P);
+	if (Image)
+		PatchImageJump((uint32)(uintptr_t)Function, Target);
+	else
+		PatchOwnCode(Function, Target);
+}
+static void RestorePatches(std::vector<TCodePatch> &List)
+{
+	for (size_t i = List.size(); i-- > 0;) {
+		DWORD Old;
+		VirtualProtect(List[i].Code, 5, PAGE_EXECUTE_READWRITE, &Old);
+		memcpy(List[i].Code, List[i].Old, 5);
+		VirtualProtect(List[i].Code, 5, Old, &Old);
+		FlushInstructionCache(GetCurrentProcess(), List[i].Code, 5);
+	}
+	List.clear();
+}
+static void TestSurfaceInitInstance()
+{
+	std::vector<TCodePatch> Patches;
+	PatchSaved(Patches, (void *)IsDirect3D9Installed, (void *)FakeInitD3D9Installed, false);
+	PatchSaved(Patches, (void *)GetEngine, (void *)FakeInitGetEngine, false);
+	PatchSaved(Patches, (void *)GetSurface, (void *)FakeInitSurface, false);
+	PatchSaved(Patches, (void *)CreateSurfaceDX9, (void *)FakeInitSurface, false);
+	PatchSaved(Patches, (void *)(uintptr_t)0x4efd10, (void *)FakeInitD3D9Installed, true);
+	PatchSaved(Patches, (void *)(uintptr_t)0x4db420, (void *)FakeInitGetEngine, true);
+	PatchSaved(Patches, (void *)(uintptr_t)0x4eaa90, (void *)FakeInitSurface, true);
+	PatchSaved(Patches, (void *)(uintptr_t)0x4f1430, (void *)FakeInitSurface, true);
+	int SavedCommandLine[2] = {CommandLineEngine, Global<int>(0x5c2564)};
+	int SavedEngine[2] = {curEngine, Global<int>(0x71d0c4)};
+	HWND SavedWindow = Global<HWND>(0x71d0c0);
+	CommandLineEngine = -1;
+	Global<int>(0x5c2564) = -1;
+	for (int Round = 0; Round < 12; Round++) {
+		InitMode = Round % 3;
+		InitEngine = (int)(ErRandom() % 5) - 1;
+		HWND Window = (HWND)(uintptr_t)(0x1000 + Round);
+		char What[64];
+		sprintf(What, "SurfaceInitInstance (fails %d, engine %d)", InitMode, InitEngine);
+		TThrown A = OurThrow([&] { InitSide = 0; SurfaceInitInstance(&Window); });
+		TThrown B = ImageThrow([&] { InitSide = 1; At<void (__cdecl *)(HWND *)>(0x4eac20)(&Window); });
+		CHECK(A.Kind != TThrown::NOTHING && B.Kind != TThrown::NOTHING, "Statics: %s did not throw", What);
+		Compare(What, A, B);
+		CHECK(curEngine == Global<int>(0x71d0c4), "Statics: %s: engine %d, original %d", What, curEngine,
+			Global<int>(0x71d0c4));
+	}
+	RestorePatches(Patches);
+	CommandLineEngine = SavedCommandLine[0];
+	Global<int>(0x5c2564) = SavedCommandLine[1];
+	curEngine = SavedEngine[0];
+	Global<int>(0x71d0c4) = SavedEngine[1];
+	Global<HWND>(0x71d0c0) = SavedWindow;
+}
+
 // Each count is set on both sides for the calls (out-of-range arguments, so
 // that only the assertions run) and put back: NumberOfBuddies,
 // NumberOfPlayerSteps, AccountCharacters, the two offers' counts. The effect
@@ -1221,6 +1318,7 @@ static void TestErrorStatics()
 	}
 	SetBuddyHideOffline(SavedHide[0]);
 	Global<bool>(0x719eac) = SavedHide[1];
+	TestSurfaceInitInstance();
 	R.Finish();
 }
 
