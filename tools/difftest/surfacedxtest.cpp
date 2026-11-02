@@ -735,9 +735,9 @@ static HRESULT WINAPI DXDrawPrimitive(TDXCom *ComObject, D3DPRIMITIVETYPE Type, 
 		DXLogf("%s%08x", ItemIndex % 8 == 0 ? ";v" : ",", Words[ItemIndex]);
 	DXLogf(";");
 	if (DXScript.ShadeMode == 1 && Count == 4 && ComObject->Target != NULL) {
-		const D3DTLVERTEX *V = (const D3DTLVERTEX *)Vertices;
-		RECT Area = {(LONG)V[0].sx, (LONG)V[0].sy, (LONG)V[3].sx, (LONG)V[3].sy};
-		D3DCOLOR Color = V[0].color;
+		const D3DTLVERTEX *VertexData = (const D3DTLVERTEX *)Vertices;
+		RECT Area = {(LONG)VertexData[0].sx, (LONG)VertexData[0].sy, (LONG)VertexData[3].sx, (LONG)VertexData[3].sy};
+		D3DCOLOR Color = VertexData[0].color;
 		DXFill(ComObject->Target, Area, DXColorPixel(ComObject->Target, (Color >> 16) & 255, (Color >> 8) & 255, Color & 255));
 	}
 	return D3D_OK;
@@ -919,11 +919,11 @@ static void **DXFindImport(const char *Dll, const char *Name)
 	uint8 *Base = (uint8 *)GetModuleHandleA(NULL);
 	IMAGE_NT_HEADERS *Headers = (IMAGE_NT_HEADERS *)(Base + ((IMAGE_DOS_HEADER *)Base)->e_lfanew);
 	IMAGE_DATA_DIRECTORY &Directory = Headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
-	for (IMAGE_IMPORT_DESCRIPTOR *D = (IMAGE_IMPORT_DESCRIPTOR *)(Base + Directory.VirtualAddress); D->Name != 0; D++) {
-		if (_stricmp((const char *)(Base + D->Name), Dll) != 0 || D->OriginalFirstThunk == 0)
+	for (IMAGE_IMPORT_DESCRIPTOR *Descriptor = (IMAGE_IMPORT_DESCRIPTOR *)(Base + Directory.VirtualAddress); Descriptor->Name != 0; Descriptor++) {
+		if (_stricmp((const char *)(Base + Descriptor->Name), Dll) != 0 || Descriptor->OriginalFirstThunk == 0)
 			continue;
-		IMAGE_THUNK_DATA *Names = (IMAGE_THUNK_DATA *)(Base + D->OriginalFirstThunk);
-		IMAGE_THUNK_DATA *Slots = (IMAGE_THUNK_DATA *)(Base + D->FirstThunk);
+		IMAGE_THUNK_DATA *Names = (IMAGE_THUNK_DATA *)(Base + Descriptor->OriginalFirstThunk);
+		IMAGE_THUNK_DATA *Slots = (IMAGE_THUNK_DATA *)(Base + Descriptor->FirstThunk);
 		for (; Names->u1.AddressOfData != 0; Names++, Slots++) {
 			if (IMAGE_SNAP_BY_ORDINAL(Names->u1.Ordinal))
 				continue;
@@ -950,12 +950,12 @@ static void DXPatchAll()
 		{"USER32.dll", "ClientToScreen", 0x55b510, (void *)DXClientToScreen},
 		{"USER32.dll", "GetSystemMetrics", 0x55b4f8, (void *)DXGetSystemMetrics},
 	};
-	for (auto &I : Imports) {
-		void **Ours = DXFindImport(I.Dll, I.Name);
-		CHECK(Ours != NULL, "DX: our import %s!%s not found", I.Dll, I.Name);
+	for (auto &Import : Imports) {
+		void **Ours = DXFindImport(Import.Dll, Import.Name);
+		CHECK(Ours != NULL, "DX: our import %s!%s not found", Import.Dll, Import.Name);
 		if (Ours != NULL)
-			DXSetSlot(Ours, I.Fake);
-		DXSetSlot((void **)(uintptr_t)I.Image, I.Fake);
+			DXSetSlot(Ours, Import.Fake);
+		DXSetSlot((void **)(uintptr_t)Import.Image, Import.Fake);
 	}
 	struct {
 		uint32 Image;

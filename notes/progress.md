@@ -19,22 +19,24 @@ Read this and `git log` first when resuming.
 7e. ContentWindows.cpp — **done** (issue #6, Claude Opus 5.5; the gap before it was settled in issue #5).
 7f. DialogElements.cpp and the DialogElements/Dialogs gap — **done** (issue #7, Claude Opus 5.5; the gap is Dialogs.obj).
 7g. Dialogs.cpp with its leading run of header code — **done** (issue #8, Claude Opus 5.5).
+7h. SurfaceDX.cpp with its trailing DirectDraw functions — **done** (issue #9, GPT-6.1-sol with Claude Opus 5.5 delegates; PR for review).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
 
 ## Current item
 
-SurfaceDX.cpp in progress (issue #9, November 2, 2026), isolated worktree:
-the full DirectDraw object is reconstructed through 0x4efd0f; comprehensive
-fake-COM tests and final validation are in progress. Delivery is a PR, not
-a direct push to main. Another agent owns Dialogs.cpp (#8); its checkout
-and uncommitted changes are untouched. Remaining surface engines keep their
-own issues; the gap 0x4efd10-0x4f1ea4 is now assigned to surfaceDX9.cpp.
+SurfaceDX.cpp complete (issue #9, November 2, 2026), delivered for PR review:
+the full DirectDraw object is reconstructed through 0x4efd0f, with fake-COM
+differential coverage, eighteen detected mutation targets and a clean full
+validation run. Integrated the completed Dialogs.cpp (#8) commits from
+origin/main only; the other agent's checkout remains untouched. Stop after
+this issue. Other surface engines keep their own issues; the gap
+0x4efd10-0x4f1ea4 belongs to surfaceDX9.cpp.
 
 ## Delegates (running)
 
-SurfaceDX differential-test coverage (fake DirectDraw/Direct3D and Win32 effects).
+None.
 
 ## Open questions
 
@@ -42,8 +44,10 @@ SurfaceDX differential-test coverage (fake DirectDraw/Direct3D and Win32 effects
 
 ## Last difftest
 
-12,744,375 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after issue #8; Dialogs: 98,889).
+13,955,244 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(after issue #9 and integration of #8; SurfaceDX: 1,213,366). Standalone SurfaceDX: 1,213,828 checks,
+0 failures. Eighteen mutation targets detected; unmutated sources rebuilt afterwards. Compile-check:
+no warnings or errors.
 
 ## Notes for later files
 
@@ -196,3 +200,19 @@ SurfaceDX differential-test coverage (fake DirectDraw/Direct3D and Win32 effects
   and strings only for the members listed as strings; values with two 0xab bytes are pattern, not pointers.
   Event 31 only with a timer, event 11 of the hotkey dialog only with a selection.
 - DIFFTEST_ONLY=Dialogs runs dialogstest.cpp alone (DG_TRACE=1, DG_LOGS=<file>).
+- SurfaceDX.cpp (issue #9): the engine uses DirectDraw4/Surface4 and
+  Direct3D3/Device3/Viewport3 despite its DirectX 5 name. TSurface is 0x70
+  bytes (8-byte alignment), TSurfaceDX is 0x250. Base Window is now hWindow;
+  the +0x50/+0x54 color-key, +0x64 attachment and +0x9c recreation slots
+  have typed names. Keep the shared +0xac name SetFramerateLimit.
+- Shared surface statistics span 0x71d0bc-0x71d0f4; private DirectDraw
+  SurfaceMemory starts at 0x71d0f8. CacheSurfaceWidth/Height start at 256,
+  InitSurfaces sets them to 320. Do not duplicate these globals for DX9/GL.
+  Source ownership is inferred; their common binary use is verified.
+- DIFFTEST_ONLY=SurfaceDX runs surfacedxtest.cpp alone (DX_TRACE=1 prints
+  phase coverage, DX_LOGS=<file> writes compared logs). All code/IAT patches
+  are restored. Never read the uninitialized DDSCAPS2 words after dwCaps.
+  The display-mode callback intentionally tests the refresh flag in
+  ddpfPixelFormat.dwFlags rather than the descriptor's dwFlags.
+- tools/ehinfo.py accepts interleaved argument loads in the SEH prologue
+  and validates FuncInfo magic (needed by SurfaceDX's stretch wrappers).

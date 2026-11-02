@@ -2172,6 +2172,49 @@ Reconstructed by Claude Opus 5.5 (issue #7), November 1, 2026.
   Naming the base CacheSurfaces member exposed a collision with
   graphicstest.cpp's fake counter; rename that counter GraphicsCacheSurfaces
   so its GetCacheSurfaces override still returns the configured test value.
+- **Integration with issue #8**: keep its member GetAvailableEngines and
+  the shared +0xac name SetFramerateLimit (our initial name was
+  SetFramerate). Both names are inferred; the binary clamps values below
+  10 or above 200 to 0xffff. There is one implementation, no alias or
+  compatibility wrapper. The new SurfaceDX layout and slot signatures
+  are used by the existing engine sketches and all test surfaces.
+- **Differential coverage**: surfacedxtest.cpp runs every callable object
+  function and folded override through real reconstructed/image code on
+  independent fake DirectDraw4/Surface4/Clipper and Direct3D3/Device3/
+  Viewport3 pools. Imports, preferences and the clock are scripted before
+  either side runs. After each operation compare call logs, all 0x250
+  object bytes (pointers normalized), thirteen shared globals, per-surface
+  memory kinds, COM state and pixels; shading includes every vertex word.
+  All code and IAT patches are restored. The standalone run passes
+  1,213,828 checks over 16,089 operations of 56 kinds, with 269 coverage
+  points. DX_LOGS writes compared logs; DX_TRACE prints phase coverage.
+  Coverage includes every mode transition, forced/recovered displays,
+  Direct3D setup failures at steps 2-14, cache/video-memory exhaustion,
+  busy/still-drawing retries, both shading outcomes, 8/16/24/32-bit
+  formats, the misplaced refresh flag and the 32-bit clock wrap.
+  Assertion and PROGRAM_ERROR throw paths cannot run in the mapped
+  image without its original CRT initialization; EH and instructions
+  establish their behavior instead. GetAttachedSurface initializes only
+  DDSCAPS2.dwCaps, so the test deliberately does not read its other words.
+- **Mutation sensitivity**: eighteen isolated changes were all detected:
+  frame-limit boundary, frame schedule, pixel offset, rectangle fill size,
+  clipped-fill statistics, horizontal/vertical line size, RGB input stride,
+  mask grayscale coefficient, color key, stretch source size, vertex color,
+  offscreen memory kind, 3D surface caps, refresh flag location, mode count,
+  surface rectangle width and recreation flag. The initial caps mutation
+  removed DDSCAPS_3DDEVICE and crashed the fake world after diverging;
+  rerunning it with an extra DDSCAPS_LOCALVIDMEM instead produced 4,371
+  ordinary comparison failures. All eighteen targets therefore have
+  explicit mismatch evidence; no target escaped. Restore the source after
+  each mutation and rebuild the unmutated test before final validation.
+- **Final validation (November 2, 2026)**: after integrating issue #8
+  from origin/main, tools\compile-check.cmd is warning/error-free and
+  tools\difftest\build.cmd passes 13,955,244 differential checks,
+  67 sysinc checks and 3,201 arithmetic checks, all with zero failures.
+  SurfaceDX contributes 1,213,366 checks in that full run; its separate
+  deterministic run passes 1,213,828 checks. The full-suite random stream
+  changes its input distribution and totals, not the tested code.
+
 ## Dialogs.cpp
 
 Reconstructed by Claude Opus 5.5 (issue #8), November 2, 2026.
