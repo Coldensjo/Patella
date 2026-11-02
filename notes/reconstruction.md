@@ -203,8 +203,10 @@ their state in memory after every step and their Tibia.cfg: notes/traffic.md.
 | Extern/regexp (regexp.c, regexp.h, regmagic.h) | Third-party (issue #15): Henry Spencer's regexp of 1986 (0x50eb00-0x50fbb8, regcomp and regexec for Status.cpp's link check), the original text written from memory and checked function by function against the assembly (all 19 messages, MAGIC 0234, the 1986 struct and jump tables); the client's changes marked: regerror calls a hook the client never sets (0x71f034, our regerrorhandler), ANSI headers, prototypes with extern "C"; no regsub/regerror files. Compiled as C (compile-check compiles src/Extern/regexp/*.c). Differentially tested (regexptest.cpp: both regcomps' programs byte for byte, both regexecs with all startp/endp, own and cross, corrupted programs, LinkPattern; 229,958 checks; a mutation check of 44 changes, three equivalent survivors). |
 | Library region | Classified (issue #15): all 1,102 functions from 0x50eae8 have names.tsv rows (kind stl, the library in the note): MFC 7.1 (nafxcw.lib), the CRT (libcmt.lib), the C++ library (libcpmt.lib), ATL 7.1 header code, import and delay-load thunks, multimon.h stubs, the regexp above; 0x559ea0 is Inventory.cpp's static initialiser (game code). The build takes the libraries from Visual Studio; file-ranges.tsv lists the blocks. |
 
-Last differential run (November 2, 2026, issue #34): 14,745,663 checks against the original code
-(difftest.exe, including 1,213,366 SurfaceDX, 58,682 SurfaceDX9, 53,082 SurfaceGL, 192,832 Container,
-229,958 regexp and 31,912 error-path checks, and the error rounds of issue #34: 31,909 GUI, 9,501 DialogWindow,
-8,572 ContextMenus, 155,615 SurfaceDX, 4,934 SurfaceDX9, 2,620 SurfaceGL, 7,920 statics), 67 in sysinctest.exe and 3,201 against
-exact arithmetic, no differences.
+Last differential run (November 2, 2026, issue #34, second part, branch issue-34b): 15,258,447 checks
+against the original code (difftest.exe, including 1,213,366 SurfaceDX, 58,682 SurfaceDX9, 53,082 SurfaceGL,
+192,832 Container, 229,958 regexp and 31,912 error-path checks, and the error rounds of issue #34: 31,909 GUI,
+9,501 DialogWindow, 8,572 ContextMenus, 287,934 ConsoleWindow, 168,764 ContentWindows, 155,615 SurfaceDX,
+4,934 SurfaceDX9, 2,620 SurfaceGL, 8,496 statics, 12,359 MapWindow, 43,150 MainWindow), 67 in sysinctest.exe
+and 3,201 against exact arithmetic, no differences. The Dialogs and DialogElements rounds are on branch
+issue-34c.

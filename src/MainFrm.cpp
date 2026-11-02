@@ -165,7 +165,11 @@ CMainFrame::CMainFrame(bool Gamemaster)
 }
 
 // 0x4a8760, line 123. The handlers rethrow out of the destructor; modern
-// compilers make destructors noexcept and warn about that.
+// compilers make destructors noexcept and warn about that. Unlike
+// TComponent's, this one cannot be noexcept(false): CFrameWnd's destructor
+// (MFC) is noexcept and an override may not throw more (C2694). An exception
+// from ExitControl ends the program here, where the original's goes on to
+// the caller of the destructor (issue #34).
 #pragma warning(push)
 #pragma warning(disable: 4297)
 CMainFrame::~CMainFrame()

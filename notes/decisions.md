@@ -4183,5 +4183,23 @@ Claude Opus 5.5 (issue #34, second part), November 2, 2026.
     functions. Ours (/EHa) keeps it.
   - Dialogs.cpp and DialogElements.cpp: done on a separate branch (issue-34c, worktree i34c), with their
     own entry; the coordinator merges both.
-- **Mutation check** (high): MUTATION_PLACEHOLDER
-- **Totals** (full build.cmd, November 2, 2026): TOTALS_PLACEHOLDER
+- **Mutation check** (high): 20 changes (build/scratch/mutate34b.py of the worktree, each file's test run
+  alone): the seven source fixes above undone where they are testable alone (DrawField's TEND1(Obj),
+  HelpMouseMove's help position, ResizeConsole's one call, GetPosition's own TextX, GetSlotAt's x,
+  TTradeWindowBody::SetSize's order, GetBuddyAt's y), assertions removed or narrowed (MapWindow's player,
+  OpenTrade's window, TTab::Draw's y, GetLine's progress, TButtonsWindow's check object, GetIcon's range,
+  the battle list's CREATURE check, the VIP list's parent, SortBuddy's NumberOfBuddies range), TEND and
+  TERROR values (MainWindow::HandleEvent, TConsoleWindow::HandleEvent's unknown event, TTab::Draw printing
+  y) and SurfaceInitInstance's PROGRAM_ERROR code; all 20 detected (16 by the error rounds' exception
+  comparisons, one by a round's log comparison, three by a crash or abort: two removed assertions and the
+  narrowed TTab::Draw one, which the counted part hits at y = 0). Trap of the
+  script: it restores a source after its build but rebuilds the restored files only at the end, so the next
+  mutation of another test ran with the previous object; the Surface.cpp mutation was run again alone
+  (detected: PROGRAM_ERROR 11 against 12).
+- **Totals** (full build.cmd, November 2, 2026): difftest.exe 15,258,447 checks, sysinctest.exe 67, vlong
+  3,201, no failures, "build.cmd: all tests passed". The error rounds' checks: GUI 31,909, DialogWindow 9,501,
+  ContextMenus 8,572, ConsoleWindow 287,934, ContentWindows 168,764, SurfaceDX 155,615, SurfaceDX9 4,934,
+  SurfaceGL 2,620, statics 8,496, MapWindow 12,359, MainWindow 43,150 (Dialogs and DialogElements: branch
+  issue-34c). Every per-test count is main's (GUI 5,246,029, DialogWindow 24,567, ContextMenus 33,088,
+  ConsoleWindow 30,948, ContentWindows 52,506, DialogElements 135,478, Dialogs 98,889, SurfaceDX 1,213,366,
+  SurfaceDX9 58,682, SurfaceGL 53,082, Container 192,832, Errors 31,912, MapWindow 115,169, MainWindow 14,164).

@@ -80,10 +80,12 @@ None.
 
 ## Last difftest
 
-14,745,663 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #34 on top of #16, #18 and #19: #22's 14,524,592 plus the window and surface error rounds:
-GUI 31,909, DialogWindow 9,501, ContextMenus 8,572, SurfaceDX 155,615, SurfaceDX9 4,934, SurfaceGL 2,620,
-statics 7,920; every other test's count as before).
+15,258,447 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(branch issue-34b, #34's second part: the first part's 14,745,663 plus the error rounds of ConsoleWindow
+287,934, ContentWindows 168,764, MapWindow 12,359 and MainWindow 43,150, statics now 8,496 (NumberOfBuddies,
+SurfaceInitInstance); GUI 31,909, DialogWindow 9,501, ContextMenus 8,572, SurfaceDX 155,615, SurfaceDX9
+4,934, SurfaceGL 2,620 as before; every per-test count as before. Dialogs and DialogElements' rounds are on
+branch issue-34c).
 
 ## Notes for later files
 
