@@ -16,13 +16,15 @@
 // DialogElements.obj (file-ranges.tsv).
 
 #include "Creatures.h"
+#include "GUI.h"
 #include "Help.h"
 #include "Map.h"
 #include "Objects.h"
 #include "Preferences.h"
 #include "Status.h"
 #include "Talk.h"
-#include "external.h"
+#include "Text.h"
+#include "sysinc.h"
 #include <stdlib.h>
 
 // Assertions whose text carries a bug number after the expression.

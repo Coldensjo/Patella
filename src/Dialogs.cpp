@@ -25,13 +25,14 @@
 #include "Status.h"
 #include "Surface.h"
 #include "Talk.h"
+#include "Text.h"
 #include "Utils.h"
 #include "sysinc.h"
 
 // Data. Dialogs.obj's only static is NoCallback (static initialiser
 // 0x559e10). Its copy of the text table (0x5c123c-0x5c1484, then its
 // regular expression pointer 0x5c1488 and its copy of DefaultFontColor
-// 0x5c148c) is in external.h.
+// 0x5c148c) is Text.h's (Dialogs.h includes it).
 static TCallback NoCallback(NULL, 0); // 0x5cc420
 
 // --- Creators ----------------------------------------------------------------------

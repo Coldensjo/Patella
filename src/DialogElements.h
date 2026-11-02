@@ -29,7 +29,7 @@
 #include "graphics.h"
 #include "Skins.h"    // Skins
 #include "Status.h"   // SetMouseOverText
-#include "external.h" // TObject
+#include "Objects.h"  // TObject
 
 // --- Separator, resizer and frame -----------------------------------------------
 

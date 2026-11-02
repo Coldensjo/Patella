@@ -22,7 +22,7 @@
 
 #include "common.h"
 
-struct TObject; // external.h, passed to DrawObject
+struct TObject; // Objects.h, passed to DrawObject
 
 #define PATH_MAX 1024
 #define HASH_TABLE_SIZE 100

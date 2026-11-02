@@ -22,6 +22,7 @@
 #include "../../src/Preferences.h"
 #include "../../src/Status.h"
 #include "../../src/Talk.h"
+#include "../../src/sysinc.h"
 #include <ctype.h>
 #include <stdarg.h>
 #include <string>

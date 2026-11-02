@@ -21,6 +21,7 @@
 #include "MainWindow.h"
 #include "ContentWindows.h"
 #include "Communication.h"
+#include "ConsoleWindow.h"
 #include "Control.h"
 #include "Creatures.h"
 #include "DialogElements.h"
@@ -32,8 +33,8 @@
 #include "Status.h"
 #include "Surface.h"
 #include "Talk.h"
+#include "Text.h"
 #include "graphics.h"
-#include "external.h"
 
 #include <stdlib.h>
 

@@ -12,6 +12,7 @@
 #include "Help.h"
 #include "Container.h"
 #include "Preferences.h"
+#include "Text.h"
 
 
 // Data, in .bss order.

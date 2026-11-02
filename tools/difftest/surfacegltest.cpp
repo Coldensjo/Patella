@@ -41,7 +41,6 @@
 #include "../../src/GUI.h"
 #include "../../src/MainFrm.h"
 #include "../../src/Preferences.h"
-#include "../../src/external.h"
 #include "surfacegltest.h"
 #include <string>
 #include <vector>

@@ -12,8 +12,8 @@
 
 #include "GUI.h"
 #include "Skins.h"
+#include "Text.h"
 #include "sysinc.h"
-#include "external.h"
 
 #include <sstream>
 

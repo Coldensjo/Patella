@@ -13,7 +13,22 @@
 
 #include "common.h"
 #include "Container.h"
-#include "external.h" // TObject, still declared there (Status.h uses it)
+
+// A reference to an object (12 bytes, passed by value). Type is named in
+// MapWindow.cpp's "SrcObj.Type!=CREATURE" (CREATURE is 99), Data in
+// Dialogs.cpp's "In(DraggedObject.Data,1,100)" (the count); Data2 is ours.
+// The default constructor clears the object: Map.cpp's TMapPoint, ten
+// TObjects and plain ints, has a compiler-generated constructor (0x4b0b40)
+// that zeroes exactly the ten objects. Written with default member
+// initializers so that the type stays an aggregate. MapWindow.cpp compares
+// objects with numbers ("SrcObj!=0", "Obj!=CREATURE") and prints one as the
+// int value of TEND1(Obj): the original converts a TObject to its Type.
+struct TObject {
+	int Type = 0;
+	int Data = 0;
+	int Data2 = 0;
+	operator int() const { return Type; }
+};
 
 // Object type of a creature on a map field ("SrcObj.Type!=CREATURE").
 #define CREATURE 99

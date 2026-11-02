@@ -3,7 +3,7 @@
 #include "difftest.h"
 #include "../../src/Talk.h"
 #include "../../src/Utils.h"
-#include "../../src/external.h"
+#include "../../src/graphics.h"
 #include <new>
 #include <stdarg.h>
 #include <vector>

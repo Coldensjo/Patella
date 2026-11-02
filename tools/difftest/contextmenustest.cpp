@@ -34,6 +34,7 @@
 #include "../../src/ContextMenus.h"
 #include "../../src/ContentWindows.h"
 #include "../../src/Communication.h"
+#include "../../src/ConsoleWindow.h"
 #include "../../src/Creatures.h"
 #include "../../src/GUI.h"
 #include "../../src/Help.h"
@@ -47,7 +48,6 @@
 #include "testsurface.h"
 #include "../../src/Talk.h"
 #include "../../src/graphics.h"
-#include "../../src/external.h"
 #include <map>
 #include <new>
 #include <stdarg.h>

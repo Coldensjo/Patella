@@ -21,7 +21,8 @@
 
 #include "common.h"
 #include "Container.h"
-#include "external.h" // TObject, TRGBColor
+#include "graphics.h" // TRGBColor
+#include "Objects.h"  // TObject
 
 #define MAPSIZE_X 18
 #define MAPSIZE_Y 14

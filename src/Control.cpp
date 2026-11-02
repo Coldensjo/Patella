@@ -17,10 +17,12 @@
 // event and are deleted here.
 
 #include "Control.h"
+#include "ConsoleWindow.h"
 #include "ContextMenus.h"
 #include "Dialogs.h"
 #include "Help.h"
 #include "Inventory.h"
+#include "MainWindow.h"
 #include "Network.h"
 #include "Map.h"
 #include "Objects.h"
@@ -31,8 +33,10 @@
 #include "Skins.h"
 #include "Script.h"
 #include "Status.h"
+#include "Surface.h"
 #include "Talk.h"
-#include "external.h"
+#include "Text.h"
+#include "sysinc.h"
 #include <ostream>
 
 // Data, in .data/.bss order. 0x5c4540-0x5c4553 is not used by any code.

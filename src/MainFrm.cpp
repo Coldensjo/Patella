@@ -16,11 +16,14 @@
 #include "MainFrm.h"
 #include "Control.h"
 #include "Creatures.h"
+#include "GUI.h"
+#include "MainWindow.h"
 #include "Network.h"
 #include "Player.h"
 #include "Preferences.h"
 #include "Status.h"
-#include "external.h"
+#include "Surface.h"
+#include "Text.h"
 #include <ostream>
 
 // Data, in .bss order.

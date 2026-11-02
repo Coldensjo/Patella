@@ -32,9 +32,9 @@
 #include "Status.h"
 #include "Surface.h"
 #include "Talk.h"
+#include "Text.h"
 #include "Utils.h"
 #include "graphics.h"
-#include "external.h"
 #include <sstream>
 #include <string.h>
 #include <time.h>

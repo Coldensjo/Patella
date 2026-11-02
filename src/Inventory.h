@@ -8,7 +8,7 @@
 #pragma once
 
 #include "common.h"
-#include "external.h" // TObject
+#include "Objects.h" // TObject
 
 #define BODY_POSITIONS 10
 #define OPEN_CONTAINERS 16

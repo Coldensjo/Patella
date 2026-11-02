@@ -39,7 +39,6 @@
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
 #include "../../src/sysinc.h"
-#include "../../src/external.h"
 #include <map>
 #include <new>
 #include <stdarg.h>

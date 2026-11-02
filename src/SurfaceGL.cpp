@@ -26,7 +26,6 @@
 #include "GUI.h"
 #include "MainFrm.h"
 #include "Preferences.h"
-#include "external.h"
 #include <GL/glu.h>
 
 // Not in the Windows SDK's OpenGL 1.1 headers (glext.h, wglext.h).

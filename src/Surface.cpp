@@ -10,7 +10,6 @@
 #include "SurfaceDX.h"
 #include "SurfaceGL.h"
 #include "Preferences.h"
-#include "external.h"
 
 // Data, in .data and .bss order. The shared data the engines use (Surface.h)
 // lies around this file's own; 0x71d0f8 and up are SurfaceDX.cpp's.

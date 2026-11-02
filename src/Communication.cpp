@@ -18,7 +18,7 @@
 #include "Script.h"
 #include "Status.h"
 #include "Talk.h"
-#include "external.h"
+#include "Text.h"
 #include <cstddef>
 
 static int SkipFields;        // 0x5c4340
@@ -2236,7 +2236,7 @@ void ReceiveLockRuleViolation()
 	TBEGIN
 	TTalkBuffer *Channel = GetTextBuffer(7, NULL, -1);
 	if (Channel != NULL) {
-		const char *Text = PTR_s_Your_request_has_been_closed__005c0348;
+		const char *Text = TextRequestClosed;
 		AddTextBufferLine(Channel, 0, Text, 18, NULL, 0);
 		Channel->SetWriteEnabled(false);
 	}
@@ -2263,7 +2263,7 @@ void ReceiveCloseChannel()
 	ChannelID = GetWord();
 	TTalkBuffer *Channel = GetTextBuffer(5, NULL, ChannelID);
 	if (Channel != NULL) {
-		const char *Text = PTR_s_The_channel_has_been_closed__You_005c034c;
+		const char *Text = TextChannelClosed;
 		AddTextBufferLine(Channel, 0, Text, 18, NULL, 0);
 		Channel->SetWriteEnabled(false);
 	}

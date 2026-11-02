@@ -45,6 +45,8 @@ calls in the binary build the area as a 16-byte block. Ten areas built from two 
 #31.
 SkinProperties point pairs (issue #31, November 2, 2026): the ten pairs of TGUIPoints that SetChildArea
 took as one area are TRects (nothing else in the binary reads them); the callers pass them.
+external.h removed (issue #14, November 2, 2026): every declaration is in its owner's header; the text
+table is src/Text.h (147 entries, one static copy per including object, as the image's 16 copies).
 Next: the other open issues; see GitHub.
 
 ## Resources (issue #17)
@@ -67,7 +69,7 @@ None.
 ## Last difftest
 
 14,492,680 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after merging #11, #13, #15, #30 and #24, unchanged by #29 and #27; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
+(after merging #11, #13, #15, #30 and #24, unchanged by #29, #27, #31 and #14; SurfaceDX: 1,213,366, SurfaceDX9: 58,682, SurfaceGL: 53,082,
 Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 
 ## Notes for later files
@@ -102,8 +104,8 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 - MainWindow.cpp creates TMapFrame (MapWindow.h) with operator new(0x40); its
   deleting destructor is folded into TStartWindow's 0x4adc40 (MainWindow.obj).
 - The text header's table is copied into every object that includes it; use
-  the copy of the object at hand (external.h lists Control.obj's and
-  MapWindow.obj's entries).
+  the copy of the object at hand: include src/Text.h in the .cpp (its entries
+  are static; Text.h lists the sixteen copies and their objects).
 - mapwindowtest.cpp's PatchWorld redirects many functions of our Map, Creatures,
   Status, Preferences, Talk, Help, graphics, GUI and Inventory code for good;
   keep it the last test in difftest.cpp or restore them.
@@ -111,10 +113,8 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   heap error that the memory layout hides: talktest.cpp had a double delete
   (fixed). _heapchk() between the tests finds the first one that breaks the
   heap.
-- MainWindow.cpp: the windows it creates from DialogElements.cpp are sketches in external.h
-  (TBorder, TTextButton, TLabel, TObjectIcon; TDialogWindow and TSubWindow are real since issue #3,
-  TConsoleWindow since issue #5, the ContentWindows.cpp windows and creators since issue #6);
-  replace them with the real classes and check MainWindow.cpp's calls (notes/decisions.md).
+- MainWindow.cpp: the windows it creates from DialogElements.cpp were sketches in external.h
+  (TBorder, TTextButton, TLabel, TObjectIcon); they are the real classes since issue #7.
 - mainwindowtest.cpp makes the not-reconstructed windows fakes for both sides: the image's
   constructors jump to fastcall wrappers that placement-new the fake, whose constructor then sets
   the vtable of a test subclass (extra overrides, same layout). Reuse it for the window files; when
@@ -135,8 +135,8 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   `x->Name(` to a free function; differences counted in older notes were made without that.
 - Python on Windows writes CRLF in text mode: pass newline='\n' when an edit script rewrites a file
   (and write such scripts with the Write tool: the Bash tool expands backslash escapes in them).
-- ContextMenus.cpp (issue #4): ContextMenus.h needs Map.h (TMark, TCoordinate), which includes
-  external.h, so external.h cannot include it; its users include it directly (Control.cpp).
+- ContextMenus.cpp (issue #4): ContextMenus.h needs Map.h (TMark, TCoordinate); its users include it
+  directly (Control.cpp).
   (The console's classes are real since issue #5; contextmenustest.cpp fakes their methods on both
   sides.) When DialogElements.cpp (TEditLine,
   TFormattedText 0x465e60, TSeparator 0x452cb0) or ContentWindows.cpp (TSkillsWindowBody) are
@@ -148,8 +148,8 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   image's address for such functions (contextmenustest.cpp's Send* and IsClipboardEmpty).
 - A menu's Show shrinks the last entry each time it runs; tests must not call it again once the last
   entry would drop below one pixel (both versions fail).
-- ConsoleWindow.cpp (issue #5): ConsoleWindow.h is included by external.h (it needs only GUI.h and Talk.h;
-  the DialogElements classes it points to are forward declarations). consolewindowtest.cpp defines the shared
+- ConsoleWindow.cpp (issue #5): ConsoleWindow.h needs only GUI.h and Talk.h (the DialogElements classes it
+  points to are forward declarations); its users include it. consolewindowtest.cpp defines the shared
   fakes of the DialogElements classes the console creates (TEditLine, TScrollBar/TScrollBarRange,
   TSkinButton's constructor, TToggleButton, TMultiStateButton); they log only while that test runs, and
   contextmenustest.cpp and dialogwindowtest.cpp link them. When DialogElements.cpp is reconstructed, those
@@ -188,7 +188,7 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
   BuddylistWindow.Data3C/Data48 are colours (issue #6). TSurface's +0x0c, +0x10, +0x18 have names.
 - DIFFTEST_ONLY=ContentWindows runs contentwindowstest.cpp alone (CT_TRACE=1 traces rounds and actions,
   CT_LOGS=<file> writes every compared log, for checking the coverage).
-- DialogElements.cpp (issue #7): DialogElements.h includes external.h (for TObject), Status.h and
+- DialogElements.cpp (issue #7): DialogElements.h includes Objects.h (for TObject), Status.h and
   Skins.h; its users include it directly. The window tests' DialogElements fakes are mirror classes of
   the old sketches (tools/difftest/elementfakes.h, TFake*): elementfakes.cpp's PatchElementFakes
   redirects the image's and our constructors (decorated names through /alternatename) and non-virtual
@@ -270,7 +270,7 @@ Container: 192,832, Regexp: 229,958, Script's long tokens: 1,621).
 - Unknown-owner data (issue #12, notes/decisions.md): every object that includes the text header has
   a full copy of its table (147 entries, 0x24c bytes, "You are poisoned" ... "Report Rule Violation");
   the object whose code reads an entry owns that copy (Player.obj 0x5c22cc, MapWindow.obj 0x5c2064,
-  Control.obj 0x5c0b34). The window objects' unused NoCallback sits at the end of their .bss, one
+  Control.obj 0x5c0b34; all sixteen copies are in src/Text.h since issue #14). The window objects' unused NoCallback sits at the end of their .bss, one
   __xc initialiser per object (Control.obj 0x5c4558, Creatures.obj 0x5cc418). The "engine N" value
   is Surface.cpp's CommandLineEngine (Surface.h).
 - SurfaceGL.cpp (#11): the XOR code tables right after its last .rdata string (0x5733a4/0x5733c4) were

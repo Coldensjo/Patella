@@ -15,7 +15,8 @@
 
 #include "common.h"
 #include "Preferences.h" // SKILLS ("In(SkillNumber,0,SKILLS-1)")
-#include "external.h" // TRGBColor, TObject; GUI.cpp is not reconstructed yet
+#include "graphics.h"    // TRGBColor
+#include "Objects.h"     // TObject
 
 #define CREATURES 150 // slots in the creature table (loops up to 0x96)
 #define BUDDIES 200   // "NumberOfBuddies<BUDDIES"

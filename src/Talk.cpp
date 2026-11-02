@@ -2,14 +2,13 @@
 // Header COMDATs are in Talk.h; Container.h supplies the filter-list vector.
 // Ghidra blocks 0x502f70 and 0x5036c0 belong to Remove and GetLine.
 #include "Talk.h"
-#include "external.h"
+#include "Text.h"
 #include "Utils.h"
+#include "graphics.h"
+#include "sysinc.h"
 #include <stddef.h>
 #include <new>
 
-const char *PTR_s_Your_request_has_been_closed__005c0348 = "Your request has been closed.";
-const char *PTR_s_The_channel_has_been_closed__You_005c034c = "The channel has been closed. You need to re-join the channel if you get invited.";
-static const char *PermanentIgnoreMessage = "You are permanently ignoring players."; // 0x5c27a4
 static bool IgnoreListEnabled; // 0x71dbd0
 static bool BuddyIgnore; // 0x71dbd1
 static bool IgnoreEnabled; // 0x71dbd2
@@ -683,7 +682,7 @@ void ShowPermanentIgnoreWarning()
 			Counter++;
 	if (Counter > 0) {
 		TASSERT(DefaultTextBuffer!=NULL);
-		AddTextBufferLine(DefaultTextBuffer, 0, PermanentIgnoreMessage, 20, NULL, 0);
+		AddTextBufferLine(DefaultTextBuffer, 0, TextPermanentlyIgnoring, 20, NULL, 0);
 		ConsoleChanged = true;
 	}
 	TEND2(o, Counter)

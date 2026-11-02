@@ -18,6 +18,7 @@
 #include "Script.h"
 #include "Talk.h"
 #include "Utils.h"
+#include "sysinc.h"
 #include <math.h>
 
 // Assertions whose expression text carries a bug number.

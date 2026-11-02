@@ -29,8 +29,8 @@
 #include "GUI.h"
 
 class TSubWindowBody; // ContentWindows.h
-class TResizer;       // external.h (DialogElements.cpp)
-class TSkinButton;    // external.h (DialogElements.cpp)
+class TResizer;       // DialogElements.h
+class TSkinButton;    // DialogElements.h
 
 // A window in a TDialogWindow. Identifier: 1 and 2 the two inventory
 // windows, 3 the automap, 4 the status bars, 5 the buttons, 6 skills, 7 battle, TRADE_WINDOW

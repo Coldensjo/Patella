@@ -25,9 +25,9 @@
 #include "GUI.h"
 
 class TMapFrame;      // MapWindow.h
-class TBorder;        // external.h (DialogElements.cpp)
+class TBorder;        // DialogElements.h
 class TDialogWindow;  // DialogWindow.h
-class TConsoleWindow; // external.h (ConsoleWindow.cpp)
+class TConsoleWindow; // ConsoleWindow.h
 class TStartWindow;
 class TSplitter;
 

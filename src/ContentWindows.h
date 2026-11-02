@@ -33,7 +33,7 @@
 #include "DialogWindow.h"
 #include "Map.h"      // TMark
 #include "DialogElements.h"
-#include "external.h" // TObject
+#include "Objects.h"  // TObject
 
 class TMainWindow;       // MainWindow.h
 class TSkillContextMenu; // ContextMenus.h

@@ -12,6 +12,7 @@
 
 #include "Status.h"
 #include "Utils.h"
+#include "sysinc.h"
 #include "Extern/regexp/regexp.h"
 
 // Data, in .data/.bss order.

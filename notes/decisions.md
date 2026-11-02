@@ -3369,3 +3369,99 @@ Claude Opus 5.5, November 2, 2026.
   which led to its change above). tools\compile-check.cmd is clean.
 - **callcheck**: identical output before and after for GUI.cpp (20 of 63 functions differ), MapWindow.cpp
   (14 of 26), DialogWindow.cpp (23 of 47) and ContentWindows.cpp (82 of 140).
+
+## external.h removed (issue #14)
+
+Settled by Claude Opus 5.5, November 2, 2026. src/external.h is gone; every declaration is in the header of
+the file that defines it, and every file includes the headers it uses (compile-guided: external.h was removed
+from all 36 includers, then each file got the headers the compiler asked for). Evidence scripts:
+build/scratch/texttable.py (the text table's copies and texts), copyrefs.py (every code reference into and
+around each copy) and gaps.py (the data between the copies), all in the i14 worktree.
+
+- **What external.h held and where it went** (high):
+
+  | Content | Now |
+  |---|---|
+  | TObject (Objects.cpp's type) | Objects.h, unchanged (comment kept); Status.h, Inventory.h, Map.h, Creatures.h, DialogElements.h, ContextMenus.h and ContentWindows.h include Objects.h |
+  | PacketHeader (0x5d1644, "owner unknown") | already defined in MainFrm.cpp and declared in MainFrm.h; Network.cpp includes MainFrm.h |
+  | TFullscreenMode forward declaration | dropped (Preferences.h has the type) |
+  | #include of Talk.h, sysinc.h, GUI.h, ConsoleWindow.h, DialogWindow.h, MainWindow.h, Surface.h, MainFrm.h, <ostream> | in the files that use them (below) |
+  | the text tables of seven objects (externs) | src/Text.h (below) |
+  | the action-state comment ("Status.cpp. Action state: 0 idle, ...") | Status.h, at ACTIONSTATE_NONE |
+  | empty headings ("Map.cpp", "Script.cpp", ...) and the stale FUN_ remark | dropped |
+
+  Includes added: Communication.cpp Text.h; ConsoleWindow.cpp Text.h; ContentWindows.cpp Text.h;
+  ContextMenus.cpp ConsoleWindow.h, Text.h, sysinc.h; Control.cpp ConsoleWindow.h, MainWindow.h, Surface.h,
+  Text.h, sysinc.h; Creatures.cpp GUI.h (its NoCallback), Text.h, sysinc.h; DialogElements.cpp, Dialogs.cpp,
+  DialogWindow.cpp, GUI.cpp, Help.cpp, MapWindow.cpp Text.h; MainFrm.cpp GUI.h, MainWindow.h, Surface.h,
+  Text.h; MainWindow.cpp ConsoleWindow.h, Text.h; Map.cpp, Script.cpp, Status.cpp sysinc.h; Network.cpp
+  MainFrm.h; Player.cpp MainFrm.h, Text.h; Talk.cpp Text.h, graphics.h (TRGBColor), sysinc.h; Map.h and
+  Creatures.h graphics.h (TRGBColor); Dialogs.h Text.h. Preferences.cpp, Surface.cpp, SurfaceDX.cpp,
+  surfaceDX9.cpp and SurfaceGL.cpp needed nothing from it. No include cycle appeared: none of the headers
+  that used to include external.h is included by Objects.h, graphics.h or Text.h.
+- **The text header is src/Text.h, 147 `static const char *` entries** (high for the form, low for the
+  file name and the names). The image has sixteen copies of the table in .data (every pointer to "You are
+  poisoned" 0x55d1b0 starts one), each 147 pointers (0x24c bytes), all sixteen identical pointer for
+  pointer. The code reads the entries from memory (`mov reg, [0x5c....]`), so they are not const pointers
+  (a `char *const` would be folded into the code and land in .rdata); they are defined in a header with
+  internal linkage, which gives exactly one copy per including object, and every object's code reads its
+  own copy. Text.h defines all 147 in the image's order with the image's texts (generated from the binary,
+  so the copies of the old test definitions are byte-identical; the test totals confirm it), so a .cpp that
+  includes it reads the entry of its own copy: entry n of a copy is at the copy's address + 4n. A table
+  (array) or 147 named variables give the same .data; named variables were kept because the users already
+  read them by name. The existing names all landed on the entry of their address without a conflict
+  (TextSelectType 70 and TextSelectType2 112 are different entries with the same text, as are
+  TextEnterCharacterName 67/71 and TextEnterShortDescription 72/113). New names (ours): TextEnterFilename
+  (73), TextServerAddress (90), TextServerPort (91), TextRequestClosed (126), TextChannelClosed (127),
+  TextPermanentlyIgnoring (134), TextSignupURL (144).
+- **The owners of the sixteen copies** (in .data order; each object's .data is contiguous, in link order):
+
+  | Copy | Object | Evidence | Confidence |
+  |---|---|---|---|
+  | 0x5c0150 | Communication.obj | reads 126, 127 (0x411b60, 0x411eea) | high |
+  | 0x5c041c | ConsoleWindow.obj | reads 12-19, 119, 120, 122, 146 | high |
+  | 0x5c0678 | ContentWindows.obj | reads 0-11, 20-50, 52, 56, 57 | high |
+  | 0x5c08d4 | ContextMenus.obj | no reads; between ContentWindows.obj's and Control.obj's | high |
+  | 0x5c0b34 | Control.obj | reads 109-111, 114, 115, 145 | high |
+  | 0x5c0d90 | Creatures.obj | no reads; after Control.cpp's LastPacketType 0x5c0d8c, before DialogElements' | high |
+  | 0x5c0fe0 | DialogElements.obj | no reads; its DefaultFontColor 0x5c1230 (read by its header code) follows | high |
+  | 0x5c123c | Dialogs.obj | reads 53-55, 58-72, 74-89, 92-108, 112, 113, 117, 118, 121, 123, 128-133, 135-142 | high |
+  | 0x5c1498 | DialogWindow.obj | no reads; DialogWindow, graphics and GUI come in this order and only one table lies between Dialogs' and GUI's | medium |
+  | 0x5c1708 | GUI.obj | no reads; GUI.cpp's DefaultFontColor 0x5c1954 follows directly | high |
+  | 0x5c1960 | Help.obj | no reads; two copies lie between GUI.obj's and MainWindow.obj's, where Help, Inventory and MainFrm link | low (Inventory.obj possible) |
+  | 0x5c1bb0 | MainFrm.obj | as above; the copy is followed by a DefaultFontColor, and of the three only MainFrm.cpp includes GUI.h (graphics.h) | low |
+  | 0x5c1e0c | MainWindow.obj | reads 124, 143 | high |
+  | 0x5c2064 | MapWindow.obj | reads 51, 125 | high |
+  | 0x5c22cc | Player.obj | reads 116 | high |
+  | 0x5c258c | Talk.obj | reads 134 (0x507843) | high |
+
+  Each of those sixteen .cpp files includes Text.h (DialogElements.cpp, ContextMenus.cpp, Creatures.cpp,
+  DialogWindow.cpp, GUI.cpp, Help.cpp and MainFrm.cpp read nothing from it). Text.h's header comment lists
+  the table. The DialogElements.cpp comment that put its copy at 0x5c0d8c-0x5c1228 was off (0x5c0d8c is
+  Control.cpp's LastPacketType, 0x5c0d90 Creatures.obj's copy); it now says 0x5c0fe0-0x5c122b.
+- **Dialogs.h includes Text.h** (high): TReconnectBody::SetTime is inline in Dialogs.h and reads
+  TextTryingToReconnect (entry 62); its out-of-line copy 0x46ba10 (Dialogs.obj's header code) reads
+  Dialogs.obj's 0x5c1334. Dialogs.h's includers (Control.cpp, Dialogs.cpp) both have a copy. Text.h's other
+  users are .cpp files.
+- **Two Ghidra names and a misplaced text in Talk.cpp** (high): Talk.cpp defined
+  `PTR_s_Your_request_has_been_closed__005c0348` and `PTR_s_The_channel_has_been_closed__You_005c034c`
+  (Talk.h declared them) for Communication.cpp's two reads; 0x5c0348/0x5c034c are entries 126 and 127 of
+  Communication.obj's own copy. Communication.cpp now reads TextRequestClosed/TextChannelClosed from its copy;
+  the two globals are gone. Talk.cpp's `static const char *PermanentIgnoreMessage` (0x5c27a4) is entry 134
+  of Talk.obj's copy: it reads TextPermanentlyIgnoring now. Same texts, never written: no behaviour change.
+  No FUN_00/DAT_00/PTR_ name is left in src/.
+- **Tests** (high): the window tests defined the entries their files declared extern (consolewindowtest,
+  contentwindowstest, mainwindowtest, mapwindowtest, playertest); those definitions are gone (the src files
+  have their copies). dialogstest.cpp's text globals and InitTexts (which pointed our side's entries at the
+  image's texts) clashed with Text.h's statics through Dialogs.h and are gone too: this is more than an
+  #include change in dialogstest.cpp (issue #32 works on its dump at the same time; the removed block, "Dialogs.obj's
+  copy of the text table" with InitTexts and its call, is apart from the dump). Our Dialogs.cpp reads its own copy now, whose
+  texts equal the image's; the dumps print the texts behind pointers (ReadString), not the pointers, so they
+  compare the same values. Include fixes: contextmenustest/mainwindowtest ConsoleWindow.h, playertest
+  Surface.h and sysinc.h (its `const int TitleCode[8]` definition needs the extern declaration, or it gets
+  internal linkage and difftest.exe does not link), talktest graphics.h, creaturestest sysinc.h.
+- **Tools**: tools/rename_externals.py retired (it renamed FUN_ names and deleted their lines from
+  external.h; no FUN_ name is left). tools/triage.py and tools/simplify.py never read external.h.
+  notes/agent-prompt.md and notes/reconstruction.md describe the rule that replaces external.h.
+- **Not done here**: Status.cpp's LinkPattern pointer (0x55b758) has 17 copies in .data, one per object,
+  so it is a header static too (issue #33).

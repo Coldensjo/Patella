@@ -29,12 +29,12 @@
 #include "GUI.h"
 #include "Map.h"     // TCoordinate, TMark
 #include "Status.h"  // SetActionState
-#include "external.h" // TObject, the classes of the files not reconstructed
+#include "Objects.h" // TObject
 
-class TConsoleWindow;    // external.h (ConsoleWindow.cpp)
-class TTextWindow;       // external.h (ConsoleWindow.cpp)
-class TEditLine;         // external.h (DialogElements.cpp)
-class TFormattedText;    // external.h (DialogElements.cpp)
+class TConsoleWindow;    // ConsoleWindow.h
+class TTextWindow;       // ConsoleWindow.h
+class TEditLine;         // DialogElements.h
+class TFormattedText;    // DialogElements.h
 class TSkillsWindowBody; // ContentWindows.h
 class TAutomapWindow;    // ContentWindows.h
 

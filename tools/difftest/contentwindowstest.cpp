@@ -51,7 +51,6 @@
 #include "../../src/Talk.h"
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
-#include "../../src/external.h"
 #include <map>
 #include <new>
 #include <stdarg.h>
@@ -143,54 +142,6 @@ static std::string KindOf(int s, const void *Object)
 	auto K = Kinds[s].find(VtableOf(Object));
 	return K == Kinds[s].end() ? "?" : K->second;
 }
-
-// ContentWindows.obj's copy of the text table (external.h).
-const char *TextPoisoned = "You are poisoned";
-const char *TextOnFire = "You are on fire";
-const char *TextMagicShield = "You are protected by a magic shield";
-const char *TextParalysed = "You are paralysed";
-const char *TextHasted = "You are hasted";
-const char *TextNoLogoutInFight = "You may not logout during a fight";
-const char *TextDrunk = "You are drunk";
-const char *TextStruckByEnergy = "You are struck by magical energy";
-const char *TextMayBeAttacked = "You may be attacked by other players";
-const char *TextPartyMember = "You are a member of a party";
-const char *TextAttackedUnmarked = "You have attacked an unmarked player";
-const char *TextKilledTooMany = "You have killed too many unmarked players";
-const char *TextMaximiseInventory = "Maximise inventory";
-const char *TextMinimiseInventory = "Minimise inventory";
-const char *TextCloseWindow = "Close this window";
-const char *TextMaximiseOrMinimise = "Maximise or minimise window";
-const char *TextShowHigherContainer = "Show higher container";
-const char *TextOpenSkillsWindow = "Open skills window (Ctrl+S)";
-const char *TextCloseSkillsWindow = "Close skills window (Ctrl+S)";
-const char *TextOpenBattleWindow = "Open battle window (Ctrl+B)";
-const char *TextCloseBattleWindow = "Close battle window (Ctrl+B)";
-const char *TextOpenVIPWindow = "Open VIP window (Ctrl+P)";
-const char *TextCloseVIPWindow = "Close VIP window (Ctrl+P)";
-const char *TextLeaveGame = "Leave the game (Ctrl+Q or Ctrl+L)";
-const char *TextCentreAroundPlayer = "Centre around player";
-const char *TextShowHigherFloor = "Show higher floor (Alt+PageUp)";
-const char *TextShowLowerFloor = "Show lower floor (Alt+PageDown)";
-const char *TextZoomIn = "Zoom in (Alt+End)";
-const char *TextZoomOut = "Zoom out (Alt+Home)";
-const char *TextScrollAutomap = "Scroll automap (Alt+Cursor)";
-const char *TextOffensiveFighting = "Offensive fighting";
-const char *TextBalancedFighting = "Balanced fighting";
-const char *TextDefensiveFighting = "Defensive fighting";
-const char *TextStandWhileFighting = "Stand while fighting";
-const char *TextChaseOpponent = "Chase opponent";
-const char *TextCannotAttackUnmarked = "You cannot attack unmarked characters";
-const char *TextCanAttackAny = "You can attack any character";
-const char *TextStopCurrentAction = "Stop current action (ESC)";
-const char *TextOpenOptions = "Open options";
-const char *TextOpenHelpMenu = "Open help menu";
-const char *TextCancelOffer = "Cancel offer";
-const char *TextRejectOffer = "Reject offer";
-const char *TextAcceptOffer = "Accept offer";
-const char *TextPercentToGo = "You have %d percent to go";
-const char *TextWaitForCounterOffer = "Please wait for a\ncounteroffer";
-const char *TextWaitForPartner = "Please wait for \nyour partner to accept.";
 
 // --- DialogElements.cpp: the shared fakes report here -------------------------------------
 

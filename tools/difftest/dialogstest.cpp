@@ -46,7 +46,6 @@
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
 #include "../../src/sysinc.h"
-#include "../../src/external.h"
 #include <map>
 #include <set>
 #include <new>
@@ -768,56 +767,6 @@ static void PatchCallees()
 	}
 }
 #undef F
-
-// Dialogs.obj's copy of the text table: our side reads the image's texts.
-const char *TextSwitchToDirectX5, *TextSwitchToDirectX9, *TextSwitchToOpenGL, *TextAccountNumber, *TextPassword,
-	*TextNoAccountYet, *TextSelectCharacter, *TextTryingToReconnect, *TextSetNumberOfItems, *TextChooseOutfit,
-	*TextSelectChannel, *TextOpenPrivateChannel, *TextEnterCharacterName, *TextStateRuleViolation,
-	*TextReportBugsOnly, *TextSelectType, *TextEnterCharacterName2, *TextEnterShortDescription,
-	*TextDownloadingPictures, *TextDownloadingObjectData, *TextDownloadingObjectGraphics, *TextClientInfo,
-	*TextShowPreviousHints, *TextAskTutor, *TextReportRuleViolations, *TextReadManual, *TextReadFAQ,
-	*TextAvailableHints, *TextChangeGeneralOptions, *TextChangeGraphicsOptions, *TextCustomiseConsole,
-	*TextChangeNetworkSettings, *TextEditHotkeys, *TextShowMotD, *TextAdvancedSettings, *TextAvailableResolutions,
-	*TextSelectEngine, *TextAvailableHotkeys, *TextEditHotkeyText, *TextClientVersion, *TextOfficialWebsite,
-	*TextCharactersToIgnore, *TextGlobalIgnoreSettings, *TextCharactersToAllow, *TextGlobalAllowSettings,
-	*TextEnterOneNamePerLine, *TextItIsEmpty, *TextItIsCurrentlyEmpty, *TextYouReadTheFollowing,
-	*TextYouCanEnterNewText, *TextYouReadWrittenBy, *TextSelectType2, *TextEnterShortDescription2,
-	*TextClientCrashed, *TextTellUsWhatYouDid, *TextRequestAlreadySubmitted, *TextNoPrivateChannelWithYourself,
-	*TextNoPlayerName, *TextNoReason, *TextNoAction, *TextNoComment, *TextNoStatement, *TextCannotReportStatement,
-	*TextTibiaURL, *TextManualURL, *TextFAQURL, *TextOptionsURL, *TextGraphicsOptionsURL, *TextAdvancedGraphicsURL,
-	*TextConsoleOptionsURL, *TextNetworkOptionsURL;
-static void InitTexts()
-{
-	struct { const char **Text; uint32 Address; } Table[] = {
-		{&TextSwitchToDirectX5, 0x5c1310}, {&TextSwitchToDirectX9, 0x5c1314}, {&TextSwitchToOpenGL, 0x5c1318},
-		{&TextAccountNumber, 0x5c1324}, {&TextPassword, 0x5c1328}, {&TextNoAccountYet, 0x5c132c},
-		{&TextSelectCharacter, 0x5c1330}, {&TextTryingToReconnect, 0x5c1334}, {&TextSetNumberOfItems, 0x5c1338},
-		{&TextChooseOutfit, 0x5c133c}, {&TextSelectChannel, 0x5c1340}, {&TextOpenPrivateChannel, 0x5c1344},
-		{&TextEnterCharacterName, 0x5c1348}, {&TextStateRuleViolation, 0x5c134c}, {&TextReportBugsOnly, 0x5c1350},
-		{&TextSelectType, 0x5c1354}, {&TextEnterCharacterName2, 0x5c1358}, {&TextEnterShortDescription, 0x5c135c},
-		{&TextDownloadingPictures, 0x5c1364}, {&TextDownloadingObjectData, 0x5c1368},
-		{&TextDownloadingObjectGraphics, 0x5c136c}, {&TextClientInfo, 0x5c1370}, {&TextShowPreviousHints, 0x5c1374},
-		{&TextAskTutor, 0x5c1378}, {&TextReportRuleViolations, 0x5c137c}, {&TextReadManual, 0x5c1380},
-		{&TextReadFAQ, 0x5c1384}, {&TextAvailableHints, 0x5c1388}, {&TextChangeGeneralOptions, 0x5c138c},
-		{&TextChangeGraphicsOptions, 0x5c1390}, {&TextCustomiseConsole, 0x5c1394},
-		{&TextChangeNetworkSettings, 0x5c1398}, {&TextEditHotkeys, 0x5c139c}, {&TextShowMotD, 0x5c13a0},
-		{&TextAdvancedSettings, 0x5c13ac}, {&TextAvailableResolutions, 0x5c13b0}, {&TextSelectEngine, 0x5c13b4},
-		{&TextAvailableHotkeys, 0x5c13b8}, {&TextEditHotkeyText, 0x5c13bc}, {&TextClientVersion, 0x5c13c0},
-		{&TextOfficialWebsite, 0x5c13c4}, {&TextCharactersToIgnore, 0x5c13c8}, {&TextGlobalIgnoreSettings, 0x5c13cc},
-		{&TextCharactersToAllow, 0x5c13d0}, {&TextGlobalAllowSettings, 0x5c13d4}, {&TextEnterOneNamePerLine, 0x5c13d8},
-		{&TextItIsEmpty, 0x5c13dc}, {&TextItIsCurrentlyEmpty, 0x5c13e0}, {&TextYouReadTheFollowing, 0x5c13e4},
-		{&TextYouCanEnterNewText, 0x5c13e8}, {&TextYouReadWrittenBy, 0x5c13ec}, {&TextSelectType2, 0x5c13fc},
-		{&TextEnterShortDescription2, 0x5c1400}, {&TextClientCrashed, 0x5c1410}, {&TextTellUsWhatYouDid, 0x5c1414},
-		{&TextRequestAlreadySubmitted, 0x5c1420}, {&TextNoPrivateChannelWithYourself, 0x5c1428},
-		{&TextNoPlayerName, 0x5c143c}, {&TextNoReason, 0x5c1440}, {&TextNoAction, 0x5c1444},
-		{&TextNoComment, 0x5c1448}, {&TextNoStatement, 0x5c144c}, {&TextCannotReportStatement, 0x5c1450},
-		{&TextTibiaURL, 0x5c1458}, {&TextManualURL, 0x5c145c}, {&TextFAQURL, 0x5c1460}, {&TextOptionsURL, 0x5c1464},
-		{&TextGraphicsOptionsURL, 0x5c1468}, {&TextAdvancedGraphicsURL, 0x5c146c}, {&TextConsoleOptionsURL, 0x5c1470},
-		{&TextNetworkOptionsURL, 0x5c1474},
-	};
-	for (auto &T : Table)
-		*T.Text = Global<const char *>(T.Address);
-}
 
 // --- The dialogs ------------------------------------------------------------------------------
 
@@ -1701,7 +1650,6 @@ void TestDialogs()
 	Global<TSkin *>(0x71c454) = Skins;
 	InitSkinProperties();
 	At<void (__cdecl *)()>(0x498160)();
-	InitTexts();
 	InitClasses();
 	// The image's static timer vector (initialiser 0x559e30, constructor 0x4973f0) and NoCallback (0x559e10).
 	typedef void (__fastcall *VectorInitFn)(void *, void *, int, int, int, void *);

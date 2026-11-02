@@ -224,5 +224,3 @@ TTalkBuffer *GetTextBuffer(int Mode, const char *Name, int Channel);
 void ResetTalk();
 void InitTalk();
 void ExitTalk();
-extern const char *PTR_s_Your_request_has_been_closed__005c0348;
-extern const char *PTR_s_The_channel_has_been_closed__You_005c034c;

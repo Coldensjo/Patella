@@ -48,7 +48,6 @@
 #include "../../src/Talk.h"
 #include "../../src/Utils.h"
 #include "../../src/graphics.h"
-#include "../../src/external.h"
 #include <direct.h>
 #include <map>
 #include <new>
@@ -114,24 +113,6 @@ static void Role(const void *Object, const char *Base)
 	sprintf(Buffer, "%s%d", Base, Serial[Side]++);
 	Roles[Side][Object] = Buffer;
 }
-
-// ConsoleWindow.obj's copy of the text table (external.h).
-const char *TextCloseChannel = "Close this Channel (Ctrl+E)";
-const char *TextShowServerMessages = "Show server messages in this channel (Ctrl+M)";
-const char *TextHideServerMessages = "Hide server messages in this channel (Ctrl+M)";
-const char *TextIgnorePlayers = "Ignore and unignore other players (Ctrl+I)";
-const char *TextOpenNewChannel = "Open new channel (Ctrl+O)";
-const char *TextAdjustVolume = "Adjust volume";
-const char *TextMoveChannelsRight = "Move channels to the right";
-const char *TextMoveChannelsLeft = "Move channels to the left";
-const char *TextWaitForGamemaster = "Please wait patiently for a gamemaster to reply.";
-const char *TextRequestSubmitted = "You have already submitted a request. Please be patient.";
-const char *TextHelpChannelWelcome = "Welcome to the help channel! Feel free to ask questions concerning client "
-	"controls, general game play, use of accounts and the official homepage. In-depth questions about the content "
-	"of the game will not be answered. Experienced players will be glad to help you to the best of their knowledge. "
-	"Keep in mind that this is not a chat channel for general conversations. Therefore please limit your "
-	"statements to relevant questions and answers.";
-const char *TextReportRuleViolation = "Report Rule Violation";
 
 // --- DialogElements.cpp: the fakes of the classes the console creates ------------------
 

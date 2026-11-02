@@ -29,6 +29,7 @@
 #include "../../src/ContentWindows.h"
 #include "../../src/MapWindow.h"
 #include "../../src/Communication.h"
+#include "../../src/ConsoleWindow.h"
 #include "../../src/Control.h"
 #include "../../src/Creatures.h"
 #include "../../src/Inventory.h"
@@ -39,7 +40,6 @@
 #include "../../src/Surface.h"
 #include "testsurface.h"
 #include "../../src/Talk.h"
-#include "../../src/external.h"
 #include <map>
 #include <new>
 #include <stdarg.h>
@@ -90,10 +90,6 @@ static void PatchOwn(void *Function, void *Target)
 template <class T> static void *Member(T Function) { return *(void **)&Function; }
 static void *VtableOf(const void *Object) { return *(void **)Object; }
 static void SetVtable(void *Object, void *Vtable) { *(void **)Object = Vtable; }
-
-// MainWindow.obj's copy of the text table (external.h).
-const char *TextNoBugReportRight = "You are not authorised to send bug reports.";
-const char *TextAccountURL = "http://www.tibia.com/home/?subtopic=account";
 
 static TMainWindow *&OriginalMainWindow = Global<TMainWindow *>(0x5d16b0);
 static TWindow *&OriginalModalWindow = Global<TWindow *>(0x5d16ac);

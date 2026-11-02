@@ -28,16 +28,16 @@
 #include "Status.h"
 #include "Surface.h"
 #include "Talk.h"
+#include "Text.h"
 #include "Utils.h"
 #include "graphics.h"
-#include "external.h"
 
 #include <math.h>
 #include <sstream>
 
 // At 0x7152e8, constructed by the static initialiser 0x559fc0 as
 // TCallback(NULL, 0) and never used; the only datum of MapWindow.obj besides its copy of the
-// text table (external.h).
+// text table (Text.h).
 static TCallback NoCallback(NULL, 0);
 
 // Limits Value to the range between Bound1 and Bound2, which may come in

@@ -33,7 +33,6 @@
 #include "../../src/Surface.h"
 #include "testsurface.h"
 #include "../../src/graphics.h"
-#include "../../src/external.h"
 #include <map>
 #include <new>
 #include <stdarg.h>

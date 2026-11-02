@@ -9,7 +9,7 @@
 
 #include "common.h"
 #include "Container.h"
-#include "external.h"
+#include "Objects.h" // TObject
 
 // "In(rightid,0,RIGHT_ANY-1)"; CheckRight treats RIGHT_ANY as "any right".
 #define RIGHT_ANY 50
@@ -59,7 +59,10 @@ void ClearRights();
 int GetActionNumber();
 void IncrementActionNumber();
 // The action state of no action (name from MainWindow.cpp's
-// "GetActionState()==ACTIONSTATE_NONE"; the other states are numbers).
+// "GetActionState()==ACTIONSTATE_NONE"; the other states are numbers: 1 left
+// button down, 2 right button down, 3 both down, 4 and 5 one of both
+// released, 7 and 8 set by events 0x2c and 0x2d, 9 help mode, 10 dialog
+// open, 11 context menu open).
 #define ACTIONSTATE_NONE 0
 void SetActionState(int State);
 int GetActionState();

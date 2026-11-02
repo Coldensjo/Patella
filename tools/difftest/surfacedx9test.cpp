@@ -31,7 +31,6 @@
 #include "../../src/surfaceDX9.h"
 #include "../../src/GUI.h"
 #include "../../src/Preferences.h"
-#include "../../src/external.h"
 #include <string>
 #include <vector>
 #include <utility>

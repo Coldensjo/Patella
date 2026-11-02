@@ -6,8 +6,9 @@
 
 #include "difftest.h"
 #include "../../src/Player.h"
-#include "../../src/external.h"
 #include "../../src/MainFrm.h"
+#include "../../src/Surface.h"
+#include "../../src/sysinc.h" // TitleCode, ClassNameCode (defined below for difftest.exe)
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
@@ -79,7 +80,6 @@ void OutputControlErrorInformations(std::ostream &) STUB
 const char *GetErrorText(int) STUB
 const char *GetErrorHint(int) STUB
 
-const char *TextCriticalError;
 // sysinc.cpp's halves of the encoded window title and class name (sysinc.cpp is not
 // linked into difftest.exe).
 const int TitleCode[8] = {68, 75, 129, 81, 98, 78, 96, 141};

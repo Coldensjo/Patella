@@ -74,10 +74,6 @@ static void PatchOwn(void *Function, void *Target)
 
 template <class T> static void *Member(T Function) { return *(void **)&Function; }
 
-// MapWindow.obj's copy of the text table (external.h).
-const char *TextReceiveHint = "Receive hint";
-const char *TextSelectPlayerToTrade = "Select a player to trade with.";
-
 // DialogElements.cpp: never constructed here (GetShowNewHints is false
 // whenever the hint button could be created).
 TFakeBlinkingButton::TFakeBlinkingButton(int, int, int, int, int, int, TCallback, const char *) { abort(); }

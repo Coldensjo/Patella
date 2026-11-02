@@ -10,11 +10,11 @@
 //   encrypted:   [u16 total][XTEA([u16 length][payload][random padding to 8])]
 
 #include "Network.h"
+#include "MainFrm.h"
 #include "Utils.h"
 #include "TXTEA.h"
 #include "Preferences.h"
 #include "Status.h"
-#include "external.h"
 
 class TSocket : public CAsyncSocket {
 public:

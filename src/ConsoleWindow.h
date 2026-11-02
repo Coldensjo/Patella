@@ -29,11 +29,11 @@
 #include "GUI.h"
 #include "Talk.h"
 
-class TEditLine;         // external.h (DialogElements.cpp)
-class TScrollBar;        // external.h (DialogElements.cpp)
-class TSkinButton;       // external.h (DialogElements.cpp)
-class TToggleButton;     // external.h (DialogElements.cpp)
-class TMultiStateButton; // external.h (DialogElements.cpp)
+class TEditLine;         // DialogElements.h
+class TScrollBar;        // DialogElements.h
+class TSkinButton;       // DialogElements.h
+class TToggleButton;     // DialogElements.h
+class TMultiStateButton; // DialogElements.h
 
 // One line of a text window: the part of a talk line that fits into the
 // window's width. Indent is 0 for the first line of a talk line and 10 for

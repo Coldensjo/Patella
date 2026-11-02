@@ -53,8 +53,14 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
   assertion strings such as `CurrentServer`, `NUMBEROFSERVER`). Invent names only for the rest,
   in the original style: TitleCase free functions, `T`-prefixed classes, TitleCase members.
 - Globals: `static` unless another file uses them, ordered by address, each with its address.
-- Declarations from files not reconstructed yet go in `src/external.h`, with address and file.
-  Move them into the real header when that file is done.
+- Every file is reconstructed, so every declaration lives in the header of the file that defines
+  it (`src/external.h` held the declarations of files not reconstructed yet; it was removed in
+  issue #14). A new declaration goes into its owner's header with its address; a header includes
+  the headers whose types it uses, a .cpp the headers of the functions and data it uses (no
+  catch-all header). Watch the include cycles noted in notes/progress.md.
+- Data defined in a header with internal linkage has one copy per including object in the binary:
+  the text table (`src/Text.h`, every .cpp that reads a text includes it; Dialogs.h too, for its
+  inline code) and graphics.h's DefaultFontColor. An object's code reads only its own copy.
 - Use the error macros from `src/common.h` (`TASSERT*`, `TERROR*`, `TBEGIN`/`TEND*`) exactly where
   the binary has the corresponding blocks.
 - Behaviour must match the binary exactly, including odd behaviour (for example

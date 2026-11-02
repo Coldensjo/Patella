@@ -24,6 +24,7 @@
 #include "Skins.h"
 #include "Status.h"
 #include "Surface.h"
+#include "Text.h"
 #include "Utils.h"
 #include "graphics.h"
 
@@ -31,8 +32,8 @@
 #define TASSERTB2(Expr, V1, V2, Bug) \
 	if (!(Expr)) throw TMYEXCEPTION("assertion failed", #V1, V1, #V2, V2, #Expr " " Bug)
 
-// Data, in .bss order. ContentWindows.obj's copy of the text table is in
-// external.h (0x5c0678-0x5c08c3, then its copy of DefaultFontColor).
+// Data, in .bss order. ContentWindows.obj's copy of the text table is
+// Text.h's (0x5c0678-0x5c08c3, then its copy of DefaultFontColor).
 static char AutomapMouseOverText[100]; // 0x5c4398, a mark's text (TAutomapWindow::MouseHover)
 static char SkillMouseOverText[256];   // 0x5c4400, "You have %d percent to go"
 // At 0x5c4500, constructed by the static initialiser 0x559dd0 as

@@ -19,14 +19,15 @@
 
 #include "Player.h"
 #include "Control.h"
+#include "MainFrm.h"
 #include "graphics.h"
 #include "Network.h"
 #include "Preferences.h"
 #include "Status.h"
 #include "Surface.h"
+#include "Text.h"
 #include "Utils.h"
 #include "sysinc.h"
-#include "external.h"
 #include <fstream>
 #include <sstream>
 #include <string>

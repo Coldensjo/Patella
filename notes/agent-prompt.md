@@ -30,8 +30,7 @@ private). Work on exactly **one** GitHub issue, finish it completely, then stop.
 4. `notes/decisions.md` (how earlier judgement calls were made and logged).
 5. For a file issue: the closest finished files as style references (e.g. `src/Objects.cpp`,
    `src/Map.cpp`, `src/GUI.cpp`, `src/MainFrm.cpp`), `decomp/clean/<File>.c` and the
-   `gap_*.c` files named in the issue, and the declarations in `src/external.h` that
-   the file will replace.
+   `gap_*.c` files named in the issue.
 
 ## 3. Do the work
 
@@ -47,9 +46,9 @@ Follow `notes/reconstruction.md` exactly. In particular:
   `names.tsv` row. Template instances go to `src/Container.h`; VC7.1 STL/MFC/compiler code
   gets a `names.tsv` row of kind `stl`, never a reimplementation. No shims or wrapper
   functions that the binary does not have.
-- Replace the file's declarations in `src/external.h` by its real header and rename the
-  callers (`python -I tools/rename_externals.py src/*.cpp src/*.h` for free functions,
-  members by hand). Check each changed call site against `decomp/clean`.
+- Declare every function and global in the header of the file that defines it (there is
+  no catch-all header since issue #14) and include that header where it is used. Check each
+  changed call site against `decomp/clean`.
 - Behaviour must match the binary exactly, including odd behaviour: comment it, never
   fix it.
 - Add every function that can run in the difftest child to a `tools/difftest/<file>test.cpp`

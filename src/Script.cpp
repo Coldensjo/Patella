@@ -14,7 +14,7 @@
 #include "Script.h"
 #include <io.h>
 #include "Utils.h"
-#include "external.h"
+#include "sysinc.h"
 
 // 0x4df6d0, lines 48-50
 void TReadScriptFile::open(const char *FileName)

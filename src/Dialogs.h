@@ -27,9 +27,10 @@
 #include "Container.h"
 #include "GUI.h"
 #include "graphics.h"
-#include "DialogElements.h" // includes external.h (TObject)
+#include "DialogElements.h"
 #include "Map.h"            // TCoordinate, TMark
 #include "Preferences.h"    // TFullscreenMode, HOTKEYS
+#include "Text.h"           // TReconnectBody::SetTime reads TextTryingToReconnect
 
 class TDialog;
 struct TTalkLine;

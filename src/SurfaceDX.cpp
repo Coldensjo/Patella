@@ -13,7 +13,6 @@
 
 #include "SurfaceDX.h"
 #include "Preferences.h"
-#include "external.h"
 
 // The image's assertions with a bug number append it to the expression text.
 #define TASSERTB1(Expr, V1, Bug) \
