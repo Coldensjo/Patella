@@ -25,6 +25,7 @@
 
 int Failures = 0;
 int Checks = 0;
+int FailuresPrinted = 20;
 
 static uint32 Seed = 12345;
 uint32 Random()
@@ -663,6 +664,8 @@ int main(int argc, char **argv)
 	// (they need none of the earlier tests), for quick runs while working on
 	// them.
 	const char *Only = getenv("DIFFTEST_ONLY");
+	if (getenv("DIFFTEST_FAILS") != NULL)
+		FailuresPrinted = atoi(getenv("DIFFTEST_FAILS"));
 	if (Only != NULL && strcmp(Only, "MainWindow") == 0) {
 		TestMainWindow();
 		printf("%d checks, %d failures\n", Checks, Failures);

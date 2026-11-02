@@ -7,8 +7,9 @@
 
 extern int Failures;
 extern int Checks;
+extern int FailuresPrinted; // DIFFTEST_FAILS=<n>, default 20
 
-#define CHECK(Cond, ...) do { Checks++; if (!(Cond)) { Failures++; if (Failures <= 20) { printf("FAIL %s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n"); } } } while (0)
+#define CHECK(Cond, ...) do { Checks++; if (!(Cond)) { Failures++; if (Failures <= FailuresPrinted) { printf("FAIL %s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n"); } } } while (0)
 
 uint32 Random();
 // Random()'s state: an error round (imageeh.h, issue #34) saves it and restores it, so the

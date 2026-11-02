@@ -517,7 +517,10 @@ void CompareThrown(const char *Test, const char *What, const TThrown &Ours, cons
 	B.Origin = WithoutLines(Original.Origin + ":", &OriginalLines);
 	CHECK(A == B && OurLines.size() == OriginalLines.size(), "%s %s: ours %s, original %s", Test, What,
 		Ours.Describe().c_str(), Original.Describe().c_str());
-	MapLines(Test, What, OurLines, OriginalLines);
+	// Only a comparison that matched maps lines: one mismatch must not make
+	// every later comparison of the same lines fail.
+	if (A == B && OurLines.size() == OriginalLines.size())
+		MapLines(Test, What, OurLines, OriginalLines);
 }
 
 bool Redirected(const void *Code)
