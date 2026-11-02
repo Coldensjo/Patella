@@ -59,12 +59,16 @@ None.
   constructors of a file's static objects explicitly (maptest.cpp does it
   for Map.cpp's), and keep inputs away from paths that raise exceptions in
   the original (e.g. opening a missing file).
-- tools\difftestuild.cmd can fail once without a message (a difftest.exe
-  still locked from the previous run); kill difftest.exe and run it again.
-- Run tools\difftest\build.cmd from PowerShell (cmd /c ...). Launched from the
-  Git Bash tool it sometimes ends with exit 1 and no output, while the same
-  build passes from PowerShell; build.cmd sets a private TEMP per checkout
-  because the tests write to fixed folders under %TEMP%.
+- build.cmd (issue #23) gives the same result from cmd, PowerShell and Git Bash. The old silent
+  "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
+  which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with
+  output were dialogstest.cpp's dump, which took a heap pointer 0x02abab30 for the 0xab fill
+  pattern (fixed: pattern bytes must include the top or low byte). Git Bash's larger environment
+  block moves the heap. From Git Bash run `cmd //c 'tools\difftest\build.cmd'` (`cmd /c` becomes
+  `cmd C:/`: an interactive cmd that runs nothing and exits 0). A locked difftest.exe no longer
+  breaks the link: the child dies with its parent (job object) and build.cmd stops a copy of this
+  checkout that still runs, by its full path. notes/reconstruction.md ("Checking") has the crash
+  reports.
 - MapWindow.cpp: TObject converts to int (Type), so TEND1(Obj) and
   comparisons like "SrcObj!=0" compile as in the original; an rvalue TObject
   now also matches GetObjectFlag(int, int). Status.cpp's Set/Get*Object take
@@ -80,10 +84,10 @@ None.
 - mapwindowtest.cpp's PatchWorld redirects many functions of our Map, Creatures,
   Status, Preferences, Talk, Help, graphics, GUI and Inventory code for good;
   keep it the last test in difftest.cpp or restore them.
-- A difftest crash that depends on the environment (TEMP's length) is a
-  heap error that the memory layout hides: talktest.cpp had a double delete
-  (fixed). _heapchk() between the tests finds the first one that breaks the
-  heap.
+- A difftest crash or difference that depends on the environment (TEMP's length, the shell) is
+  memory-layout dependent: a heap error (difftest.cpp runs _heapchk() after every test and names
+  the test; LFH small-block overruns can still slip through) or a dump that classifies values by
+  address.
 - MainWindow.cpp: the windows it creates from DialogElements.cpp are sketches in external.h
   (TBorder, TTextButton, TLabel, TObjectIcon; TDialogWindow and TSubWindow are real since issue #3,
   TConsoleWindow since issue #5, the ContentWindows.cpp windows and creators since issue #6);

@@ -144,13 +144,16 @@ static bool ReadString(const void *Address, std::string *Out)
 	return false;
 }
 // Bytes of the fill pattern (two or more 0xab bytes) are no pointer, even if
-// the heap has grown over that address meanwhile.
+// the heap has grown over that address meanwhile. One of them must be the top
+// byte (no pointer of a 32-bit process is that high) or the low byte (no
+// object is at an odd address): a heap pointer such as 0x02abab30 is a
+// pointer, else the dump depends on where the heap happens to be (issue #23).
 static bool IsPattern(uint32 Value)
 {
 	int Count = 0;
 	for (int i = 0; i < 4; i++)
 		Count += ((Value >> (8 * i)) & 0xff) == 0xab;
-	return Count >= 2;
+	return Count >= 2 && ((Value >> 24) == 0xab || (Value & 0xff) == 0xab);
 }
 // A value: a known object's name, a string, a pointer or a number.
 static std::string Val(int s, uint32 Value)

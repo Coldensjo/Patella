@@ -72,12 +72,28 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
   original functions next to the reconstructed ones on the same inputs. Only functions that do
   not touch imports can be called this way. `statustest.cpp` patches the image's `malloc` and
   `free` (and a few helpers that would reach Windows) to jump to the test's own code, so
-  allocating functions can be compared too; reuse its `PatchImage`. A crash in the child prints its address and the stack; an uncaught exception of our side (an error
-path hit by a test input) ends the child with 0xc0000409 and no message. `scripttest.cpp` also
-redirects the image's stdio functions (fopen, getc, fputc, fread, ...) to the test's CRT, so
-file-based code can be compared on real files. build.cmd gives the tests a private TEMP
-(build\difftest\tmp): several tests write fixed directories there, and runs in other worktrees at
-the same time made each other crash. `vlongtest.cpp` and
+  allocating functions can be compared too; reuse its `PatchImage`.
+- How build.cmd reports failures and crashes (issue #23): every step that fails stops the script
+  with exit code 1 and a message (the compiler's output, `build.cmd: <step> failed (exit code N)`,
+  or difftest.exe's report); a passing run ends with `build.cmd: all tests passed`. Before each
+  test the child writes the test's name into memory shared with the parent (the `#define
+  TestX(...)` lines before `main` in difftest.cpp: a new test needs one) and runs `_heapchk()` after
+  it. A crash prints `crash:` lines in the child where it can (access violations, stack overflow,
+  heap corruption with address and stack; uncaught C++ exceptions with the thrown type and the
+  message of a TMyException or std::exception; terminate, abort, invalid parameter, pure call,
+  /GS cookie), and the parent always prints `difftest: the test process ended with exit code
+  0x... (name) in TestX` (or "in the heap check after TestX"), also for `__fastfail`, which nothing
+  in the child can catch. The child runs in a job that dies with the parent (no orphan keeps
+  difftest.exe locked) and never waits on Windows Error Reporting; DIFFTEST_TIMEOUT=<seconds>
+  (default 1800, 0 none) stops a hung child. build.cmd deletes each test program before linking
+  it and stops a copy of this checkout that still runs (by its full path). From Git Bash run
+  `cmd //c 'tools\difftest\build.cmd'`: `cmd /c` becomes `cmd C:/` there and runs nothing.
+- `scripttest.cpp` also
+  redirects the image's stdio functions (fopen, getc, fputc, fread, ...) to the test's CRT, so
+  file-based code can be compared on real files. build.cmd gives the tests a private TEMP
+  (build\difftest\tmp): several tests write fixed directories there, and runs in other worktrees at
+  the same time made each other crash. A test's result must not depend on where the heap is: the
+  environment block (other shell, other TEMP) moves it. `vlongtest.cpp` and
   `vlongcheck.py` check the big-number code and RSA against Python's exact integers. Add a test
   for every new pure function.
 - Before finishing a file, compare each function against its pseudocode once more: every
