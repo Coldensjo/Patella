@@ -35,6 +35,7 @@
 // left in the table at the end.
 
 #include "difftest.h"
+#include "imageeh.h"
 #include "../../src/Dialogs.h"
 #include "../../src/Communication.h"
 #include "../../src/Control.h"
@@ -86,10 +87,22 @@ static bool Testing;
 static std::string Log[2];
 static FILE *LogFile;
 
+// The error round (issue #34): the FailAt-th call of a fake (a logged call or
+// a getter) throws an assertion of the calling side (0: none); Ticks counts
+// one side's calls.
+static int FailAt, Ticks;
+static void Tick()
+{
+	Ticks++;
+	if (FailAt > 0 && --FailAt == 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Ticks);
+}
+
 static void Logf(const char *Format, ...)
 {
 	if (!Testing)
 		return;
+	Tick();
 	char Buffer[2048];
 	va_list Args;
 	va_start(Args, Format);
@@ -375,6 +388,7 @@ static struct {
 	bool BuddyNotify, BuddyDescription;
 	int Modes, Engines, Engine, FPSHundredths;
 	TFullscreenMode ModeList[6];
+	bool NoPlayer, NoHelpTitles; // the error round's assertions: no player, no help title matches
 } World;
 
 static TCreature Player;
@@ -411,23 +425,26 @@ static bool Hash(uint32 Seed, int a, int b, int Percent)
 static int CharWidth(int Font, char c) { return 4 + ((unsigned char)c + Font) % 5; }
 static int __cdecl FakeGetTextPartWidth(int Font, const char *Text, int Length)
 {
+	Tick();
 	int Width = 0;
 	for (int i = 0; i < Length && Text[i] != 0; i++)
 		Width += CharWidth(Font, Text[i]);
 	return Width;
 }
-static int __cdecl FakeGetTextWidth(int Font, const char *Text) { return FakeGetTextPartWidth(Font, Text, 1 << 30); }
+static int __cdecl FakeGetTextWidth(int Font, const char *Text) { Tick(); return FakeGetTextPartWidth(Font, Text, 1 << 30); }
 static int __cdecl FakeGetFittingTextLength(int Font, const char *Text, int Width)
 {
+	Tick();
 	int Length = 0, Used = 0;
 	while (Text[Length] != 0 && Used + CharWidth(Font, Text[Length]) <= Width)
 		Used += CharWidth(Font, Text[Length++]);
 	return Length;
 }
-static int __cdecl FakeGetFontHeight(int Font) { return 8 + (Font & 3); }
-static int __cdecl FakeGetFontLineHeight(int Font) { return 11 + (Font & 3); }
+static int __cdecl FakeGetFontHeight(int Font) { Tick(); return 8 + (Font & 3); }
+static int __cdecl FakeGetFontLineHeight(int Font) { Tick(); return 11 + (Font & 3); }
 static void __cdecl FakeGetTextPosition(int *TextX, int *TextY, int x, int y, int Width, int Height, TFont *Format)
 {
+	Tick();
 	*TextX = x + Width / 3 + Format->Alignment;
 	*TextY = y + Height / 4 + Format->FontNumber;
 }
@@ -468,8 +485,8 @@ static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int Picture, 
 }
 static void __cdecl FakeSetMouseOverText(const char *Text) { Logf("Over%s;", Text == NULL ? "-" : Text); }
 static void __cdecl FakeSetMouseCursor(int Cursor) { Logf("Cursor%d;", Cursor); }
-static int __cdecl FakeGetActionState() { return World.ActionState; }
-static int __cdecl FakeGetActionNumber() { return World.ActionNumber; }
+static int __cdecl FakeGetActionState() { Tick(); return World.ActionState; }
+static int __cdecl FakeGetActionNumber() { Tick(); return World.ActionNumber; }
 static void __cdecl FakeSetActionState(int State) { Logf("Action%d;", State); }
 static void __cdecl FakeAddMessage(int Type, INT_PTR Param1, INT_PTR Param2)
 {
@@ -479,19 +496,20 @@ static void __cdecl FakeAddMessageFirst(int Type, INT_PTR Param1, INT_PTR Param2
 {
 	Logf("First%d,%s,%s;", Type, Val((uint32)Param1).c_str(), Val((uint32)Param2).c_str());
 }
-static int __cdecl FakePeekMessageType() { return World.MessageType; }
+static int __cdecl FakePeekMessageType() { Tick(); return World.MessageType; }
 static void __cdecl FakeClearMessages() { Logf("ClearMessages;"); }
-static int __cdecl FakeGetConnectionState() { return World.ConnectionState; }
-static int __cdecl FakeGetProgress() { return World.Progress; }
-static int __cdecl FakeGetAccountCharacters() { return World.Characters; }
-static int __cdecl FakeGetPremiumDays() { return World.PremiumDays; }
-static int __cdecl FakeGetActiveCharacter() { return World.ActiveCharacter; }
+static int __cdecl FakeGetConnectionState() { Tick(); return World.ConnectionState; }
+static int __cdecl FakeGetProgress() { Tick(); return World.Progress; }
+static int __cdecl FakeGetAccountCharacters() { Tick(); return World.Characters; }
+static int __cdecl FakeGetPremiumDays() { Tick(); return World.PremiumDays; }
+static int __cdecl FakeGetActiveCharacter() { Tick(); return World.ActiveCharacter; }
 static void __cdecl FakeSetActiveCharacter(int Number) { Logf("Active%d;", Number); }
-static const char *__cdecl FakeGetCharacterName(int Number) { return World.CharacterNames[Number & 7]; }
-static const char *__cdecl FakeGetCharacterWorld(int Number) { return World.CharacterWorlds[Number & 7]; }
+static const char *__cdecl FakeGetCharacterName(int Number) { Tick(); return World.CharacterNames[Number & 7]; }
+static const char *__cdecl FakeGetCharacterWorld(int Number) { Tick(); return World.CharacterWorlds[Number & 7]; }
 static void __cdecl FakeSetAccount(int Number, const char *Password) { Logf("Account%d,%s;", Number, Str(Password).c_str()); }
 static TObject *__cdecl FakeGetDragObject(int *Index, int *x, int *y, int *z)
 {
+	Tick();
 	*Index = World.DragIndex;
 	*x = World.DragX;
 	*y = World.DragY;
@@ -500,19 +518,20 @@ static TObject *__cdecl FakeGetDragObject(int *Index, int *x, int *y, int *z)
 }
 static void __cdecl FakeGetDragTarget(int *x, int *y, int *z)
 {
+	Tick();
 	*x = World.TargetX;
 	*y = World.TargetY;
 	*z = World.TargetZ;
 }
-static int __cdecl FakeGetWindowWidth() { return World.WindowWidth; }
-static int __cdecl FakeGetWindowHeight() { return World.WindowHeight; }
-static bool __cdecl FakeCheckRight(int Right, int Bit) { return Hash(World.RightSeed, Right, Bit, Bit < 0 ? 60 : 50); }
-static const char *__cdecl FakeGetRightName(int Right) { return RightNames[Right % 22]; }
-static const char *__cdecl FakeGetActionName(int Action) { return ActionNames[Action % 7]; }
-static int __cdecl FakeGetNumberOfErrorReports() { return World.ErrorReports; }
-static const char *__cdecl FakeGetErrorReportTitle(int Number) { return ReportTitles[Number % 3]; }
-static const char *__cdecl FakeGetErrorReportDate(int Number) { return Number % 2 ? "2006-06-08 12:00" : "2006-06-09"; }
-static const char *__cdecl FakeGetErrorReportText(int Number) { return ReportTexts[Number % 3]; }
+static int __cdecl FakeGetWindowWidth() { Tick(); return World.WindowWidth; }
+static int __cdecl FakeGetWindowHeight() { Tick(); return World.WindowHeight; }
+static bool __cdecl FakeCheckRight(int Right, int Bit) { Tick(); return Hash(World.RightSeed, Right, Bit, Bit < 0 ? 60 : 50); }
+static const char *__cdecl FakeGetRightName(int Right) { Tick(); return RightNames[Right % 22]; }
+static const char *__cdecl FakeGetActionName(int Action) { Tick(); return ActionNames[Action % 7]; }
+static int __cdecl FakeGetNumberOfErrorReports() { Tick(); return World.ErrorReports; }
+static const char *__cdecl FakeGetErrorReportTitle(int Number) { Tick(); return ReportTitles[Number % 3]; }
+static const char *__cdecl FakeGetErrorReportDate(int Number) { Tick(); return Number % 2 ? "2006-06-08 12:00" : "2006-06-09"; }
+static const char *__cdecl FakeGetErrorReportText(int Number) { Tick(); return ReportTexts[Number % 3]; }
 static void __cdecl FakeSetErrorReportComment(const char *Comment) { Logf("Comment%s;", Str(Comment).c_str()); }
 static void __cdecl FakeClearErrorReports() { Logf("ClearReports;"); }
 static void __cdecl FakeDeleteErrorFile() { Logf("DeleteErrorFile;"); }
@@ -520,12 +539,12 @@ static void __cdecl FakeCheckClipboardText(const char *Text, int Length)
 {
 	Logf("Clip%s,%d;", std::string(Text, Length > 0 ? Length : 0).c_str(), Length);
 }
-static bool __cdecl FakeIsClipboardEmpty() { return World.ClipboardEmpty; }
-static char *__cdecl FakeGetClipboardText() { return (char *)World.Clipboard; }
+static bool __cdecl FakeIsClipboardEmpty() { Tick(); return World.ClipboardEmpty; }
+static char *__cdecl FakeGetClipboardText() { Tick(); return (char *)World.Clipboard; }
 
 // Preferences.cpp: one copy per side.
 #define PREF(Type, Name) \
-	static Type __cdecl FakeGet##Name() { return World.Pref[Side].Name; } \
+	static Type __cdecl FakeGet##Name() { Tick(); return World.Pref[Side].Name; } \
 	static void __cdecl FakeSet##Name(Type Value) { Logf("Set" #Name "%d;", (int)Value); World.Pref[Side].Name = Value; }
 PREF(int, ViewMode)
 PREF(int, CreatureInfo)
@@ -543,7 +562,7 @@ PREF(bool, StatusMessages)
 PREF(bool, TimeStamps)
 PREF(bool, PrivateMessages)
 PREF(bool, TestServerLogin)
-static TFullscreenMode *__cdecl FakeGetFullscreenMode() { return &World.Pref[Side].FullscreenMode; }
+static TFullscreenMode *__cdecl FakeGetFullscreenMode() { Tick(); return &World.Pref[Side].FullscreenMode; }
 static void __cdecl FakeSetFullscreenMode(const TFullscreenMode *Mode)
 {
 	Logf("SetMode%d,%d,%d,%d;", Mode->Width, Mode->Height, Mode->Depth, Mode->Frequency);
@@ -551,6 +570,7 @@ static void __cdecl FakeSetFullscreenMode(const TFullscreenMode *Mode)
 }
 static const char *__cdecl FakeGetHotkey(int Number, bool *AutoSend)
 {
+	Tick();
 	*AutoSend = World.Pref[Side].AutoSend[Number];
 	return World.Pref[Side].Hotkeys[Number];
 }
@@ -559,11 +579,12 @@ static void __cdecl FakeSetHotkey(int Number, const char *Text, bool AutoSend)
 	Logf("Hotkey%d,%s,%d;", Number, Str(Text).c_str(), AutoSend ? 1 : 0);
 }
 static void __cdecl FakeSavePreferences() { Logf("SavePreferences;"); }
-static bool __cdecl FakeIsKnownHint(int Number) { return World.KnownHints[Number & 15]; }
+static bool __cdecl FakeIsKnownHint(int Number) { Tick(); return World.KnownHints[Number & 15]; }
 
 // Talk.cpp: the lists come as texts the dialog frees.
 static char *__cdecl FakeGetIgnoreListText()
 {
+	Tick();
 	if (World.IgnoreText[0] == 0 && Hash(World.IgnoreSeed, 1, 1, 30))
 		return NULL;
 	char *Text = new char[strlen(World.IgnoreText) + 1];
@@ -572,20 +593,21 @@ static char *__cdecl FakeGetIgnoreListText()
 }
 static char *__cdecl FakeGetBuddyIgnoreText()
 {
+	Tick();
 	if (World.BuddyIgnoreText[0] == 0 && Hash(World.IgnoreSeed, 2, 2, 30))
 		return NULL;
 	char *Text = new char[strlen(World.BuddyIgnoreText) + 1];
 	strcpy(Text, World.BuddyIgnoreText);
 	return Text;
 }
-static bool __cdecl FakeIsPermanentIgnore(const char *Name) { return Hash(World.IgnoreSeed, Name[0], (int)strlen(Name), 50); }
-static bool __cdecl FakeIsPermanentBuddyIgnore(const char *Name) { return Hash(World.IgnoreSeed, Name[1], 7, 50); }
-static bool __cdecl FakeIsModeIgnored(int Mode) { return World.ModeIgnored[Mode & 7]; }
-static bool __cdecl FakeGetIgnoreListEnabled() { return World.IgnoreListEnabled; }
+static bool __cdecl FakeIsPermanentIgnore(const char *Name) { Tick(); return Hash(World.IgnoreSeed, Name[0], (int)strlen(Name), 50); }
+static bool __cdecl FakeIsPermanentBuddyIgnore(const char *Name) { Tick(); return Hash(World.IgnoreSeed, Name[1], 7, 50); }
+static bool __cdecl FakeIsModeIgnored(int Mode) { Tick(); return World.ModeIgnored[Mode & 7]; }
+static bool __cdecl FakeGetIgnoreListEnabled() { Tick(); return World.IgnoreListEnabled; }
 static void __cdecl FakeSetIgnoreListEnabled(bool Value) { Logf("IgnoreList%d;", Value ? 1 : 0); }
-static bool __cdecl FakeGetIgnoreEnabled() { return World.IgnoreEnabled; }
+static bool __cdecl FakeGetIgnoreEnabled() { Tick(); return World.IgnoreEnabled; }
 static void __cdecl FakeSetIgnoreEnabled(bool Value) { Logf("IgnoreEnabled%d;", Value ? 1 : 0); }
-static bool __cdecl FakeGetBuddyIgnore() { return World.BuddyIgnore; }
+static bool __cdecl FakeGetBuddyIgnore() { Tick(); return World.BuddyIgnore; }
 static void __cdecl FakeSetBuddyIgnore(bool Value) { Logf("BuddyIgnore%d;", Value ? 1 : 0); }
 static void __cdecl FakeClearIgnoreList() { Logf("ClearIgnore;"); }
 static void __cdecl FakeIgnoreName(const char *Name, bool Permanent) { Logf("Ignore%s,%d;", Str(Name).c_str(), Permanent ? 1 : 0); }
@@ -606,25 +628,34 @@ static TTalkBuffer *__cdecl FakeGetTextBuffer(int Mode, const char *Name, int Ch
 }
 
 // Creatures.cpp
-static uint32 __cdecl FakeGetPlayerID() { return World.PlayerID; }
-static TCreature *__cdecl FakeGetCreature(uint32 ID) { return ID == World.PlayerID ? &Player : NULL; }
-static int __cdecl FakeGetBuddyPosition(uint32 ID) { return World.BuddyPosition; }
-static const char *__cdecl FakeGetBuddyListName(int Position) { return NamePool[Position % 10]; }
-static int __cdecl FakeGetBuddyListIcon(int Position) { return World.BuddyIcon; }
+static uint32 __cdecl FakeGetPlayerID() { Tick(); return World.PlayerID; }
+static TCreature *__cdecl FakeGetCreature(uint32 ID)
+{
+	Tick();
+	return ID == World.PlayerID && !World.NoPlayer ? &Player : NULL;
+}
+static int __cdecl FakeGetBuddyPosition(uint32 ID) { Tick(); return World.BuddyPosition; }
+static const char *__cdecl FakeGetBuddyListName(int Position) { Tick(); return NamePool[Position % 10]; }
+static int __cdecl FakeGetBuddyListIcon(int Position) { Tick(); return World.BuddyIcon; }
 static const char *__cdecl FakeGetBuddyListDescription(int Position)
 {
+	Tick();
 	return World.BuddyDescription ? "a friend\nfrom the old days" : NULL;
 }
-static bool __cdecl FakeGetBuddyListNotify(int Position) { return World.BuddyNotify; }
+static bool __cdecl FakeGetBuddyListNotify(int Position) { Tick(); return World.BuddyNotify; }
 static void __cdecl FakeEditBuddy(int ID, int Icon, const char *Description, bool Notify)
 {
 	Logf("EditBuddy%d,%d,%s,%d;", ID, Icon, Str(Description).c_str(), Notify ? 1 : 0);
 }
 
 // Help.cpp, Objects.cpp, Map.cpp, Control.cpp
-static const char *__cdecl FakeGetEventHelpTitle(int Number) { return HelpTitles[Number & 15]; }
-static const char *__cdecl FakeGetEventHelpText(int Number) { return HelpTexts[Number & 15]; }
-static bool __cdecl FakeGetObjectFlag(int Type, int Flag) { return Hash(World.FlagSeed, Type, Flag, 40); }
+static const char *__cdecl FakeGetEventHelpTitle(int Number)
+{
+	Tick();
+	return World.NoHelpTitles ? "Unknown" : HelpTitles[Number & 15];
+}
+static const char *__cdecl FakeGetEventHelpText(int Number) { Tick(); return HelpTexts[Number & 15]; }
+static bool __cdecl FakeGetObjectFlag(int Type, int Flag) { Tick(); return Hash(World.FlagSeed, Type, Flag, 40); }
 static void __cdecl FakeGetCumulativePattern(TObject &Obj, int *PatternX, int *PatternY)
 {
 	Logf("Pattern%d,%d;", Obj.Type, Obj.Data);
@@ -711,21 +742,22 @@ public:
 	{
 		Logf("VLine%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Height, C.R, C.G, C.B);
 	}
-	bool CanShadeRectangles() { return World.Engines & 4; }
+	bool CanShadeRectangles() { Tick(); return World.Engines & 4; }
 	int GetFullscreenModes(TFullscreenMode **Modes)
 	{
+		Tick();
 		*Modes = new TFullscreenMode[World.Modes == 0 ? 1 : World.Modes];
 		for (int i = 0; i < World.Modes; i++)
 			(*Modes)[i] = World.ModeList[i];
 		return World.Modes;
 	}
 	void SetFramerateLimit(int Limit) { Logf("Framerate%d;", Limit); }
-	double GetFPS() { return World.FPSHundredths / 100.0; }
+	double GetFPS() { Tick(); return World.FPSHundredths / 100.0; }
 };
 static TDGSurface *Surface;
-static TSurface *__cdecl FakeGetSurface() { return Surface; }
+static TSurface *__cdecl FakeGetSurface() { Tick(); return Surface; }
 // A TSurface member without arguments (thiscall: the surface in ECX).
-static uint8 __fastcall FakeGetAvailableEngines(void *, void *) { return (uint8)(World.Engines & 3); }
+static uint8 __fastcall FakeGetAvailableEngines(void *, void *) { Tick(); return (uint8)(World.Engines & 3); }
 
 // The receivers of the callbacks that do not go to the dialog.
 class TDGReceiver : public TElement {
@@ -1358,11 +1390,27 @@ static std::string DumpAll(int s)
 
 static int OperationCount[32];
 static const char *OperationName;
+
+// The error round: the action whose calls fail (CurrentAction: the operation,
+// 16 the creator, 17 the destructor, 18 a key press straight to the body),
+// the most fake calls and the last count
+// one call of each action made for each kind of dialog, whether a call threw
+// (the dialogs are then abandoned: members may point to deleted parts, so
+// only the logs are compared).
+enum { ACTION_CREATOR = 16, ACTION_DESTRUCTOR = 17, ACTION_BODYKEY = 18, ACTIONS = 19 };
+static TErrorRound *DialogsRound;
+static int CurrentAction, TargetAction = -1, MaxTicks[KINDS][ACTIONS], LastTicks[KINDS][ACTIONS];
+static bool Threw;
+
 static void Compare()
 {
 	// The table of blocks does not change between the two dumps.
 	Untracked++;
-	std::string D[2] = {DumpAll(OURS), DumpAll(ORIGINAL)};
+	std::string D[2];
+	if (!Threw) {
+		D[OURS] = DumpAll(OURS);
+		D[ORIGINAL] = DumpAll(ORIGINAL);
+	}
 	Untracked--;
 	ApplyPendingFrees();
 	if (LogFile != NULL)
@@ -1378,13 +1426,56 @@ static void Compare()
 // Runs F for our side and then for the image's (the names of the trees are
 // refreshed first, for the logs).
 static bool Trace;
+static int FailIndex(int Count)
+{
+	int Choice = Random() % 3, Range = 1 << (Random() % 12);
+	Range = Range < Count ? Range : Count;
+	if (Choice == 0)
+		return 1 + (int)(Random() % Count);
+	if (Choice == 1)
+		return 1 + (int)(Random() % Range);
+	return Count - (int)(Random() % Range);
+}
+// In the error round the calls of the round's action fail at one of the fake
+// calls such a call made before (for the same kind of dialog), and what both
+// sides threw is compared; after a throw nothing runs.
 template <class Fn> static void Both(Fn Function)
 {
+	if (DialogsRound != NULL) {
+		if (Threw)
+			return;
+		int Count = Random() % 2 == 0 ? MaxTicks[Kind][CurrentAction] : LastTicks[Kind][CurrentAction];
+		int Fail = Count > 0 && CurrentAction == TargetAction ? FailIndex(Count + 1) : 0;
+		char What[96];
+		sprintf(What, "%s %s (fail at %d)", KindNames[Kind], OperationName, Fail);
+		DialogsRound->Calling(What, "ours");
+		TThrown A = OurThrow([&] { Side = OURS; RefreshNames(OURS); Ticks = 0; FailAt = Fail; Function(OURS); });
+		DialogsRound->Calling(What, "the original");
+		TThrown B = ImageThrow([&] {
+			Side = ORIGINAL;
+			RefreshNames(ORIGINAL);
+			Ticks = 0;
+			FailAt = Fail;
+			Function(ORIGINAL);
+		});
+		FailAt = 0;
+		Side = OURS;
+		DialogsRound->Compare(What, A, B);
+		if (A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING) {
+			Threw = true;
+		} else {
+			LastTicks[Kind][CurrentAction] = Ticks;
+			if (Ticks > MaxTicks[Kind][CurrentAction])
+				MaxTicks[Kind][CurrentAction] = Ticks;
+		}
+		return;
+	}
 	for (int s = 0; s < 2; s++) {
 		Side = s;
 		if (Trace)
 			fprintf(stderr, "    %s side %d\n", OperationName, s);
 		RefreshNames(s);
+		Ticks = 0;
 		if (s == OURS) {
 			try {
 				Function(s);
@@ -1397,6 +1488,9 @@ template <class Fn> static void Both(Fn Function)
 			Function(s);
 		}
 	}
+	// (the counts of the error round's failures)
+	if (Ticks > MaxTicks[Kind][CurrentAction])
+		MaxTicks[Kind][CurrentAction] = Ticks;
 	Side = OURS;
 }
 
@@ -1525,7 +1619,9 @@ static void Members(uint32 r)
 			if (s == OURS) {
 				TRuleViolationDialog *D = (TRuleViolationDialog *)Body(s);
 				D->UpdateActions();
-				Logf("Reason%d,Action%d;", D->GetReason(), D->GetAction());
+				// (two calls as on the image's side: the error round counts them)
+				Logf("Reason%d,", D->GetReason());
+				Logf("Action%d;", D->GetAction());
 			} else {
 				CallI<void>(0x47eae0, Body(s));
 				Logf("Reason%d,", CallI<int>(0x4776b0, Body(s)));
@@ -1597,10 +1693,13 @@ static void Members(uint32 r)
 }
 
 static int Clock; // the test clock of the round (the dialogs start at 1000)
-static void Operation()
+// Forced >= 0: that operation (the error round), with the same random numbers.
+static void Operation(int Forced = -1)
 {
 	TDialog *F0 = Frame[OURS];
 	int Op = Random() % 16;
+	if (Forced >= 0)
+		Op = Forced;
 	int x, y, x2, y2;
 	ChildPoint(&x, &y);
 	ChildPoint(&x2, &y2);
@@ -1623,6 +1722,7 @@ static void Operation()
 	if (Kind == K_HOTKEYS && Op >= 3 && Op <= 5 && ((THotkeyDialog *)Body(OURS))->ListBox->Selected < 0)
 		Op = 1;
 	OperationCount[Op]++;
+	CurrentAction = Op;
 	switch (Op) {
 	case 0: {
 		int Surface = 1 + r1 % 3, dx = r2 % 50, dy = r3 % 50;
@@ -1792,6 +1892,390 @@ static void TestErrorReport()
 	}
 }
 
+// --- The error round (issue #34) -------------------------------------------------------------
+
+// Abandoned dialogs (a call threw) leave their timers in both timer lists:
+// they are taken out (ours with RemoveTimer, the image's with 0x49b0d0),
+// found by the timer vtables at the start of a live block.
+static void RemoveAbandonedTimers()
+{
+	for (auto &B : *Blocks) {
+		if (B.second.Freed || B.second.Size < sizeof(TTimer))
+			continue;
+		void *V = *(void **)B.first;
+		if (V == OurTimerVtable)
+			RemoveTimer((TTimer *)B.first);
+		else if ((uintptr_t)V == 0x5646e8)
+			At<void (__cdecl *)(void *)>(0x49b0d0)((void *)B.first);
+	}
+}
+
+// One call on both sides (failing at the Fail-th fake call, 0: none), what
+// they threw compared, then the logs (and the dialogs unless a call threw).
+template <class F> static void DialogCall(const char *What, F Call, int Fail = 0)
+{
+	OperationName = What;
+	DialogsRound->Calling(What, "ours");
+	TThrown A = OurThrow([&] { Side = OURS; RefreshNames(OURS); Ticks = 0; FailAt = Fail; Call(OURS); });
+	DialogsRound->Calling(What, "the original");
+	TThrown B = ImageThrow([&] { Side = ORIGINAL; RefreshNames(ORIGINAL); Ticks = 0; FailAt = Fail; Call(ORIGINAL); });
+	FailAt = 0;
+	Side = OURS;
+	DialogsRound->Compare(What, A, B);
+	Threw = Threw || A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING;
+	Compare();
+}
+
+// A new pair of dialogs of the kind (random world and arguments); false when
+// the creator threw.
+static bool NewDialogs()
+{
+	RandomWorld();
+	RandomArguments();
+	curEngine = World.Engine;
+	Global<int>(0x71d0c4) = World.Engine;
+	Clock = 1000;
+	SetTestClock(Clock);
+	Testing = true;
+	Threw = false;
+	Frame[OURS] = Frame[ORIGINAL] = NULL;
+	OperationName = "creator";
+	CurrentAction = ACTION_CREATOR;
+	Both([&](int s) { Frame[s] = Create(s); });
+	Compare();
+	return !Threw && Frame[OURS] != NULL && Frame[ORIGINAL] != NULL;
+}
+
+// The end of a round: the dialogs deleted, or abandoned after a throw.
+static void EndDialogs()
+{
+	if (!Threw && Frame[OURS] != NULL && Frame[ORIGINAL] != NULL) {
+		OperationName = "destructor";
+		CurrentAction = ACTION_DESTRUCTOR;
+		Both([&](int s) {
+			delete Frame[s];
+			Frame[s] = NULL;
+		});
+		CHECK(Log[OURS] == Log[ORIGINAL], "Dialogs errors destructor (%s): logs differ\n  ours: %s\n  orig: %s",
+			KindNames[Kind], Log[OURS].c_str(), Log[ORIGINAL].c_str());
+	}
+	Frame[OURS] = Frame[ORIGINAL] = NULL;
+	RemoveAbandonedTimers();
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+	Testing = false;
+	ReleaseFreedBlocks();
+	Threw = false;
+}
+
+// A dialog of the kind for a direct call; false when the creator threw or
+// made none.
+static bool NewKind(int k)
+{
+	Kind = k;
+	if (NewDialogs())
+		return true;
+	EndDialogs();
+	return false;
+}
+
+// A call on new dialogs of the kind, first without a failure (its fake calls
+// counted), then failing at each of its first fake calls in turn, each on new
+// dialogs. Prepare (calls without failures) returns whether the call applies.
+static int SweepCalls;
+template <class P, class F> static void Sweep(int k, const char *What, P Prepare, F Call, int Limit = 40)
+{
+	int Count = 0;
+	for (int Fail = 0; Fail <= Count && Fail <= Limit; Fail++) {
+		if (NewKind(k)) {
+			if (Prepare() && !Threw) {
+				DialogCall(What, Call, Fail);
+				if (Fail == 0) {
+					Count = Threw ? 0 : Ticks;
+					SweepCalls += Count;
+					if (DialogsRound->Trace)
+						printf("Dialogs errors: sweep %s: %d fake calls\n", What, Count);
+				}
+			}
+		}
+		EndDialogs();
+	}
+}
+
+typedef TDialog *(__cdecl *CreateMessageFn)(const char *, const char *);
+typedef void *(__fastcall *NewFn)(void *, void *);
+static char LongText[2100];
+
+// The assertions and TERRORs, with direct calls (each on a new dialog, or
+// without one: a constructor or creator with arguments the game does not give).
+static void TestDialogsAssertions()
+{
+	for (int Round = 0; Round < 3; Round++) {
+		// TDialog's constructor: no caption, a caption of 100 characters, no body.
+		memset(LongText, 'a', sizeof(LongText) - 1);
+		LongText[100 + Round] = 0;
+		Kind = K_MESSAGE;
+		RandomWorld();
+		Testing = true;
+		DialogCall("CreateMessageDialog without a caption", [&](int s) {
+			Frame[s] = s == OURS ? CreateMessageDialog(NULL, "x") : At<CreateMessageFn>(0x47f8a0)(NULL, "x"); });
+		EndDialogs();
+		Testing = true;
+		DialogCall("CreateMessageDialog long caption", [&](int s) {
+			Frame[s] = s == OURS ? CreateMessageDialog(LongText, "x") : At<CreateMessageFn>(0x47f8a0)(LongText, "x"); });
+		EndDialogs();
+		Testing = true;
+		DialogCall("TDialog::TDialog without a body", [&](int s) {
+			if (s == OURS)
+				new TDialog("x", NULL);
+			else
+				CallI<void *>(0x47c970, PatternNew(sizeof(TDialog)), "x", (TComponent *)NULL); });
+		EndDialogs();
+		// The move dialog without an object or with a pile outside 1-100.
+		Kind = K_MOVE;
+		RandomWorld();
+		World.DragObject.Type = Round == 0 ? 0 : 100;
+		World.DragObject.Data = Round == 1 ? 0 : 101 + Round;
+		Testing = true;
+		DialogCall("TMoveObjectsDialog::TMoveObjectsDialog", [&](int s) {
+			if (s == OURS)
+				new TMoveObjectsDialog();
+			else
+				CallI<void *>(0x470670, PatternNew(sizeof(TMoveObjectsDialog))); });
+		EndDialogs();
+		// The outfit dialog without data, a text dialog without a text, an edit
+		// list without a text or with a text too long.
+		Kind = K_OUTFIT;
+		RandomWorld();
+		Testing = true;
+		DialogCall("CreateOutfitDialog without data", [&](int s) {
+			Frame[s] = s == OURS ? CreateOutfitDialog(NULL) : At<TDialog *(__cdecl *)(int *)>(0x4819f0)(NULL); });
+		EndDialogs();
+		Kind = K_TEXT;
+		Testing = true;
+		DialogCall("TTextDialog::TTextDialog without a text", [&](int s) {
+			TObject Obj;
+			Obj.Type = 1000 + Round;
+			if (s == OURS)
+				new TTextDialog(100, NULL, 7, Obj, "Description");
+			else
+				CallI<void *>(0x471500, PatternNew(sizeof(TTextDialog)), 100, (const char *)NULL, (uint32)7, Obj,
+					"Description"); });
+		EndDialogs();
+		Kind = K_EDITLIST;
+		Testing = true;
+		memset(LongText, 'a', sizeof(LongText) - 1);
+		LongText[1999 + Round] = 0;
+		DialogCall("CreateEditListDialog without a text", [&](int s) {
+			Frame[s] = s == OURS ? CreateEditListDialog(HouseData, NULL)
+				: At<TDialog *(__cdecl *)(int *, const char *)>(0x4817c0)(HouseData, NULL); });
+		EndDialogs();
+		Testing = true;
+		DialogCall("CreateEditListDialog long text", [&](int s) {
+			Frame[s] = s == OURS ? CreateEditListDialog(HouseData, LongText)
+				: At<TDialog *(__cdecl *)(int *, const char *)>(0x4817c0)(HouseData, LongText); });
+		EndDialogs();
+		// The new channel dialog without channel IDs or with no channels.
+		Kind = K_NEWCHANNEL;
+		Testing = true;
+		typedef TDialog *(__cdecl *NewChannelFn)(int, int *, const char (*)[30]);
+		int Number = Round == 0 ? 3 : -(Round - 1);
+		int *IDs = Round == 0 ? NULL : ChannelIDs;
+		DialogCall("CreateNewChannelDialog", [&](int s) {
+			Frame[s] = s == OURS ? CreateNewChannelDialog(Number, IDs, (const char (*)[30])ChannelNames)
+				: At<NewChannelFn>(0x481e00)(Number, IDs, (const char (*)[30])ChannelNames); });
+		EndDialogs();
+		// The VIP dialog of a character that is no VIP; the mark dialog without a
+		// coordinate.
+		Kind = K_EDITBUDDY;
+		RandomWorld();
+		World.BuddyPosition = -1 - Round;
+		Testing = true;
+		DialogCall("CreateEditBuddyDialog no VIP", [&](int s) {
+			Frame[s] = s == OURS ? CreateEditBuddyDialog(77) : At<TDialog *(__cdecl *)(int)>(0x482a70)(77); });
+		EndDialogs();
+		Kind = K_EDITMARK;
+		Testing = true;
+		DialogCall("CreateEditMarkDialog without a coordinate", [&](int s) {
+			Frame[s] = s == OURS ? CreateEditMarkDialog(NULL, NULL)
+				: At<TDialog *(__cdecl *)(TCoordinate *, TMark *)>(0x4832e0)(NULL, NULL); });
+		EndDialogs();
+		// The ignore lists with a last name that has no line end.
+		Kind = K_IGNORE;
+		RandomWorld();
+		strcpy(Round == 1 ? World.BuddyIgnoreText : World.IgnoreText, Round == 2 ? "Alpha" : "Alpha\nbeta");
+		Testing = true;
+		DialogCall("CreateIgnoreListDialog", [&](int s) {
+			Frame[s] = s == OURS ? CreateIgnoreListDialog() : At<TDialog *(__cdecl *)()>(0x482410)(); });
+		EndDialogs();
+	}
+	for (int Round = 0; Round < 3 * KINDS; Round++) {
+		int k = Round % KINDS;
+		// The frame's buttons removed twice.
+		if (NewKind(k)) {
+			static const uint32 Image[] = {0x46c3e0, 0x46c710, 0x46ca40};
+			int Which = Round / KINDS;
+			for (int i = 0; i < 2 && !Threw; i++) {
+				DialogCall("remove a button", [&](int s) {
+					if (s == OURS) {
+						if (Which == 0)
+							Frame[s]->SetOkButton(NULL, TCallback());
+						else if (Which == 1)
+							Frame[s]->SetCancelButton(NULL, TCallback());
+						else
+							Frame[s]->SetExtraButton(NULL, TCallback());
+					} else {
+						CallI<void>(Image[Which], Frame[s], (const char *)NULL, TCallback());
+					}
+				});
+			}
+		}
+		EndDialogs();
+		// Events the body does not know.
+		if (NewKind(k)) {
+			int Event = Round < KINDS ? 9999 : Round < 2 * KINDS ? -1 : 3;
+			DialogCall("body HandleEvent unknown", [&](int s) { Frame[s]->Dialog->HandleEvent(Event); });
+		}
+		EndDialogs();
+	}
+	for (int Round = 0; Round < 6; Round++) {
+		// The login dialog's keys without an active edit line.
+		if (NewKind(K_LOGIN)) {
+			TFocusGroup *Saved[2];
+			for (int s = 0; s < 2; s++) {
+				Saved[s] = *(TFocusGroup **)((char *)Frame[s]->Dialog + 0x34);
+				Saved[s]->Active = NULL;
+			}
+			DialogCall("TLoginDialog::KeyPress without an edit line", [&](int s) { Frame[s]->Dialog->KeyPress('a' + Round); });
+		}
+		EndDialogs();
+		// A private conversation without the player.
+		if (NewKind(K_NEWCHANNEL)) {
+			World.NoPlayer = true;
+			DialogCall("TNewChannelDialog::HandleEvent without the player", [&](int s) {
+				((TNewChannelDialog *)Frame[s]->Dialog)->NameEdit->SetText("Someone");
+				Frame[s]->Dialog->HandleEvent(1); });
+			World.NoPlayer = false;
+		}
+		EndDialogs();
+		// A hint whose title is no help title.
+		if (NewKind(K_HINTS) && ((THintsDialog *)Frame[OURS]->Dialog)->ListBox->Lines > 0) {
+			int Line = Round % ((THintsDialog *)Frame[OURS]->Dialog)->ListBox->Lines;
+			DialogCall("THintsDialog select", [&](int s) {
+				if (s == OURS)
+					((THintsDialog *)Frame[s]->Dialog)->ListBox->SetSelection(Line);
+				else
+					CallI<void>(0x46ad10, ((THintsDialog *)Frame[s]->Dialog)->ListBox, Line); });
+			World.NoHelpTitles = true;
+			DialogCall("THintsDialog::HandleEvent unknown title", [&](int s) { Frame[s]->Dialog->HandleEvent(1); });
+			World.NoHelpTitles = false;
+		}
+		EndDialogs();
+		// The action named by the selected line; a release with a selected hotkey;
+		// the mouse on the character list.
+		Sweep(K_RULEVIOLATION, "TRuleViolationDialog::GetAction", [&] {
+			TListBox *R = ((TRuleViolationDialog *)Frame[OURS]->Dialog)->ReasonList;
+			if (R->Lines == 0)
+				return false;
+			int Reason = Round % R->Lines;
+			DialogCall("select reason", [&](int s) {
+				TRuleViolationDialog *B = (TRuleViolationDialog *)Frame[s]->Dialog;
+				if (s == OURS)
+					B->ReasonList->SetSelection(Reason);
+				else
+					CallI<void>(0x46ad10, B->ReasonList, Reason);
+				B->HandleEvent(21); });
+			TListBox *L = ((TRuleViolationDialog *)Frame[OURS]->Dialog)->ActionList;
+			if (Threw || L->Lines == 0)
+				return false;
+			int Line = Round % L->Lines;
+			DialogCall("select action", [&](int s) {
+				TListBox *List = ((TRuleViolationDialog *)Frame[s]->Dialog)->ActionList;
+				if (s == OURS)
+					List->SetSelection(Line);
+				else
+					CallI<void>(0x46ad10, List, Line); });
+			return true;
+		}, [&](int s) {
+			if (s == OURS)
+				Logf("Action%d;", ((TRuleViolationDialog *)Frame[s]->Dialog)->GetAction());
+			else
+				Logf("Action%d;", CallI<int>(0x477860, Frame[s]->Dialog));
+		});
+		Sweep(K_HOTKEYS, "THotkeyDialog::LeftButtonUp", [&] {
+			int Line = Round % HOTKEYS;
+			DialogCall("select hotkey", [&](int s) {
+				THotkeyDialog *D = (THotkeyDialog *)Frame[s]->Dialog;
+				if (s == OURS)
+					D->ListBox->SetSelection(Line);
+				else
+					CallI<void>(0x46ad10, D->ListBox, Line);
+				D->HandleEvent(11); });
+			return true;
+		}, [&](int s) { Logf("U%d;", Frame[s]->Dialog->LeftButtonUp(3 + Round, 3, 0) ? 1 : 0); });
+		for (int Mouse = 0; Mouse < 2; Mouse++) {
+			Sweep(K_CHARACTERS, Mouse == 0 ? "TCharacterListDialog::RightButtonUp" : "TCharacterListDialog::MouseWheel",
+				[&] { return true; }, [&](int s) {
+				TComponent *B = Frame[s]->Dialog;
+				int x = B->Width / 2, y = B->Height / 2;
+				if (Mouse == 0)
+					Logf("R%d;", B->RightButtonUp(x, y, 0) ? 1 : 0);
+				else
+					Logf("W%d;", B->MouseWheel(x, y, 1 + Round % 2) ? 1 : 0);
+			});
+		}
+		// A hotkey line outside the table.
+		if (NewKind(K_HOTKEYS)) {
+			int Number = Round % 2 ? HOTKEYS + Round : -1 - Round;
+			DialogCall("THotkeyDialog::UpdateLine outside", [&](int s) {
+				if (s == OURS)
+					((THotkeyDialog *)Frame[s]->Dialog)->UpdateLine(Number);
+				else
+					CallI<void>(0x47b9c0, Frame[s]->Dialog, Number); });
+		}
+		EndDialogs();
+	}
+}
+
+// Every TASSERT/TERROR of Dialogs.cpp and the TEND blocks: the test's
+// operations on new dialogs, the calls of one action per round failing at
+// one of the fake calls it made before, until one throws; then the
+// assertions with direct calls.
+static void TestDialogsErrors()
+{
+	TErrorRound R("Dialogs");
+	DialogsRound = &R;
+	// Each kind with each action failing (half of the operations are the
+	// action's own), ten times.
+	for (int Round = 0; Round < 10 * KINDS * ACTIONS; Round++) {
+		Kind = Round % KINDS;
+		TargetAction = Round / KINDS % ACTIONS;
+		if (NewDialogs()) {
+			int Operations = 5 + Random() % 30;
+			for (int i = 0; i < Operations && !Threw; i++) {
+				bool Own = Random() % 2 != 0;
+				if (Own && TargetAction == ACTION_BODYKEY) {
+					// The body's own keys (Return and Escape do not reach it through the frame).
+					int K = Random() % 3 == 0 ? Key() : Random() % 2 ? 13 : 27;
+					OperationName = "body KeyPress";
+					CurrentAction = ACTION_BODYKEY;
+					Both([&](int s) { Frame[s]->Dialog->KeyPress(K); });
+					Compare();
+				} else {
+					Operation(Own && TargetAction < 16 ? TargetAction : -1);
+				}
+			}
+		}
+		EndDialogs();
+	}
+	TargetAction = -1;
+	TestDialogsAssertions();
+	if (getenv("EH_TRACE") != NULL)
+		printf("Dialogs errors: sweeps over %d fake calls\n", SweepCalls);
+	DialogsRound = NULL;
+	R.Finish();
+}
+
 void TestDialogs()
 {
 	int Before = Checks, BeforeFailures = Failures;
@@ -1853,6 +2337,7 @@ void TestDialogs()
 		SetTestClock(Clock);
 		Testing = true;
 		OperationName = "creator";
+		CurrentAction = ACTION_CREATOR;
 		Both([&](int s) { Frame[s] = Create(s); });
 		Compare();
 		if (Frame[OURS] != NULL && Frame[ORIGINAL] != NULL) {
@@ -1863,6 +2348,7 @@ void TestDialogs()
 					fprintf(stderr, "  %s\n", OperationName);
 			}
 			OperationName = "destructor";
+			CurrentAction = ACTION_DESTRUCTOR;
 			Both([&](int s) {
 				delete Frame[s];
 				Frame[s] = NULL;
@@ -1875,6 +2361,14 @@ void TestDialogs()
 		Testing = false;
 		ReleaseFreedBlocks();
 	}
+
+	// The error round (issue #34): its checks are reported apart.
+	int RoundChecks = Checks, SavedCounts[32];
+	memcpy(SavedCounts, OperationCount, sizeof(SavedCounts));
+	TestDialogsErrors();
+	memcpy(OperationCount, SavedCounts, sizeof(SavedCounts));
+	RoundChecks = Checks - RoundChecks;
+
 	for (int s = 0; s < 2; s++) {
 		delete Receiver[s];
 		delete ParentWindow[s];
@@ -1894,5 +2388,5 @@ void TestDialogs()
 	for (int i = 0; i < 16; i++)
 		MinOperation = OperationCount[i] < MinOperation ? OperationCount[i] : MinOperation;
 	printf("Dialogs: %d checks, %d failures (each dialog at least %d times, each operation at least %d times)\n",
-		Checks - Before, Failures - BeforeFailures, MinKind, MinOperation);
+		Checks - Before - RoundChecks, Failures - BeforeFailures, MinKind, MinOperation);
 }

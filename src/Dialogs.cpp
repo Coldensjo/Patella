@@ -682,17 +682,19 @@ void TDialog::KeyPress(int Key)
 	TEND1(Key)
 }
 
-// 0x46d410, line 848. A drag keeps the dialog inside the game window.
+// 0x46d410, line 848. A drag keeps the dialog inside the game window. The new
+// position is a value of its own (ebx, edi; the parameters' stack slots are
+// never written): TEND2 prints the mouse position.
 bool TDialog::MouseMove(int x, int y)
 {
 	TBEGIN
 	if (!Dragging)
 		return TWindow::MouseMove(x, y);
-	x = OffsetX - DragX + x;
-	y = OffsetY - DragY + y;
-	Limit(&x, 0, GetWindowWidth() - Width);
-	Limit(&y, 0, GetWindowHeight() - Height);
-	SetPosition(x, y);
+	int NewX = OffsetX - DragX + x;
+	int NewY = OffsetY - DragY + y;
+	Limit(&NewX, 0, GetWindowWidth() - Width);
+	Limit(&NewY, 0, GetWindowHeight() - Height);
+	SetPosition(NewX, NewY);
 	return true;
 	TEND2(x, y)
 }

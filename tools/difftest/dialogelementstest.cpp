@@ -30,6 +30,7 @@
 // operations, DE_LOGS=<file> writes every compared log and dump.
 
 #include "difftest.h"
+#include "imageeh.h"
 #include "../../src/DialogElements.h"
 #include "../../src/GUI.h"
 #include "../../src/Skins.h"
@@ -67,10 +68,22 @@ static bool Testing;
 static std::string Log[2];
 static FILE *LogFile;
 
+// The error round (issue #34): the FailAt-th call of a fake (a logged call or
+// a getter) throws an assertion of the calling side (0: none); Ticks counts
+// one side's calls.
+static int FailAt, Ticks;
+static void Tick()
+{
+	Ticks++;
+	if (FailAt > 0 && --FailAt == 0)
+		ThrowSideAssertion(Side == ORIGINAL, -Ticks);
+}
+
 static void Logf(const char *Format, ...)
 {
 	if (!Testing)
 		return;
+	Tick();
 	char Buffer[1024];
 	va_list Args;
 	va_start(Args, Format);
@@ -98,6 +111,7 @@ template <class R, class... A> static R CallI(uint32 Address, const void *This, 
 
 static std::map<const void *, std::string> Roles[2];
 static std::map<void *, std::string> Kinds[2];
+static void *OurElementVtable, *OurWindowVtable; // (the error round's image-side objects)
 static std::string KindOf(int s, const void *Object)
 {
 	auto K = Kinds[s].find(VtableOf(Object));
@@ -138,23 +152,26 @@ static struct {
 static int CharWidth(int Font, char c) { return 4 + ((unsigned char)c + Font) % 5; }
 static int __cdecl FakeGetTextPartWidth(int Font, const char *Text, int Length)
 {
+	Tick();
 	int Width = 0;
 	for (int i = 0; i < Length && Text[i] != 0; i++)
 		Width += CharWidth(Font, Text[i]);
 	return Width;
 }
-static int __cdecl FakeGetTextWidth(int Font, const char *Text) { return FakeGetTextPartWidth(Font, Text, 1 << 30); }
+static int __cdecl FakeGetTextWidth(int Font, const char *Text) { Tick(); return FakeGetTextPartWidth(Font, Text, 1 << 30); }
 static int __cdecl FakeGetFittingTextLength(int Font, const char *Text, int Width)
 {
+	Tick();
 	int Length = 0, Used = 0;
 	while (Text[Length] != 0 && Used + CharWidth(Font, Text[Length]) <= Width)
 		Used += CharWidth(Font, Text[Length++]);
 	return Length;
 }
-static int __cdecl FakeGetFontHeight(int Font) { return 8 + (Font & 3); }
-static int __cdecl FakeGetFontLineHeight(int Font) { return 11 + (Font & 3); }
+static int __cdecl FakeGetFontHeight(int Font) { Tick(); return 8 + (Font & 3); }
+static int __cdecl FakeGetFontLineHeight(int Font) { Tick(); return 11 + (Font & 3); }
 static void __cdecl FakeGetTextPosition(int *TextX, int *TextY, int x, int y, int Width, int Height, TFont *Format)
 {
+	Tick();
 	*TextX = x + Width / 3 + Format->Alignment;
 	*TextY = y + Height / 4 + Format->FontNumber;
 }
@@ -194,8 +211,8 @@ static void __cdecl FakeDrawPicturePart(int Surface, int x, int y, int Picture, 
 }
 static void __cdecl FakeSetMouseOverText(const char *Text) { Logf("Over%s;", Text == NULL ? "-" : Text); }
 static void __cdecl FakeSetMouseCursor(int Cursor) { Logf("Cursor%d;", Cursor); }
-static int __cdecl FakeGetActionState() { return World.ActionState; }
-static int __cdecl FakeGetActionNumber() { return World.ActionNumber; }
+static int __cdecl FakeGetActionState() { Tick(); return World.ActionState; }
+static int __cdecl FakeGetActionNumber() { Tick(); return World.ActionNumber; }
 static void __cdecl FakeAddMessage(int Type, INT_PTR Param1, INT_PTR Param2)
 {
 	Logf("Msg%d,%s,%d;", Type, Name((void *)Param1).c_str(), (int)Param2);
@@ -204,8 +221,8 @@ static void __cdecl FakeCheckClipboardText(const char *Text, int Length)
 {
 	Logf("Clip%s,%d;", std::string(Text, Length > 0 ? Length : 0).c_str(), Length);
 }
-static bool __cdecl FakeIsClipboardEmpty() { return World.ClipboardEmpty; }
-static char *__cdecl FakeGetClipboardText() { return (char *)World.Clipboard; }
+static bool __cdecl FakeIsClipboardEmpty() { Tick(); return World.ClipboardEmpty; }
+static char *__cdecl FakeGetClipboardText() { Tick(); return (char *)World.Clipboard; }
 // sysinc.cpp is not linked: our side's definition.
 char *GetClipboardText() { return FakeGetClipboardText(); }
 
@@ -222,7 +239,7 @@ public:
 	}
 };
 static TDESurface *Surface;
-static TSurface *__cdecl FakeGetSurface() { return Surface; }
+static TSurface *__cdecl FakeGetSurface() { Tick(); return Surface; }
 
 static void __cdecl FakeOpenURL(const char *URL) { Logf("URL%s;", URL); }
 
@@ -778,9 +795,24 @@ static std::string DumpAll(int s)
 
 static int OperationCount[64];
 static const char *OperationName;
+
+// The error round: the action whose calls fail (CurrentAction: the operation,
+// 22 the constructors, 23 the first SetSize, 24 the destructors), the most
+// fake calls and the last count one call of each action made for each kind
+// of control, whether a call threw (the controls are then abandoned: members
+// may point to deleted parts, so only the logs are compared).
+enum { ACTION_CONSTRUCT = 22, ACTION_FIRSTSIZE = 23, ACTION_DESTRUCT = 24, ACTIONS = 25 };
+static TErrorRound *ElementsRound;
+static int CurrentAction, TargetAction = -1, MaxTicks[KINDS][ACTIONS], LastTicks[KINDS][ACTIONS];
+static bool Threw;
+
 static void Compare()
 {
-	std::string D[2] = {DumpAll(OURS), DumpAll(ORIGINAL)};
+	std::string D[2];
+	if (!Threw) {
+		D[OURS] = DumpAll(OURS);
+		D[ORIGINAL] = DumpAll(ORIGINAL);
+	}
 	if (LogFile != NULL)
 		fprintf(LogFile, "== %s %s\n%s\n%s\n", KindNames[Kind], OperationName, Log[OURS].c_str(), D[OURS].c_str());
 	CHECK(Log[OURS] == Log[ORIGINAL], "DialogElements %s (%s): logs differ\n  ours: %s\n  orig: %s", OperationName,
@@ -791,11 +823,49 @@ static void Compare()
 	Log[ORIGINAL].clear();
 }
 
-// Runs F for our side and then for the image's.
+static int FailIndex(int Count)
+{
+	int Choice = Random() % 3, Range = 1 << (Random() % 12);
+	Range = Range < Count ? Range : Count;
+	if (Choice == 0)
+		return 1 + (int)(Random() % Count);
+	if (Choice == 1)
+		return 1 + (int)(Random() % Range);
+	return Count - (int)(Random() % Range);
+}
+
+// Runs F for our side and then for the image's. In the error round the calls
+// of the round's action fail at one of the fake calls such a call made before
+// (for the same kind of control), and what both sides threw is compared;
+// after a throw nothing runs.
 template <class F> static void Both(F Function)
 {
+	if (ElementsRound != NULL) {
+		if (Threw)
+			return;
+		int Count = Random() % 2 == 0 ? MaxTicks[Kind][CurrentAction] : LastTicks[Kind][CurrentAction];
+		int Fail = Count > 0 && CurrentAction == TargetAction ? FailIndex(Count + 1) : 0;
+		char What[96];
+		sprintf(What, "%s %s (fail at %d)", KindNames[Kind], OperationName, Fail);
+		ElementsRound->Calling(What, "ours");
+		TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Function(OURS); });
+		ElementsRound->Calling(What, "the original");
+		TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Function(ORIGINAL); });
+		FailAt = 0;
+		Side = OURS;
+		ElementsRound->Compare(What, A, B);
+		if (A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING) {
+			Threw = true;
+		} else {
+			LastTicks[Kind][CurrentAction] = Ticks;
+			if (Ticks > MaxTicks[Kind][CurrentAction])
+				MaxTicks[Kind][CurrentAction] = Ticks;
+		}
+		return;
+	}
 	for (int s = 0; s < 2; s++) {
 		Side = s;
+		Ticks = 0;
 		if (s == OURS) {
 			try {
 				Function(s);
@@ -808,6 +878,9 @@ template <class F> static void Both(F Function)
 			Function(s);
 		}
 	}
+	// (the counts of the error round's failures)
+	if (Ticks > MaxTicks[Kind][CurrentAction])
+		MaxTicks[Kind][CurrentAction] = Ticks;
 	Side = OURS;
 }
 
@@ -1252,10 +1325,13 @@ static void Special(int r1, int r2, int r3)
 	}
 }
 
-static void Operation()
+// Forced >= 0: that operation (the error round), with the same random numbers.
+static void Operation(int Forced = -1)
 {
 	TComponent *C0 = Control[OURS];
 	int Op = Random() % 22;
+	if (Forced >= 0)
+		Op = Forced;
 	int x = (int)(Random() % (C0->Width + 12)) - 5, y = (int)(Random() % (C0->Height + 12)) - 5;
 	int x2 = (int)(Random() % (C0->Width + 12)) - 5, y2 = (int)(Random() % (C0->Height + 12)) - 5;
 	int r1 = Random(), r2 = Random(), r3 = Random();
@@ -1266,6 +1342,7 @@ static void Operation()
 	World.Clipboard = Clips[Random() % 4];
 	SetTestClock(r3 % 1000 + 1000 * (World.ActionNumber % 5));
 	OperationCount[Op]++;
+	CurrentAction = Op;
 	switch (Op) {
 	case 0: {
 		int w, h;
@@ -1383,7 +1460,11 @@ static void FindVtables()
 	Receiver[OURS] = new TDEReceiver;
 	TWindow *W = new TWindow;
 	Kinds[OURS][VtableOf(W)] = "Window";
+	OurWindowVtable = VtableOf(W);
 	delete W;
+	TElement *E = new TElement;
+	OurElementVtable = VtableOf(E);
+	delete E;
 	for (int s = 0; s < 2; s++)
 		Kinds[s][VtableOf(Receiver[OURS])] = "Receiver";
 	for (int k = 0; k < KINDS; k++) {
@@ -1406,12 +1487,27 @@ static void FindVtables()
 	delete Receiver[OURS];
 }
 
+// The image side's receiver and target in the error round: the image's
+// TElement and TWindow code for what they do not override (imageeh.h,
+// ImageSideVtable), named like ours.
+static void ImageSide(int s, void *Object, bool Window)
+{
+	if (ElementsRound == NULL || s != ORIGINAL)
+		return;
+	void *Ours = VtableOf(Object);
+	void *Hybrid = ImageSideVtable(Ours, Window ? OurWindowVtable : OurElementVtable, Window ? 0x564528 : 0x5645c8);
+	Kinds[ORIGINAL][Hybrid] = Kinds[ORIGINAL][Ours];
+	*(void **)Object = Hybrid;
+}
+
 static void Construct(const TArguments &A)
 {
 	Both([&](int s) {
 		Receiver[s] = new TDEReceiver;
+		ImageSide(s, Receiver[s], false);
 		Roles[s][Receiver[s]] = "Recv";
 		Target[s] = new TDETarget;
+		ImageSide(s, Target[s], true);
 		Roles[s][Target[s]] = "Target";
 		Target[s]->TComponent::SetSize(100, 80);
 		Root[s] = s == OURS ? new TWindow : (TWindow *)ImageWindow();
@@ -1456,6 +1552,432 @@ static void Destruct()
 	});
 }
 
+// --- The error round (issue #34) ---------------------------------------------------------
+
+// New controls of the kind (random arguments) and their first size; false
+// when a call threw.
+static bool NewControls(TArguments &A, bool WithGroup = false)
+{
+	A = RandomArguments();
+	if (WithGroup)
+		A.Flag2 = true; // (the edit lines' focus group)
+	Testing = true;
+	Threw = false;
+	OperationName = "constructor";
+	CurrentAction = ACTION_CONSTRUCT;
+	Construct(A);
+	Compare();
+	int Width, Height;
+	if (!Threw)
+		RandomSize(&Width, &Height);
+	OperationName = "first SetSize";
+	CurrentAction = ACTION_FIRSTSIZE;
+	Both([&](int s) { Control[s]->SetSize(Width, Height); });
+	Compare();
+	return !Threw;
+}
+
+// The end of a round: the controls deleted, or abandoned after a throw.
+static void EndControls()
+{
+	if (!Threw) {
+		OperationName = "destructor";
+		CurrentAction = ACTION_DESTRUCT;
+		Destruct();
+		CHECK(Log[OURS] == Log[ORIGINAL], "DialogElements errors destructor (%s): logs differ\n  ours: %s\n  orig: %s",
+			KindNames[Kind], Log[OURS].c_str(), Log[ORIGINAL].c_str());
+	}
+	for (int s = 0; s < 2; s++) {
+		Root[s] = NULL;
+		Control[s] = NULL;
+		Group[s] = NULL;
+		Roles[s].clear();
+	}
+	Log[OURS].clear();
+	Log[ORIGINAL].clear();
+	Testing = false;
+	Threw = false;
+}
+
+// One call on both sides (failing at the Fail-th fake call, 0: none), what
+// they threw compared, then the logs (and the controls unless a call threw).
+template <class F> static void ElementCall(const char *What, F Call, int Fail = 0)
+{
+	OperationName = What;
+	ElementsRound->Calling(What, "ours");
+	TThrown A = OurThrow([&] { Side = OURS; Ticks = 0; FailAt = Fail; Call(OURS); });
+	ElementsRound->Calling(What, "the original");
+	TThrown B = ImageThrow([&] { Side = ORIGINAL; Ticks = 0; FailAt = Fail; Call(ORIGINAL); });
+	FailAt = 0;
+	Side = OURS;
+	ElementsRound->Compare(What, A, B);
+	Threw = Threw || A.Kind != TThrown::NOTHING || B.Kind != TThrown::NOTHING;
+	Compare();
+}
+
+static void TestDialogElementsAssertions();
+
+// Every TASSERT/TERROR of DialogElements.cpp and the TEND blocks: the test's
+// operations on new controls, the calls of one action per round failing at
+// one of the fake calls it made before, until one throws; then the
+// assertions with direct calls.
+static void TestDialogElementsErrors()
+{
+	TErrorRound R("DialogElements");
+	ElementsRound = &R;
+	// Each kind with each action failing (half of the operations are the
+	// action's own), forty times.
+	for (int Round = 0; Round < 40 * KINDS * ACTIONS; Round++) {
+		Kind = Round % KINDS;
+		TargetAction = Round / KINDS % ACTIONS;
+		TArguments A;
+		if (NewControls(A)) {
+			int Operations = 5 + Random() % 30;
+			for (int i = 0; i < Operations && !Threw; i++) {
+				bool Own = Random() % 2 != 0;
+				Operation(Own && TargetAction < 22 ? TargetAction : -1);
+			}
+		}
+		EndControls();
+	}
+	TargetAction = -1;
+	TestDialogElementsAssertions();
+	ElementsRound = NULL;
+	R.Finish();
+}
+
+// A direct call on new controls of the kind (with the edit lines' focus
+// group), compared; the controls are deleted or abandoned after it.
+template <class F> static void Direct(int k, const char *What, F Call, bool WithGroup = false)
+{
+	Kind = k;
+	TArguments A;
+	if (NewControls(A, WithGroup))
+		ElementCall(What, Call);
+	EndControls();
+}
+
+// A call on new controls of the kind, first without a failure (its fake
+// calls counted), then failing at each of them in turn, each on new controls.
+template <class F> static void Sweep(int k, const char *What, F Call, int Limit = 60)
+{
+	int Count = 0;
+	for (int Fail = 0; Fail <= Count && Fail <= Limit; Fail++) {
+		Kind = k;
+		TArguments A;
+		if (NewControls(A)) {
+			ElementCall(What, Call, Fail);
+			if (Fail == 0)
+				Count = Threw ? 0 : Ticks;
+		}
+		EndControls();
+	}
+}
+
+static const char *const LongButtonText = "a button text of fifty characters and a few more!!";
+
+// The assertions with direct calls: constructors with arguments the game
+// does not give (made beside new controls of a kind), the members of each
+// kind outside their ranges.
+static void TestDialogElementsAssertions()
+{
+	static char Filler[64];
+	memset(Filler, 'x', sizeof(Filler) - 1);
+	for (int Round = 0; Round < 4; Round++) {
+		TFont F = RandomFont();
+		int r = Round;
+		// Constructors.
+		Direct(K_SEPARATOR, "TResizer::TResizer NULL", [&](int s) {
+			if (s == OURS) new TResizer(NULL, true, r % 2 != 0, false);
+			else CallI<void *>(0x453be0, PatternNew(0x38), (TComponent *)NULL, true, r % 2 != 0, false); });
+		Direct(K_SEPARATOR, "TBorder::TBorder NULL", [&](int s) {
+			if (s == OURS) new TBorder((TWindow *)NULL, r);
+			else CallI<void *>(0x4547f0, PatternNew(0x68), (TWindow *)NULL, r); });
+		Direct(K_SEPARATOR, "TBorder::TBorder 8 skins NULL", [&](int s) {
+			if (s == OURS) new TBorder((TWindow *)NULL, 26, 32, 27, 30, 31, 28, 33, 29, r);
+			else CallI<void *>(0x454b10, PatternNew(0x68), (TWindow *)NULL, 26, 32, 27, 30, 31, 28, 33, 29, r); });
+		Direct(K_SEPARATOR, "TBorder::TBorder 9 skins NULL", [&](int s) {
+			if (s == OURS) new TBorder((TWindow *)NULL, 26, 32, 27, 30, 31, 28, 33, 29, 7, r);
+			else CallI<void *>(0x454e30, PatternNew(0x68), (TWindow *)NULL, 26, 32, 27, 30, 31, 28, 33, 29, 7, r); });
+		Direct(K_SEPARATOR, "TLabel::TLabel NULL", [&](int s) {
+			const char *T = NULL;
+			if (r % 3 == 0) {
+				if (s == OURS) new TLabel(1, 2, 40, 12, F, T, true);
+				else CallI<void *>(0x465510, PatternNew(0x4c), 1, 2, 40, 12, F, T, true);
+			} else if (r % 3 == 1) {
+				if (s == OURS) new TLabel(1, 2, F, T);
+				else CallI<void *>(0x465810, PatternNew(0x4c), 1, 2, F, T);
+			} else {
+				if (s == OURS) new TLabel(F, T);
+				else CallI<void *>(0x465b40, PatternNew(0x4c), F, T);
+			} });
+		Direct(K_SEPARATOR, "TLink::TLink NULL", [&](int s) {
+			const char *Text = r % 3 == 1 ? NULL : "Text", *Button = r % 3 == 2 ? NULL : "Open";
+			const char *Destination = r % 3 == 0 ? NULL : "http://www.tibia.com/";
+			if (s == OURS) new TLink(Text, Button, Destination, FakeOpenURL, F);
+			else CallI<void *>(0x46b030, PatternNew(0x3c), Text, Button, Destination, (void (*)(const char *))FakeOpenURL, F); });
+		Direct(K_SEPARATOR, "TTextButton::TTextButton", [&](int s) {
+			const char *T = r % 2 == 0 ? NULL : LongButtonText;
+			TCallback CB(Receiver[s], 1);
+			if (r < 2) {
+				if (s == OURS) new TTextButton(1, 2, T, 30, 31, CB, "Tip");
+				else CallI<void *>(0x466bc0, PatternNew(0x78), 1, 2, T, 30, 31, CB, "Tip");
+			} else {
+				if (s == OURS) new TTextButton(1, 2, T, CB, "Tip");
+				else CallI<void *>(0x466ed0, PatternNew(0x78), 1, 2, T, CB, "Tip");
+			} });
+		Direct(K_SEPARATOR, "TCheckBox::TCheckBox", [&](int s) {
+			const char *T = r % 2 == 0 ? NULL : LongButtonText;
+			if (s == OURS) new TCheckBox(T);
+			else CallI<void *>(0x467440, PatternNew(0x34), T); });
+		Direct(K_SEPARATOR, "TEditLine::TEditLine negative", [&](int s) {
+			if (r % 2 == 0) {
+				if (s == OURS) new TEditLine(TRect(1, 2, 60, 16), -1 - r, false);
+				else CallI<void *>(0x467b50, PatternNew(0x68), TRect(1, 2, 60, 16), -1 - r, false);
+			} else {
+				if (s == OURS) new TEditLine(-1 - r, true);
+				else CallI<void *>(0x45a4c0, PatternNew(0x68), -1 - r, true);
+			} });
+		// The ranges: minimum above maximum, value outside, no buttons.
+		int Min = r % 2 == 0 ? 10 : 0, Max = r % 2 == 0 ? 5 : 10, Value = r % 2 == 0 ? 7 : 11 + r;
+		Direct(K_SEPARATOR, "THorizontalScrollBarRange::THorizontalScrollBarRange", [&](int s) {
+			TCallback CB(Receiver[s], 1);
+			if (s == OURS) new THorizontalScrollBarRange(Min, Max, Value, 2, CB);
+			else CallI<void *>(0x45e9e0, PatternNew(0x54), Min, Max, Value, 2, CB); });
+		Direct(K_SEPARATOR, "TScrollBarRange::TScrollBarRange", [&](int s) {
+			if (s == OURS) new TScrollBarRange(0, 0, 12, 40, Min, Max, Value, 2);
+			else CallI<void *>(0x469670, PatternNew(0x4c), 0, 0, 12, 40, Min, Max, Value, 2); });
+		Direct(K_SEPARATOR, "THorizontalScrollBar::THorizontalScrollBar no buttons", [&](int s) {
+			TCallback CB(Receiver[s], 1);
+			if (s == OURS) new THorizontalScrollBar(0, 10, 5, 3, -r, CB);
+			else CallI<void *>(0x4692d0, PatternNew(0x38), 0, 10, 5, 3, -r, CB); });
+		Direct(K_SEPARATOR, "TScrollBar::TScrollBar no buttons", [&](int s) {
+			if (s == OURS) new TScrollBar(TRect(1, 2, 12, 60), 0, 10, 5, 3, -r);
+			else CallI<void *>(0x469a80, PatternNew(0x38), TRect(1, 2, 12, 60), 0, 10, 5, 3, -r); });
+
+		// The resizer without its window.
+		for (int What = 0; What < 3; What++) {
+			Direct(K_RESIZER, "TResizer without a window", [&](int s) {
+				((TResizer *)Control[s])->ToResize = NULL;
+				if (What == 0) Control[s]->MouseMove(1, 1);
+				else if (What == 1) Control[s]->LeftButtonDown(1, 1, 0);
+				else Control[s]->LeftButtonUp(1, 1, 0); });
+		}
+		// Sizes below the minimum, a link without a width, icons that are not square.
+		Direct(K_BORDER, "TBorder::SetSize below the minimum", [&](int s) {
+			TBorder *B = (TBorder *)Control[OURS];
+			int w = B->getMinimumWidth(), h = B->getMinimumHeight();
+			if (r % 2 == 0) Control[s]->SetSize(w - 1 - r, h + 5);
+			else Control[s]->SetSize(w + 5, h - 1 - r); });
+		Direct(K_LINK, "TLink::Arrange without a width", [&](int s) {
+			Control[s]->Width = -r;
+			Control[s]->Arrange(); });
+		Direct(K_OUTFIT, "TOutfitIcon::Draw not square", [&](int s) {
+			Control[s]->Width = 20;
+			Control[s]->Height = 21 + r;
+			Control[s]->Draw(1, 0, 0); });
+		Direct(K_OBJECTICON, "TObjectIcon::Draw not square", [&](int s) {
+			Control[s]->Width = 20 + r;
+			Control[s]->Height = 19;
+			Control[s]->Draw(1, 0, 0); });
+		// Drawing at negative places.
+		static const int DrawKinds[] = {K_SKINICON, K_OBJECTICON, K_SKINBUTTON, K_COLORBUTTON, K_ICONBUTTON, K_BLINKING,
+			K_TEXTBUTTON, K_TOGGLE, K_TEXTTOGGLE, K_MULTI, K_CHECKBOX};
+		for (int k : DrawKinds) {
+			int dx = k == K_ICONBUTTON ? SkinProperties.Buttons.Texture.x : k == K_CHECKBOX ? SkinProperties.CheckBox.Item.x : 0;
+			int dy = k == K_ICONBUTTON ? SkinProperties.Buttons.Texture.y : k == K_CHECKBOX ? SkinProperties.CheckBox.Item.y : 0;
+			int x = r % 2 == 0 ? -dx - 1 - r : 0, y = r % 2 == 0 ? 0 : -dy - 1 - r;
+			Direct(k, "Draw at a negative place", [&](int s) {
+				if (k == K_OBJECTICON)
+					((TObjectIcon *)Control[s])->Framed = true; // (the assertions are the frame's)
+				Control[s]->Draw(1, x, y); });
+		}
+		// The outfit's colours, the buttons' skins and radio groups.
+		Direct(K_OUTFIT, "TOutfitIcon::SetColor mask", [&](int s) {
+			int Mask = r % 2 == 0 ? -r : 5 + r;
+			if (s == OURS) ((TOutfitIcon *)Control[s])->SetColor(Mask, 3);
+			else CallI<void>(0x457440, Control[s], Mask, 3); });
+		Direct(K_OUTFIT, "TOutfitIcon::SetColors NULL", [&](int s) {
+			if (s == OURS) ((TOutfitIcon *)Control[s])->SetColors(NULL);
+			else CallI<void>(0x4575a0, Control[s], (int *)NULL); });
+		static const int ButtonKinds[] = {K_SKINBUTTON, K_COLORBUTTON, K_ICONBUTTON, K_BLINKING, K_TEXTBUTTON, K_TOGGLE,
+			K_TEXTTOGGLE, K_MULTI};
+		for (int k : ButtonKinds) {
+			int Up = r % 2 == 0 ? NumberOfSkins + r : 30, Down = r % 2 == 0 ? 30 : NumberOfSkins + r;
+			Direct(k, "TSkinButton::SetSkins", [&](int s) {
+				if (s == OURS) ((TSkinButton *)Control[s])->SetSkins(Up, Down);
+				else CallI<void>(0x458b20, Control[s], Up, Down); });
+			if (r == 0) {
+				Direct(k, "TSkinButton::SetRadioButtonGroup twice", [&](int s) {
+					for (int i = 0; i < 2; i++) {
+						if (s == OURS) ((TSkinButton *)Control[s])->SetRadioButtonGroup(Radio[s]);
+						else CallI<void>(0x458de0, Control[s], Radio[s]);
+					} });
+			}
+		}
+		// The edit lines: unknown events, texts and positions outside.
+		Direct(K_EDIT, "TEditLine::HandleEvent unknown", [&](int s) { Control[s]->HandleEvent(r % 2 == 0 ? 15 : 21 + r); });
+		Direct(K_EDITTEXT, "TEditText::HandleEvent unknown", [&](int s) { Control[s]->HandleEvent(r % 2 == 0 ? 15 : 21 + r); });
+		Direct(K_EDIT, "TEditLine::SetFocusGroup NULL", [&](int s) {
+			if (s == OURS) Edit(s)->SetFocusGroup(NULL);
+			else CallI<void>(0x468470, Control[s], (TFocusGroup *)NULL); });
+		Direct(K_EDIT, "TEditLine::SetText NULL", [&](int s) { Edit(s)->SetText(NULL); });
+		Direct(K_LABEL, "TLabel::SetText NULL", [&](int s) { ((TLabel *)Control[s])->SetText(NULL, r % 2 != 0); });
+		Direct(K_FORMATTED, "TFormattedText::SetText NULL", [&](int s) {
+			((TFormattedText *)Control[s])->SetText(NULL, r % 2 != 0); });
+		Direct(K_EDITTEXT, "TEditText::SetText NULL", [&](int s) { ((TEditText *)Control[s])->SetText(NULL, r % 2 != 0); });
+		Direct(r % 2 == 0 ? K_EDIT : K_EDITTEXT, "TEditLine::InsertText after the end", [&](int s) {
+			Edit(s)->SetText("abc");
+			Logf("Inserted%d;", Edit(s)->InsertText(4 + r, "x", 1)); });
+		Direct(r % 2 == 0 ? K_EDIT : K_EDITTEXT, "TEditLine::InsertChar after the end", [&](int s) {
+			Edit(s)->SetText("abc");
+			Edit(s)->InsertChar(4 + r, 'x'); });
+		Direct(r % 2 == 0 ? K_EDIT : K_EDITTEXT, "TEditLine::InsertText too long", [&](int s) {
+			// The cursor after the position: the rest is counted twice.
+			TEditLine *E = Edit(s);
+			E->SetText("abcdefghij");
+			E->Cursor = 10;
+			int Length = E->MaxLength - 10 - r;
+			Logf("Inserted%d;", Length >= 0 ? E->InsertText(0, Filler, Length) : 0); });
+		Direct(K_EDITTEXT, "TEditText::FormatText without a width", [&](int s) {
+			((TEditText *)Control[s])->FieldWidth = -r;
+			if (s == OURS) ((TEditText *)Control[s])->FormatText();
+			else CallI<void>(0x45da90, Control[s]); });
+		// The focus group: members twice or NULL, Next and Previous without an
+		// active member or with one that is not in the group.
+		Direct(K_EDIT, "TFocusGroup::AddMember twice", [&](int s) {
+			TEditLine *M = r % 2 == 0 ? (TEditLine *)Control[s] : NULL;
+			if (Group[s] == NULL) return;
+			if (s == OURS) Group[s]->AddMember(M);
+			else CallI<void>(0x45dfc0, Group[s], M); }, true);
+		for (int Previous = 0; Previous < 2; Previous++) {
+			Direct(K_EDIT, Previous ? "TFocusGroup::Previous" : "TFocusGroup::Next", [&](int s) {
+				if (Group[s] == NULL) return;
+				Group[s]->Active = r % 2 == 0 ? NULL : (TEditLine *)Root[s];
+				if (s == OURS) {
+					if (Previous) Group[s]->Previous();
+					else Group[s]->Next();
+				} else {
+					CallI<void>(Previous ? 0x45e630 : 0x45e290, Group[s]);
+				} }, true);
+		}
+		// Ranges, lines and the progress outside.
+		Direct(r % 2 == 0 ? K_VRANGE : K_VSCROLL, "TScrollBarRange::SetRange", [&](int s) {
+			TScrollBarRange *R = Kind == K_VRANGE ? (TScrollBarRange *)Control[s] : ((TScrollBar *)Control[s])->Range;
+			if (s == OURS) R->SetRange(10 + r, 5, 7, 2);
+			else CallI<void>(0x460450, R, 10 + r, 5, 7, 2); });
+		for (int What = 0; What < 5; What++) {
+			Direct(K_LIST, "TListBox lines", [&](int s) {
+				TListBox *L = (TListBox *)Control[s];
+				int Lines = L->Lines, Bad = r % 2 == 0 ? Lines + r : -2 - r;
+				switch (What) {
+				case 0: if (s == OURS) L->AddLine(NULL); else CallI<void>(0x462460, L, (const char *)NULL); break;
+				case 1: if (s == OURS) L->SetLine(0, NULL); else CallI<void>(0x462730, L, 0, (const char *)NULL); break;
+				case 2: if (s == OURS) L->SetLine(Bad, "x"); else CallI<void>(0x462730, L, Bad, "x"); break;
+				case 3: Logf("Line%s;", s == OURS ? L->GetLine(Bad) : CallI<char *>(0x462b20, L, Bad)); break;
+				case 4:
+					// (an empty list takes every selection as none)
+					if (s == OURS) L->AddLine("a"); else CallI<void>(0x462460, L, "a");
+					if (s == OURS) L->SetSelection(Bad + 1); else CallI<void>(0x46ad10, L, Bad + 1);
+					break;
+				} });
+			Direct(K_FONTLIST, "TFontListBox lines", [&](int s) {
+				TFontListBox *L = (TFontListBox *)Control[s];
+				int Lines = L->Lines, Bad = r % 2 == 0 ? Lines + r : -2 - r;
+				TFont Got;
+				switch (What) {
+				case 0: if (s == OURS) L->AddLine(NULL, F); else CallI<void>(0x463820, L, (const char *)NULL, F); break;
+				case 1: if (s == OURS) L->AddLine(-1 - r); else CallI<void>(0x463b10, L, -1 - r); break;
+				case 2: if (s == OURS) L->SetLine(0, NULL, F); else CallI<void>(0x463dc0, L, 0, (const char *)NULL, F); break;
+				case 3: if (s == OURS) L->SetLine(Bad, "x", F); else CallI<void>(0x463dc0, L, Bad, "x", F); break;
+				case 4: Logf("Line%s;", s == OURS ? L->GetLine(Bad, &Got) : CallI<char *>(0x4643a0, L, Bad, &Got)); break;
+				} });
+		}
+		Direct(K_PROGRESS, "TProgressBar::SetMaximum", [&](int s) {
+			if (s == OURS) ((TProgressBar *)Control[s])->SetMaximum(-r);
+			else CallI<void>(0x464f40, Control[s], -r); });
+
+		// Negative sizes (TComponent::SetSize's assertion under each SetSize).
+		for (int k = 0; k < KINDS; k++)
+			Direct(k, "SetSize negative", [&](int s) { Control[s]->SetSize(r % 2 == 0 ? -1 - r : 30, r % 2 == 0 ? 20 : -1 - r); });
+		// Presses while the parent captures another component; a range's
+		// release whose parent captures another one.
+		static const int PressKinds[] = {K_RESIZER, K_SKINBUTTON, K_COLORBUTTON, K_ICONBUTTON, K_BLINKING, K_TEXTBUTTON,
+			K_TOGGLE, K_TEXTTOGGLE, K_MULTI, K_HRANGE, K_VRANGE};
+		for (int k : PressKinds) {
+			Direct(k, "LeftButtonDown with a capture", [&](int s) {
+				Root[s]->Capture = Receiver[s];
+				Logf("D%d;", Control[s]->LeftButtonDown(2, 2, 0) ? 1 : 0); });
+		}
+		Direct(r % 2 == 0 ? K_VRANGE : K_HRANGE, "LeftButtonUp with another capture", [&](int s) {
+			if (Kind == K_VRANGE) ((TScrollBarRange *)Control[s])->Pressed = true;
+			else ((THorizontalScrollBarRange *)Control[s])->Pressed = true;
+			Root[s]->Capture = Receiver[s];
+			Logf("U%d;", Control[s]->LeftButtonUp(2, 2, 0) ? 1 : 0); });
+		Direct(K_EDIT, "TEditLine::LeftButtonUp selecting with a capture", [&](int s) {
+			Edit(s)->Selecting = true;
+			((TWindow *)Control[s])->Capture = Receiver[s];
+			Logf("U%d;", Control[s]->LeftButtonUp(2, 2, 0) ? 1 : 0); });
+		Direct(K_EDIT, "TEditLine::SetFocusGroup again", [&](int s) {
+			if (Group[s] == NULL) return;
+			if (s == OURS) Edit(s)->SetFocusGroup(Group[s]);
+			else CallI<void>(0x468470, Control[s], Group[s]); }, true);
+		// Constructors whose callees assert: a frame around a window that has a
+		// parent, a formatted text without a text, an outfit without colours, a
+		// button with a skin outside, an edit line and a range of negative width,
+		// scroll bars with a minimum above the maximum.
+		Direct(K_SEPARATOR, "TBorder::TBorder window with a parent", [&](int s) {
+			TWindow *W = (TWindow *)Control[s];
+			if (r % 3 == 0) {
+				if (s == OURS) new TBorder(W, r);
+				else CallI<void *>(0x4547f0, PatternNew(0x68), W, r);
+			} else if (r % 3 == 1) {
+				if (s == OURS) new TBorder(W, 26, 32, 27, 30, 31, 28, 33, 29, r);
+				else CallI<void *>(0x454b10, PatternNew(0x68), W, 26, 32, 27, 30, 31, 28, 33, 29, r);
+			} else {
+				if (s == OURS) new TBorder(W, 26, 32, 27, 30, 31, 28, 33, 29, 7, r);
+				else CallI<void *>(0x454e30, PatternNew(0x68), W, 26, 32, 27, 30, 31, 28, 33, 29, 7, r);
+			} });
+		Direct(K_SEPARATOR, "TFormattedText::TFormattedText NULL", [&](int s) {
+			if (s == OURS) new TFormattedText(NULL);
+			else CallI<void *>(0x465e60, PatternNew(0x38), (const char *)NULL); });
+		Direct(K_SEPARATOR, "TOutfitIcon::TOutfitIcon without colours", [&](int s) {
+			TRGBColor C(1, 2, 3);
+			if (s == OURS) new TOutfitIcon(130, r, NULL, &C);
+			else CallI<void *>(0x4666a0, PatternNew(0x48), 130, r, (int *)NULL, &C); });
+		Direct(K_SEPARATOR, "TSkinButton::TSkinButton skin outside", [&](int s) {
+			TCallback CB(Receiver[s], 1);
+			if (s == OURS) new TSkinButton(1, 2, 30, NumberOfSkins + r, CB, "Tip", false);
+			else CallI<void *>(0x466860, PatternNew(0x44), 1, 2, 30, NumberOfSkins + r, CB, "Tip", false); });
+		Direct(K_SEPARATOR, "TEditLine::TEditLine negative width", [&](int s) {
+			TRect Area(1, 2, r % 2 == 0 ? -1 - r : 60, r % 2 == 0 ? 16 : -1 - r);
+			if (s == OURS) new TEditLine(Area, 20, false);
+			else CallI<void *>(0x467b50, PatternNew(0x68), Area, 20, false); });
+		Direct(K_SEPARATOR, "TScrollBarRange::TScrollBarRange negative width", [&](int s) {
+			if (s == OURS) new TScrollBarRange(0, 0, -1 - r, 40, 0, 10, 5, 2);
+			else CallI<void *>(0x469670, PatternNew(0x4c), 0, 0, -1 - r, 40, 0, 10, 5, 2); });
+		Direct(K_SEPARATOR, "THorizontalScrollBar::THorizontalScrollBar range", [&](int s) {
+			TCallback CB(Receiver[s], 1);
+			if (s == OURS) new THorizontalScrollBar(Min, Max, Value, 3, 1, CB);
+			else CallI<void *>(0x4692d0, PatternNew(0x38), Min, Max, Value, 3, 1, CB); });
+		Direct(K_SEPARATOR, "TScrollBar::TScrollBar range", [&](int s) {
+			if (s == OURS) new TScrollBar(TRect(1, 2, 12, 60), Min, Max, Value, 3, 1);
+			else CallI<void *>(0x469a80, PatternNew(0x38), TRect(1, 2, 12, 60), Min, Max, Value, 3, 1); });
+	}
+	// A label's constructor and a check box's SetEnabled, failing at each of
+	// their fake calls.
+	for (int Round = 0; Round < 3; Round++) {
+		TFont F = RandomFont();
+		const char *Text = Round == 0 ? "Hello world, this is a longer text" : Round == 1 ? "two\nlines" : "x";
+		Sweep(K_SEPARATOR, "TLabel::TLabel", [&](int s) {
+			if (s == OURS) new TLabel(1, 2, 40, 12, F, Text, Round != 1);
+			else CallI<void *>(0x465510, PatternNew(0x4c), 1, 2, 40, 12, F, Text, Round != 1); });
+		Sweep(K_CHECKBOX, "TCheckBox::SetEnabled", [&](int s) {
+			if (s == OURS) ((TCheckBox *)Control[s])->SetEnabled(Round != 1);
+			else CallI<void>(0x4678d0, Control[s], Round != 1); });
+	}
+}
+
 void TestDialogElements()
 {
 	int Before = Checks, BeforeFailures = Failures;
@@ -1482,12 +2004,14 @@ void TestDialogElements()
 			fprintf(stderr, "round %d kind %s\n", Round, KindNames[Kind]);
 		TArguments A = RandomArguments();
 		Testing = true;
+		CurrentAction = ACTION_CONSTRUCT;
 		Construct(A);
 		OperationName = "constructor";
 		Compare();
 		int Width, Height;
 		RandomSize(&Width, &Height);
 		OperationName = "first SetSize";
+		CurrentAction = ACTION_FIRSTSIZE;
 		Both([&](int s) { Control[s]->SetSize(Width, Height); });
 		Compare();
 		int Operations = 20 + Random() % 40;
@@ -1496,6 +2020,7 @@ void TestDialogElements()
 			if (Trace)
 				fprintf(stderr, "  %s\n", OperationName);
 		}
+		CurrentAction = ACTION_DESTRUCT;
 		Destruct();
 		OperationName = "destructor";
 		CHECK(Log[OURS] == Log[ORIGINAL], "DialogElements destructor (%s): logs differ\n  ours: %s\n  orig: %s",
@@ -1507,6 +2032,13 @@ void TestDialogElements()
 		Testing = false;
 	}
 
+	// The error round (issue #34): its checks are reported apart.
+	int RoundChecks = Checks, SavedCounts[64];
+	memcpy(SavedCounts, OperationCount, sizeof(SavedCounts));
+	TestDialogElementsErrors();
+	memcpy(OperationCount, SavedCounts, sizeof(SavedCounts));
+	RoundChecks = Checks - RoundChecks;
+
 	RestoreAll();
 	if (LogFile != NULL)
 		fclose(LogFile);
@@ -1516,5 +2048,5 @@ void TestDialogElements()
 	for (int i = 0; i < 22; i++)
 		MinOperation = OperationCount[i] < MinOperation ? OperationCount[i] : MinOperation;
 	printf("DialogElements: %d checks, %d failures (each kind at least %d times, each operation at least %d times)\n",
-		Checks - Before, Failures - BeforeFailures, MinKind, MinOperation);
+		Checks - Before - RoundChecks, Failures - BeforeFailures, MinKind, MinOperation);
 }

@@ -635,7 +635,7 @@ public:
 // bytes). The height is always SkinProperties.Data880.
 class THorizontalScrollBar : public TWindow {
 public:
-	THorizontalScrollBar(int _Min, int _Max, int _Value, int _Visible, int _ButtonRange, TCallback _Callback); // 0x4692d0, lines 3158-3169
+	THorizontalScrollBar(int Min, int Max, int _Value, int _Visible, int _ButtonRange, TCallback _Callback); // 0x4692d0, lines 3158-3169
 	// The destructor is the implicit one (deleting destructor 0x4adc40, folded).
 	void SetSize(int Width, int Height);               // +0x34, 0x45fe90, line 3188
 	int getMinimumWidth() { return SkinProperties.Data884; }  // +0x3c, 0x4692c0
@@ -694,7 +694,7 @@ public:
 // bytes). The width is always SkinProperties.Data878.
 class TScrollBar : public TWindow {
 public:
-	TScrollBar(TRect Area, int _Min, int _Max, int _Value, int _Visible, int _ButtonRange); // 0x469a80, lines 3462-3475
+	TScrollBar(TRect Area, int Min, int Max, int _Value, int _Visible, int _ButtonRange); // 0x469a80, lines 3462-3475
 	// The destructor is the implicit one (deleting destructor 0x4adc40, folded).
 	void SetSize(int Width, int Height);               // +0x34, 0x461770, line 3509
 	int getMinimumWidth() { return SkinProperties.Data870; }  // +0x3c, 0x469e60

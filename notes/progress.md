@@ -87,12 +87,13 @@ None.
 
 ## Last difftest
 
-15,258,447 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(main after merging #21 and #34's second part (issue-34b): the first part's 14,745,663 plus the error rounds of
+16,685,370 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(main after merging #34's third part (issue-34c): the second part's 15,258,447 plus the error rounds of
+Dialogs 200,285 and DialogElements 1,226,638. The second part (issue-34b): the first part's 14,745,663 plus the error rounds of
 ConsoleWindow 287,934, ContentWindows 168,764, MapWindow 12,359 and MainWindow 43,150, statics now 8,496
 (NumberOfBuddies, SurfaceInitInstance); GUI 31,909, DialogWindow 9,501, ContextMenus 8,572, SurfaceDX 155,615,
 SurfaceDX9 4,934, SurfaceGL 2,620 as before; every per-test count as before; #21 (src/compat/crt71.h) changed
-no total. Dialogs and DialogElements' rounds are on branch issue-34c. Full build.cmd, November 2, 2026).
+no total. Full build.cmd, November 2, 2026).
 
 ## Notes for later files
 
@@ -126,8 +127,8 @@ no total. Dialogs and DialogElements' rounds are on branch issue-34c. Full build
   Dragged). DIFFTEST_SKIP=<names> leaves tests out of the full run (find which earlier test leaves state
   behind); DIFFTEST_FAILS=<n> prints n failures in every test. notes/decisions.md "Error paths of the window
   and surface files" lists what is covered and what is not reachable (its "Second part": MapWindow,
-  MainWindow, ConsoleWindow, ContentWindows, NumberOfBuddies, Surface.cpp; Dialogs and DialogElements on
-  branch issue-34c).
+  MainWindow, ConsoleWindow, ContentWindows, NumberOfBuddies, Surface.cpp; its "Third part": Dialogs and
+  DialogElements).
 - Failure injection by call count (issue #34, second part): a window test's Logf calls Tick(), which counts
   one side's fake calls and makes the FailAt-th throw ThrowSideAssertion of the calling side; a getter that
   does not log can tick too. Both sides make the same calls, so the throw lands at the same place. A Tick in
@@ -141,6 +142,12 @@ no total. Dialogs and DialogElements' rounds are on branch issue-34c. Full build
 - Destructors and exceptions (issue #34): VC7.1 lets exceptions out of destructors, C++11 makes them
   noexcept (terminate). TComponent's destructor is noexcept(false), so the window classes' destructors throw
   as in the binary; a class whose base is MFC's (CMainFrame) cannot (C2694).
+- Error rounds of Dialogs.cpp and DialogElements.cpp (issue #34, third part): Tick() in the getter fakes
+  too, failure counts per kind and action, Operation(Forced) for the target action (same random numbers, so
+  the counted part is unchanged), sweeps (a call failing at each of its fake calls). A wrapper of the test
+  that calls a ticking fake must not tick itself. Abandoned objects with timers must leave the timer lists
+  (dialogstest.cpp RemoveAbandonedTimers). With the image's exceptions enabled the image's error report
+  dialog constructor works (std::stringstream).
 - build.cmd (issue #23) gives the same result from cmd, PowerShell and Git Bash. The old silent
   "exit 1" runs were the child dying without a word (0xc0000374 from talktest.cpp's double delete,
   which only some memory layouts showed) under `|| exit /b 1`; the Git Bash runs that failed with
