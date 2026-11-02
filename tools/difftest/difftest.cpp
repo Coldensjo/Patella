@@ -304,7 +304,7 @@ static TChildStatus *Status = &OwnStatus;
 static const char *ExitCodeName(DWORD Code)
 {
 	switch (Code) {
-	case 0: return "success, but the tests did not finish: ExitProcess or exit in a test?";
+	case 0: return "success, but the tests did not finish: ExitProcess in a test?";
 	case 1: return "check failures";
 	case 2: return "the tests could not start";
 	case 3: return "abort()";
@@ -318,7 +318,7 @@ static const char *ExitCodeName(DWORD Code)
 	case 0xc00000fd: return "stack overflow";
 	case 0xc000013a: return "Ctrl+C";
 	case 0xc0000374: return "heap corruption";
-	case 0xc0000409: return "__fastfail: /GS stack cookie, invalid parameter, abort() or terminate()";
+	case 0xc0000409: return "__fastfail, a /GS stack cookie or a pure virtual call";
 	case 0xc0000417: return "invalid parameter passed to a C runtime function";
 	case 0xe06d7363: return "uncaught C++ exception";
 	}

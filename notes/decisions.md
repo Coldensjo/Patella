@@ -2481,3 +2481,58 @@ PR #28, merged first into this branch).
   NextFrame = Now - 1.0 assigns the value NextFrame already has, so `>` and `>=` agree). An earlier run's
   heap corruption was the test's own input (a cache surface shrunk below the 106-pixel writes).
   DIFFTEST_ONLY=SurfaceDX9 runs it alone (DX9_TRACE=1, DX9_LOGS=<file>, DX9_ROUNDS=<n>).
+
+## build.cmd reliability (issue #23)
+
+Claude Opus 5.5 (issue #23), November 2, 2026.
+
+- **Causes found** (high, reproduced). (1) The silent "exit 1" from Git Bash: main's harness with
+  talktest.cpp's old double delete (734a5f7 reverted for the experiment) ends with `exit 1` and no output
+  from Git Bash; the child died with 0xc0000374 and build.cmd's `|| exit /b 1` said nothing. The new
+  harness prints `crash: exception 0xc0000374 (heap corruption) ... in TestTalk` and the parent's line.
+  (2) Git Bash runs on main failed with output: 336 failures in dialogstest.cpp ("Dialogs ... (hotkeys):
+  dialogs differ") while PowerShell passed. The dump took the original's string pointer 0x02abab30 for
+  the 0xab fill pattern (two 0xab bytes) and printed it as a number, ours as the string. Git Bash's larger
+  environment block moves the heap, so only some shells hit the 256-byte window 0x..abab... IsPattern now
+  needs a 0xab top byte (no pointer of a 32-bit process is that high) or low byte (no object is at an odd
+  address). (3) `cmd /c ...` from Git Bash: MSYS turns /c into C:/, so cmd starts interactively, prints
+  its banner, reads the empty stdin and exits 0 without running anything; run `cmd //c`. (4) A locked
+  difftest.exe: a child left running (its parent killed, or Windows Error Reporting holding a crashed
+  child) keeps the image locked and the link fails. No other environment difference mattered: vcvarsall,
+  cl.exe, link.exe (vcvars puts MSVC's before Git's /usr/bin/link.exe), python and TEMP/TMP (Windows paths
+  from Git Bash too) resolve the same in all three shells.
+- **Test names through shared memory, not stdout** (medium). The parent passes an inheritable file
+  mapping handle as a third argument (`--child <Tibia.exe> <handle>`); the child writes the state and the
+  test's name there. It survives the child, so even `__fastfail` (no handler in the process runs) gets
+  the test named. A pipe or status file would work as well; this needs no reader thread and no file.
+- **Function-like macros announce the tests** (medium). `#define TestX(...) RUN_TEST(TestX, __VA_ARGS__)`
+  before main wraps each call in BeginTest/EndTest without changing the registration lines (a macro is
+  not expanded again inside its own expansion, so the inner TestX calls the function). The cost: a new
+  test needs a macro line; without one a crash in it is reported "after <previous test> (between the
+  tests, or in a test that does not announce itself)". The alternative, a table or a RUN(...) on each
+  line, would have rewritten every registration line that other branches (#11) add to.
+- **Normal end through atexit** (medium). The child marks itself finished in an atexit handler, so the
+  DIFFTEST_ONLY early returns need no change; a child that ends without atexit (crash, ExitProcess in
+  image code, TerminateProcess) is reported even with exit code 0 (difftest.exe then returns 2).
+- **The child ends crashes itself** (medium). Its unhandled-exception filter prints and terminates with
+  the exception code (no Windows Error Reporting, no CRT terminate path); terminate() goes to abort(),
+  whose SIGABRT handler exits with 3 (abort's own code); invalid parameter exits with 0xc0000417, a pure
+  call with 0xc0000409; `__report_gsfailure` is patched into a jump to a reporter that prints the return
+  address of the function whose /GS cookie was overwritten. SetThreadStackGuarantee(64 KB) leaves the
+  vectored handler stack after a stack overflow. Child exit codes: 0 passed, 1 failures, 2 could not
+  start, 3 abort, 4 heap check failed.
+- **_heapchk() after every test, always** (high). It costs nothing measurable (runs took 181-200 s
+  before and after). It finds corruption of the heap's own structures (a large-block overrun is reported
+  "in the heap check after TestX"); an overrun inside the low-fragmentation heap's small blocks can stay
+  unnoticed until the heap trips over it.
+- **Job object and timeout** (high). The child is in a job with KILL_ON_JOB_CLOSE (it dies with the
+  parent) and DIE_ON_UNHANDLED_EXCEPTION (no error dialog). DIFFTEST_TIMEOUT defaults to 1800 s; a full
+  difftest.exe run takes about 2.5 minutes, traced runs can set 0 (none).
+- **build.cmd** (high). Each step's failure prints a message and exits 1; the run line of difftest.exe
+  and its cl line keep their text (the parent prints the report; issue #11 adds files to those lines),
+  only a `call :remove difftest.exe` before them is new. `:remove` deletes the old program before linking;
+  if it is locked, PowerShell stops processes whose full path is this checkout's program (never other
+  worktrees') and retries the delete for 10 s. ROOT is normalised (`%%~fI`), so TEMP is now
+  ...\build\difftest\tmp without `tools\difftest\..\..`. vcvarsall's output goes to build\difftest\vcvars.txt
+  and is shown when it fails. A passing run ends with "build.cmd: all tests passed"; the totals lines are
+  unchanged. No incremental build: a full run takes about 3 minutes.

@@ -111,17 +111,29 @@ static std::map<const void *, std::string> Names[2];
 
 // Readable memory, by the page protection (no access violations: the
 // child's crash handler would report each).
+// While Compare makes the two dumps, each page's answer is kept: the heap
+// grows during the dumps, and a number both sides hold (0x00df64af) must not
+// become a readable pointer in the second dump only (issue #23).
+static bool KeepReadable;
+static std::map<uintptr_t, bool> ReadablePages;
 static bool Readable(const void *Address)
 {
 	if ((uintptr_t)Address < 0x10000 || (uintptr_t)Address >= 0x7fff0000)
 		return false;
+	if (KeepReadable) {
+		auto Found = ReadablePages.find((uintptr_t)Address >> 12);
+		if (Found != ReadablePages.end())
+			return Found->second;
+	}
+	bool Result = false;
 	MEMORY_BASIC_INFORMATION M;
-	if (VirtualQuery(Address, &M, sizeof(M)) != sizeof(M) || M.State != MEM_COMMIT)
-		return false;
-	if (M.Protect & (PAGE_GUARD | PAGE_NOACCESS))
-		return false;
-	return (M.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE
-		| PAGE_EXECUTE_WRITECOPY)) != 0;
+	if (VirtualQuery(Address, &M, sizeof(M)) == sizeof(M) && M.State == MEM_COMMIT
+	 && (M.Protect & (PAGE_GUARD | PAGE_NOACCESS)) == 0)
+		Result = (M.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ
+			| PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) != 0;
+	if (KeepReadable)
+		ReadablePages[(uintptr_t)Address >> 12] = Result;
+	return Result;
 }
 // A readable C string of printable characters.
 static bool ReadString(const void *Address, std::string *Out)
@@ -1262,7 +1274,10 @@ static int OperationCount[32];
 static const char *OperationName;
 static void Compare()
 {
+	KeepReadable = true;
+	ReadablePages.clear();
 	std::string D[2] = {DumpAll(OURS), DumpAll(ORIGINAL)};
+	KeepReadable = false;
 	if (LogFile != NULL)
 		fprintf(LogFile, "== %s %s\n%s\n%s\n", KindNames[Kind], OperationName, Log[OURS].c_str(), D[OURS].c_str());
 	CHECK(Log[OURS] == Log[ORIGINAL], "Dialogs %s (%s): logs differ\n  ours: %s\n  orig: %s", OperationName,
