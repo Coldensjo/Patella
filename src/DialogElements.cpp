@@ -921,11 +921,12 @@ bool TSkinButton::IsPressed()
 	TEND
 }
 
-// 0x458b20, lines 1228-1229. No try block.
+// 0x458b20, lines 1228-1229. No try block. The assertions print the skin
+// only (the binary's messages, issue #34).
 void TSkinButton::SetSkins(int _ButtonUp, int _ButtonDown)
 {
-	TASSERT2(_ButtonUp<NumberOfSkins, _ButtonUp, NumberOfSkins);
-	TASSERT2(_ButtonDown<NumberOfSkins, _ButtonDown, NumberOfSkins);
+	TASSERT1(_ButtonUp<NumberOfSkins, _ButtonUp);
+	TASSERT1(_ButtonDown<NumberOfSkins, _ButtonDown);
 	ButtonDown = _ButtonDown;
 	ButtonUp = _ButtonUp;
 }
@@ -2284,8 +2285,10 @@ void THorizontalScrollBarRange::KeyPress(int Key)
 
 // --- THorizontalScrollBar ---------------------------------------------------------
 
-// 0x4692d0, lines 3158-3169
-THorizontalScrollBar::THorizontalScrollBar(int _Min, int _Max, int _Value, int _Visible, int _ButtonRange,
+// 0x4692d0, lines 3158-3169. The catch block prints the minimum and maximum
+// under the names Min and Max (the binary's message; the range's assertion
+// says _Min and _Max).
+THorizontalScrollBar::THorizontalScrollBar(int Min, int Max, int _Value, int _Visible, int _ButtonRange,
 	TCallback _Callback)
 {
 	TASSERT1(_ButtonRange>0, _ButtonRange);
@@ -2294,11 +2297,11 @@ THorizontalScrollBar::THorizontalScrollBar(int _Min, int _Max, int _Value, int _
 	RightButton = new TSkinButton(0, 0, 167, 168, TCallback(this, 6), NULL, true);
 	TWindow::InsertChild(LeftButton);
 	TWindow::InsertChild(RightButton);
-	Range = new THorizontalScrollBarRange(_Min, _Max, _Value, _Visible, _Callback);
+	Range = new THorizontalScrollBarRange(Min, Max, _Value, _Visible, _Callback);
 	Range->PageScroll = true;
 	Range->ButtonRange = _ButtonRange;
 	TWindow::InsertChild(Range);
-	TEND
+	TEND2(Min, Max)
 }
 
 // 0x45fe90, line 3188. The parameters are changed in place (the catch
@@ -2543,8 +2546,9 @@ void TScrollBarRange::KeyPress(int Key)
 
 // --- TScrollBar -------------------------------------------------------------------
 
-// 0x469a80, lines 3462-3475
-TScrollBar::TScrollBar(TRect Area, int _Min, int _Max, int _Value, int _Visible, int _ButtonRange)
+// 0x469a80, lines 3462-3475. The catch block prints Min and Max, as
+// THorizontalScrollBar's.
+TScrollBar::TScrollBar(TRect Area, int Min, int Max, int _Value, int _Visible, int _ButtonRange)
 {
 	TASSERT1(_ButtonRange>0, _ButtonRange);
 	TBEGIN
@@ -2552,14 +2556,14 @@ TScrollBar::TScrollBar(TRect Area, int _Min, int _Max, int _Value, int _Visible,
 	DownButton = new TSkinButton(0, 0, 159, 160, TCallback(this, 4), NULL, true);
 	TWindow::InsertChild(UpButton);
 	TWindow::InsertChild(DownButton);
-	Range = new TScrollBarRange(0, 0, Area.width, Area.height - DownButton->Height - UpButton->Height, _Min, _Max,
+	Range = new TScrollBarRange(0, 0, Area.width, Area.height - DownButton->Height - UpButton->Height, Min, Max,
 		_Value, _Visible);
 	Range->PageScroll = true;
 	Range->ButtonRange = _ButtonRange;
 	TWindow::InsertChild(Range);
 	TWindow::SetPosition(Area.x, Area.y);
 	TScrollBar::SetSize(Area.width, Area.height);
-	TEND
+	TEND2(Min, Max)
 }
 
 // 0x461770, line 3509. The parameters are changed in place.
