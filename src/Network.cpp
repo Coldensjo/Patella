@@ -98,15 +98,15 @@ void SetNetworkWindow(HWND Window)
 // 0x4ca450, lines 132-133
 void SetTestServerAddress(const char *Address)
 {
-	TASSERT(Address!=NULL);
-	TASSERT1(strlen(Address)<100, strlen(Address));
+	TASSERT(132, Address!=NULL);
+	TASSERT1(133, strlen(Address)<100, strlen(Address));
 	strcpy(TestServer.Address, Address);
 }
 
 // 0x4ca730, lines 152-164
 void SetServerError(int errorcode)
 {
-	TASSERT1(CurrentServer<NUMBEROFSERVER, CurrentServer);
+	TASSERT1(152, CurrentServer<NUMBEROFSERVER, CurrentServer);
 	TBEGIN
 	if (GetTestServerLogin()) {
 		TestServer.Available = false;
@@ -115,15 +115,15 @@ void SetServerError(int errorcode)
 	}
 	Servers[CurrentServer].Available = false;
 	Servers[CurrentServer].ErrorCode = errorcode;
-	TEND1(errorcode)
+	TEND1(164, errorcode)
 }
 
 // 0x4ca9f0, lines 182-184
 void SetServerIPAddress(const char *ipaddress)
 {
-	TASSERT1(CurrentServer<NUMBEROFSERVER, CurrentServer);
-	TASSERT(ipaddress!=NULL);
-	TASSERT1(strlen(ipaddress)<100, strlen(ipaddress));
+	TASSERT1(182, CurrentServer<NUMBEROFSERVER, CurrentServer);
+	TASSERT(183, ipaddress!=NULL);
+	TASSERT1(184, strlen(ipaddress)<100, strlen(ipaddress));
 	if (GetTestServerLogin()) {
 		strcpy(TestServer.Address, ipaddress);
 		TestServer.Resolved = true;
@@ -136,7 +136,7 @@ void SetServerIPAddress(const char *ipaddress)
 // 0x4cadb0, lines 202-233. Stores the server to try next; false when none is left.
 bool GetCurrentServer(TServer **Server)
 {
-	TASSERT1(CurrentServer<NUMBEROFSERVER, CurrentServer);
+	TASSERT1(202, CurrentServer<NUMBEROFSERVER, CurrentServer);
 	TBEGIN
 	if (GetTestServerLogin()) {
 		*Server = &TestServer;
@@ -157,7 +157,7 @@ bool GetCurrentServer(TServer **Server)
 			CurrentServer = 0;
 	}
 	return false;
-	TEND
+	TEND(233)
 }
 
 // 0x4cb0d0, line 255
@@ -173,19 +173,19 @@ int GetServerErrorCode()
 	TServer *Server;
 	GetCurrentServer(&Server);
 	return Server->ErrorCode;
-	TEND
+	TEND(255)
 }
 
 // 0x4cb2a0, lines 268-275. Reserves the 4 header bytes that SendCommand fills in.
 void BeginCommand(int CommandType)
 {
-	TASSERT1(In(CommandType,0,255), CommandType);
+	TASSERT1(268, In(CommandType,0,255), CommandType);
 	TBEGIN
 	SendBuffer.Position = 0;
 	SendBuffer.PutWord(0);
 	SendBuffer.PutWord(0);
 	SendBuffer.PutByte((uint8)CommandType);
-	TEND1(CommandType)
+	TEND1(275, CommandType)
 }
 
 // 0x4cb540, line 286
@@ -193,7 +193,7 @@ void SendByte(uint8 Data)
 {
 	TBEGIN
 	SendBuffer.PutByte(Data);
-	TEND1(Data)
+	TEND1(286, Data)
 }
 
 // 0x4cb6e0, line 297
@@ -201,7 +201,7 @@ void SendWord(uint16 Data)
 {
 	TBEGIN
 	SendBuffer.PutWord(Data);
-	TEND1(Data)
+	TEND1(297, Data)
 }
 
 // 0x4cb880, line 308
@@ -209,22 +209,22 @@ void SendQuad(uint32 Data)
 {
 	TBEGIN
 	SendBuffer.PutQuad(Data);
-	TEND1(Data)
+	TEND1(308, Data)
 }
 
 // 0x4cba20, lines 316-320
 void SendString(const char *Text)
 {
-	TASSERT(Text!=NULL);
+	TASSERT(316, Text!=NULL);
 	TBEGIN
 	SendBuffer.PutString(Text);
-	TEND
+	TEND(320)
 }
 
 // 0x4cbca0, line 328
 void SendBytes(const uint8 *Buffer, int Count)
 {
-	TASSERT(Buffer!=NULL);
+	TASSERT(328, Buffer!=NULL);
 	SendBuffer.PutBytes(Buffer, Count);
 }
 
@@ -254,10 +254,10 @@ void SendCommand(bool Encrypt)
 		for (int i = 2; i < Length + 2; i += 8)
 			SymmetricKey.EncryptBlock(&SendData[i]);
 	} catch (...) {
-		TERROR("Symmetric encryption failed with unknown exception");
+		TERROR(355, "Symmetric encryption failed with unknown exception");
 	}
 	Socket->Send(SendData, Length + 2, 0);
-	TEND
+	TEND(367)
 }
 
 // 0x4cc130, lines 391-410. Drops the packet already read, then decrypts the next
@@ -277,19 +277,19 @@ void PrepareNextPacket()
 		ReceiveBuffer.Position = 0;
 		int PacketSize = ReceiveBuffer.GetWord();
 		if (PacketSize % 8 != 0)
-			TERROR1("packet size does not fit to symmetric encryption", PacketSize);
+			TERROR1(391, "packet size does not fit to symmetric encryption", PacketSize);
 		try {
 			for (int i = 2; i < PacketSize + 2; i += 8)
 				SymmetricKey.DecryptBlock(&ReceiveData[i]);
 		} catch (...) {
-			TERROR("Symmetric decryption failed with unknown exception");
+			TERROR(398, "Symmetric decryption failed with unknown exception");
 		}
 		ReceiveBuffer.SetSize(ReceiveBuffer.GetWord() + 4);
 		memset(PacketHeader, 0, sizeof(PacketHeader));
 		ReceiveRead = PacketSize + 2;
 		memcpy(PacketHeader, &ReceiveData[2], PacketSize < 16 ? PacketSize : 16);
 	}
-	TEND
+	TEND(410)
 }
 
 // 0x4cc550, line 423. Returns the next command byte, or -1 when no packet is complete.
@@ -302,7 +302,7 @@ int GetNextCommand()
 			return -1;
 	}
 	return ReceiveBuffer.GetByte();
-	TEND
+	TEND(423)
 }
 
 // 0x4cc720, line 434
@@ -310,7 +310,7 @@ uint8 GetByte()
 {
 	TBEGIN
 	return ReceiveBuffer.GetByte();
-	TEND
+	TEND(434)
 }
 
 // 0x4cc8b0, line 445
@@ -318,7 +318,7 @@ uint16 GetWord()
 {
 	TBEGIN
 	return ReceiveBuffer.GetWord();
-	TEND
+	TEND(445)
 }
 
 // 0x4cca40, line 456
@@ -326,16 +326,16 @@ uint32 GetQuad()
 {
 	TBEGIN
 	return ReceiveBuffer.GetQuad();
-	TEND
+	TEND(456)
 }
 
 // 0x4ccbd0, lines 466-470
 void GetString(char *Buffer, int MaxLength)
 {
-	TASSERT(Buffer!=NULL);
+	TASSERT(466, Buffer!=NULL);
 	TBEGIN
 	ReceiveBuffer.GetString(Buffer, MaxLength);
-	TEND1(MaxLength)
+	TEND1(470, MaxLength)
 }
 
 // 0x4cce50, line 482. The caller owns the returned string.
@@ -343,7 +343,7 @@ char *GetString()
 {
 	TBEGIN
 	return ReceiveBuffer.GetString();
-	TEND
+	TEND(482)
 }
 
 // 0x4ccfe0, line 493
@@ -351,7 +351,7 @@ void GetBytes(uint8 *Buffer, int Count)
 {
 	TBEGIN
 	ReceiveBuffer.GetBytes(Buffer, Count);
-	TEND
+	TEND(493)
 }
 
 // 0x4cf850, line 518. Called periodically; reconnects when the limit is passed.
@@ -366,13 +366,13 @@ void CheckConnectionTimeout()
 		SetConnectionState(0);
 		ConnectToLoginServer();
 	}
-	TEND
+	TEND(518)
 }
 
 // 0x4cd180, lines 544-602. ErrorType 1 is the login server, 2 the game server.
 void GetErrorMessage(char *Message, int ErrorCode, int ErrorType)
 {
-	TASSERT(Message!=NULL);
+	TASSERT(544, Message!=NULL);
 	TBEGIN
 	char Text[100];
 	bool Offline = false;
@@ -440,7 +440,7 @@ void GetErrorMessage(char *Message, int ErrorCode, int ErrorType)
 		}
 	} else {
 		if (ErrorType != 2)
-			TERROR1("unknown error type", ErrorType);
+			TERROR1(597, "unknown error type", ErrorType);
 		strcat(Message, "Cannot connect to the game server.\n\nError: ");
 		strcat(Message, Text);
 		if (Offline) {
@@ -450,14 +450,14 @@ void GetErrorMessage(char *Message, int ErrorCode, int ErrorType)
 	}
 	strcat(Message, "\n\nFor more information take a look at the FAQs in the ");
 	strcat(Message, "\nguide section at www.tibia.com.");
-	TEND1(ErrorCode)
+	TEND1(602, ErrorCode)
 }
 
 // 0x4cd9a0, lines 611-625. Starts an asynchronous lookup; NetworkWindow gets
 // WM_USER+1 when it completes.
 bool ResolveHostname(const char *Hostname)
 {
-	TASSERT(Hostname!=NULL);
+	TASSERT(611, Hostname!=NULL);
 	TBEGIN
 	HostnameRequest = WSAAsyncGetHostByName(NetworkWindow, WM_USER + 1, Hostname,
 		HostnameResolveBuffer, HostnameResolveBufferSize);
@@ -471,16 +471,16 @@ bool ResolveHostname(const char *Hostname)
 	TimeoutCounter = 0;
 	TimeoutLimit = 150;
 	return true;
-	TEND
+	TEND(625)
 }
 
 // 0x4cdca0, lines 634-640
 const char *GetResolvedIPAddress()
 {
 	TBEGIN
-	TASSERT(HostnameResolveBuffer!=NULL);
+	TASSERT(634, HostnameResolveBuffer!=NULL);
 	return inet_ntoa(*(in_addr *)((HOSTENT *)HostnameResolveBuffer)->h_addr_list[0]);
-	TEND
+	TEND(640)
 }
 
 // 0x4cee30, line 661. Returns 0 or a WinSock error code.
@@ -498,13 +498,13 @@ int CreateSocket()
 		return Error;
 	}
 	return 0;
-	TEND
+	TEND(661)
 }
 
 // 0x4cdf20, lines 671-687. Returns 0 or a WinSock error code.
 int ConnectSocket(const char *IPAddress, int Port, bool SetTimeout)
 {
-	TASSERT(IPAddress!=NULL);
+	TASSERT(671, IPAddress!=NULL);
 	TBEGIN
 	if (!Socket->Connect(IPAddress, Port)) {
 		if (WSAGetLastError() != WSAEWOULDBLOCK) {
@@ -523,7 +523,7 @@ int ConnectSocket(const char *IPAddress, int Port, bool SetTimeout)
 		TimeoutCounter = 0;
 	}
 	return 0;
-	TEND
+	TEND(687)
 }
 
 // 0x4ce210, line 698
@@ -532,7 +532,7 @@ void SetSymmetricKey(const uint8 *Key)
 	try {
 		SymmetricKey.SetKey(Key);
 	} catch (const char *) {
-		TERROR("Key initialization failed");
+		TERROR(698, "Key initialization failed");
 	}
 }
 
@@ -560,7 +560,7 @@ void Disconnect(bool force)
 		TimeoutLimit = 0;
 		TimeoutCounter = 0;
 	}
-	TEND1((force?1:0))
+	TEND1(727, (force?1:0))
 }
 
 // 0x4cf050, lines 739-773. Tries the current login server and moves on to the
@@ -569,7 +569,7 @@ void ConnectToLoginServer()
 {
 	RecursionProtection++;
 	TBEGIN
-	TASSERT1(RecursionProtection<=NUMBEROFSERVER+1, RecursionProtection);
+	TASSERT1(739, RecursionProtection<=NUMBEROFSERVER+1, RecursionProtection);
 	TServer *Server;
 	if (!GetCurrentServer(&Server)) {
 		char *Message = new char[1024];
@@ -595,7 +595,7 @@ void ConnectToLoginServer()
 		}
 	}
 	RecursionProtection--;
-	TEND
+	TEND(773)
 }
 
 // 0x4cf390, line 802
@@ -620,7 +620,7 @@ void ConnectToGameServer()
 		AddMessage(1, (INT_PTR)"Connection failed", (INT_PTR)Message);
 		AddMessage(10, 300, 0);
 	}
-	TEND
+	TEND(802)
 }
 
 // 0x4cf5e0, line 835. vtable 0x56d388 +0x2c.
@@ -651,7 +651,7 @@ void TSocket::OnConnect(int ErrorCode)
 	AddMessage(10, 300, 0);
 	Disconnect(false);
 	SetConnectionState(0);
-	TEND1(ErrorCode)
+	TEND1(835, ErrorCode)
 }
 
 // 0x4ce530, line 885. vtable +0x1c. Appends received bytes and calls the
@@ -676,7 +676,7 @@ void TSocket::OnReceive(int ErrorCode)
 	}
 	if (Complete)
 		ReceiveCallback();
-	TEND1(ErrorCode)
+	TEND1(885, ErrorCode)
 }
 
 // 0x4ce750, line 897. vtable +0x30.
@@ -685,7 +685,7 @@ void TSocket::OnClose(int /*ErrorCode*/)
 	TBEGIN
 	Disconnect(false);
 	CloseCallback();
-	TEND
+	TEND(897)
 }
 
 // 0x4ce8f0
@@ -700,9 +700,9 @@ void InitNetwork(void (*ConnectHandler)(), void (*ReceiveHandler)(), void (*Clos
 {
 	if (!AfxSocketInit(NULL))
 		throw PROGRAM_ERROR_SOCKET_INIT;
-	TASSERT(ConnectHandler!=NULL);
-	TASSERT(ReceiveHandler!=NULL);
-	TASSERT(CloseHandler!=NULL);
+	TASSERT(932, ConnectHandler!=NULL);
+	TASSERT(933, ReceiveHandler!=NULL);
+	TASSERT(934, CloseHandler!=NULL);
 	ReceiveCallback = ReceiveHandler;
 	ConnectCallback = ConnectHandler;
 	CloseCallback = CloseHandler;
@@ -724,5 +724,5 @@ void ExitNetwork()
 	if (HostnameResolveBuffer != NULL)
 		free(HostnameResolveBuffer);
 	HostnameResolveBuffer = NULL;
-	TEND
+	TEND(961)
 }

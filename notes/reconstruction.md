@@ -18,13 +18,14 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
 
 ## Reading the clean pseudocode
 
-- `TASSERT_FAILED(line, "expr", "name", value)`: a failed `TASSERT1(expr, name)` at that line.
-  The expression text is the original source text.
-- `TERROR(line, "message", "name", value)`: `TERROR1("message", name)`.
+- `TASSERT_FAILED(line, "expr", "name", value)`: a failed `TASSERT1(line, expr, name)`.
+  The expression text is the original source text; the line is the macro's first argument (issue #35).
+- `TERROR(line, "message", "name", value)`: `TERROR1(line, "message", name)`.
 - After most functions come three catch blocks. A 20-byte one re-throws a `PROGRAM_ERROR`; a
   `TRETHROW(line, "names"...)` one and a `TERROR(line, "unknown exception occurred", ...)` one
-  are `TEND`, `TEND1(name)` or `TEND2(a, b)` at that line, closing a `TBEGIN` at the start of
-  the body. The names are the function's parameters (or expressions of them).
+  are `TEND(line)`, `TEND1(line, name)` or `TEND2(line, a, b)`, closing a `TBEGIN` at the start of
+  the body. The names are the function's parameters (or expressions of them). `python -I tools/lines.py
+  check` checks every site's line against the binary.
 - A catch block with its own message, such as "Symmetric encryption failed with unknown
   exception", is an inner `try { ... } catch (...) { TERROR("..."); }`.
 - Get the catch types and the try ranges from the exception tables, not from the pseudocode:
@@ -145,8 +146,8 @@ with time made virtual so both clients draw the same moment: notes/rendering.md.
 - Error paths (issue #22): `errortest.cpp` (DIFFTEST_ONLY=Errors) calls the original and the reconstructed
   functions with inputs that fail their assertions, TERRORs and PROGRAM_ERROR throws and compares what each
   side throws: the type, a PROGRAM_ERROR's value, a TMyException's whole message with every TEND level and its
-  origin. Line numbers are mapped, not compared (our sources do not keep the original's lines): each of our
-  lines must stand for one original line throughout. `imageeh.cpp` makes the image's own exception code run in
+  origin, the line numbers too (since issue #35 every site names the original's line; before, they were
+  mapped). `imageeh.cpp` makes the image's own exception code run in
   the child (its throw, frame handlers and catch blocks, its stringstream and TMyException code): the image's
   locks and per-thread data are patched, the imports it needs bound, and its exception handlers, which Windows
   refuses outside a mapped image, are called through a SafeSEH-registered trampoline (`imageehseh.asm`, built
@@ -213,7 +214,8 @@ with time made virtual so both clients draw the same moment: notes/rendering.md.
 | Extern/regexp (regexp.c, regexp.h, regmagic.h) | Third-party (issue #15): Henry Spencer's regexp of 1986 (0x50eb00-0x50fbb8, regcomp and regexec for Status.cpp's link check), the original text written from memory and checked function by function against the assembly (all 19 messages, MAGIC 0234, the 1986 struct and jump tables); the client's changes marked: regerror calls a hook the client never sets (0x71f034, our regerrorhandler), ANSI headers, prototypes with extern "C"; no regsub/regerror files. Compiled as C (compile-check compiles src/Extern/regexp/*.c). Differentially tested (regexptest.cpp: both regcomps' programs byte for byte, both regexecs with all startp/endp, own and cross, corrupted programs, LinkPattern; 229,958 checks; a mutation check of 44 changes, three equivalent survivors). |
 | Library region | Classified (issue #15): all 1,102 functions from 0x50eae8 have names.tsv rows (kind stl, the library in the note): MFC 7.1 (nafxcw.lib), the CRT (libcmt.lib), the C++ library (libcpmt.lib), ATL 7.1 header code, import and delay-load thunks, multimon.h stubs, the regexp above; 0x559ea0 is Inventory.cpp's static initialiser (game code). The build takes the libraries from Visual Studio; file-ranges.tsv lists the blocks. |
 
-Last differential run (November 2, 2026, main after merging #34's third part, issue-34c): 16,685,370 checks
+Last differential run (November 2, 2026, branch issue-35: the line numbers compared exactly; every count as on
+main after merging #34's third part, issue-34c): 16,685,370 checks
 against the original code (difftest.exe, including 1,213,366 SurfaceDX, 58,682 SurfaceDX9, 53,082 SurfaceGL,
 192,832 Container, 229,958 regexp and 31,912 error-path checks, and the error rounds of issue #34: 31,909 GUI,
 9,501 DialogWindow, 8,572 ContextMenus, 287,934 ConsoleWindow, 168,764 ContentWindows, 155,615 SurfaceDX,

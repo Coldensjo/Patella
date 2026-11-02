@@ -93,11 +93,10 @@ time for walk, error and error-login and shows that the two runs differ in exact
 The masks accept only MSVC 7.1's form of ctime (the day with two digits): Patella's first run wrote
 "Mon Nov  2" where Tibia.exe wrote "Mon Nov 02", and a looser mask hid that (below).
 
-Not masked but compared through a map: the line numbers in error.txt's `<file> <line>`. Our sources do not
-keep the original's lines (the difftest maps them too, notes/decisions.md "Error paths (issue #22)"), so the
-script checks each differing pair: the same file names in the same order, Patella's line inside the function
-of src/<file> whose `// 0x...` comment precedes it, Tibia.exe's line among that function's assertion and
-catch lines in symbols.tsv, and one original line per Patella line. Making the lines equal is issue #35.
+Not masked: the line numbers in error.txt's `<file> <line>`. Since issue #35 every error site of our sources
+names the original's line (tools/lines.py checks them against Tibia.exe), so error.txt is compared byte for
+byte apart from the time. Before #35 they were compared through a map (each differing pair inside the same
+function, symbols.tsv's lines; the results below are of that run).
 
 ## Results (November 2, 2026)
 
@@ -120,7 +119,7 @@ likewise); nothing else differed between them.
 Line numbers in error.txt (Tibia.exe -> Patella.exe; the function and its original lines from symbols.tsv):
 Control.cpp 1274 -> 775 and 1208 -> 690 (the two TERRORs of ReceivePackets 0x44a900, lines 1208, 1274, 1280),
 Control.cpp 1280 -> 780 (its TEND), Network.cpp 885 -> 679 (0x4ce530), Player.cpp 383 -> 388 (Run 0x4dae60).
-Issue #35 makes them equal.
+Issue #35 makes them equal: those sites now name 1208, 1274, 1280, 885 and 383 (not run again in #35).
 
 **Client bug found and fixed**: ctime's day. The first replays of the walk (before the fix) wrote "Channel
 saved at Mon Nov 02 12:14:46 2026" (Tibia.exe) and "Channel saved at Mon Nov  2 12:18:13 2026"

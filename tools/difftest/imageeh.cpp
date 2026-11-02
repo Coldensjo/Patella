@@ -518,20 +518,30 @@ static std::string WithoutLines(const std::string &Text, std::vector<TLineRef> *
 	return Result;
 }
 
-static void MapLines(const char *Test, const char *What, const std::vector<TLineRef> &Ours, const std::vector<TLineRef> &Original)
+// One check per line pair: our line must be the original's (issue #35: every
+// site names the original's line). EH_LINEMAP=1 compares through a map instead,
+// as before issue #35 (each of our lines must stand for one original line and
+// each original line for one of ours over the whole run), for debugging.
+static void CompareLines(const char *Test, const char *What, const std::vector<TLineRef> &Ours, const std::vector<TLineRef> &Original)
 {
+	static const bool Map = getenv("EH_LINEMAP") != NULL && atoi(getenv("EH_LINEMAP")) != 0;
 	for (size_t i = 0; i < Ours.size() && i < Original.size(); i++) {
 		if (Ours[i].File != Original[i].File)
 			continue; // the messages differ; reported there
 		const std::string &File = Ours[i].File;
 		std::map<int, int> &Forward = OursToOriginal[File];
 		std::map<int, int> &Backward = OriginalToOurs[File];
-		auto F = Forward.find(Ours[i].Line);
-		auto B = Backward.find(Original[i].Line);
-		CHECK((F == Forward.end() || F->second == Original[i].Line) && (B == Backward.end() || B->second == Ours[i].Line),
-			"%s %s: our %s line %d stands for the original's line %d, earlier for %d; the original's line %d earlier for our %d",
-			Test, What, File.c_str(), Ours[i].Line, Original[i].Line, F == Forward.end() ? -1 : F->second, Original[i].Line,
-			B == Backward.end() ? -1 : B->second);
+		if (Map) {
+			auto F = Forward.find(Ours[i].Line);
+			auto B = Backward.find(Original[i].Line);
+			CHECK((F == Forward.end() || F->second == Original[i].Line) && (B == Backward.end() || B->second == Ours[i].Line),
+				"%s %s: our %s line %d stands for the original's line %d, earlier for %d; the original's line %d earlier for our %d",
+				Test, What, File.c_str(), Ours[i].Line, Original[i].Line, F == Forward.end() ? -1 : F->second, Original[i].Line,
+				B == Backward.end() ? -1 : B->second);
+		} else {
+			CHECK(Ours[i].Line == Original[i].Line, "%s %s: our %s line %d, the original's %d", Test, What, File.c_str(),
+				Ours[i].Line, Original[i].Line);
+		}
 		Forward[Ours[i].Line] = Original[i].Line;
 		Backward[Original[i].Line] = Ours[i].Line;
 	}
@@ -550,10 +560,10 @@ void CompareThrown(const char *Test, const char *What, const TThrown &Ours, cons
 	B.Origin = WithoutLines(Original.Origin + ":", &OriginalLines);
 	CHECK(A == B && OurLines.size() == OriginalLines.size(), "%s %s: ours %s, original %s", Test, What,
 		Ours.Describe().c_str(), Original.Describe().c_str());
-	// Only a comparison that matched maps lines: one mismatch must not make
-	// every later comparison of the same lines fail.
+	// The lines of a comparison that matched otherwise (a different message is
+	// reported once, above).
 	if (A == B && OurLines.size() == OriginalLines.size())
-		MapLines(Test, What, OurLines, OriginalLines);
+		CompareLines(Test, What, OurLines, OriginalLines);
 }
 
 void *ImageSideVtable(const void *OurVtable, const void *OurBase, uint32 ImageBase, int BaseSlots, int Slots)

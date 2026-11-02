@@ -115,7 +115,7 @@ void GetOutfitColor(int Color, int *R, int *G, int *B)
 // 0x5093d0, line 66
 void LowerString(char *s)
 {
-	TASSERT(s!=NULL);
+	TASSERT(66, s!=NULL);
 	while (*s != 0) {
 		*s = (char)ToLower(*s);
 		s++;
@@ -125,7 +125,7 @@ void LowerString(char *s)
 // 0x509540, line 88. Upper-cases the first letter of each word.
 void CapitalizeString(char *s)
 {
-	TASSERT(s!=NULL);
+	TASSERT(88, s!=NULL);
 	bool WordStart = true;
 	for (int i = 0; i < (int)strlen(s); i++) {
 		if (IsAlpha(s[i])) {
@@ -141,8 +141,8 @@ void CapitalizeString(char *s)
 // 0x509710, lines 106-107. Like strnicmp, with the Latin-1 case rules above.
 int CompareStrings(const char *s1, const char *s2, int Count)
 {
-	TASSERT(s1!=NULL);
-	TASSERT(s2!=NULL);
+	TASSERT(106, s1!=NULL);
+	TASSERT(107, s2!=NULL);
 	for (int i = 0; i != Count; i++) {
 		if (ToLower(s1[i]) > ToLower(s2[i]))
 			return 1;
@@ -157,8 +157,8 @@ int CompareStrings(const char *s1, const char *s2, int Count)
 // 0x509a60, lines 124-125
 void CopyString(char *Destination, const char *Source, int Size)
 {
-	TASSERT(Destination!=NULL);
-	TASSERT(Source!=NULL);
+	TASSERT(124, Destination!=NULL);
+	TASSERT(125, Source!=NULL);
 	strncpy(Destination, Source, Size);
 	Destination[Size - 1] = 0;
 }
@@ -166,8 +166,8 @@ void CopyString(char *Destination, const char *Source, int Size)
 // 0x509d10, lines 158-159. Copies Source without leading and trailing white space.
 void TrimString(char *Destination, const char *Source)
 {
-	TASSERT(Source!=NULL);
-	TASSERT(Destination!=NULL);
+	TASSERT(158, Source!=NULL);
+	TASSERT(159, Destination!=NULL);
 	int i = 0;
 	while (Source[i] != 0 && IsSpace(Source[i]))
 		i++;
@@ -180,7 +180,7 @@ void TrimString(char *Destination, const char *Source)
 // returns whether it was cut.
 bool ShortenString(char *Text, int MaxLength)
 {
-	TASSERT(Text!=NULL);
+	TASSERT(179, Text!=NULL);
 	int Length = (int)strlen(Text);
 	if (Length <= MaxLength)
 		return false;
@@ -193,8 +193,8 @@ bool ShortenString(char *Text, int MaxLength)
 // 0x50a200, lines 286-287
 TReadBuffer::TReadBuffer(uint8 *data, int size)
 {
-	TASSERT(data!=NULL);
-	TASSERT(size>=0);
+	TASSERT(286, data!=NULL);
+	TASSERT(287, size>=0);
 	Size = size;
 	Position = 0;
 	Data = data;
@@ -203,14 +203,14 @@ TReadBuffer::TReadBuffer(uint8 *data, int size)
 // 0x50a4b0, line 299
 uint8 TReadBuffer::GetByte()
 {
-	TASSERT2(Position<=Size-1, Position, Size);
+	TASSERT2(299, Position<=Size-1, Position, Size);
 	return Data[Position++];
 }
 
 // 0x50a610, line 310
 uint16 TReadBuffer::GetWord()
 {
-	TASSERT2(Position<=Size-2, Position, Size);
+	TASSERT2(310, Position<=Size-2, Position, Size);
 	uint16 Result = (uint16)(Data[Position] + Data[Position + 1] * 0x100);
 	Position += 2;
 	return Result;
@@ -219,7 +219,7 @@ uint16 TReadBuffer::GetWord()
 // 0x50a780, line 321
 uint32 TReadBuffer::GetQuad()
 {
-	TASSERT2(Position<=Size-4, Position, Size);
+	TASSERT2(321, Position<=Size-4, Position, Size);
 	uint32 Result = Data[Position] | (Data[Position + 1] << 8) | (Data[Position + 2] << 16)
 		| (Data[Position + 3] << 24);
 	Position += 4;
@@ -229,12 +229,12 @@ uint32 TReadBuffer::GetQuad()
 // 0x50a900, lines 334-340. Reads at most MaxLength-1 characters; skips the rest.
 void TReadBuffer::GetString(char *Buffer, int MaxLength)
 {
-	TASSERT(Buffer!=NULL);
+	TASSERT(334, Buffer!=NULL);
 	int Length = GetWord();
 	Buffer[0] = 0;
 	if (Length == 0)
 		return;
-	TASSERT2(Position<=Size-Length, Position, Size-Length);
+	TASSERT2(340, Position<=Size-Length, Position, Size-Length);
 	if (MaxLength < 0 || Length < MaxLength) {
 		memcpy(Buffer, &Data[Position], Length);
 		Buffer[Length] = 0;
@@ -251,7 +251,7 @@ char *TReadBuffer::GetString()
 {
 	int Length = GetWord();
 	char *Result = new char[Length + 1];
-	TASSERT2(Position<=Size-Length, Position, Size-Length);
+	TASSERT2(359, Position<=Size-Length, Position, Size-Length);
 	memcpy(Result, &Data[Position], Length);
 	Result[Length] = 0;
 	Position += Length;
@@ -261,8 +261,8 @@ char *TReadBuffer::GetString()
 // 0x50ad50, lines 371-372
 void TReadBuffer::GetBytes(uint8 *Buffer, int Count)
 {
-	TASSERT(Buffer!=NULL);
-	TASSERT2(Position<=Size-Count, Position, Size-Count);
+	TASSERT(371, Buffer!=NULL);
+	TASSERT2(372, Position<=Size-Count, Position, Size-Count);
 	memcpy(Buffer, &Data[Position], Count);
 	Position += Count;
 }
@@ -270,8 +270,8 @@ void TReadBuffer::GetBytes(uint8 *Buffer, int Count)
 // 0x50b030, lines 387-388
 TWriteBuffer::TWriteBuffer(uint8 *data, int size)
 {
-	TASSERT(data!=NULL);
-	TASSERT(size>=0);
+	TASSERT(387, data!=NULL);
+	TASSERT(388, size>=0);
 	Size = size;
 	Position = 0;
 	Data = data;
@@ -280,14 +280,14 @@ TWriteBuffer::TWriteBuffer(uint8 *data, int size)
 // 0x50b2e0, line 400
 void TWriteBuffer::PutByte(uint8 Data)
 {
-	TASSERT2(Position<=Size-1, Position, Size);
+	TASSERT2(400, Position<=Size-1, Position, Size);
 	this->Data[Position++] = Data;
 }
 
 // 0x50b450, line 410
 void TWriteBuffer::PutWord(uint16 Data)
 {
-	TASSERT2(Position<=Size-2, Position, Size);
+	TASSERT2(410, Position<=Size-2, Position, Size);
 	this->Data[Position] = (uint8)Data;
 	this->Data[Position + 1] = (uint8)(Data >> 8);
 	Position += 2;
@@ -296,7 +296,7 @@ void TWriteBuffer::PutWord(uint16 Data)
 // 0x50b5e0, line 421
 void TWriteBuffer::PutQuad(uint32 Data)
 {
-	TASSERT2(Position<=Size-4, Position, Size);
+	TASSERT2(421, Position<=Size-4, Position, Size);
 	this->Data[Position] = (uint8)Data;
 	this->Data[Position + 1] = (uint8)(Data >> 8);
 	this->Data[Position + 2] = (uint8)(Data >> 16);
@@ -307,12 +307,12 @@ void TWriteBuffer::PutQuad(uint32 Data)
 // 0x50b780, lines 437-441
 void TWriteBuffer::PutString(const char *s)
 {
-	TASSERT(s!=NULL);
+	TASSERT(437, s!=NULL);
 	int Length = (int)strlen(s);
 	PutWord((uint16)Length);
 	if (Length == 0)
 		return;
-	TASSERT2(Position<=Size-Length, Position, Size-Length);
+	TASSERT2(441, Position<=Size-Length, Position, Size-Length);
 	memcpy(&Data[Position], s, Length);
 	Position += Length;
 }
@@ -320,8 +320,8 @@ void TWriteBuffer::PutString(const char *s)
 // 0x50ba00, lines 451-452
 void TWriteBuffer::PutBytes(const uint8 *Buffer, int Count)
 {
-	TASSERT(Buffer!=NULL);
-	TASSERT2(Position<=Size-Count, Position, Size-Count);
+	TASSERT(451, Buffer!=NULL);
+	TASSERT2(452, Position<=Size-Count, Position, Size-Count);
 	for (int i = 0; i < Count; i++)
 		PutByte(Buffer[i]);
 }
@@ -329,8 +329,8 @@ void TWriteBuffer::PutBytes(const uint8 *Buffer, int Count)
 // 0x50bce0, lines 467-468
 void FormatNumber(int Number, char *Buffer)
 {
-	TASSERT(Buffer!=NULL);
-	TASSERT1(Number>=0, Number);
+	TASSERT(467, Buffer!=NULL);
+	TASSERT1(468, Number>=0, Number);
 	sprintf(Buffer, "%d", Number);
 	for (int Digits = 3; Digits < (int)strlen(Buffer); Digits += 4) {
 		char *Position = &Buffer[strlen(Buffer) - Digits];

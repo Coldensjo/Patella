@@ -58,43 +58,48 @@ enum PROGRAM_ERROR {
 	PROGRAM_ERROR_SOCKET_INIT = 6, // our name
 };
 
-#define TMYEXCEPTION(Kind, N1, V1, N2, V2, Last) \
-	TMyException(__FILE__, __LINE__, Kind, N1, (int)(V1), N2, (int)(V2), Last)
+// Every site names the original's source line as its first argument, the line
+// the binary pushes for that site: TASSERT(66, s!=NULL), TEND1(874, Obj).
+// tools/lines.py reads the lines from Tibia.exe and checks every site against
+// them. The file is __FILE__ (the messages name it without its path).
+#define TMYEXCEPTION(Line, Kind, N1, V1, N2, V2, Last) \
+	TMyException(__FILE__, Line, Kind, N1, (int)(V1), N2, (int)(V2), Last)
 
 // Assertions record the expression and up to two values with their source text.
-#define TASSERT(Expr) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", "", 0, "", 0, #Expr)
-#define TASSERT1(Expr, V1) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", #V1, V1, "", 0, #Expr)
-#define TASSERT2(Expr, V1, V2) \
-	if (!(Expr)) throw TMYEXCEPTION("assertion failed", #V1, V1, #V2, V2, #Expr)
+#define TASSERT(Line, Expr) \
+	if (!(Expr)) throw TMYEXCEPTION(Line, "assertion failed", "", 0, "", 0, #Expr)
+#define TASSERT1(Line, Expr, V1) \
+	if (!(Expr)) throw TMYEXCEPTION(Line, "assertion failed", #V1, V1, "", 0, #Expr)
+#define TASSERT2(Line, Expr, V1, V2) \
+	if (!(Expr)) throw TMYEXCEPTION(Line, "assertion failed", #V1, V1, #V2, V2, #Expr)
 
-#define TERROR(Message) \
-	throw TMYEXCEPTION(Message, "", 0, "", 0, "")
-#define TERROR1(Message, V1) \
-	throw TMYEXCEPTION(Message, #V1, V1, "", 0, "")
-#define TERROR2(Message, V1, V2) \
-	throw TMYEXCEPTION(Message, #V1, V1, #V2, V2, "")
+#define TERROR(Line, Message) \
+	throw TMYEXCEPTION(Line, Message, "", 0, "", 0, "")
+#define TERROR1(Line, Message, V1) \
+	throw TMYEXCEPTION(Line, Message, #V1, V1, "", 0, "")
+#define TERROR2(Line, Message, V1, V2) \
+	throw TMYEXCEPTION(Line, Message, #V1, V1, #V2, V2, "")
 // An error with a text as its reason (Script.cpp: the file name), in the
 // place of an assertion's expression: "<Message>, reason:\n<Reason>".
-#define TERROR_REASON(Message, Reason) \
-	throw TMYEXCEPTION(Message, "", 0, "", 0, Reason)
-#define TERROR1_REASON(Message, V1, Reason) \
-	throw TMYEXCEPTION(Message, #V1, V1, "", 0, Reason)
+#define TERROR_REASON(Line, Message, Reason) \
+	throw TMYEXCEPTION(Line, Message, "", 0, "", 0, Reason)
+#define TERROR1_REASON(Line, Message, V1, Reason) \
+	throw TMYEXCEPTION(Line, Message, #V1, V1, "", 0, Reason)
 
 // Most functions wrap their body in TBEGIN ... TEND. The three handlers are
 // visible in the binary as catch blocks after each function: a PROGRAM_ERROR
 // passes through unchanged, a TMyException is wrapped with the listed
-// parameters, and anything else becomes "unknown exception occurred".
+// parameters, and anything else becomes "unknown exception occurred". Both
+// messages name the TEND's line.
 #define TBEGIN try {
-#define TEND_HANDLERS(N1, V1, N2, V2) \
+#define TEND_HANDLERS(Line, N1, V1, N2, V2) \
 	} catch (PROGRAM_ERROR Error_) { \
 		throw Error_; \
 	} catch (TMyException &Exception_) { \
-		throw TMYEXCEPTION("exception occurred", N1, V1, N2, V2, Exception_); \
+		throw TMYEXCEPTION(Line, "exception occurred", N1, V1, N2, V2, Exception_); \
 	} catch (...) { \
-		throw TMYEXCEPTION("unknown exception occurred", N1, V1, N2, V2, ""); \
+		throw TMYEXCEPTION(Line, "unknown exception occurred", N1, V1, N2, V2, ""); \
 	}
-#define TEND TEND_HANDLERS("", 0, "", 0)
-#define TEND1(V1) TEND_HANDLERS(#V1, V1, "", 0)
-#define TEND2(V1, V2) TEND_HANDLERS(#V1, V1, #V2, V2)
+#define TEND(Line) TEND_HANDLERS(Line, "", 0, "", 0)
+#define TEND1(Line, V1) TEND_HANDLERS(Line, #V1, V1, "", 0)
+#define TEND2(Line, V1, V2) TEND_HANDLERS(Line, #V1, V1, #V2, V2)

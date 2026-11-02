@@ -85,7 +85,7 @@ void CPlayerApp::FatalError(const char *Text, const char *Caption)
 // 0x4d9140, line 62. Text needs 9 bytes.
 void GetWindowTitle(char *Text)
 {
-	TASSERT(Text!=NULL);
+	TASSERT(62, Text!=NULL);
 	for (int i = 0; i < 8; i++)
 		Text[i] = (char)(TitleCode[i] ^ TitleKey[i]);
 	Text[8] = 0;
@@ -94,7 +94,7 @@ void GetWindowTitle(char *Text)
 // 0x4d92b0, line 75. Text needs 12 bytes.
 void GetWindowClassName(char *Text)
 {
-	TASSERT(Text!=NULL);
+	TASSERT(75, Text!=NULL);
 	for (int i = 0; i < 11; i++)
 		Text[i] = (char)(ClassNameCode[i] ^ ClassNameKey[i]);
 	Text[11] = 0;
@@ -306,7 +306,7 @@ BOOL CPlayerApp::InitInstance()
 			CMainFrame *MainFrame;
 			TBEGIN
 			MainFrame = new CMainFrame(Gamemaster);
-			TEND
+			TEND(255)
 			char Title[56];
 			GetWindowTitle(Title);
 			if (!MainFrame->Create(NULL, Title, WS_OVERLAPPEDWINDOW, CFrameWnd::rectDefault, NULL, NULL, 0, NULL)) {
@@ -336,7 +336,7 @@ BOOL CPlayerApp::InitInstance()
 			}
 			TBEGIN
 			Redraw(false);
-			TEND
+			TEND(296)
 			SendMessageA(MainFrame->m_hWnd, WM_SETICON, ICON_BIG,
 				(LPARAM)::LoadIconA(AfxGetResourceHandle(), MAKEINTRESOURCEA(128)));
 			m_pMainWnd = MainFrame;
@@ -354,17 +354,17 @@ BOOL CPlayerApp::InitInstance()
 		} catch (PROGRAM_ERROR Error) {
 			HandleProgramError(Error);
 		} catch (TMyException &Exception_) {
-			throw TMYEXCEPTION("exception occurred", "", 0, "", 0, Exception_);
+			throw TMYEXCEPTION(322, "exception occurred", "", 0, "", 0, Exception_);
 		} catch (std::bad_alloc &) {
-			TERROR("bad_alloc_exception occurred");
+			TERROR(335, "bad_alloc_exception occurred");
 		} catch (std::out_of_range &) {
-			TERROR("out_of_range_exception occurred");
+			TERROR(338, "out_of_range_exception occurred");
 		} catch (std::exception &) {
-			TERROR("exception occurred");
+			TERROR(341, "exception occurred");
 		} catch (const char *) {
-			TERROR("const char* exception occurred");
+			TERROR(344, "const char* exception occurred");
 		} catch (...) {
-			TERROR("unknown exception occurred");
+			TERROR(347, "unknown exception occurred");
 		}
 	} catch (TMyException &Exception) {
 		HandleException(Exception);
@@ -385,17 +385,17 @@ int CPlayerApp::Run()
 		} catch (PROGRAM_ERROR Error) {
 			HandleProgramError(Error);
 		} catch (TMyException &Exception_) {
-			throw TMYEXCEPTION("exception occurred", "", 0, "", 0, Exception_);
+			throw TMYEXCEPTION(383, "exception occurred", "", 0, "", 0, Exception_);
 		} catch (std::bad_alloc &) {
-			TERROR("bad_alloc_exception occurred");
+			TERROR(396, "bad_alloc_exception occurred");
 		} catch (std::out_of_range &) {
-			TERROR("out_of_range_exception occurred");
+			TERROR(399, "out_of_range_exception occurred");
 		} catch (std::exception &) {
-			TERROR("exception occurred");
+			TERROR(402, "exception occurred");
 		} catch (const char *) {
-			TERROR("const char* exception occurred");
+			TERROR(405, "const char* exception occurred");
 		} catch (...) {
-			TERROR("unknown exception occurred");
+			TERROR(408, "unknown exception occurred");
 		}
 	} catch (TMyException &Exception) {
 		HandleException(Exception);
@@ -425,5 +425,5 @@ BOOL CPlayerApp::OnIdle(LONG lCount)
 	}
 	ProcessEvents();
 	return TRUE;
-	TEND
+	TEND(456)
 }

@@ -20,10 +20,10 @@
 void TReadScriptFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR_REASON("file still open", Filename);
+		TERROR_REASON(48, "file still open", Filename);
 	File = fopen(FileName, "rb");
 	if (File == NULL)
-		TERROR_REASON("failed to open file", FileName);
+		TERROR_REASON(50, "failed to open file", FileName);
 	Line = 1;
 	strcpy(Filename, FileName);
 }
@@ -41,7 +41,7 @@ void TReadScriptFile::error(const char *Text)
 	_snprintf(Message, 1054, "error in script file '%s' in line %d", Filename, Line);
 	if (Text == NULL)
 		Text = Unknown;
-	throw TMYEXCEPTION(Message, "", 0, "", 0, Text);
+	throw TMYEXCEPTION(84, Message, "", 0, "", 0, Text);
 }
 
 // 0x4dfb60, lines 93-230. A state machine over getc. String is cleared
@@ -54,7 +54,7 @@ void TReadScriptFile::error(const char *Text)
 void TReadScriptFile::nextToken()
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(93, "no file open");
 	int State = 0;
 	int Size = 0;
 	memset(String, 0, sizeof(String));
@@ -333,7 +333,7 @@ void TReadScriptFile::nextToken()
 			Token = SPECIAL;
 			return;
 		default:
-			TERROR1("invalid state", State);
+			TERROR1(230, "invalid state", State);
 		}
 		// The binary checks this after every state change (the first pass
 		// starts at the switch).
@@ -379,10 +379,10 @@ char TReadScriptFile::getSpecial()
 void TWriteScriptFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR_REASON("file still open", Filename);
+		TERROR_REASON(403, "file still open", Filename);
 	File = fopen(FileName, "wb");
 	if (File == NULL)
-		TERROR_REASON("failed to open file", FileName);
+		TERROR_REASON(405, "failed to open file", FileName);
 	Line = 0;
 	strcpy(Filename, FileName);
 }
@@ -391,7 +391,7 @@ void TWriteScriptFile::open(const char *FileName)
 void TWriteScriptFile::writeLn()
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(441, "no file open");
 	fputc('\r', File);
 	fputc('\n', File);
 }
@@ -400,9 +400,9 @@ void TWriteScriptFile::writeLn()
 void TWriteScriptFile::writeText(const char *Text)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(451, "no file open");
 	if (Text == NULL)
-		TERROR("no text");
+		TERROR(452, "no text");
 	while (*Text != 0) {
 		fputc(*Text, File);
 		Text++;
@@ -414,9 +414,9 @@ void TWriteScriptFile::writeText(const char *Text)
 void TWriteScriptFile::writeString(const char *Text)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(462, "no file open");
 	if (Text == NULL)
-		TERROR("no text");
+		TERROR(463, "no text");
 	fputc('"', File);
 	while (*Text != 0) {
 		if (*Text == '"' || *Text == '\\')
@@ -436,7 +436,7 @@ void TWriteScriptFile::writeString(const char *Text)
 void TWriteScriptFile::writeNumber(int Number)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(481, "no file open");
 	char Help[20];
 	sprintf(Help, "%d", Number);
 	writeText(Help);
@@ -446,10 +446,10 @@ void TWriteScriptFile::writeNumber(int Number)
 void TReadBinaryFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR_REASON("file still open", Filename);
+		TERROR_REASON(552, "file still open", Filename);
 	File = fopen(FileName, "rb");
 	if (File == NULL)
-		TERROR_REASON("failed to open file", FileName);
+		TERROR_REASON(554, "failed to open file", FileName);
 	strncpy(Filename, FileName, sizeof(Filename));
 }
 
@@ -457,9 +457,9 @@ void TReadBinaryFile::open(const char *FileName)
 void TReadBinaryFile::seek(int Offset)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(572, "no file open");
 	if (Offset < 0)
-		TERROR1_REASON("negative offset", Offset, Filename);
+		TERROR1_REASON(573, "negative offset", Offset, Filename);
 	fseek(File, Offset, SEEK_SET);
 }
 
@@ -467,7 +467,7 @@ void TReadBinaryFile::seek(int Offset)
 bool TReadBinaryFile::eof()
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(582, "no file open");
 	return _eof(_fileno(File)) != 0;
 }
 
@@ -475,10 +475,10 @@ bool TReadBinaryFile::eof()
 uint8 TReadBinaryFile::readByte()
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(603, "no file open");
 	uint8 Byte;
 	if (fread(&Byte, 1, 1, File) == 0)
-		TERROR_REASON("out of data", Filename);
+		TERROR_REASON(605, "out of data", Filename);
 	return Byte;
 }
 
@@ -490,28 +490,28 @@ uint16 TReadBinaryFile::readWord()
 	uint8 Low = readByte();
 	uint8 High = readByte();
 	return (uint16)(Low | (High << 8));
-	TEND
+	TEND(619)
 }
 
 // 0x4e1ba0, lines 627-635
 int TReadBinaryFile::readQuad()
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(627, "no file open");
 	TBEGIN
 	uint8 Byte0 = readByte();
 	uint8 Byte1 = readByte();
 	uint8 Byte2 = readByte();
 	uint8 Byte3 = readByte();
 	return Byte0 | (Byte1 << 8) | (Byte2 << 16) | (Byte3 << 24);
-	TEND
+	TEND(635)
 }
 
 // 0x4e3a10, lines 644-653. The caller frees the string with delete[].
 char *TReadBinaryFile::readString()
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(644, "no file open");
 	TBEGIN
 	int Length = readWord() & 0xffff;
 	char *Text = new char[Length + 1];
@@ -519,28 +519,28 @@ char *TReadBinaryFile::readString()
 		readBytes((uint8 *)Text, Length);
 	Text[Length] = 0;
 	return Text;
-	TEND
+	TEND(653)
 }
 
 // 0x4e1e50, lines 661-664
 void TReadBinaryFile::readBytes(uint8 *Buffer, int Count)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(661, "no file open");
 	if (Buffer == NULL)
-		TERROR("Buffer==NULL");
+		TERROR(662, "Buffer==NULL");
 	if ((int)fread(Buffer, 1, Count, File) != Count)
-		TERROR1_REASON("out of data", Count, Filename);
+		TERROR1_REASON(664, "out of data", Count, Filename);
 }
 
 // 0x4e21a0, lines 706-708
 void TWriteBinaryFile::open(const char *FileName)
 {
 	if (File != NULL)
-		TERROR_REASON("file still open", Filename);
+		TERROR_REASON(706, "file still open", Filename);
 	File = fopen(FileName, "wb");
 	if (File == NULL)
-		TERROR_REASON("failed to open file", FileName);
+		TERROR_REASON(708, "failed to open file", FileName);
 	strncpy(Filename, FileName, sizeof(Filename));
 }
 
@@ -548,33 +548,33 @@ void TWriteBinaryFile::open(const char *FileName)
 void TWriteBinaryFile::writeByte(uint8 Byte)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(727, "no file open");
 	if (fwrite(&Byte, 1, 1, File) != 1)
-		TERROR_REASON("failed to write file", Filename);
+		TERROR_REASON(729, "failed to write file", Filename);
 }
 
 // 0x4e2750, lines 737-742
 void TWriteBinaryFile::writeWord(uint16 Word)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(737, "no file open");
 	TBEGIN
 	writeByte((uint8)Word);
 	writeByte((uint8)(Word >> 8));
-	TEND
+	TEND(742)
 }
 
 // 0x4e29e0, lines 750-757
 void TWriteBinaryFile::writeQuad(uint32 Quad)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(750, "no file open");
 	TBEGIN
 	writeByte((uint8)Quad);
 	writeByte((uint8)(Quad >> 8));
 	writeByte((uint8)(Quad >> 16));
 	writeByte((uint8)(Quad >> 24));
-	TEND
+	TEND(757)
 }
 
 // 0x4e2c80, lines 765-766. Writes one item of Count bytes, so Count 0 fails
@@ -582,9 +582,9 @@ void TWriteBinaryFile::writeQuad(uint32 Quad)
 void TWriteBinaryFile::writeBytes(const uint8 *Buffer, int Count)
 {
 	if (File == NULL)
-		TERROR("no file open");
+		TERROR(765, "no file open");
 	if (fwrite(Buffer, Count, 1, File) != 1)
-		TERROR1_REASON("failed to write file", Count, Filename);
+		TERROR1_REASON(766, "failed to write file", Count, Filename);
 }
 
 // 0x4e2f50, line 779. A word with the length, then the characters; longer
@@ -596,7 +596,7 @@ void TWriteBinaryFile::writeString(const char *Text)
 	writeWord((uint16)Length);
 	if ((uint16)Length != 0)
 		writeBytes((const uint8 *)Text, (uint16)Length);
-	TEND
+	TEND(779)
 }
 
 // The patched file is written next to the original: "Tibia.exe" becomes
@@ -709,12 +709,12 @@ bool ApplyFullPatch(const char *FileName, const uint8 *Data, int Size)
 void InstallPatch(const char *FileName)
 {
 	if (FileName == NULL)
-		TERROR("no file name");
+		TERROR(879, "no file name");
 	char Name[1024];
 	strcpy(Name, FileName);
 	Name[strlen(FileName) - 1] = '_';
 	if (!FileExists(Name))
-		TERROR_REASON("file does not exists", Name);
+		TERROR_REASON(883, "file does not exists", Name);
 	remove(FileName);
 	rename(Name, FileName);
 }

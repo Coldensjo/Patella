@@ -161,7 +161,7 @@ CMainFrame::CMainFrame(bool Gamemaster)
 	InitControl(Gamemaster);
 	SetViewMode(1);
 	MouseCursor = GetMouseCursor();
-	TEND
+	TEND(112)
 }
 
 // 0x4a8760, line 123. The handlers rethrow out of the destructor; modern
@@ -176,7 +176,7 @@ CMainFrame::~CMainFrame()
 {
 	TBEGIN
 	ExitControl();
-	TEND
+	TEND(123)
 }
 #pragma warning(pop)
 
@@ -186,7 +186,7 @@ void ExitProgram()
 	TBEGIN
 	Closing = true;
 	PostMessageA(MainFrame->m_hWnd, WM_CLOSE, 0, 0);
-	TEND
+	TEND(135)
 }
 
 // 0x4a8940, line 149. Like ExitProgram, but Run starts patch.exe afterwards.
@@ -198,7 +198,7 @@ void CloseProgram()
 		App->RunPatch = true;
 	Closing = true;
 	PostMessageA(MainFrame->m_hWnd, WM_CLOSE, 0, 0);
-	TEND
+	TEND(149)
 }
 
 // 0x4a8af0, line 181. View mode 2 is fullscreen: a topmost popup window over
@@ -224,7 +224,7 @@ void SetDisplayMode(int ViewMode)
 		MainFrame->SetWindowPlacement(&MainFrame->Placement);
 		MainFrame->SetWindowPos(&CWnd::wndNoTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_FRAMECHANGED);
 	}
-	TEND1(ViewMode)
+	TEND1(181, ViewMode)
 }
 
 // 0x4a8d80, line 193. Leaves fullscreen mode first.
@@ -234,7 +234,7 @@ void OpenURL(const char *URL)
 	if (GetViewMode() == 2)
 		SetDisplayMode(1);
 	ShellExecuteA(NULL, NULL, URL, NULL, NULL, SW_SHOWNORMAL);
-	TEND
+	TEND(193)
 }
 
 // 0x4a8f30, line 244. The window class registered by InitInstance.
@@ -245,7 +245,7 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT &cs)
 	cs.lpszClass = ClassName;
 	CFrameWnd::PreCreateWindow(cs);
 	return TRUE;
-	TEND
+	TEND(244)
 }
 
 // 0x4abbc0, line 273. Creates the main game window (MainWindow.cpp), hands
@@ -270,7 +270,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		SetDefaultWindowPosition();
 	::SetTimer(m_hWnd, 1, 100, NULL);
 	return 0;
-	TEND
+	TEND(273)
 }
 
 // 0x4abe40, line 295. A screen smaller than the window in windowed mode
@@ -286,7 +286,7 @@ LRESULT CMainFrame::OnDisplayChange(WPARAM wParam, LPARAM lParam)
 		DisplayChanged = true;
 	}
 	return 0;
-	TEND
+	TEND(295)
 }
 
 // 0x4a90e0, line 335. WSAAsyncGetHostByName finished (Network.cpp gives the
@@ -314,7 +314,7 @@ LRESULT CMainFrame::OnHostResolved(WPARAM wParam, LPARAM lParam)
 	}
 	ConnectToLoginServer();
 	return 0;
-	TEND
+	TEND(335)
 }
 
 // 0x4a9310, line 356. Forgets the held modifiers and leaves fullscreen mode
@@ -325,7 +325,7 @@ void CMainFrame::OnActivateApp(BOOL bActive, DWORD dwThreadID)
 	KeyFlags = 0;
 	if (GetViewMode() == 2)
 		SetDisplayMode(1);
-	TEND
+	TEND(356)
 }
 
 // 0x4ab9d0, line 375. 600x450 client area, centred.
@@ -339,7 +339,7 @@ void CMainFrame::SetDefaultWindowPosition()
 	int y = (GetSystemMetrics(SM_CYSCREEN) - Height) / 2;
 	SetWindowedMode(x, y, Width, Height, false);
 	MoveWindow(x, y, Width, Height, TRUE);
-	TEND
+	TEND(375)
 }
 
 // 0x4a94b0. From a client size to the window size.
@@ -351,7 +351,7 @@ void CMainFrame::AddFrameSize(int *Width, int *Height)
 	::GetWindowRect(m_hWnd, &Window);
 	*Width += Client.left - Client.right - Window.left + Window.right;
 	*Height += Client.top - Client.bottom - Window.top + Window.bottom;
-	TEND
+	TEND(388)
 }
 
 // 0x4a9540, line 414. Keeps the client area at least 550x450.
@@ -375,7 +375,7 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 		if (!::IsIconic(m_hWnd))
 			Resize(Width, Height);
 	}
-	TEND2(cx, cy)
+	TEND2(414, cx, cy)
 }
 
 // 0x4a9790, line 430. The smallest window: a client area of 550x450.
@@ -388,7 +388,7 @@ void CMainFrame::OnGetMinMaxInfo(MINMAXINFO *lpMMI)
 	AddFrameSize(&Width, &Height);
 	lpMMI->ptMinTrackSize.y = Height;
 	lpMMI->ptMinTrackSize.x = Width;
-	TEND
+	TEND(430)
 }
 
 // 0x4a9950, line 441. In fullscreen mode everything is client area.
@@ -398,7 +398,7 @@ LRESULT CMainFrame::OnNcHitTest(CPoint point)
 	if (GetViewMode() == 2)
 		return HTCLIENT;
 	return Default();
-	TEND
+	TEND(441)
 }
 
 // 0x4a9b00, line 454
@@ -407,7 +407,7 @@ void CMainFrame::OnTimer(UINT nIDEvent)
 	TBEGIN
 	Default();
 	TimerEvent();
-	TEND1(nIDEvent)
+	TEND1(454, nIDEvent)
 }
 
 // 0x4a9c90, line 466. Control.cpp may refuse (logout warning in the game).
@@ -417,7 +417,7 @@ void CMainFrame::OnClose()
 	if (!Closing && !CloseRequest())
 		return;
 	CFrameWnd::OnClose();
-	TEND
+	TEND(466)
 }
 
 // 0x4a9e30, line 481
@@ -427,7 +427,7 @@ BOOL CMainFrame::DestroyWindow()
 	if (GetViewMode() == 2)
 		SetDisplayMode(1);
 	return CWnd::DestroyWindow();
-	TEND
+	TEND(481)
 }
 
 // 0x4a9fd0, line 500. Saves the windowed position for Tibia.cfg.
@@ -443,7 +443,7 @@ void CMainFrame::OnDestroy()
 	::KillTimer(m_hWnd, 1);
 	DestroyCursor(DefaultCursor);
 	DestroyCursor(HandCursor);
-	TEND
+	TEND(500)
 }
 
 // 0x4aa1d0, line 523. The Windows cursor for the client's mouse cursor
@@ -477,7 +477,7 @@ void UpdateMouseCursor()
 		}
 	}
 	SetCursor(Cursor);
-	TEND
+	TEND(523)
 }
 
 // 0x4aa3c0, line 550. Outside the client area Windows sets the cursor.
@@ -496,7 +496,7 @@ BOOL CMainFrame::OnSetCursor(CWnd *pWnd, UINT nHitTest, UINT message)
 	}
 	UpdateMouseCursor();
 	return TRUE;
-	TEND
+	TEND(550)
 }
 
 // 0x4aa5d0, line 568. In fullscreen mode the points are screen points.
@@ -510,7 +510,7 @@ void CMainFrame::OnLButtonDown(UINT nFlags, CPoint point)
 	LeftButtonPressed = true;
 	if (!RightButtonPressed)
 		CWnd::FromHandle(::SetCapture(m_hWnd));
-	TEND2(point.x, point.y)
+	TEND2(568, point.x, point.y)
 }
 
 // 0x4aa7b0, line 588
@@ -526,7 +526,7 @@ void CMainFrame::OnLButtonUp(UINT nFlags, CPoint point)
 		if (!RightButtonPressed)
 			ReleaseCapture();
 	}
-	TEND2(point.x, point.y)
+	TEND2(588, point.x, point.y)
 }
 
 // 0x4aa990, line 606
@@ -540,7 +540,7 @@ void CMainFrame::OnLButtonDblClk(UINT nFlags, CPoint point)
 	LeftButtonPressed = true;
 	if (!RightButtonPressed)
 		CWnd::FromHandle(::SetCapture(m_hWnd));
-	TEND2(point.x, point.y)
+	TEND2(606, point.x, point.y)
 }
 
 // 0x4aab70, line 624
@@ -554,7 +554,7 @@ void CMainFrame::OnRButtonDown(UINT nFlags, CPoint point)
 	RightButtonPressed = true;
 	if (!LeftButtonPressed)
 		CWnd::FromHandle(::SetCapture(m_hWnd));
-	TEND2(point.x, point.y)
+	TEND2(624, point.x, point.y)
 }
 
 // 0x4aad50, line 644
@@ -570,7 +570,7 @@ void CMainFrame::OnRButtonUp(UINT nFlags, CPoint point)
 		if (!LeftButtonPressed)
 			ReleaseCapture();
 	}
-	TEND2(point.x, point.y)
+	TEND2(644, point.x, point.y)
 }
 
 // 0x4aaf30, line 662. The same as a single click.
@@ -584,7 +584,7 @@ void CMainFrame::OnRButtonDblClk(UINT nFlags, CPoint point)
 	RightButtonPressed = true;
 	if (!LeftButtonPressed)
 		CWnd::FromHandle(::SetCapture(m_hWnd));
-	TEND2(point.x, point.y)
+	TEND2(662, point.x, point.y)
 }
 
 // 0x4ab110, line 686. Another window took the mouse: releases the held
@@ -605,7 +605,7 @@ void CMainFrame::OnCaptureChanged(CWnd *pWnd)
 		RightButtonPressed = false;
 	}
 	Default();
-	TEND
+	TEND(686)
 }
 
 // 0x4ab310, line 704. One MouseWheel call per notch (120); direction 1 is
@@ -620,7 +620,7 @@ BOOL CMainFrame::OnMouseWheel(UINT nFlags, short zDelta, CPoint point)
 	for (int i = 0; i < abs(Delta / 120); i++)
 		MouseWheel(GetMouseX(), GetMouseY(), Delta > 0 ? 1 : 2);
 	return TRUE;
-	TEND2(point.x, point.y)
+	TEND2(704, point.x, point.y)
 }
 
 // 0x4ab510, line 768. Modifiers are remembered; Alt+F4 closes the window;
@@ -644,7 +644,7 @@ void CMainFrame::KeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		return;
 	}
 	KeyPress(KeyFlags | Key);
-	TEND2(nChar, nFlags)
+	TEND2(768, nChar, nFlags)
 }
 
 // 0x4ab730
@@ -658,7 +658,7 @@ void CMainFrame::KeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		KeyFlags &= ~KEY_CONTROL;
 	else if (Key == KEY_ALT)
 		KeyFlags &= ~KEY_ALT;
-	TEND
+	TEND(795)
 }
 
 // 0x4ab7c0 (with OnSysKeyDown)
@@ -697,5 +697,5 @@ void CMainFrame::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 		return;
 	}
 	KeyPress(KeyFlags | nChar);
-	TEND2(nChar, nFlags)
+	TEND2(871, nChar, nFlags)
 }

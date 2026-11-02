@@ -4406,3 +4406,94 @@ The script, the method and the results: notes/rendering.md. Decisions with a rea
   it; not investigated, the same in both clients) and the trade window then pushed the bag window out; at the end
   of the session they need no closing. The toggle buttons are placed from the Logout button's node and
   TButtonsWindow's skin points (Tibia.exe has no name for TTextToggleButton).
+
+## Original line numbers (issue #35)
+
+Claude Opus 5.5 (issue #35), November 2, 2026.
+
+- **The form** (the user's decision, 2026-11-02): every site names the original's line as the macro's first
+  argument: `TASSERT(66, s!=NULL)`, `TASSERT1/TASSERT2(line, ...)`, `TERROR(1208, "...")`, `TERROR1/TERROR2`,
+  `TERROR_REASON/TERROR1_REASON(line, ...)`, `TEND(1280)`, `TEND1(1280, Type)`, `TEND2(line, a, b)`,
+  `TEND_HANDLERS(line, ...)`, `TMYEXCEPTION(line, kind, ...)`, and the file-local macros the same way
+  (`TASSERTB/TASSERTB1/TASSERTB2` of Map, graphics, SurfaceDX, surfaceDX9, ContentWindows; Creatures.cpp's
+  `TASSERT1_BUG/TASSERT2_BUG`; MapWindow.cpp's `TERROR1B`). `__LINE__` is no longer used for messages; no
+  `#line`, no tables. `TEND` was an object-like macro and takes the line now. Both handlers of a TEND name the
+  same line, as in the binary (every TEND pair of catch blocks pushes one line).
+- **The evidence: tools/lines.py** (high). The binary side: objdump of the game code (0x401000 up to the
+  library region), every call of the constructors 0x508400 (assertions, errors, the "unknown exception
+  occurred" catch blocks) and 0x5086a0 (the wrapping catch blocks); the line is the immediate pushed just
+  before the file (the second push before the call; all 3,191 calls have one); the literal strings pushed
+  since the previous constructor call or throw give the signature (reason, name2, name1, kind, file, in the
+  order the code builds them); the function from symbols.tsv (a catch block's parent). A TEND is the pair of
+  its two catch blocks with the same names and line. Copies of a site (header code in several objects,
+  inlined functions) are one unit: 2,053 units. Our side: every macro invocation in src/ (headers included,
+  #define lines skipped), its literal strings as its macro builds them (#Expr stringized, bug suffixes,
+  literal kinds and reasons; strings built at run time left out, they match anything). `align` matched both
+  sides per file by order and signature (a maximum-score alignment; an address comment naming the unit's
+  function scores a little more) and wrote the lines in; `check` is the proof: each of our sites must name a
+  line where the binary has a unit with its signature, every unit must be named by one of ours, the lines
+  must grow in our source order, and every exception must be in its EXPLAINED table and verified. Result:
+  2,089 sites, 2,053 matched (TASSERT 351, TASSERT1 289, TASSERT2 100, TASSERTB 1, TASSERTB1 57, TASSERTB2 3,
+  TASSERT1_BUG 1, TASSERT2_BUG 1, TERROR 58, TERROR1 43, TERROR1B 1, TERROR_REASON 11, TERROR1_REASON 4,
+  TMYEXCEPTION 21, TEND 512, TEND1 364, TEND2 236), 36 explained, **0 mismatches**. The order check found no
+  inversion besides the one explained; the alignment needed no manual pair besides it.
+- **Sites without a unit** (36, each in lines.py's EXPLAINED with the reason, verified by the check):
+  - 33 TENDs whose function has no catch block in the binary (FuncInfo with 0 try blocks: the try block calls
+    nothing that can throw, the compiler dropped the handlers; the check verifies that symbols.tsv lists no
+    catch block for the function): ContentWindows.cpp 2 (TInventoryView::GetSlotAt, ~TSkillsWindowBody), Creatures.cpp 2,
+    DialogElements.cpp 13 (the Arrange functions and the IsPressed/SetActive members, issue #34's "not
+    reachable" list), Dialogs.cpp 1 (TEditListDialog::Arrange), GUI.cpp 1 (InitSkinProperties), MainFrm.cpp 3,
+    MainWindow.cpp 2 (GetConsoleWindowHeight, TSplitter::Arrange), graphics.cpp 9.
+  - graphics.cpp DrawPicturePart's Width>0 and Height>0: dropped by the compiler (the function returns
+    before them; the exception tables keep their states, the old comment says so).
+  - ContextMenus.cpp THelpBubble::Place's second newY>=0: folded into the first (line 262) by the compiler.
+  - Their lines are **estimates** (low; no message can carry them: the original has no code for them):
+    linear between the neighbouring matched sites' lines (Place's newY: 263, from the pairs 257/258 and
+    267/268 of the other cases). Ours keeps these handlers and assertions (/EHa), as before.
+  - One site out of our order (high): Map.cpp ProcessMissileEffects' Effect.Status!=0 is line 841 in the
+    binary, before the moving branch's 850-858: the original has the arrived missile's branch first (the code
+    at 0x4bbe2a falls through to it); ours has it in the else branch. The line is the binary's (841); the
+    code is left as it is (the same behaviour; the order is not part of this issue).
+- **No binary unit without a site of ours**: every one of the 2,053 units is named.
+- **File names** (high): our `__FILE__` is right everywhere: the check compares each unit's file (the
+  basename of the binary's string, which is what the messages print) with the file the site is in, including
+  the headers Container.h, ConsoleWindow.h, GUI.h, Talk.h and Utils.h and the lower-case graphics.cpp,
+  surfaceDX9.cpp, sysinc.cpp. No change. glh_extensions.h's two printf lines already carry the original's file
+  and lines (issue #11) and are not TMyException sites.
+- **Reconstruction bugs found and fixed** (high, each from a unit the alignment left over):
+  - Talk.cpp IsTalkIgnored ends with TEND2(Mode, Channel), not TEND1(Channel): the catch block 0x500186 pushes
+    [ebp+0x8] (Mode) and [ebp+0x10] (Channel) with the names "Mode" and "Channel" (0x5001cf-0x5001e1).
+    symbols.tsv's params column says "Channel" only (triage.py's string order; not changed).
+  - Map.cpp AppendObject's "too many objects on map point" has a reason: a stringstream "ObjectCount: <n> rx:
+    <rx> ry: <ry> rz: <rz>" (0x4b918e-0x4b9258: the stream constructor 0x403a10, the four texts 0x56cc20,
+    0x56cc18, 0x56cc10, 0x56cc08 and the values [esi], rx, [ebp+0xc], [ebp+0x10], then str() as the reason).
+  - Communication.cpp's "unknown talk mode" (the talk packet's default case) has the reason "[bug0000649]"
+    (0x410e8f; TERROR1_REASON now).
+  None of the three is reached by a test (their sites were not compared before).
+- **The difftest compares the lines exactly** (high). imageeh.cpp CompareThrown: the comparison of the
+  message and origin with the lines replaced stays, then each line pair is compared exactly, one check per
+  pair as before, so every check count stays the same (the map's checks became equality checks).
+  EH_LINEMAP=1 compares through the old map (for debugging); EH_LINES=1 and ER_LINES=1 print the lines seen.
+- **tools/compare_files.py** (high, not run here: the coordinator runs it): error.txt is compared byte for
+  byte except the masked crash time; the line map (check_lines, function_at, original_lines and the SITE
+  substitution) is gone. The lines of the #21 run's error.txt (Control.cpp 1208, 1274, 1280, Network.cpp 885,
+  Player.cpp 383 in Tibia.exe's) are what our sites name now (Control.cpp ReceivePackets' two TERROR1s and
+  TEND1, Network.cpp's TEND1(885, ErrorCode), Player.cpp Run's TMYEXCEPTION(383, ...)).
+- **callcheck** (high): `python -I tools/callcheck.py` gives the same output for all 35 files as on main.
+- **Mutation check** (high): (1) static, build/scratch/mutate_static.py of the worktree: 15 changes on a copy
+  of src/ (TASSERT in Utils.cpp and sysinc.cpp, TASSERTB2 in Map.cpp and ContentWindows.cpp (to the next
+  site's line), TASSERT1_BUG in Creatures.cpp, TEND2 in Talk.cpp, TEND1 in Objects.cpp, TMYEXCEPTION in
+  Script.cpp, Container.h and Player.cpp (a wrapping one), TERROR_REASON in Script.cpp, TERROR1_REASON in
+  Communication.cpp, TERROR1B in MapWindow.cpp, an estimated TEND in graphics.cpp, and two TENDs with the same
+  signature swapped in Communication.cpp): all 15 reported (the swap by the order check only). (2) the
+  difftest: build/scratch/mutate_diff.py of the worktree: 14 lines shifted by one at once (Utils, Status,
+  Preferences (to the next assertion's line), Help, Talk TEND1, Inventory TEND1, Map TASSERTB1, Objects TEND1,
+  Script's error() TMYEXCEPTION and TERROR_REASON, graphics TASSERTB1, GUI TComponent::SetSize's assertion, a
+  DialogElements TEND2, MapWindow's TERROR1B), the objects rebuilt, DIFFTEST_ONLY=Errors, GUI, DialogElements
+  and MapWindow run with every failure printed: 13 detected, each by its own failures ("our <file> line <new>,
+  the original's <old>": 2 to 572 each); graphics.cpp's 1218 (DrawText's alignment assertion) is reached by no
+  test (the static check catches it). Restored: 0 failures in all four.
+- **Totals**: full tools\difftest\build.cmd (November 2, 2026): difftest.exe 16,685,370 checks, sysinctest.exe
+  67, vlong 3,201, 0 failures, "build.cmd: all tests passed"; every per-test and error-round count is main's
+  (the line checks are one per pair, as the map's were). compile-check clean with real MFC and with
+  TIBIA_MFC_SHIM=1; tools\build-patella.cmd 0 warnings, resources 0 differences.

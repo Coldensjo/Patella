@@ -60,7 +60,7 @@ TSkillContextMenu::~TSkillContextMenu()
 // is fitted twice: before and after it has laid itself out.
 THelpBubble::THelpBubble(const char *HelpText)
 {
-	TASSERT(HelpText!=NULL);
+	TASSERT(106, HelpText!=NULL);
 	TBEGIN
 	DrawingListLength = 9;
 	DrawingList = new TDrawing[9];
@@ -70,7 +70,7 @@ THelpBubble::THelpBubble(const char *HelpText)
 	FitToChild(Text, SkinProperties.Data160, true);
 	Text->FitToChildren(TRect(0, 0, 0, 0), true);
 	FitToChild(Text, SkinProperties.Data160, true);
-	TEND
+	TEND(121)
 }
 
 // 0x43d730, line 142. The size is rounded up to Data174 modulo Data170 and
@@ -112,7 +112,7 @@ void THelpBubble::SetSize(int Width, int Height)
 	TWindow::SetSize(Width, Height);
 	SetChildArea(Text, SkinProperties.Data160);
 	Arrange();
-	TEND2(Width, Height)
+	TEND2(142, Width, Height)
 }
 
 // 0x43d9b0. The frame: corners 52-55, edges 56-59, the middle 60.
@@ -200,20 +200,20 @@ void THelpBubble::Place(TWindow *Window)
 		if (GetMouseX() < Window->Width / 2) {
 			newX = Window->Width - w - Margin;
 			newY = Margin;
-			TASSERT1(newX>=0, newX);
-			TASSERT1(newY>=0, newY);
+			TASSERT1(257, newX>=0, newX);
+			TASSERT1(258, newY>=0, newY);
 		} else {
 			newX = Margin;
 			newY = Margin;
-			TASSERT1(newX>=0, newX);
-			TASSERT1(newY>=0, newY);
+			TASSERT1(262, newX>=0, newX);
+			TASSERT1(263, newY>=0, newY);
 		}
 	}
-	TASSERT1(newX>=0, newX);
-	TASSERT1(newY>=0, newY);
+	TASSERT1(267, newX>=0, newX);
+	TASSERT1(268, newY>=0, newY);
 	SetPosition(newX, newY);
 	SetSize(w, h);
-	TEND
+	TEND(272)
 }
 
 // 0x43dca0, lines 289-293. The bubble fits at x, y if it keeps the margin to
@@ -230,10 +230,10 @@ bool THelpBubble::FitsIn(int &x, int &y, int &Width, int &Height, TWindow *Windo
 		return false;
 	if (x + Width > Window->Width - Margin || y + Height > Window->Height - Margin)
 		return false;
-	TASSERT1(x>=0, x);
-	TASSERT1(y>=0, y);
+	TASSERT1(289, x>=0, x);
+	TASSERT1(290, y>=0, y);
 	return true;
-	TEND
+	TEND(293)
 }
 
 // --- TContextMenuEntry ---------------------------------------------------------
@@ -256,7 +256,7 @@ TContextMenuEntry::TContextMenuEntry(const char *_Text, const char *_Shortcut, T
 	if (Shortcut[0] != 0)
 		w += GetTextWidth(SkinProperties.Data0B0.FontNumber, Shortcut);
 	SetSize(w, h);
-	TEND
+	TEND(316)
 }
 
 // 0x43e210, line 338. The entry under the mouse gets a background as high
@@ -275,7 +275,7 @@ void TContextMenuEntry::Draw(int Surface, int x, int y)
 		PrintText(Surface, x + Width - SkinProperties.Data0D4 - 1, y, SkinProperties.Data0B0.FontNumber,
 			SkinProperties.Data0B0.Color, Shortcut, RIGHT_ALIGN);
 	}
-	TEND1(Surface)
+	TEND1(338, Surface)
 }
 
 // 0x43e4d0, line 349
@@ -284,7 +284,7 @@ bool TContextMenuEntry::LeftButtonUp(int x, int y, int Flags)
 	TBEGIN
 	Callback.Send();
 	return true;
-	TEND
+	TEND(349)
 }
 
 // 0x43e660, line 361. The last entry loses the space below the font.
@@ -293,7 +293,7 @@ void TContextMenuEntry::SetLast()
 	TBEGIN
 	SetSize(Width, Height - (GetFontLineHeight(SkinProperties.Data0B0.FontNumber)
 		- GetFontHeight(SkinProperties.Data0B0.FontNumber)));
-	TEND
+	TEND(361)
 }
 
 // --- TContextMenu --------------------------------------------------------------
@@ -307,7 +307,7 @@ TContextMenu::TContextMenu()
 	EntryWidth = 0;
 	Separator = false;
 	Empty = true;
-	TEND
+	TEND(381)
 }
 
 // 0x43ea00. The frame: corners 208-211, edges 212-215, the middle 207.
@@ -336,7 +336,7 @@ bool TContextMenu::LeftButtonUp(int x, int y, int Flags)
 	TWindow::LeftButtonUp(x, y, Flags);
 	SetActionState(0);
 	return true;
-	TEND2(x, y)
+	TEND2(437, x, y)
 }
 
 // 0x43eea0, line 449
@@ -345,7 +345,7 @@ bool TContextMenu::RightButtonUp(int x, int y, int Flags)
 	TBEGIN
 	SetActionState(0);
 	return true;
-	TEND
+	TEND(449)
 }
 
 // 0x43f030, line 460. Escape closes the menu.
@@ -354,7 +354,7 @@ void TContextMenu::KeyPress(int Key)
 	TBEGIN
 	if (Key == 27)
 		SetActionState(0);
-	TEND1(Key)
+	TEND1(460, Key)
 }
 
 // 0x442de0, lines 486-498. Opens the menu at x, y, or left of and above it
@@ -373,7 +373,7 @@ void TContextMenu::Show(int x, int y, int ParentWidth, int ParentHeight)
 	if (GetLastChild() == NULL)
 		AddEntry(0, "", NULL);
 	TContextMenuEntry *LastEntry = (TContextMenuEntry *)GetLastChild();
-	TASSERT(LastEntry!=NULL);
+	TASSERT(486, LastEntry!=NULL);
 	LastEntry->SetLast();
 	FitToChildren(SkinProperties.Data0A0, true);
 	Arrange();
@@ -386,7 +386,7 @@ void TContextMenu::Show(int x, int y, int ParentWidth, int ParentHeight)
 	if (y < 0)
 		y = 0;
 	SetPosition(x, y);
-	TEND2(x, y)
+	TEND2(498, x, y)
 }
 
 // 0x442910, lines 506-521. The assertions come before the try block. A
@@ -394,9 +394,9 @@ void TContextMenu::Show(int x, int y, int ParentWidth, int ParentHeight)
 // while the menu is empty.
 void TContextMenu::AddEntry(int Event, const char *Text, const char *Shortcut)
 {
-	TASSERT(Text!=NULL);
-	TASSERT1(strlen(Text)<50, strlen(Text));
-	TASSERT1(Shortcut==NULL || strlen(Shortcut)<20, strlen(Shortcut));
+	TASSERT(506, Text!=NULL);
+	TASSERT1(507, strlen(Text)<50, strlen(Text));
+	TASSERT1(508, Shortcut==NULL || strlen(Shortcut)<20, strlen(Shortcut));
 	TBEGIN
 	if (Separator && !Empty) {
 		AddSeparator();
@@ -407,7 +407,7 @@ void TContextMenu::AddEntry(int Event, const char *Text, const char *Shortcut)
 		EntryWidth = Entry->Width;
 	AppendChild(Entry);
 	Empty = false;
-	TEND1(Event)
+	TEND1(521, Event)
 }
 
 // 0x43f1d0, line 542. Show widens the line to the entries.
@@ -417,7 +417,7 @@ void TContextMenu::AddSeparator()
 	TSeparator *Line = new TSeparator(true);
 	Line->SetSize(50, SkinProperties.Data0C4);
 	AppendChild(Line);
-	TEND
+	TEND(542)
 }
 
 // --- TObjectContextMenu --------------------------------------------------------
@@ -431,7 +431,7 @@ TObjectContextMenu::TObjectContextMenu(int x, int y, int ParentWidth, int Parent
 	LookedObject = *GetTradeObject(&LookedObjectIndex, &LookedObjectX, &LookedObjectY, &LookedObjectZ);
 	UsedObject = *GetUseObject(&UsedObjectIndex, &UsedObjectX, &UsedObjectY, &UsedObjectZ);
 	CreatureID = GetTradeInfo();
-	TASSERT(LookedObject!=0);
+	TASSERT(560, LookedObject!=0);
 	bool ClassicControl = GetClassicControl();
 	AddEntry(10001, "Look", ClassicControl ? NULL : "(Shift)");
 	if (UsedObject != 0) {
@@ -515,7 +515,7 @@ TObjectContextMenu::TObjectContextMenu(int x, int y, int ParentWidth, int Parent
 					}
 					break;
 				default:
-					TERROR1("unknown player party flag", GetPlayerPartyFlag());
+					TERROR1(643, "unknown player party flag", GetPlayerPartyFlag());
 				}
 			}
 		}
@@ -528,7 +528,7 @@ TObjectContextMenu::TObjectContextMenu(int x, int y, int ParentWidth, int Parent
 		}
 	}
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND2(x, y)
+	TEND2(670, x, y)
 }
 
 // 0x43f3a0, lines 712-780; jump table 0x43fd98 with the byte table 0x43fdfc
@@ -571,14 +571,14 @@ void TObjectContextMenu::HandleEvent(int Event)
 		SendRequestOutfit();
 		break;
 	case 10010:
-		TASSERT1(LookedObjectX==0xFFFF, LookedObjectX);
-		TASSERT(LookedObject.Type!=CREATURE);
+		TASSERT1(712, LookedObjectX==0xFFFF, LookedObjectX);
+		TASSERT(713, LookedObject.Type!=CREATURE);
 		SendMoveObject(LookedObjectX, LookedObjectY, LookedObjectZ, LookedObject.Type, LookedObjectIndex,
 			LookedObjectX, LookedObjectY, 0xfe, GetObjectFlag(LookedObject, CUMULATIVE) ? LookedObject.Data : 1);
 		break;
 	case 10011:
-		TASSERT1(UsedObjectX==0xFFFF, UsedObjectX);
-		TASSERT1(UsedObjectY>=64, UsedObjectY);
+		TASSERT1(717, UsedObjectX==0xFFFF, UsedObjectX);
+		TASSERT1(718, UsedObjectY>=64, UsedObjectY);
 		SendUseObject(UsedObjectX, UsedObjectY, UsedObjectZ, UsedObject.Type, UsedObjectIndex, UsedObjectY - 64);
 		break;
 	case 10012:
@@ -660,9 +660,9 @@ void TObjectContextMenu::HandleEvent(int Event)
 		break;
 	}
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(777, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(780, Event)
 }
 
 // --- TCreatureContextMenu ------------------------------------------------------
@@ -725,7 +725,7 @@ TCreatureContextMenu::TCreatureContextMenu(uint32 CreatureID, int x, int y, int 
 			}
 			break;
 		default:
-			TERROR1("unknown player party flag", GetPlayerPartyFlag());
+			TERROR1(845, "unknown player party flag", GetPlayerPartyFlag());
 		}
 		Separator = true;
 	}
@@ -736,7 +736,7 @@ TCreatureContextMenu::TCreatureContextMenu(uint32 CreatureID, int x, int y, int 
 		Separator = true;
 	}
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND1(CreatureID)
+	TEND1(862, CreatureID)
 }
 
 // 0x43fed0, lines 934-937; jump table 0x440350 with the byte table 0x44038c
@@ -829,9 +829,9 @@ void TCreatureContextMenu::HandleEvent(int Event)
 		break;
 	}
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(934, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(937, Event)
 }
 
 // --- TBuddyContextMenu ---------------------------------------------------------
@@ -874,7 +874,7 @@ TBuddyContextMenu::TBuddyContextMenu(uint32 _CharacterID, int x, int y, int Pare
 		}
 	}
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND1(_CharacterID)
+	TEND1(987, _CharacterID)
 }
 
 // 0x440460, lines 1040-1043; a compare tree with the jump table 0x4408d8
@@ -933,9 +933,9 @@ void TBuddyContextMenu::HandleEvent(int Event)
 		HideOfflineBuddies(!GetBuddyHideOffline());
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(1040, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(1043, Event)
 }
 
 // --- TTextContextMenu ----------------------------------------------------------
@@ -947,8 +947,8 @@ void TBuddyContextMenu::HandleEvent(int Event)
 TTextContextMenu::TTextContextMenu(TTextWindow *_TextWindow, int _LineNumber, int x, int y, int ParentWidth,
 	int ParentHeight)
 {
-	TASSERT(_TextWindow!=NULL);
-	TASSERT1(GetCreature(GetPlayerID()), GetPlayerID());
+	TASSERT(1056, _TextWindow!=NULL);
+	TASSERT1(1057, GetCreature(GetPlayerID()), GetPlayerID());
 	TBEGIN
 	TextWindow = _TextWindow;
 	LineNumber = _LineNumber;
@@ -995,7 +995,7 @@ TTextContextMenu::TTextContextMenu(TTextWindow *_TextWindow, int _LineNumber, in
 		Separator = true;
 	}
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND1(_LineNumber)
+	TEND1(1120, _LineNumber)
 }
 
 // 0x4408f0, line 1173. Unknown events do nothing. "Rule Violation" passes a
@@ -1067,7 +1067,7 @@ void TTextContextMenu::HandleEvent(int Event)
 		}
 		break;
 	}
-	TEND1(Event)
+	TEND1(1173, Event)
 }
 
 // --- TRequestContextMenu -------------------------------------------------------
@@ -1076,7 +1076,7 @@ void TTextContextMenu::HandleEvent(int Event)
 TRequestContextMenu::TRequestContextMenu(TConsoleWindow *_ConsoleWindow, int _LineNumber, int x, int y,
 	int ParentWidth, int ParentHeight)
 {
-	TASSERT(_ConsoleWindow!=NULL);
+	TASSERT(1181, _ConsoleWindow!=NULL);
 	TBEGIN
 	ConsoleWindow = _ConsoleWindow;
 	LineNumber = _LineNumber;
@@ -1092,7 +1092,7 @@ TRequestContextMenu::TRequestContextMenu(TConsoleWindow *_ConsoleWindow, int _Li
 		AddEntry(10205, "Copy Message", NULL);
 	}
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND1(_LineNumber)
+	TEND1(1203, _LineNumber)
 }
 
 // 0x440c60, lines 1221-1241. "Process" opens the reporter's channel with the
@@ -1109,7 +1109,7 @@ void TRequestContextMenu::HandleEvent(int Event)
 			sprintf(Title, "%s's Report", Name);
 			ConsoleWindow->OpenChannel(TALK_PLAYER_ANSWER, TALK_GAMEMASTER_ANSWER, Name, -1, Title);
 			TTalkBuffer *TextBuffer = GetTextBuffer(TALK_PLAYER_ANSWER, Name, -1);
-			TASSERT(TextBuffer!=NULL);
+			TASSERT(1221, TextBuffer!=NULL);
 			TextBuffer->Clear();
 			AddTextBufferLine(TextBuffer, Line->StatementID, Line->Text, TALK_PLAYER_ANSWER, Name, 0);
 			TextBuffer->SetWriteEnabled(true);
@@ -1132,7 +1132,7 @@ void TRequestContextMenu::HandleEvent(int Event)
 			break;
 		}
 	}
-	TEND1(Event)
+	TEND1(1241, Event)
 }
 
 // --- TChannelContextMenu -------------------------------------------------------
@@ -1143,11 +1143,11 @@ void TRequestContextMenu::HandleEvent(int Event)
 TChannelContextMenu::TChannelContextMenu(TConsoleWindow *_ConsoleWindow, int x, int y, int ParentWidth,
 	int ParentHeight)
 {
-	TASSERT(_ConsoleWindow!=NULL);
+	TASSERT(1248, _ConsoleWindow!=NULL);
 	TBEGIN
 	ConsoleWindow = _ConsoleWindow;
 	TTalkBuffer *TextBuffer = ConsoleWindow->GetTextBuffer();
-	TASSERT(TextBuffer!=NULL);
+	TASSERT(1253, TextBuffer!=NULL);
 	if (!TextBuffer->isDefault()) {
 		if (TextBuffer->GetSelected() && TextBuffer->IsPrivateChannel()) {
 			AddEntry(10016, "Invite player", NULL);
@@ -1164,7 +1164,7 @@ TChannelContextMenu::TChannelContextMenu(TConsoleWindow *_ConsoleWindow, int x, 
 	if (!TextBuffer->IsRuleViolationChannel())
 		AddEntry(10105, "Clear Window", NULL);
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND2(x, y)
+	TEND2(1275, x, y)
 }
 
 // 0x440fe0, lines 1307-1312. The invitation and exclusion go through dialogs
@@ -1190,14 +1190,14 @@ void TChannelContextMenu::HandleEvent(int Event)
 		break;
 	case 10105: {
 		TTalkBuffer *TextBuffer = ConsoleWindow->GetTextBuffer();
-		TASSERT(TextBuffer!=NULL);
+		TASSERT(1307, TextBuffer!=NULL);
 		ClearTextBuffer(TextBuffer);
 		break;
 	}
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(1310, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(1312, Event)
 }
 
 // --- TEditContextMenu ----------------------------------------------------------
@@ -1205,7 +1205,7 @@ void TChannelContextMenu::HandleEvent(int Event)
 // 0x444eb0, lines 1324-1349. The assertion comes before the try block.
 TEditContextMenu::TEditContextMenu(TEditLine *_Edit, int x, int y, int ParentWidth, int ParentHeight)
 {
-	TASSERT(_Edit!=NULL);
+	TASSERT(1324, _Edit!=NULL);
 	TBEGIN
 	Edit = _Edit;
 	if (_Edit->SelectionStart != -1 && _Edit->SelectionLength != 0) {
@@ -1222,7 +1222,7 @@ TEditContextMenu::TEditContextMenu(TEditLine *_Edit, int x, int y, int ParentWid
 	}
 	AddEntry(10206, "Select All", NULL);
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND2(x, y)
+	TEND2(1349, x, y)
 }
 
 // 0x441370, lines 1363-1366; jump table 0x44163c (Event-10200, 0-6). The
@@ -1247,9 +1247,9 @@ void TEditContextMenu::HandleEvent(int Event)
 		Edit->HandleEvent(20);
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(1363, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(1366, Event)
 }
 
 // --- TMarkContextMenu ----------------------------------------------------------
@@ -1258,7 +1258,7 @@ void TEditContextMenu::HandleEvent(int Event)
 // menu keeps a copy of the data and deletes the original.
 TMarkContextMenu::TMarkContextMenu(TMarkMenuData *_Data, int x, int y, int ParentWidth, int ParentHeight)
 {
-	TASSERT(_Data!=NULL);
+	TASSERT(1379, _Data!=NULL);
 	TBEGIN
 	Data = *_Data;
 	if (Data.Mark.x == 0 && Data.Mark.y == 0) {
@@ -1269,7 +1269,7 @@ TMarkContextMenu::TMarkContextMenu(TMarkMenuData *_Data, int x, int y, int Paren
 	}
 	Show(x, y, ParentWidth, ParentHeight);
 	delete _Data;
-	TEND2(x, y)
+	TEND2(1397, x, y)
 }
 
 // 0x441660, lines 1426-1429; jump table 0x4419ec (Event-10400, 0-3). The
@@ -1301,9 +1301,9 @@ void TMarkContextMenu::HandleEvent(int Event)
 		DeleteAutomapMark(Data.Mark, Data.Coordinate.z);
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(1426, "unknown event", Event);
 	}
-	TEND1(Event)
+	TEND1(1429, Event)
 }
 
 // --- TSkillContextMenu ---------------------------------------------------------
@@ -1313,7 +1313,7 @@ void TMarkContextMenu::HandleEvent(int Event)
 TSkillContextMenu::TSkillContextMenu(TSkillsWindowBody *_SkillsWindow, int x, int y, int ParentWidth,
 	int ParentHeight)
 {
-	TASSERT(_SkillsWindow);
+	TASSERT(1442, _SkillsWindow);
 	TBEGIN
 	SkillsWindow = _SkillsWindow;
 	_SkillsWindow->ContextMenu = this;
@@ -1330,7 +1330,7 @@ TSkillContextMenu::TSkillContextMenu(TSkillsWindowBody *_SkillsWindow, int x, in
 	AddEntry(10509, "Show all Skill Bars", NULL);
 	AddEntry(10510, "Hide all Skill Bars", NULL);
 	Show(x, y, ParentWidth, ParentHeight);
-	TEND2(x, y)
+	TEND2(1465, x, y)
 }
 
 // 0x441a00, lines 1525-1530; jump table 0x441d34 with the byte table 0x441d48
@@ -1367,9 +1367,9 @@ void TSkillContextMenu::HandleEvent(int Event)
 			SetSkillBar(i, false);
 		break;
 	default:
-		TERROR1("unknown event", Event);
+		TERROR1(1525, "unknown event", Event);
 	}
 	if (SkillsWindow != NULL)
 		SkillsWindow->Arrange();
-	TEND1(Event)
+	TEND1(1530, Event)
 }

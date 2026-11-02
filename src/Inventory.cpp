@@ -49,7 +49,7 @@ int GetCounterOfferCount()
 void SetBodyObject(int Position, TObject Object)
 {
 	int Pos = Position - 1;
-	TASSERT1(In(Pos,0,BODY_POSITIONS-1), Pos);
+	TASSERT1(55, In(Pos,0,BODY_POSITIONS-1), Pos);
 	Body[Pos] = Object;
 }
 
@@ -58,7 +58,7 @@ void DeleteBodyObject(int Position)
 {
 	TBEGIN
 	SetBodyObject(Position, NoObject);
-	TEND1(Position)
+	TEND1(67, Position)
 }
 
 // 0x4a4880, lines 77-80
@@ -66,18 +66,18 @@ TObject *GetBodyObject(int Position)
 {
 	TBEGIN
 	int Pos = Position - 1;
-	TASSERT1(In(Pos,0,BODY_POSITIONS-1), Pos);
+	TASSERT1(77, In(Pos,0,BODY_POSITIONS-1), Pos);
 	return &Body[Pos];
-	TEND1(Position)
+	TEND1(80, Position)
 }
 
 // 0x4a4b00, lines 102-105. The name is stored capitalised.
 void OpenContainer(int Container, TObject Object, const char *Name, int Capacity, bool HasParent)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT(!Containers[Container].IsOpen);
-	TASSERT(Name!=NULL);
-	TASSERT1(strlen(Name)<30, strlen(Name));
+	TASSERT1(102, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT(103, !Containers[Container].IsOpen);
+	TASSERT(104, Name!=NULL);
+	TASSERT1(105, strlen(Name)<30, strlen(Name));
 	Containers[Container].IsOpen = true;
 	Containers[Container].Object = Object;
 	strcpy(Containers[Container].Name, Name);
@@ -90,15 +90,15 @@ void OpenContainer(int Container, TObject Object, const char *Name, int Capacity
 // 0x4a4f70, lines 120-121
 void CloseContainer(int Container)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT(Containers[Container].IsOpen);
+	TASSERT1(120, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT(121, Containers[Container].IsOpen);
 	Containers[Container].IsOpen = false;
 }
 
 // 0x4a5220, line 130
 bool IsContainerOpen(int Container)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(130, In(Container,0,OPEN_CONTAINERS-1), Container);
 	return Containers[Container].IsOpen;
 }
 
@@ -106,8 +106,8 @@ bool IsContainerOpen(int Container)
 // loses its last object first.
 void InsertContainerObject(int Container, TObject Object)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT(Containers[Container].IsOpen);
+	TASSERT1(139, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT(140, Containers[Container].IsOpen);
 	if (Containers[Container].Count > CONTAINER_OBJECTS - 1)
 		DeleteContainerObject(Container, Containers[Container].Count - 1);
 	for (int i = Containers[Container].Count; i > 0; i--)
@@ -119,8 +119,8 @@ void InsertContainerObject(int Container, TObject Object)
 // 0x4a5380, lines 153-154. Ignored when the container is full.
 void AppendContainerObject(int Container, TObject Object)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(153, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(154, Containers[Container].IsOpen, Container);
 	if (Containers[Container].Count < CONTAINER_OBJECTS) {
 		Containers[Container].Objects[Containers[Container].Count] = Object;
 		Containers[Container].Count++;
@@ -130,8 +130,8 @@ void AppendContainerObject(int Container, TObject Object)
 // 0x4a5630, lines 165-166. Ignored for a position outside the contents.
 void ChangeContainerObject(int Container, int Position, TObject Object)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(165, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(166, Containers[Container].IsOpen, Container);
 	if (In(Position, 0, Containers[Container].Count - 1))
 		Containers[Container].Objects[Position] = Object;
 }
@@ -140,8 +140,8 @@ void ChangeContainerObject(int Container, int Position, TObject Object)
 // server can send the object that moves up into view.
 bool DeleteContainerObject(int Container, int Position)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(177, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(178, Containers[Container].IsOpen, Container);
 	if (!In(Position, 0, Containers[Container].Count - 1))
 		return false;
 	for (int i = Position; i < Containers[Container].Count - 1; i++)
@@ -153,49 +153,49 @@ bool DeleteContainerObject(int Container, int Position)
 // 0x4a5bd0, lines 191-192
 int GetContainerObjectCount(int Container)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(191, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(192, Containers[Container].IsOpen, Container);
 	return Containers[Container].Count;
 }
 
 // 0x4a5e80, lines 201-202. The container itself.
 TObject GetContainerObject(int Container)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(201, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(202, Containers[Container].IsOpen, Container);
 	return Containers[Container].Object;
 }
 
 // 0x4a6150, lines 211-213
 TObject GetContainerContent(int Container, int Position)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
-	TASSERT2(In(Position,0,Containers[Container].Count-1), Position, Containers[Container].Count-1);
+	TASSERT1(211, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(212, Containers[Container].IsOpen, Container);
+	TASSERT2(213, In(Position,0,Containers[Container].Count-1), Position, Containers[Container].Count-1);
 	return Containers[Container].Objects[Position];
 }
 
 // 0x4a64e0, lines 222-223
 char *GetContainerName(int Container)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(222, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(223, Containers[Container].IsOpen, Container);
 	return Containers[Container].Name;
 }
 
 // 0x4a6790, lines 232-233
 int GetContainerCapacity(int Container)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(232, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(233, Containers[Container].IsOpen, Container);
 	return Containers[Container].Capacity;
 }
 
 // 0x4a6a40, lines 242-243
 bool GetContainerHasParent(int Container)
 {
-	TASSERT1(In(Container,0,OPEN_CONTAINERS-1), Container);
-	TASSERT1(Containers[Container].IsOpen, Container);
+	TASSERT1(242, In(Container,0,OPEN_CONTAINERS-1), Container);
+	TASSERT1(243, Containers[Container].IsOpen, Container);
 	return Containers[Container].HasParent;
 }
 
@@ -209,15 +209,15 @@ int GetFreeContainer()
 			return i;
 	}
 	return OPEN_CONTAINERS - 1;
-	TEND1(i)
+	TEND1(258, i)
 }
 
 // 0x4a6eb0, lines 281-283
 bool SetOwnOffer(const char *Name)
 {
-	TASSERT1(OwnOffer.Count==0, OwnOffer.Count);
-	TASSERT(Name!=NULL);
-	TASSERT1(strlen(Name)<30, strlen(Name));
+	TASSERT1(281, OwnOffer.Count==0, OwnOffer.Count);
+	TASSERT(282, Name!=NULL);
+	TASSERT1(283, strlen(Name)<30, strlen(Name));
 	strcpy(OwnOffer.Name, Name);
 	return true;
 }
@@ -227,8 +227,8 @@ bool SetCounterOffer(const char *Name)
 {
 	if (CounterOffer.Count != 0)
 		return false;
-	TASSERT(Name!=NULL);
-	TASSERT1(strlen(Name)<30, strlen(Name));
+	TASSERT(296, Name!=NULL);
+	TASSERT1(297, strlen(Name)<30, strlen(Name));
 	strcpy(CounterOffer.Name, Name);
 	return true;
 }
@@ -236,7 +236,7 @@ bool SetCounterOffer(const char *Name)
 // 0x4a7460, line 307
 void AddOwnOfferObject(TObject Object)
 {
-	TASSERT1(OwnOffer.Count<OBJECTS_PER_OFFER, OwnOffer.Count);
+	TASSERT1(307, OwnOffer.Count<OBJECTS_PER_OFFER, OwnOffer.Count);
 	OwnOffer.Objects[OwnOffer.Count] = Object;
 	OwnOffer.Count++;
 }
@@ -244,7 +244,7 @@ void AddOwnOfferObject(TObject Object)
 // 0x4a75e0, line 317
 void AddCounterOfferObject(TObject Object)
 {
-	TASSERT1(CounterOffer.Count<OBJECTS_PER_OFFER, CounterOffer.Count);
+	TASSERT1(317, CounterOffer.Count<OBJECTS_PER_OFFER, CounterOffer.Count);
 	CounterOffer.Objects[CounterOffer.Count] = Object;
 	CounterOffer.Count++;
 }
@@ -252,28 +252,28 @@ void AddCounterOfferObject(TObject Object)
 // 0x4a7760, line 327
 char *GetOwnOfferName()
 {
-	TASSERT1(OwnOffer.Count>0, OwnOffer.Count);
+	TASSERT1(327, OwnOffer.Count>0, OwnOffer.Count);
 	return OwnOffer.Name;
 }
 
 // 0x4a78b0, line 336
 char *GetCounterOfferName()
 {
-	TASSERT1(CounterOffer.Count>0, CounterOffer.Count);
+	TASSERT1(336, CounterOffer.Count>0, CounterOffer.Count);
 	return CounterOffer.Name;
 }
 
 // 0x4a7a00, line 361
 TObject GetOwnOfferObject(int Position)
 {
-	TASSERT2(In(Position,0,OwnOffer.Count-1), Position, OwnOffer.Count-1);
+	TASSERT2(361, In(Position,0,OwnOffer.Count-1), Position, OwnOffer.Count-1);
 	return OwnOffer.Objects[Position];
 }
 
 // 0x4a7b90, line 370
 TObject GetCounterOfferObject(int Position)
 {
-	TASSERT2(In(Position,0,CounterOffer.Count-1), Position, CounterOffer.Count-1);
+	TASSERT2(370, In(Position,0,CounterOffer.Count-1), Position, CounterOffer.Count-1);
 	return CounterOffer.Objects[Position];
 }
 
@@ -292,7 +292,7 @@ void ResetInventory()
 {
 	TBEGIN
 	InitInventory();
-	TEND
+	TEND(400)
 }
 
 // Empty; the linker kept one copy of the identical empty functions (0x496160,

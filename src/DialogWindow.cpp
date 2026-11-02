@@ -120,7 +120,7 @@ void TDialogWindow::SetSize(int Width, int Height)
 	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->GetNext())
 		Child->SetSize(Width, Child->Height);
 	Rearrange(8, NULL);
-	TEND
+	TEND(63)
 }
 
 // 0x485970, line 86. The children's heights, whatever their minimum heights.
@@ -131,7 +131,7 @@ int TDialogWindow::getMinimumHeight()
 	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->GetNext())
 		Result += Child->Height;
 	return Result;
-	TEND
+	TEND(86)
 }
 
 // 0x485b10, line 109. The dragged child's place is a rectangle of
@@ -152,7 +152,7 @@ void TDialogWindow::Draw(int Surface, int x, int y)
 	TComponent::Draw(Surface, x, y);
 	if (Dragged != NULL)
 		Dragged->Draw(Surface, Dragged->OffsetX + x, Dragged->OffsetY + y);
-	TEND1(Surface)
+	TEND1(109, Surface)
 }
 
 // 0x48a490, line 169. The free space below the children (FreeHeight pixels
@@ -204,7 +204,7 @@ void TDialogWindow::Arrange()
 		if (h > 0)
 			DrawingList[8] = TDrawing(31, Width - Skins[31].width, Skins[27].height + Top, Skins[135].width, h, 0, 0);
 	}
-	TEND
+	TEND(169)
 }
 
 // 0x485d70, line 181. Children are as wide as the column.
@@ -213,7 +213,7 @@ void TDialogWindow::InsertChild(TComponent *Child)
 	TBEGIN
 	TWindow::InsertChild(Child);
 	Child->SetSize(Width, Child->Height);
-	TEND
+	TEND(181)
 }
 
 // 0x485f10, line 193
@@ -222,7 +222,7 @@ void TDialogWindow::AppendChild(TComponent *Child)
 	TBEGIN
 	TWindow::AppendChild(Child);
 	Child->SetSize(Width, Child->Height);
-	TEND
+	TEND(193)
 }
 
 // 0x4860b0, line 205
@@ -233,7 +233,7 @@ void TDialogWindow::DeleteChild(TComponent *Child)
 		Dragged = NULL;
 	TWindow::DeleteChild(Child);
 	Rearrange(32, NULL);
-	TEND
+	TEND(205)
 }
 
 // 0x486260, line 217
@@ -242,7 +242,7 @@ void TDialogWindow::InsertChildAfter(TComponent *Previous, TComponent *Child)
 	TBEGIN
 	TWindow::InsertChildAfter(Previous, Child);
 	Child->SetSize(Width, Child->Height);
-	TEND
+	TEND(217)
 }
 
 // 0x486400, line 233. The children of a column are content windows.
@@ -254,7 +254,7 @@ TContentWindow *TDialogWindow::GetContentWindow(int Identifier)
 			return (TContentWindow *)Child;
 	}
 	return NULL;
-	TEND1(Identifier)
+	TEND1(233, Identifier)
 }
 
 // 0x4865b0, line 247. The windows that the next game opens again (not the
@@ -266,7 +266,7 @@ void TDialogWindow::StoreOpenDialogs()
 		if (((TContentWindow *)Child)->Identifier < 0x40)
 			AddOpenDialog(((TContentWindow *)Child)->Identifier);
 	}
-	TEND
+	TEND(247)
 }
 
 // 0x48aea0, lines 271-297; jump table 0x48b338 with the byte table 0x48b354
@@ -289,7 +289,7 @@ void TDialogWindow::Rearrange(int Strategy, TComponent *Work)
 		Shrink();
 		break;
 	case 4:
-		TASSERT(Work!=NULL);
+		TASSERT(271, Work!=NULL);
 		UpdateFreeHeight = false;
 		PositionChildren(false);
 		Grow(Work);
@@ -300,7 +300,7 @@ void TDialogWindow::Rearrange(int Strategy, TComponent *Work)
 		FitChildren();
 		break;
 	case 16:
-		TASSERT(Work!=NULL);
+		TASSERT(282, Work!=NULL);
 		MakeRoom(Work);
 		AppendChild(Work);
 		PositionChildren(false);
@@ -309,12 +309,12 @@ void TDialogWindow::Rearrange(int Strategy, TComponent *Work)
 		PositionChildren(false);
 		break;
 	default:
-		TERROR1("unknown strategy", Strategy);
+		TERROR1(290, "unknown strategy", Strategy);
 	}
 	Arrange();
 	UpdateFreeHeight = true;
 	Busy = false;
-	TEND1(Strategy)
+	TEND1(297, Strategy)
 }
 
 // 0x486760, line 317. The dragged child keeps the position the mouse gave it.
@@ -328,7 +328,7 @@ void TDialogWindow::PositionChildren(bool SkipDragged)
 			Child->SetPosition(x, y);
 		y += Child->Height;
 	}
-	TEND
+	TEND(317)
 }
 
 // 0x486930, line 353 (strategy 8). The children that do not fit any more
@@ -362,7 +362,7 @@ void TDialogWindow::FitChildren()
 		}
 	}
 	Busy = false;
-	TEND
+	TEND(353)
 }
 
 // 0x48a990, lines 377-394 (strategy 2). While the children are higher than
@@ -388,13 +388,13 @@ bool TDialogWindow::Shrink()
 		int DeltaHeight = Shrinking->Height - Shrinking->getMinimumHeight();
 		if (Missing < DeltaHeight)
 			DeltaHeight = Missing;
-		TASSERT1(DeltaHeight>0, DeltaHeight);
+		TASSERT1(377, DeltaHeight>0, DeltaHeight);
 		Shrinking->SetSize(Shrinking->Width, Shrinking->Height - DeltaHeight);
 		for (TComponent *Next = Shrinking->GetNext(); Next != NULL; Next = Next->GetNext())
 			Next->SetPosition(Next->OffsetX, Next->OffsetY - DeltaHeight);
 	}
 	return true;
-	TEND
+	TEND(394)
 }
 
 // 0x486b30, lines 419-429 (strategy 1). The dragged child swaps places with
@@ -409,7 +409,7 @@ void TDialogWindow::DragChild(TComponent *Work)
 		TComponent *Search = FirstChild;
 		TComponent *Next;
 		for (;;) {
-			TASSERT(Search!=NULL);
+			TASSERT(419, Search!=NULL);
 			Next = Search->GetNext();
 			if (Dragged == Search)
 				break;
@@ -421,7 +421,7 @@ void TDialogWindow::DragChild(TComponent *Work)
 		if (Next != NULL && Dragged->Height + Dragged->OffsetY > Next->Height / 2 + Next->OffsetY)
 			SwapChildren(Next, Dragged);
 	}
-	TEND
+	TEND(429)
 }
 
 // 0x486e20, line 477 (strategy 16). Before Work is appended, the children
@@ -455,7 +455,7 @@ void TDialogWindow::MakeRoom(TComponent *Work)
 			Space = Work->Height;
 		Work->SetSize(Work->Width, Space);
 	}
-	TEND
+	TEND(477)
 }
 
 // 0x48acb0, line 505 (strategy 4). The space Work gave up (the free height
@@ -476,7 +476,7 @@ void TDialogWindow::Grow(TComponent *Work)
 			}
 		}
 	}
-	TEND
+	TEND(505)
 }
 
 // 0x487060, line 524. Negative when the children do not fit.
@@ -490,7 +490,7 @@ int TDialogWindow::GetFreeHeight()
 	if (UpdateFreeHeight)
 		FreeHeight = Available - Used;
 	return Available - Used;
-	TEND
+	TEND(524)
 }
 
 // --- TContentWindow --------------------------------------------------------
@@ -501,14 +501,14 @@ void TContentWindow::Draw(int Surface, int x, int y)
 {
 	TBEGIN
 	if (Background) {
-		TASSERT1(x>=0, x);
-		TASSERT1(y>=0, y);
+		TASSERT1(681, x>=0, x);
+		TASSERT1(682, y>=0, y);
 		DrawSkin(Surface, x, y, Width, Height, 7, 0, BackgroundY);
 	}
 	TComponent::Draw(Surface, x, y);
 	for (TComponent *Child = FirstChild; Child != NULL; Child = Child->GetNext())
 		Child->Draw(Surface, Child->OffsetX + x, Child->OffsetY + y);
-	TEND1(Surface)
+	TEND1(692, Surface)
 }
 
 // 0x4875a0, line 703
@@ -517,7 +517,7 @@ void TContentWindow::Arrange()
 	TBEGIN
 	TWindow::Arrange();
 	BackgroundY = OffsetY % Skins[7].height;
-	TEND
+	TEND(703)
 }
 
 // 0x487740, line 714. The catch blocks name no parameter.
@@ -526,7 +526,7 @@ void TContentWindow::ReleaseCapture(TComponent *Component)
 	TBEGIN
 	Dragging = false;
 	TWindow::ReleaseCapture(Component);
-	TEND
+	TEND(714)
 }
 
 // 0x4878d0, line 734. While dragging, the window follows the mouse inside
@@ -546,7 +546,7 @@ bool TContentWindow::MouseMove(int x, int y)
 		return true;
 	}
 	return TWindow::MouseMove(x, y);
-	TEND2(x, y)
+	TEND2(734, x, y)
 }
 
 // 0x487ad0, line 751. A press that no child takes starts dragging the
@@ -562,7 +562,7 @@ bool TContentWindow::LeftButtonDown(int x, int y, int Flags)
 		DragBottom = Height + OffsetY - y;
 	}
 	return true;
-	TEND2(x, y)
+	TEND2(751, x, y)
 }
 
 // 0x487ca0, line 768
@@ -575,7 +575,7 @@ bool TContentWindow::LeftButtonUp(int x, int y, int Flags)
 		return true;
 	}
 	return TWindow::LeftButtonUp(x, y, Flags);
-	TEND2(x, y)
+	TEND2(768, x, y)
 }
 
 // --- TSubWindow ------------------------------------------------------------
@@ -597,7 +597,7 @@ TSubWindow::TSubWindow(int _Identifier, TSubWindowBody *_Body, bool _Resizable, 
 	MinimizeButton = NULL;
 	Icon = NULL;
 	Title = NULL;
-	TASSERT(_Body!=NULL);
+	TASSERT(791, _Body!=NULL);
 	Body = _Body;
 	TWindow::InsertChild(Body);
 	if (_Resizable) {
@@ -609,7 +609,7 @@ TSubWindow::TSubWindow(int _Identifier, TSubWindowBody *_Body, bool _Resizable, 
 		Resizer1 = NULL;
 		Resizer2 = NULL;
 	}
-	TEND1(_Identifier)
+	TEND1(804, _Identifier)
 }
 
 // 0x4881f0, line 861. Not lower than the minimum height; a minimized window
@@ -653,7 +653,7 @@ void TSubWindow::SetSize(int Width, int Height)
 		}
 		Column->Rearrange(8, NULL);
 	}
-	TEND2(Width, Height)
+	TEND2(861, Width, Height)
 }
 
 // 0x488510, lines 891-928. A container's body updates its "up" button
@@ -666,7 +666,7 @@ void TSubWindow::Arrange()
 	TBEGIN
 	TContentWindow::Arrange();
 	if (Identifier >= 0x40) {
-		TASSERT(Body!=NULL);
+		TASSERT(891, Body!=NULL);
 		((TContainerWindowBody *)Body)->UpdateUpButton();
 	}
 	DrawingList[0] = TDrawing(128, 0, 0, 0, 0, 0, 0);
@@ -681,7 +681,7 @@ void TSubWindow::Arrange()
 	DrawingList[6] = TDrawing(133, Skins[130].width, Height - Skins[133].height, Width - Skins[131].width - Skins[130].width,
 		Skins[133].height, 0, 0);
 	DrawingList[7] = TDrawing(131, Width - Skins[131].width, Height - Skins[131].height, 0, 0, 0, 0);
-	TEND
+	TEND(928)
 }
 
 // 0x4889c0, line 950. The resizers get the press first, even where they
@@ -698,7 +698,7 @@ bool TSubWindow::LeftButtonDown(int x, int y, int Flags)
 	 && Resizer2->LeftButtonDown(x - Resizer2->OffsetX, y - Resizer2->OffsetY, Flags))
 		return true;
 	return TContentWindow::LeftButtonDown(x, y, Flags);
-	TEND2(x, y)
+	TEND2(950, x, y)
 }
 
 // 0x488c20, line 972
@@ -714,7 +714,7 @@ bool TSubWindow::MouseMove(int x, int y)
 	 && Resizer2->MouseMove(x - Resizer2->OffsetX, y - Resizer2->OffsetY))
 		return true;
 	return TContentWindow::MouseMove(x, y);
-	TEND2(x, y)
+	TEND2(972, x, y)
 }
 
 // 0x488e80, line 986. A double click that no child takes minimizes or
@@ -725,7 +725,7 @@ bool TSubWindow::LeftButtonDoubleClick(int x, int y, int Flags)
 	if (!TWindow::LeftButtonDoubleClick(x, y, Flags))
 		HandleEvent(9);
 	return true;
-	TEND2(x, y)
+	TEND2(986, x, y)
 }
 
 // 0x489030, line 1002. Event 10 (the close button) deletes the window.
@@ -740,7 +740,7 @@ void TSubWindow::HandleEvent(int Event)
 		else
 			Minimize();
 	}
-	TEND1(Event)
+	TEND1(1002, Event)
 }
 
 // 0x489220, lines 1009-1020. The assertion comes before the try block. The
@@ -748,7 +748,7 @@ void TSubWindow::HandleEvent(int Event)
 // with the resizers.
 void TSubWindow::Minimize()
 {
-	TASSERT(IsMinimized==false);
+	TASSERT(1009, IsMinimized==false);
 	TBEGIN
 	IsMinimized = true;
 	RestoreHeight = Height;
@@ -762,13 +762,13 @@ void TSubWindow::Minimize()
 	if (MinimizeButton != NULL)
 		MinimizeButton->SetSkins(140, 141);
 	SetSize(Width, SkinProperties.Style194.Data4C);
-	TEND
+	TEND(1020)
 }
 
 // 0x489500, lines 1027-1037. The assertion comes before the try block.
 void TSubWindow::Maximize()
 {
-	TASSERT(IsMinimized==true);
+	TASSERT(1027, IsMinimized==true);
 	TBEGIN
 	IsMinimized = false;
 	Body->Maximize();
@@ -781,7 +781,7 @@ void TSubWindow::Maximize()
 	if (MinimizeButton != NULL)
 		MinimizeButton->SetSkins(138, 139);
 	SetSize(Width, RestoreHeight);
-	TEND
+	TEND(1037)
 }
 
 // 0x4897d0, line 1049
@@ -790,7 +790,7 @@ void TSubWindow::ShowUpButton()
 	TBEGIN
 	if (UpButton != NULL && !IsChild(UpButton))
 		InsertChild(UpButton);
-	TEND
+	TEND(1049)
 }
 
 // 0x489970, line 1061. The button stays the window's (the destructor
@@ -800,7 +800,7 @@ void TSubWindow::HideUpButton()
 	TBEGIN
 	if (UpButton != NULL && IsChild(UpButton) == true)
 		RemoveChild(UpButton);
-	TEND
+	TEND(1061)
 }
 
 // 0x489b10, line 1075. Each setter deletes the part it replaces.
@@ -816,7 +816,7 @@ void TSubWindow::SetUpButton(TComponent *Button)
 	UpButton = Button;
 	InsertChild(Button);
 	SetChildPosition(UpButton, SkinProperties.Style194.Data20.x, SkinProperties.Style194.Data20.y);
-	TEND
+	TEND(1075)
 }
 
 // 0x489cf0, line 1088
@@ -832,7 +832,7 @@ void TSubWindow::SetCloseButton(TComponent *Button)
 	CloseButton = Button;
 	InsertChild(Button);
 	SetChildPosition(CloseButton, SkinProperties.Style194.Data10.x, SkinProperties.Style194.Data10.y);
-	TEND
+	TEND(1088)
 }
 
 // 0x489ed0, line 1101
@@ -848,7 +848,7 @@ void TSubWindow::SetMinimizeButton(TSkinButton *Button)
 	MinimizeButton = Button;
 	InsertChild(Button);
 	SetChildPosition(MinimizeButton, SkinProperties.Style194.Data18.x, SkinProperties.Style194.Data18.y);
-	TEND
+	TEND(1101)
 }
 
 // 0x48a0b0, line 1114
@@ -864,7 +864,7 @@ void TSubWindow::SetIcon(TComponent *_Icon)
 	Icon = _Icon;
 	InsertChild(_Icon);
 	SetChildArea(Icon, SkinProperties.Style194.Data00);
-	TEND
+	TEND(1114)
 }
 
 // 0x48a2a0, line 1127
@@ -880,5 +880,5 @@ void TSubWindow::SetTitle(TComponent *_Title)
 	Title = _Title;
 	InsertChild(_Title);
 	SetChildArea(Title, SkinProperties.Style194.Data28);
-	TEND
+	TEND(1127)
 }

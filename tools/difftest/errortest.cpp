@@ -3,11 +3,10 @@
 // reconstructed code, through imageeh.cpp, plus TMyException's messages and
 // the report HandleException writes to error.txt.
 //
-// The messages are compared in full except for the line numbers: our sources
-// do not keep the original's lines. Every "<file> <line>" of a message is
-// compared with the line replaced, and each of our lines must stand for one
-// original line and each original line for one of ours over the whole run
-// (ER_LINES=1 prints the pairs).
+// The messages are compared in full, the line numbers too: every site of our
+// sources names the original's line (issue #35; imageeh.cpp CompareThrown,
+// EH_LINEMAP=1 compares the lines through a map as before). ER_LINES=1 prints
+// the lines seen.
 //
 // DIFFTEST_ONLY=Errors runs this test alone; ER_TRACE=1 prints every compared
 // exception, ER_SEED=<n> changes the random inputs.
