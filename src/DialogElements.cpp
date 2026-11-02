@@ -146,7 +146,7 @@ bool TResizer::LeftButtonUp(int x, int y, int Flags)
 
 // 0x4547f0, lines 166-184. WindowArea is cleared by its constructor and again
 // in the body.
-TBorder::TBorder(TWindow *_Window, int _Border)
+TBorder::TBorder(TComponent *_Window, int _Border)
 {
 	TASSERT(_Window!=NULL);
 	TBEGIN
@@ -169,7 +169,7 @@ TBorder::TBorder(TWindow *_Window, int _Border)
 }
 
 // 0x454b10, lines 192-210
-TBorder::TBorder(TWindow *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
+TBorder::TBorder(TComponent *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
 	int _Bottom, int _BottomRight, int _Border)
 {
 	TASSERT(_Window!=NULL);
@@ -193,7 +193,7 @@ TBorder::TBorder(TWindow *_Window, int _TopLeft, int _Top, int _TopRight, int _L
 }
 
 // 0x454e30, lines 217-235
-TBorder::TBorder(TWindow *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
+TBorder::TBorder(TComponent *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
 	int _Bottom, int _BottomRight, int _Background, int _Border)
 {
 	TASSERT(_Window!=NULL);

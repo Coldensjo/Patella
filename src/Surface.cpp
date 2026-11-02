@@ -87,8 +87,9 @@ TSurface::~TSurface()
 {
 }
 
-// 0x4eabe0
-uint8 GetAvailableEngines()
+// 0x4eabe0. A member (Dialogs.cpp calls it on GetSurface()) that reads only the
+// global.
+uint8 TSurface::GetAvailableEngines()
 {
 	return AvailableEngines;
 }

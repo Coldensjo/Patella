@@ -106,7 +106,7 @@ void TSurfaceDX::SetSourceColorKey(int Surface, TRGBColor ColorKey)
 }
 
 // 0x4eb000. 10 to 200 frames per second; anything else is no limit.
-void TSurfaceDX::SetFramerate(int Framerate)
+void TSurfaceDX::SetFramerateLimit(int Framerate)
 {
 	if (Framerate < 10 || Framerate > 200)
 		this->Framerate = 0xffff;
@@ -832,7 +832,7 @@ void TSurfaceDX::InitSurfaces()
 	}
 	SetDefaultNoStretching(!CanStretch);
 	ResetFrameTimer();
-	SetFramerate(GetConfineFramerate());
+	SetFramerateLimit(GetConfineFramerate());
 }
 
 // 0x4ed1a0, lines 267-269. Clips the primary surface to the window

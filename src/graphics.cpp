@@ -874,9 +874,9 @@ void DrawObject(int Surface, int x, int y, int Size, TObject Obj, TRGBColor High
 			}
 		}
 	}
-	if (GetObjectFlag(Obj.Type, CUMULATIVE) && (Obj.Data1 > 1 || ShowCount)) {
+	if (GetObjectFlag(Obj.Type, CUMULATIVE) && (Obj.Data > 1 || ShowCount)) {
 		char Count[4];
-		sprintf(Count, "%d", Obj.Data1);
+		sprintf(Count, "%d", Obj.Data);
 		int Height = GetTextHeight(Font.FontNumber, Count);
 		PrintFormattedTextClipped(Surface, x - 1 + Size, y - Height - 1 + Size, Font, Count, Clip);
 	}

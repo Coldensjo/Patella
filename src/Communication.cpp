@@ -1362,7 +1362,7 @@ void ReceiveAddObject()
 	TObject Object;
 	if (Type == 0x61 || Type == 0x62 || Type == 0x63) {
 		Object.Type = 0x63;
-		Object.Data1 = ReadCreature(Type, rx, ry, rz);
+		Object.Data = ReadCreature(Type, rx, ry, rz);
 		Object.Data2 = 0;
 	} else {
 		int Data = 0;
@@ -1373,7 +1373,7 @@ void ReceiveAddObject()
 		if (GetObjectFlag(Type, 10))
 			Data = GetByte();
 		Object.Type = Type;
-		Object.Data1 = Data;
+		Object.Data = Data;
 		Object.Data2 = 0;
 	}
 	AddObject(rx, ry, rz, Object);
@@ -1410,7 +1410,7 @@ void ReceiveChangeObject()
 			GetByte();
 	} else {
 		if (OldObject.Type == 0x63) {
-			TCreature *Creature = GetCreature(OldObject.Data1);
+			TCreature *Creature = GetCreature(OldObject.Data);
 			if (Creature != NULL)
 				Creature->Visible = false;
 		}
@@ -1418,7 +1418,7 @@ void ReceiveChangeObject()
 		TObject Object;
 		if (Type == 0x61 || Type == 0x62 || Type == 0x63) {
 			Object.Type = 0x63;
-			Object.Data1 = ReadCreature(Type, rx, ry, rz);
+			Object.Data = ReadCreature(Type, rx, ry, rz);
 			Object.Data2 = 0;
 		} else {
 			int Data = 0;
@@ -1429,7 +1429,7 @@ void ReceiveChangeObject()
 			if (GetObjectFlag(Type, 10))
 				Data = GetByte();
 			Object.Type = Type;
-			Object.Data1 = Data;
+			Object.Data = Data;
 			Object.Data2 = 0;
 		}
 		ChangeObject(rx, ry, rz, Position, Object);
@@ -1456,7 +1456,7 @@ void ReceiveDeleteObject()
 		TASSERT2(FieldRefreshRequested(rx,ry,rz), rx, ry);
 	} else {
 		if (Object.Type == 0x63) {
-			TCreature *Creature = GetCreature(Object.Data1);
+			TCreature *Creature = GetCreature(Object.Data);
 			if (Creature != NULL)
 				Creature->Visible = false;
 		}
@@ -1514,11 +1514,11 @@ void ReceiveMoveCreature()
 				Text << " (CREATURE, ";
 			else
 				Text << " (" << Object.Type << ", ";
-			Text << Object.Data1 << ")";
+			Text << Object.Data << ")";
 		}
 		Error = Text.str();
 	} else {
-		Creature = GetCreature(Object.Data1);
+		Creature = GetCreature(Object.Data);
 		if (Creature != NULL) {
 			if (Teleport) {
 				if (Creature->CreatureID == GetPlayerID())
@@ -1558,7 +1558,7 @@ void ReceiveMoveCreature()
 		try {
 			TObject Current = GetFirstObject(sx, sy, sz);
 			while (Current.Type != 0) {
-				Text << " (" << Current.Type << "," << Current.Data1 << ")";
+				Text << " (" << Current.Type << "," << Current.Data << ")";
 				Current = GetNextObject();
 			}
 			Text << std::endl << " Start Cylinder (2): ";
@@ -1567,12 +1567,12 @@ void ReceiveMoveCreature()
 				if (Current.Type == NoObject.Type)
 					Text << "(-)";
 				else
-					Text << " (" << Current.Type << "," << Current.Data1 << ")";
+					Text << " (" << Current.Type << "," << Current.Data << ")";
 			}
 			Text << std::endl << " Destination Cylinder (1): ";
 			Current = GetFirstObject(zx, zy, zz);
 			while (Current.Type != 0) {
-				Text << " (" << Current.Type << "," << Current.Data1 << ")";
+				Text << " (" << Current.Type << "," << Current.Data << ")";
 				Current = GetNextObject();
 			}
 			Text << std::endl << " Destination Cylinder (2): ";
@@ -1581,7 +1581,7 @@ void ReceiveMoveCreature()
 				if (Current.Type == NoObject.Type)
 					Text << "(-)";
 				else
-					Text << " (" << Current.Type << "," << Current.Data1 << ")";
+					Text << " (" << Current.Type << "," << Current.Data << ")";
 			}
 		} catch (TMyException &Exception) {
 			Text << std::endl << "Exception during cylinder looping: " << std::endl << Exception.GetMessage();

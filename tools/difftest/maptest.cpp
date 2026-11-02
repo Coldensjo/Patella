@@ -164,7 +164,7 @@ static void CompareFiles(const char *What)
 
 static bool Same(const TObject &A, const TObject &B)
 {
-	return A.Type == B.Type && A.Data1 == B.Data1 && A.Data2 == B.Data2;
+	return A.Type == B.Type && A.Data == B.Data && A.Data2 == B.Data2;
 }
 
 static void ComparePoint(int rx, int ry, int rz, const char *What)
@@ -173,7 +173,7 @@ static void ComparePoint(int rx, int ry, int rz, const char *What)
 		TObject A = GetMapObject(rx, ry, rz, p), B;
 		At<ObjPosFn>(0x4b6580)(&B, rx, ry, rz, p);
 		CHECK(Same(A, B), "%s: object %d,%d,%d/%d: %d/%d/%d, original %d/%d/%d", What, rx, ry, rz, p,
-			A.Type, A.Data1, A.Data2, B.Type, B.Data1, B.Data2);
+			A.Type, A.Data, A.Data2, B.Type, B.Data, B.Data2);
 	}
 	TObject A = GetFirstObject(rx, ry, rz), B;
 	At<ObjAtFn>(0x4b6140)(&B, rx, ry, rz);
@@ -265,10 +265,10 @@ static TObject RandomObject()
 	TObject Obj;
 	if (Random() % 6 == 0) {
 		Obj.Type = CREATURE;
-		Obj.Data1 = 0x40000000 + Random() % 1000;
+		Obj.Data = 0x40000000 + Random() % 1000;
 	} else {
 		Obj.Type = 100 + Random() % (MaxObject - 99);
-		Obj.Data1 = Random() % 256;
+		Obj.Data = Random() % 256;
 	}
 	Obj.Data2 = Random() % 3 == 0 ? (int)(Random() % 40) : 0;
 	return Obj;

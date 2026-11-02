@@ -428,15 +428,15 @@ static TObject *__cdecl FakeGetTradeObject(int *Index, int *x, int *y, int *z)
 }
 static void __cdecl FakeSetDragObject(TObject Obj, int Index, int x, int y, int z)
 {
-	Logf("SetDrag%d,%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data1, Obj.Data2, Index, x, y, z, 0);
+	Logf("SetDrag%d,%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data, Obj.Data2, Index, x, y, z, 0);
 }
 static void __cdecl FakeSetUseObject(TObject Obj, int Index, int x, int y, int z)
 {
-	Logf("SetUse%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data1, Obj.Data2, Index, x, y, z);
+	Logf("SetUse%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data, Obj.Data2, Index, x, y, z);
 }
 static void __cdecl FakeSetTradeObject(TObject Obj, int Index, int x, int y, int z)
 {
-	Logf("SetTrade%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data1, Obj.Data2, Index, x, y, z);
+	Logf("SetTrade%d,%d,%d,%d,%d,%d,%d;", Obj.Type, Obj.Data, Obj.Data2, Index, x, y, z);
 }
 static void __cdecl FakeSetTradeInfo(int Info) { Logf("TradeInfo%d;", Info); }
 static void __cdecl FakeSetDragTarget(int x, int y, int z) { Logf("DragTarget%d,%d,%d;", x, y, z); }
@@ -650,7 +650,7 @@ static void __cdecl FakeDrawPicturePartClipped(int Surface, int x, int y, int Pi
 static void __cdecl FakeDrawObject(int Surface, int x, int y, int Size, TObject Obj, TRGBColor Highlight, TRect Clip,
 	TFont Font, bool ShowCount)
 {
-	Logf("Obj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data1,
+	Logf("Obj%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d;", Surface, x, y, Size, Obj.Type, Obj.Data,
 		Obj.Data2, Highlight.R, Highlight.G, Highlight.B, Clip.x, Clip.y, Clip.Width, Clip.Height, Font.FontNumber,
 		Font.Color.R, Font.Color.G, Font.Color.B, Font.Alignment, ShowCount ? 1 : 0);
 }
@@ -1350,7 +1350,7 @@ static TObject RandomObject(bool MayBeEmpty)
 	if (MayBeEmpty && Random() % 4 == 0)
 		return Obj;
 	Obj.Type = Types[Random() % 11];
-	Obj.Data1 = Random() % 3 == 0 ? 1 + Random() % 100 : Random() % 2;
+	Obj.Data = Random() % 3 == 0 ? 1 + Random() % 100 : Random() % 2;
 	Obj.Data2 = Random() % 3;
 	return Obj;
 }
@@ -1699,7 +1699,7 @@ static void Queries()
 			World.ActionState = 6;
 			if (Random() % 2 == 0) {
 				World.DragObject.Type = 2543;
-				World.DragObject.Data1 = 2 + Random() % 50;
+				World.DragObject.Data = 2 + Random() % 50;
 			}
 			if (x >= W->Width || y >= W->Height)
 				return;

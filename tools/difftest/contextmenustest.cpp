@@ -220,10 +220,10 @@ static void RandomWorld()
 	RandomFlags();
 	static const int Types[] = {0, 99, 100, 101, 102, 1987, 2000, 3031, 2148, 1740};
 	W.Trade.Type = Types[1 + Random() % 9];
-	W.Trade.Data1 = Random() % 100;
+	W.Trade.Data = Random() % 100;
 	W.Trade.Data2 = Random() % 3;
 	W.Use.Type = Types[Random() % 10];
-	W.Use.Data1 = Random() % 100;
+	W.Use.Data = Random() % 100;
 	W.Use.Data2 = 0;
 	bool TradeInContainer = Random() % 2 != 0, UseInContainer = Random() % 2 != 0;
 	W.TradeX = TradeInContainer ? 0xFFFF : 32000 + Random() % 100;
@@ -953,8 +953,8 @@ static std::string Dump(int s)
 		case KIND_OBJECT: {
 			TObjectContextMenu *O = (TObjectContextMenu *)W;
 			sprintf(Buffer, " looked %d/%d/%d %d %d,%d,%d used %d/%d/%d %d %d,%d,%d cr %u", O->LookedObject.Type,
-				O->LookedObject.Data1, O->LookedObject.Data2, O->LookedObjectIndex, O->LookedObjectX, O->LookedObjectY,
-				O->LookedObjectZ, O->UsedObject.Type, O->UsedObject.Data1, O->UsedObject.Data2, O->UsedObjectIndex,
+				O->LookedObject.Data, O->LookedObject.Data2, O->LookedObjectIndex, O->LookedObjectX, O->LookedObjectY,
+				O->LookedObjectZ, O->UsedObject.Type, O->UsedObject.Data, O->UsedObject.Data2, O->UsedObjectIndex,
 				O->UsedObjectX, O->UsedObjectY, O->UsedObjectZ, O->CreatureID);
 			break;
 		}

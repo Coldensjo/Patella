@@ -502,7 +502,7 @@ static void RandomDraw(int t)
 	TObject Obj = {0, 0, 0};
 	if (t % 7 != 0) {
 		Obj.Type = DrawableObjects[Random() % DrawableObjects.size()];
-		Obj.Data1 = Range(0, 120);
+		Obj.Data = Range(0, 120);
 	}
 	int Size = t % 2 ? 32 : Range(8, 64);
 	bool ShowCount = (Random() & 1) != 0;

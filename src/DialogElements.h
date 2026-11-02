@@ -81,10 +81,10 @@ public:
 // window (vtable 0x561358, 0x68 bytes).
 class TBorder : public TWindow {
 public:
-	TBorder(TWindow *_Window, int _Border);             // 0x4547f0, lines 166-184, the skins 26-33
-	TBorder(TWindow *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
+	TBorder(TComponent *_Window, int _Border);          // 0x4547f0, lines 166-184, the skins 26-33
+	TBorder(TComponent *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
 		int _Bottom, int _BottomRight, int _Border);    // 0x454b10, lines 192-210
-	TBorder(TWindow *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
+	TBorder(TComponent *_Window, int _TopLeft, int _Top, int _TopRight, int _Left, int _Right, int _BottomLeft,
 		int _Bottom, int _BottomRight, int _Background, int _Border); // 0x454e30, lines 217-235
 	// The destructor is the implicit one (deleting destructor 0x4adc40, folded).
 	void SetSize(int Width, int Height);               // +0x34, 0x455150, lines 242-251
@@ -93,7 +93,7 @@ public:
 	void Arrange();                                     // +0x48, 0x4556b0
 	void FitToWindow();                                 // 0x455500, line 262
 
-	TWindow *Window;  // +0x2c
+	TComponent *Window; // +0x2c, a window or an element (the outfit dialog frames its icon)
 	int TopLeft;      // +0x30, skins
 	int Top;          // +0x34
 	int TopRight;     // +0x38
@@ -759,6 +759,9 @@ public:
 		return Selected;
 	}
 	void SetEditable(bool _Editable) { Editable = _Editable; }
+	// Inline (Dialogs.cpp; the out-of-line copy is folded with Talk.h's
+	// TChannelTalkBuffer::GetChannelID 0x507060).
+	int GetNumberOfLines() { return Lines; }
 
 	int Lines;                // +0x2c
 	int TextWidth;            // +0x30

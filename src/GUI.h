@@ -438,16 +438,11 @@ struct TSkinPropertiesAA4 {
 struct TSkinPropertiesB08 {
 	int Data00; // +0x00
 	int Data04; // +0x04
-	TGUIPoint Data08; // +0x08
-	TGUIPoint Data10; // +0x10
+	TRect Data08; // +0x08, the caption
 	TFont Data18; // +0x18
-	TGUIPoint Data2C; // +0x2c
-	TGUIPoint Data34; // +0x34
-	TGUIPoint Data3C; // +0x3c
-	TGUIPoint Data44; // +0x44
-	TGUIPoint Data4C; // +0x4c
-	TGUIPoint Data54; // +0x54
-	TGUIPoint Data5C; // +0x5c
+	TGUIPoint Data2C[3]; // +0x2c, the buttons from the right
+	TRect Data44; // +0x44, the separator
+	TRect Data54; // +0x54, the body (FitToChild takes it by value)
 	TFont Data64; // +0x64
 	TFont Data78; // +0x78
 };
@@ -457,23 +452,22 @@ struct TSkinPropertiesD3C {
 	int Data00; // +0x00
 	int Data04; // +0x04
 	TRect Data08; // +0x08
-	TRGBColor Data18; // +0x18
-	TRect Data24; // +0x24
-	TRect Data34; // +0x34
-	TRect Data44; // +0x44
-	TGUIPoint Data54; // +0x54
-	TGUIPoint Data5C; // +0x5c
-	TRect Data64; // +0x64
-	TGUIPoint Data74; // +0x74
-	TRect Data7C; // +0x7c
-	TGUIPoint Data8C; // +0x8c
-	TGUIPoint Data94; // +0x94
-	TRect Data9C; // +0x9c
-	TRect DataAC; // +0xac
-	TRect DataBC; // +0xbc
-	TRect DataCC; // +0xcc
-	TRect DataDC; // +0xdc
-	TGUIPoint DataEC; // +0xec
+	TRect Data18; // +0x18
+	TRect Data28; // +0x28
+	TGUIPoint Data38; // +0x38
+	TGUIPoint Data40; // +0x40
+	TRect Data48; // +0x48
+	TRect Data58; // +0x58
+	TRect Data68; // +0x68
+	TRect Data78; // +0x78
+	TRGBColor Data88; // +0x88
+	TRect Data94; // +0x94
+	TRect DataA4; // +0xa4
+	TRect DataB4; // +0xb4
+	TGUIPoint DataC4; // +0xc4
+	TGUIPoint DataCC; // +0xcc
+	TRect DataD4; // +0xd4
+	TRect DataE4; // +0xe4
 	TRect DataF4; // +0xf4
 };
 
@@ -484,31 +478,22 @@ struct TSkinPropertiesE68 {
 	TFont Data08; // +0x08
 	TFont Data1C; // +0x1c
 	int Data30; // +0x30
-	TGUIPoint Data34; // +0x34
-	TGUIPoint Data3C; // +0x3c
-	TGUIPoint Data44; // +0x44
-	TGUIPoint Data4C; // +0x4c
-	TGUIPoint Data54; // +0x54
-	TGUIPoint Data5C; // +0x5c
+	TRect Data34; // +0x34
+	TRect Data44; // +0x44
+	TRect Data54; // +0x54
 };
 
 // GUIStyle+0xf8c (0x5cdf54); compiler-generated constructor 0x4963a0.
 struct TSkinPropertiesF8C {
 	int Data00; // +0x00
 	int Data04; // +0x04
-	TGUIPoint Data08; // +0x08
-	TGUIPoint Data10; // +0x10
-	TGUIPoint Data18; // +0x18
-	TGUIPoint Data20; // +0x20
-	TGUIPoint Data28; // +0x28
-	TGUIPoint Data30; // +0x30
+	TRect Data08; // +0x08
+	TRect Data18; // +0x18
+	TRect Data28; // +0x28
 	TGUIPoint Data38[11]; // +0x38
-	TGUIPoint Data90; // +0x90
-	TGUIPoint Data98; // +0x98
-	TGUIPoint DataA0; // +0xa0
-	TGUIPoint DataA8; // +0xa8
-	TGUIPoint DataB0; // +0xb0
-	TGUIPoint DataB8; // +0xb8
+	TRect Data90; // +0x90
+	TRect DataA0; // +0xa0
+	TRect DataB0; // +0xb0
 };
 
 // GUIStyle+0x1084 (0x5ce04c); compiler-generated constructor 0x496430.
@@ -521,37 +506,29 @@ struct TSkinProperties1084 {
 	TGUIPoint Data20; // +0x20
 	TGUIPoint Data28; // +0x28
 	TGUIPoint Data30; // +0x30
-	TRect Data38; // +0x38
-	TRect Data48; // +0x48
-	TRect Data58; // +0x58
-};
-
-// GUIStyle+0x1114 (0x5ce0dc); compiler-generated constructor 0x495ee0.
-struct TSkinProperties1114 {
-	int Data00; // +0x00
-	int Data04; // +0x04
-	TGUIPoint Data08; // +0x08
-	TGUIPoint Data10; // +0x10
-	TGUIPoint Data18; // +0x18
-	TGUIPoint Data20; // +0x20
-	TGUIPoint Data28; // +0x28
-	TGUIPoint Data30; // +0x30
 	TGUIPoint Data38; // +0x38
 	TGUIPoint Data40; // +0x40
 	TGUIPoint Data48; // +0x48
 	TGUIPoint Data50; // +0x50
 	TGUIPoint Data58; // +0x58
 	TGUIPoint Data60; // +0x60
-	TGUIPoint Data68; // +0x68
-	TGUIPoint Data70; // +0x70
-	TGUIPoint Data78; // +0x78
-	TGUIPoint Data80; // +0x80
-	TGUIPoint Data88; // +0x88
-	TGUIPoint Data90; // +0x90
-	TGUIPoint Data98; // +0x98
-	TGUIPoint DataA0; // +0xa0
-	TGUIPoint DataA8; // +0xa8
-	TGUIPoint DataB0; // +0xb0
+};
+
+// GUIStyle+0x1114 (0x5ce0dc); compiler-generated constructor 0x495ee0.
+struct TSkinProperties1114 {
+	int Data00; // +0x00
+	int Data04; // +0x04
+	TRect Data08; // +0x08
+	TRect Data18; // +0x18
+	TRect Data28; // +0x28
+	TRect Data38; // +0x38
+	TRect Data48; // +0x48
+	TRect Data58; // +0x58
+	TRect Data68; // +0x68
+	TRect Data78; // +0x78
+	TRect Data88; // +0x88
+	TRect Data98; // +0x98
+	TRect DataA8; // +0xa8
 };
 
 // GUIStyle+0x1274 (0x5ce23c); compiler-generated constructor 0x4964a0.
@@ -564,11 +541,13 @@ struct TSkinProperties1274 {
 	TGUIPoint Data20; // +0x20
 	TGUIPoint Data28; // +0x28
 	TGUIPoint Data30; // +0x30
-	TRect Data38; // +0x38
-	TRect Data48; // +0x48
-	TRect Data58; // +0x58
-	TGUIPoint Data68; // +0x68
-	TGUIPoint Data70; // +0x70
+	TGUIPoint Data38; // +0x38
+	TGUIPoint Data40; // +0x40
+	TGUIPoint Data48; // +0x48
+	TGUIPoint Data50; // +0x50
+	TGUIPoint Data58; // +0x58
+	TGUIPoint Data60; // +0x60
+	TRect Data68; // +0x68
 };
 
 // GUIStyle+0x1394 (0x5ce35c); compiler-generated constructor 0x495fa0.
@@ -577,15 +556,12 @@ struct TSkinProperties1394 {
 	int Data04; // +0x04
 	TGUIPoint Data08; // +0x08
 	TGUIPoint Data10; // +0x10
-	TRect Data18; // +0x18
-	TGUIPoint Data28; // +0x28
-	TGUIPoint Data30; // +0x30
-	TGUIPoint Data38; // +0x38
-	TGUIPoint Data40; // +0x40
-	TGUIPoint Data48; // +0x48
-	TGUIPoint Data50; // +0x50
-	TGUIPoint Data58; // +0x58
-	TGUIPoint Data60; // +0x60
+	TGUIPoint Data18; // +0x18
+	TGUIPoint Data20; // +0x20
+	TRect Data28; // +0x28
+	TRect Data38; // +0x38
+	TRect Data48; // +0x48
+	TRect Data58; // +0x58
 	TGUIPoint Data68; // +0x68
 	TGUIPoint Data70; // +0x70
 };
@@ -624,8 +600,6 @@ struct TSkinProperties {
 	int TooltipBorder; // +0x044
 	TRGBColor TooltipBackground; // +0x048
 	TRGBColor TooltipFrame; // +0x054
-	// The frames around creatures on the map (MapWindow.cpp): under the
-	// mouse, attacked and followed, the last two also under the mouse.
 	TRGBColor HighlightColor; // +0x060
 	TRGBColor AttackColor; // +0x06c
 	TRGBColor FollowColor; // +0x078
@@ -719,27 +693,20 @@ struct TSkinProperties {
 	int DataB94; // +0xb94
 	int DataB98; // +0xb98
 	TRect DataB9C; // +0xb9c
-	TGUIPoint DataBAC; // +0xbac
-	TGUIPoint DataBB4; // +0xbb4
+	TRect DataBAC; // +0xbac, the login dialog's account number
 	TRect DataBBC; // +0xbbc
-	TGUIPoint DataBCC; // +0xbcc
-	TGUIPoint DataBD4; // +0xbd4
-	TGUIPoint DataBDC; // +0xbdc
-	TGUIPoint DataBE4; // +0xbe4
+	TRect DataBCC; // +0xbcc, its password
+	TRect DataBDC; // +0xbdc, its link
 	int DataBEC; // +0xbec
 	int DataBF0; // +0xbf0
 	int DataBF4; // +0xbf4
-	TGUIPoint DataBF8; // +0xbf8
-	TGUIPoint DataC00; // +0xc00
-	TGUIPoint DataC08; // +0xc08
-	TGUIPoint DataC10; // +0xc10
-	TGUIPoint DataC18; // +0xc18
-	TGUIPoint DataC20; // +0xc20
+	TRect DataBF8; // +0xbf8, the character list's label
+	TRect DataC08; // +0xc08, its list
+	TRect DataC18; // +0xc18, its account status
 	int DataC28; // +0xc28
 	int DataC2C; // +0xc2c
-	TGUIPoint DataC30; // +0xc30
-	TRect DataC38; // +0xc38
-	TGUIPoint DataC48; // +0xc48
+	TRect DataC30; // +0xc30, the move dialog's scroll bar
+	TRect DataC40; // +0xc40, its label
 	TGUIPoint DataC50; // +0xc50
 	int DataC58; // +0xc58
 	int DataC5C; // +0xc5c
@@ -747,8 +714,7 @@ struct TSkinProperties {
 	int DataC70; // +0xc70
 	TRGBColor DataC74; // +0xc74
 	TGUIPoint DataC80; // +0xc80
-	TRect DataC88; // +0xc88
-	TRect DataC98; // +0xc98
+	TGUIPoint DataC88[4]; // +0xc88, the outfit dialog's part buttons
 	TGUIPoint DataCA8; // +0xca8
 	int DataCB0; // +0xcb0
 	int DataCB4; // +0xcb4
@@ -757,141 +723,95 @@ struct TSkinProperties {
 	int DataCC4; // +0xcc4
 	TRect DataCC8; // +0xcc8
 	TRGBColor DataCD8; // +0xcd8
-	TGUIPoint DataCE4; // +0xce4
-	TGUIPoint DataCEC; // +0xcec
-	TGUIPoint DataCF4; // +0xcf4
-	TGUIPoint DataCFC; // +0xcfc
+	TRect DataCE4; // +0xce4, the text dialog's description
+	TRect DataCF4; // +0xcf4, its text
 	int DataD04; // +0xd04
 	int DataD08; // +0xd08
 	TRect DataD0C; // +0xd0c
-	TGUIPoint DataD1C; // +0xd1c
-	TGUIPoint DataD24; // +0xd24
-	TGUIPoint DataD2C; // +0xd2c
-	TGUIPoint DataD34; // +0xd34
+	TRect DataD1C; // +0xd1c, the edit list's description
+	TRect DataD2C; // +0xd2c, its text
 	TSkinPropertiesD3C StyleD3C; // +0xd3c, 0x104 bytes
 	int DataE40; // +0xe40
 	int DataE44; // +0xe44
-	TGUIPoint DataE48; // +0xe48
-	TGUIPoint DataE50; // +0xe50
-	TGUIPoint DataE58; // +0xe58
-	TGUIPoint DataE60; // +0xe60
+	TRect DataE48; // +0xe48, the bug report's text
+	TRect DataE58; // +0xe58, its label
 	TSkinPropertiesE68 StyleE68; // +0xe68, 0x64 bytes
 	int DataECC; // +0xecc
 	int DataED0; // +0xed0
-	TGUIPoint DataED4; // +0xed4
-	TGUIPoint DataEDC; // +0xedc
-	TGUIPoint DataEE4; // +0xee4
-	TGUIPoint DataEEC; // +0xeec
-	TGUIPoint DataEF4; // +0xef4
-	TGUIPoint DataEFC; // +0xefc
-	TGUIPoint DataF04; // +0xf04
-	TGUIPoint DataF0C; // +0xf0c
+	TRect DataED4; // +0xed4, the new channel dialog's labels and fields
+	TRect DataEE4; // +0xee4
+	TRect DataEF4; // +0xef4
+	TRect DataF04; // +0xf04
 	int DataF14; // +0xf14
 	int DataF18; // +0xf18
-	TGUIPoint DataF1C; // +0xf1c
-	TGUIPoint DataF24; // +0xf24
-	TGUIPoint DataF2C; // +0xf2c
-	TGUIPoint DataF34; // +0xf34
+	TRect DataF1C; // +0xf1c, the private channel dialog's name
+	TRect DataF2C; // +0xf2c, its label
 	int DataF3C; // +0xf3c
 	int DataF40; // +0xf40
-	TGUIPoint DataF44; // +0xf44
-	TGUIPoint DataF4C; // +0xf4c
-	TGUIPoint DataF54; // +0xf54
-	TGUIPoint DataF5C; // +0xf5c
+	TRect DataF44; // +0xf44, the report dialog's text
+	TRect DataF54; // +0xf54, its label
 	int DataF64; // +0xf64
 	int DataF68; // +0xf68
-	TGUIPoint DataF6C; // +0xf6c
-	TGUIPoint DataF74; // +0xf74
-	TGUIPoint DataF7C; // +0xf7c
-	TGUIPoint DataF84; // +0xf84
+	TRect DataF6C; // +0xf6c, the VIP dialog's name
+	TRect DataF7C; // +0xf7c, its label
 	TSkinPropertiesF8C StyleF8C; // +0xf8c, 0xc0 bytes
 	int Data104C; // +0x104c
 	int Data1050; // +0x1050
-	TRGBColor Data1054; // +0x1054
-	TGUIPoint Data1060; // +0x1060
-	TRGBColor Data1068; // +0x1068
-	TGUIPoint Data1074; // +0x1074
-	TGUIPoint Data107C; // +0x107c
+	TRect Data1054; // +0x1054, the update dialog's label
+	TRect Data1064; // +0x1064, zeroed, not used
+	TRect Data1074; // +0x1074, its progress bar
 	TSkinProperties1084 Style1084; // +0x1084, 0x68 bytes
 	int Data10EC; // +0x10ec
 	int Data10F0; // +0x10f0
-	TGUIPoint Data10F4; // +0x10f4
-	TGUIPoint Data10FC; // +0x10fc
-	TGUIPoint Data1104; // +0x1104
-	TGUIPoint Data110C; // +0x110c
+	TRect Data10F4; // +0x10f4, the hints dialog's label
+	TRect Data1104; // +0x1104, its list
 	TSkinProperties1114 Style1114; // +0x1114, 0xb8 bytes
 	int Data11CC; // +0x11cc
 	int Data11D0; // +0x11d0
-	TGUIPoint Data11D4; // +0x11d4
-	TGUIPoint Data11DC; // +0x11dc
-	TGUIPoint Data11E4; // +0x11e4
-	TGUIPoint Data11EC; // +0x11ec
-	TGUIPoint Data11F4; // +0x11f4
-	TGUIPoint Data11FC; // +0x11fc
+	TRect Data11D4; // +0x11d4, the mark dialog's labels and text
+	TRect Data11E4; // +0x11e4
+	TRect Data11F4; // +0x11f4
 	TGUIPoint Data1204[14]; // +0x1204
 	TSkinProperties1274 Style1274; // +0x1274, 0x78 bytes
 	int Data12EC; // +0x12ec
 	int Data12F0; // +0x12f0
-	TGUIPoint Data12F4; // +0x12f4
-	TGUIPoint Data12FC; // +0x12fc
-	TGUIPoint Data1304; // +0x1304
-	TGUIPoint Data130C; // +0x130c
-	TGUIPoint Data1314; // +0x1314
-	TGUIPoint Data131C; // +0x131c
-	TGUIPoint Data1324; // +0x1324
-	TGUIPoint Data132C; // +0x132c
-	TGUIPoint Data1334; // +0x1334
-	TGUIPoint Data133C; // +0x133c
+	TRect Data12F4; // +0x12f4, the general options' check boxes
+	TRect Data1304; // +0x1304
+	TRect Data1314; // +0x1314
+	TRect Data1324; // +0x1324
+	TRect Data1334; // +0x1334
 	int Data1344; // +0x1344
 	int Data1348; // +0x1348
-	TGUIPoint Data134C; // +0x134c
-	TGUIPoint Data1354; // +0x1354
-	TGUIPoint Data135C; // +0x135c
-	TGUIPoint Data1364; // +0x1364
-	TGUIPoint Data136C; // +0x136c
-	TGUIPoint Data1374; // +0x1374
+	TRect Data134C; // +0x134c, the graphics options' controls
+	TRect Data135C; // +0x135c
+	TRect Data136C; // +0x136c
 	TGUIPoint Data137C; // +0x137c
-	TGUIPoint Data1384; // +0x1384
-	TGUIPoint Data138C; // +0x138c
+	TRect Data1384; // +0x1384
 	TSkinProperties1394 Style1394; // +0x1394, 0x78 bytes
 	int Data140C; // +0x140c
 	int Data1410; // +0x1410
-	TGUIPoint Data1414; // +0x1414
-	TGUIPoint Data141C; // +0x141c
-	TGUIPoint Data1424; // +0x1424
-	TGUIPoint Data142C; // +0x142c
-	TGUIPoint Data1434; // +0x1434
-	TGUIPoint Data143C; // +0x143c
-	TGUIPoint Data1444; // +0x1444
-	TGUIPoint Data144C; // +0x144c
-	TGUIPoint Data1454; // +0x1454
-	TGUIPoint Data145C; // +0x145c
+	TRect Data1414; // +0x1414, the console options' check boxes
+	TRect Data1424; // +0x1424
+	TRect Data1434; // +0x1434
+	TRect Data1444; // +0x1444
+	TRect Data1454; // +0x1454
 	int Data1464; // +0x1464
 	int Data1468; // +0x1468
-	TGUIPoint Data146C; // +0x146c
-	TGUIPoint Data1474; // +0x1474
+	TRect Data146C; // +0x146c, the network options' check box
 	int Data147C; // +0x147c
 	int Data1480; // +0x1480
-	TGUIPoint Data1484; // +0x1484
-	TGUIPoint Data148C; // +0x148c
-	TRGBColor Data1494; // +0x1494
-	TGUIPoint Data14A0; // +0x14a0
-	TGUIPoint Data14A8; // +0x14a8
-	TGUIPoint Data14B0; // +0x14b0
-	TGUIPoint Data14B8; // +0x14b8
-	TGUIPoint Data14C0; // +0x14c0
-	TGUIPoint Data14C8; // +0x14c8
-	TRect Data14D0; // +0x14d0
+	TRect Data1484; // +0x1484, the hotkey dialog's list
+	TRect Data1494; // +0x1494, its labels and fields
+	TRect Data14A4; // +0x14a4
+	TRect Data14B4; // +0x14b4
+	TRect Data14C4; // +0x14c4
+	TRGBColor Data14D4; // +0x14d4, the lines of hotkeys sent automatically
 	int Data14E0; // +0x14e0
 	int Data14E4; // +0x14e4
-	TGUIPoint Data14E8; // +0x14e8
-	TGUIPoint Data14F0; // +0x14f0
-	TGUIPoint Data14F8; // +0x14f8
-	TGUIPoint Data1500; // +0x1500
-	TGUIPoint Data1508; // +0x1508
-	TGUIPoint Data1510; // +0x1510
-	TGUIPoint Data1518; // +0x1518
-	TGUIPoint Data1520; // +0x1520
+	TRect Data14E8; // +0x14e8, the error report's labels and fields
+	TRect Data14F8; // +0x14f8
+	TRect Data1508; // +0x1508
+	TRect Data1518; // +0x1518
 };
 
 extern TSkinProperties SkinProperties; // 0x5ccfc8

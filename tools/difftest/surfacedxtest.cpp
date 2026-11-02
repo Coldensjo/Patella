@@ -28,7 +28,7 @@
 // Phases: factory (CreateSurfaceDX, both destructors), draw (the drawing
 // slots, all blits and stretches, masks, colour keys, GetPixelColor,
 // ClipRect, ShadeRectangle(s), TestShading and the accessors on prepared
-// objects), timer (SetFramerate, ResetFrameTimer, WaitForNextFrame with
+// objects), timer (SetFramerateLimit, ResetFrameTimer, WaitForNextFrame with
 // early, exact, late frames and the second boundaries), modes
 // (GetFullscreenModes with accepted and rejected modes, both refresh flag
 // placements, empty and failed enumerations), lifecycle (InitSurfaces, Init in
@@ -1401,7 +1401,7 @@ static void DXPhaseDraw()
 					case 8: Object->Unknown08(Value); break;
 					case 9: Object->Unknown80(Value, 1, 2, 3); break;
 					case 10: Object->Unknown98(Value, 1, 2, 3, 4); break;
-					case 11: Object->SetFramerate(Value); break;
+					case 11: Object->SetFramerateLimit(Value); break;
 					}
 					break;
 				case 28: Object->UpdateWindowRect(); break;
@@ -1472,8 +1472,8 @@ static void DXPhaseTimer()
 		int Kind = Random() % 8;
 		if (Kind == 0) {
 			int Rate = Rates[Random() % (sizeof(Rates) / sizeof(Rates[0]))];
-			DXRun("SetFramerate", [&](int, TSurface *Object) { Object->SetFramerate(Rate); });
-			DXCover("SetFramerate %s", Rate < 10 || Rate > 200 ? "none" : "limit");
+			DXRun("SetFramerateLimit", [&](int, TSurface *Object) { Object->SetFramerateLimit(Rate); });
+			DXCover("SetFramerateLimit %s", Rate < 10 || Rate > 200 ? "none" : "limit");
 		} else if (Kind == 1 && Random() % 4 == 0) {
 			Clock += Steps[Random() % (sizeof(Steps) / sizeof(Steps[0]))];
 			DXScript.Clock = Clock;
@@ -1510,10 +1510,10 @@ static void DXPhaseClockWrap()
 	static const int Rates[] = {10, 30, 200, 0};
 	for (int Round = 0; Round < 8; Round++) {
 		int Rate = Rates[Round % 4];
-		DXRun("SetFramerate", [&](int, TSurface *Object) { Object->SetFramerate(Rate); });
+		DXRun("SetFramerateLimit", [&](int, TSurface *Object) { Object->SetFramerateLimit(Rate); });
 		uint32 Clock = 0xffffffffu - (uint32)(Random() % 3000);
 		DXScript.Clock = Clock;
-		DXRun("ResetFrameTimer", [&](int, TSurface *Object) { Object->ResetFrameTimer(); Object->SetFramerate(Rate); });
+		DXRun("ResetFrameTimer", [&](int, TSurface *Object) { Object->ResetFrameTimer(); Object->SetFramerateLimit(Rate); });
 		for (int Op = 0; Op < 60; Op++) {
 			int Kind = Random() % 4;
 			if (Kind == 0)

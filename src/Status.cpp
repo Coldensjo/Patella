@@ -205,7 +205,7 @@ void SetDragStart(int x, int y)
 	DragStartX = x;
 	DragStartY = y;
 	DraggedObject.Type = 0;
-	DraggedObject.Data1 = 0;
+	DraggedObject.Data = 0;
 	DraggedObject.Data2 = 0;
 }
 
@@ -863,13 +863,13 @@ void InitStatus(bool Gamemaster, void (*linkwarningeventhandler)())
 	NumberOfMessages = 0;
 	ActionNumber = 0;
 	DraggedObject.Type = 0;
-	DraggedObject.Data1 = 0;
+	DraggedObject.Data = 0;
 	DraggedObject.Data2 = 0;
 	TradeObject.Type = 0;
-	TradeObject.Data1 = 0;
+	TradeObject.Data = 0;
 	TradeObject.Data2 = 0;
 	UseObject.Type = 0;
-	UseObject.Data1 = 0;
+	UseObject.Data = 0;
 	UseObject.Data2 = 0;
 	TradeInfo = 0;
 	ConnectionState = 0;

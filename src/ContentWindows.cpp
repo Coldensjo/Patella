@@ -989,13 +989,13 @@ bool TSmallInventoryWindow::LeftButtonUp(int x, int y, int Flags)
 	 && In(y - SkinProperties.Data590.y, 0, SkinProperties.Data590.Height - 1) && GetActionState() == 6) {
 		int Index, SrcX, SrcY, SrcZ;
 		TObject *Obj = GetDragObject(&Index, &SrcX, &SrcY, &SrcZ);
-		if (!GetObjectFlag(Obj->Type, CUMULATIVE) || Obj->Data1 < 2 || (Flags & 0x200) != 0) {
+		if (!GetObjectFlag(Obj->Type, CUMULATIVE) || Obj->Data < 2 || (Flags & 0x200) != 0) {
 			SendMoveObject(SrcX, SrcY, SrcZ, Obj->Type, Index, 0xffff, 0, 0, 1);
 		} else if ((Flags & 0x400) == 0) {
 			SetDragTarget(0xffff, 0, 0);
 			AddMessage(13, 0, 0);
 		} else {
-			SendMoveObject(SrcX, SrcY, SrcZ, Obj->Type, Index, 0xffff, 0, 0, Obj->Data1);
+			SendMoveObject(SrcX, SrcY, SrcZ, Obj->Type, Index, 0xffff, 0, 0, Obj->Data);
 		}
 	}
 	return Result;
@@ -1125,7 +1125,7 @@ bool TInventoryView::LeftButtonUp(int x, int y, int Flags)
 			int DragIndex, DragX, DragY, DragZ;
 			TObject *DragObject = GetDragObject(&DragIndex, &DragX, &DragY, &DragZ);
 			if (DragX != 0xffff || DragY != Slot) {
-				if (!GetObjectFlag(DragObject->Type, CUMULATIVE) || DragObject->Data1 < 2 || (Flags & 0x200) != 0) {
+				if (!GetObjectFlag(DragObject->Type, CUMULATIVE) || DragObject->Data < 2 || (Flags & 0x200) != 0) {
 					SendMoveObject(DragX, DragY, DragZ, DragObject->Type, DragIndex, 0xffff, Slot, 0, 1);
 				} else if ((Flags & 0x400) == 0) {
 					SetDragTarget(0xffff, Slot, 0);
@@ -1133,7 +1133,7 @@ bool TInventoryView::LeftButtonUp(int x, int y, int Flags)
 					return true;
 				} else {
 					SendMoveObject(DragX, DragY, DragZ, DragObject->Type, DragIndex, 0xffff, Slot, 0,
-						DragObject->Data1);
+						DragObject->Data);
 				}
 			}
 		} else if (Flags != 0) {
@@ -1606,7 +1606,7 @@ bool TContainerWindowBody::LeftButtonUp(int x, int y, int Flags)
 			int DragIndex, DragX, DragY, DragZ;
 			TObject *DragObject = GetDragObject(&DragIndex, &DragX, &DragY, &DragZ);
 			if (DragX != 0xffff || DragY != Container + 0x40 || DragZ != Position) {
-				if (!GetObjectFlag(DragObject->Type, CUMULATIVE) || DragObject->Data1 < 2 || (Flags & 0x200) != 0) {
+				if (!GetObjectFlag(DragObject->Type, CUMULATIVE) || DragObject->Data < 2 || (Flags & 0x200) != 0) {
 					SendMoveObject(DragX, DragY, DragZ, DragObject->Type, DragIndex, 0xffff, Container + 0x40, Position,
 						1);
 				} else if ((Flags & 0x400) == 0) {
@@ -1615,7 +1615,7 @@ bool TContainerWindowBody::LeftButtonUp(int x, int y, int Flags)
 					return true;
 				} else {
 					SendMoveObject(DragX, DragY, DragZ, DragObject->Type, DragIndex, 0xffff, Container + 0x40, Position,
-						DragObject->Data1);
+						DragObject->Data);
 				}
 			}
 		} else if (Flags != 0) {

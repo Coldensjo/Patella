@@ -113,11 +113,12 @@ public:
 	virtual bool IsUnavailable() = 0;                                 // +0xa0
 	virtual bool CanShadeRectangles() = 0;                            // +0xa4, MapWindow.cpp draws the light with +0x4c only when true
 	virtual int GetSurfaceMemory(int Index) = 0;                      // +0xa8, 1 video memory, 2 system memory
-	virtual void SetFramerate(int Framerate) = 0;                     // +0xac
+	virtual void SetFramerateLimit(int Framerate) = 0;                     // +0xac
 	virtual double GetFPS() = 0;                                      // +0xb0
 	virtual void InitSurfaces() = 0;                                  // +0xb4
 	virtual void ExitSurfaces() = 0;                                  // +0xb8
 	virtual bool TestEngine();                                        // +0xbc
+	uint8 GetAvailableEngines();                                      // 0x4eabe0, the engines found at start-up (bit 0 OpenGL, bit 1 DirectX 9)
 
 	// The members the engines share: the engines' identical copies of
 	// GetCacheSurfaces, IsUnavailable, GetFPS and the frame timer use the same
@@ -150,7 +151,6 @@ public:
 int GetCurrentEngine();
 TSurface *GetSurface();
 void SurfaceExitInstance();
-uint8 GetAvailableEngines();
 void SurfaceInitInstance(HWND *Window);
 
 // Data the engines share (Surface.cpp's; SurfaceDX.cpp, surfaceDX9.cpp and

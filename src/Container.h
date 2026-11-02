@@ -29,9 +29,10 @@
 // The destructor's out-of-line instances are 0x452c50 (vector<int>, entry at
 // +0x1c) and 0x452c60 (vector<TListBoxLine>, entry at +0x30), called from
 // unwind funclets; the static initialisers register atexit handlers
-// (0x55a320 and following) that free entry inline. Dialogs.obj adds a vector
-// of a 31-byte element (destructor 0x46bb60, operator() 0x46bb70,
-// constructor 0x46c0d0).
+// (0x55a320 and following) that free entry inline. Dialogs.obj adds
+//   vector<TIgnoreEntry>    constructor 0x46c0d0, operator() 0x46bb70,
+//                           destructor 0x46bb60 (Dialogs.h's 31-byte ignore
+//                           list entries, with an inline constructor)
 
 #pragma once
 

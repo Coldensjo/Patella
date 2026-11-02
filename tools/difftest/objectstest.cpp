@@ -230,12 +230,12 @@ static void TestPatterns(int Type, const TProperties &E)
 		for (int t = 0; t < 24; t++) {
 			TObject Obj;
 			Obj.Type = Type;
-			Obj.Data1 = t < 22 ? Data[t] : (int)(Random() ^ (Random() << 16));
+			Obj.Data = t < 22 ? Data[t] : (int)(Random() ^ (Random() << 16));
 			Obj.Data2 = t % 4 == 0 ? HOOKSOUTH : t % 4 == 1 ? HOOKEAST : (int)(Random() % 40) - 5;
 			int X1 = -7, Y1 = -7, X2 = -7, Y2 = -7;
 			F.Ours(Obj, &X1, &Y1);
 			At<PatternFn>(F.Address)(&Obj, &X2, &Y2);
-			CHECK(X1 == X2 && Y1 == Y2, "%s(%d, %d, %d): %d,%d original %d,%d", F.Name, Type, Obj.Data1,
+			CHECK(X1 == X2 && Y1 == Y2, "%s(%d, %d, %d): %d,%d original %d,%d", F.Name, Type, Obj.Data,
 				Obj.Data2, X1, Y1, X2, Y2);
 		}
 	}

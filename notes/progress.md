@@ -18,6 +18,7 @@ Read this and `git log` first when resuming.
 7d. ConsoleWindow.cpp and the gaps on both sides — **done** (issue #5, Claude Opus 5.5; the second gap is ContentWindows.obj).
 7e. ContentWindows.cpp — **done** (issue #6, Claude Opus 5.5; the gap before it was settled in issue #5).
 7f. DialogElements.cpp and the DialogElements/Dialogs gap — **done** (issue #7, Claude Opus 5.5; the gap is Dialogs.obj).
+7g. Dialogs.cpp with its leading run of header code — **done** (issue #8, Claude Opus 5.5).
 8. Creatures.cpp and the Control/Creatures, Creatures/DialogElements gaps — **done** (Claude Opus 5.5 delegate, reviewed, merged; the second gap is DialogElements.cpp + Container.h).
 9. Talk.cpp and the gaps next to it — **done** (ChatGPT gpt-6.1-sol, sent back once for names/shims, then merged).
 10. The remaining files in link order, smallest first. Done: sysinc.cpp, Help.cpp, Inventory.cpp, MainFrm.cpp, GUI.cpp, graphics.cpp (delegates, merged).
@@ -41,8 +42,8 @@ SurfaceDX differential-test coverage (fake DirectDraw/Direct3D and Win32 effects
 
 ## Last difftest
 
-12,645,939 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
-(after issue #7; DialogElements: 135,478).
+12,744,375 checks against the original + 67 in sysinctest.exe, 0 failures; 3,201 vlong checks, 0 failures
+(after issue #8; Dialogs: 98,889).
 
 ## Notes for later files
 
@@ -179,3 +180,19 @@ SurfaceDX differential-test coverage (fake DirectDraw/Direct3D and Win32 effects
   TSkinButton::SetEnabled, TListBox::GetSelection/SetEditable, TFontListBox, TEditText,
   THorizontalScrollBar with its callback, TLink with OpenURL).
 - DIFFTEST_ONLY=DialogElements runs dialogelementstest.cpp alone (DE_TRACE=1, DE_LOGS=<file>).
+- Dialogs.cpp (issue #8): Dialogs.h includes DialogElements.h, Map.h and Preferences.h; its users include it
+  directly (Control.cpp). The creators return the frame TDialog (a TWindow) for ModalWindow. TDialog's body is
+  a TComponent (labels are bodies too). TObject's second member is Data (assertion text), TBorder frames a
+  TComponent, TListBox has GetNumberOfLines (inline), TSurface has GetFullscreenModes (+0x8c),
+  SetFramerateLimit (+0xac) and the member GetAvailableEngines.
+- SkinProperties: build/scratch/dg8/retype.py relayouts blocks from a table (offset, type, name), checks the
+  constructor-zeroed bytes and rewrites every use by offset; reuse it for later retypes.
+- The original's SetChildArea takes a TRect by value (callers build a 16-byte block); GUI.h keeps the five
+  ints (same stack layout; issue #27).
+- The image's iostreams cannot run in the test child (the CRT's static initialisers are not run and call
+  imports): functions that build a std::stringstream in the image (the error report dialog's constructor,
+  Container.h's index errors) cannot be called on the image side.
+- dialogstest.cpp's dump prints every member word with pointers named (tree components, receivers, timers)
+  and strings only for the members listed as strings; values with two 0xab bytes are pattern, not pointers.
+  Event 31 only with a timer, event 11 of the hotkey dialog only with a selection.
+- DIFFTEST_ONLY=Dialogs runs dialogstest.cpp alone (DG_TRACE=1, DG_LOGS=<file>).

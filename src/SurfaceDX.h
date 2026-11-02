@@ -79,7 +79,7 @@ public:
 	bool IsUnavailable();                                             // 0x4fb5f0
 	bool CanShadeRectangles();                                        // 0x4ec9d0
 	int GetSurfaceMemory(int Index);                                  // 0x4eae80
-	void SetFramerate(int Framerate);                                 // 0x4eb000
+	void SetFramerateLimit(int Framerate);                                 // 0x4eb000
 	double GetFPS();                                                  // 0x4f9d00
 	void InitSurfaces();                                              // 0x4ecfd0
 	void ExitSurfaces();                                              // 0x4ec9e0
