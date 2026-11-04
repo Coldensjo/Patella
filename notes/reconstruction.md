@@ -40,8 +40,8 @@ Regenerate after changes: `python -I tools/triage.py` (only when the raw decompi
   assertions that build the first states come **before** `TBEGIN`; a failure there is not wrapped
   with "exception occurred". Each assertion builds five strings, so five states.
 - Ghidra hides the `this` pointer of member calls (`in_ECX`). When it matters which object a
-  call uses, read the instructions: `rea instructions C:\Tibia\Tibia.exe <address> --provider
-  ghidra --snapshot C:\Tibia\rea-out\tibia.snapshot --json` and look for `MOV ECX, <address>`
+  call uses, read the instructions: `rea instructions C:\Tibia\Patella\Tibia.exe <address> --provider
+  ghidra --snapshot C:\Tibia\Patella\rea-out\tibia.snapshot --json` and look for `MOV ECX, <address>`
   or `LEA ECX, [EBP + ...]` before the call.
 - Return values of small wrappers are often dropped by Ghidra (`void FUN_...` that returns
   `EAX` from a callee). Check the callers.

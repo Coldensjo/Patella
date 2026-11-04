@@ -1,6 +1,6 @@
 # Tibia client reverse engineering
 
-Target: `C:\Tibia\Tibia.exe`, the Tibia 7.x client (PE32, x86, MSVC 7.1 linker, built 2006-06-08,
+Target: `C:\Tibia\Patella\Tibia.exe`, the Tibia 7.x client (PE32, x86, MSVC 7.1 linker, built 2006-06-08,
 sha256 `1a82fe97a39e536c29327d6d5dde316775f537dcc01506831429b1a0433b76f8`).
 Data files next to it: `Tibia.dat`, `Tibia.spr`, `Tibia.pic`, `Tibia.cfg`.
 
@@ -22,7 +22,7 @@ above, still ignored); `-Stash` puts it away again. The build and the tests (`to
 ## REA
 
 The `rea` MCP server (https://github.com/morluto/rea) is registered at Claude Code local scope for this
-folder only, with the skill in `.claude/skills/reverse-engineer-anything`. Pass `C:\Tibia\Tibia.exe` as
+folder only, with the skill in `.claude/skills/reverse-engineer-anything`. Pass `C:\Tibia\Patella\Tibia.exe` as
 the target to its native analysis tools.
 
 - Package: `C:\Servers\Software\rea` (rea-agents 6.8.0), CLI: `rea` (`C:\Servers\Software\rea\rea.cmd`)
@@ -35,9 +35,9 @@ the target to its native analysis tools.
 CLI examples (`rea.cmd` sets `GHIDRA_INSTALL_DIR` and `JAVA_HOME` itself if they are unset):
 
 ```
-rea analyze C:\Tibia\Tibia.exe --provider ghidra --json
-rea search C:\Tibia\Tibia.exe "Tibia.spr" --provider ghidra --json
-rea decompile C:\Tibia\Tibia.exe 0x401000 --provider ghidra --json
+rea analyze C:\Tibia\Patella\Tibia.exe --provider ghidra --json
+rea search C:\Tibia\Patella\Tibia.exe "Tibia.spr" --provider ghidra --json
+rea decompile C:\Tibia\Patella\Tibia.exe 0x401000 --provider ghidra --json
 ```
 
 To update: `rea update` does not refresh the local-scope registration. Run
