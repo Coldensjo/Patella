@@ -18,3 +18,8 @@ The client's own files (`Tibia.exe`, `Tibia.dat`, `Tibia.spr`, `Tibia.pic`) and
 the decompilation workspace (the decompiler output, the name and symbol databases,
 the analysis notes and tools) are not part of this repository; `tools\decompilation.ps1`
 moves the local copy between `decompilation/` and its working paths (see CLAUDE.md).
+
+## License
+
+MIT, see [LICENSE](LICENSE). It covers this repository's own work; `src/Extern` keeps its own licenses, and
+Tibia and its files belong to CipSoft GmbH and are not licensed here.
