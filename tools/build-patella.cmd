@@ -33,3 +33,19 @@ if errorlevel 1 (
 )
 findstr /c:" differences" "%ROOT%\build\%CONFIG%\resources.txt"
 echo build-patella.cmd: built %ROOT%\build\%CONFIG%\Patella.exe
+rem 3. When the local test server is installed (notes/testserver.md), write a copy pointed at it
+rem    (127.0.0.1:7171, the server's RSA key) into build\run-patella, with copies of the data files
+rem    (only when missing: the client rewrites Tibia.cfg there).
+set SERVER_PEM=C:\Tibia\gameserver\tibia.pem
+if not exist "%SERVER_PEM%" goto :eof
+set RUNDIR=%ROOT%\build\run-patella
+if not exist "%RUNDIR%" mkdir "%RUNDIR%"
+for %%F in (Tibia.dat Tibia.spr Tibia.pic Tibia.cfg) do (
+	if not exist "%RUNDIR%\%%F" copy /y "%ROOT%\%%F" "%RUNDIR%\%%F" >nul || exit /b 1
+)
+python -I "%ROOT%\tools\patch_client.py" "%ROOT%\build\%CONFIG%\Patella.exe" "%RUNDIR%\Patella.exe" --host 127.0.0.1 --rsa "%SERVER_PEM%"
+if errorlevel 1 (
+	echo build-patella.cmd: patching the local-server copy failed
+	exit /b 1
+)
+echo build-patella.cmd: local-server copy %RUNDIR%\Patella.exe

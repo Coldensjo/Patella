@@ -97,6 +97,12 @@ PlayerState table exists in tibia.db. The character list is ordered by level and
 Tester, level 1 after its first login, before Patella Second, level 0), then the server's "Account
 Manager" entry (account_manager defaults to on).
 
+**GameMaster account**: account **772002**, password **gamemaster**, premium, character "GM Patella"
+(CharacterID 15146576) with the 84 rights of the shipped GameMasters (copied from "GM Havey on Zanera"):
+`tools/testserver-gm-account.sql`. The server reads CharacterRights at login, so the script can run while
+it is up. Checked November 2, 2026 with login_client.py and build\run-patella\Patella.exe (capacity 65535:
+UNLIMITED_CAPACITY).
+
 The shipped accounts 111111-666666 (password tibia, thousands of RealOTs characters each) were not
 changed, but one login with 111111 was made while finding out why 772001 failed: its first character,
 "Savage Saint" (CharacterID 8395503, level 152), was in the game for a few seconds (the client was killed,
@@ -117,6 +123,9 @@ this server's game port. So the clients are patched like an "IP changer", on cop
 python -I tools/patch_client.py Tibia.exe build/run-orig/Tibia.exe --host 127.0.0.1 --rsa C:\Tibia\gameserver\tibia.pem
 python -I tools/patch_client.py build/Release/Patella.exe build/run-patella/Patella.exe --host 127.0.0.1 --rsa C:\Tibia\gameserver\tibia.pem
 ```
+
+`tools\build-patella.cmd` does the second line itself after every build when `C:\Tibia\gameserver\tibia.pem`
+exists, and copies the data files into build\run-patella when they are missing there.
 
 - The four server names are replaced in place by 127.0.0.1, NUL-padded to their own length (both clients
   copy each literal with a fixed number of bytes: mov/movups of the whole literal), so all four entries
